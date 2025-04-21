@@ -1,0 +1,839 @@
+{% extends "base.html" %}
+
+
+{% block title %}Cultural Event Planning Committee - Orientation{% endblock %}
+
+{% block extra_head %}
+<style>
+    .game-interface {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: 1px solid #e1e1e1;
+        overflow: hidden;
+    }
+    
+    .scene-header {
+        background-size: cover;
+        background-position: center;
+        height: 150px;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+    }
+    
+    .scene-header-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.7));
+    }
+    
+    .scene-title {
+        color: white;
+        position: relative;
+        z-index: 2;
+        padding: 15px;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    }
+    
+    .scene-description {
+        font-style: italic;
+        background-color: #f8f9fa;
+        border-left: 4px solid #457b9d;
+        padding: 10px 15px;
+        margin-bottom: 20px;
+    }
+    
+    .avatar-container {
+        width: 70px;
+        height: 70px;
+        position: relative;
+    }
+    
+    .avatar-img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .avatar-fallback {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background-color: #457b9d;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .speaker-name {
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    
+    .speaker-role {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .dialogue-bubble {
+        background-color: #e9ecef;
+        border-radius: 18px;
+        padding: 15px 20px;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+    }
+    
+    .dialogue-bubble:after {
+        content: '';
+        position: absolute;
+        left: 30px;
+        top: -15px;
+        border-width: 0 10px 15px;
+        border-style: solid;
+        border-color: #e9ecef transparent;
+    }
+    
+    .dialogue-instruction {
+        background-color: #e3f2fd;
+        border-radius: 8px;
+        padding: 10px 15px;
+        margin-top: 10px;
+        font-style: italic;
+        color: #0c5460;
+    }
+    
+    .player-response-container {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 25px;
+        margin-top: 10px;
+        border: 1px solid #e1e1e1;
+    }
+    
+    .feedback-container {
+        padding: 15px;
+        border-radius: 8px;
+        background-color: #fff3cd;
+        margin: 20px 0;
+        display: none;
+    }
+    
+    .skills-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .skill-badge {
+        background-color: #457b9d;
+        color: white;
+        border-radius: 20px;
+        padding: 5px 12px;
+        font-size: 0.85rem;
+        margin-left: 10px;
+    }
+    
+    .xp-container {
+        background-color: #28a745;
+        color: white;
+        border-radius: 20px;
+        padding: 5px 15px;
+        font-weight: bold;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .xp-icon {
+        font-size: 1.2rem;
+        margin-right: 5px;
+    }
+    
+    .progress-container {
+        margin: 15px 0;
+        background-color: rgba(0,0,0,0.1);
+        border-radius: 20px;
+        height: 10px;
+        overflow: hidden;
+    }
+    
+    .progress-indicator {
+        height: 100%;
+        background: linear-gradient(to right, #457b9d, #e63946);
+        border-radius: 20px;
+    }
+    
+    .level-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 5px;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .achievements-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .achievement-badge {
+        background-color: #f8f9fa;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #dee2e6;
+        font-size: 1.5rem;
+        color: #6c757d;
+    }
+    
+    .achievement-badge.locked {
+        opacity: 0.5;
+        filter: grayscale(1);
+    }
+    
+    .feedback-suggestions {
+        background: #f8f9fa;
+        border-left: 4px solid #ffc107;
+        padding: 10px 15px;
+        margin-top: 10px;
+        font-size: 0.9rem;
+    }
+    
+    .assessment-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+    
+    .assessment-a1 { background-color: #dc3545; }
+    .assessment-a2 { background-color: #fd7e14; }
+    .assessment-b1 { background-color: #ffc107; }
+    .assessment-b2 { background-color: #28a745; }
+    .assessment-c1 { background-color: #17a2b8; }
+    
+    .loader {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 2s linear infinite;
+        margin: 0 auto;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .typing-indicator {
+        display: flex;
+        padding: 10px 15px;
+        border-radius: 20px;
+        background: #e9ecef;
+        width: fit-content;
+    }
+    
+    .typing-indicator span {
+        height: 10px;
+        width: 10px;
+        float: left;
+        margin: 0 1px;
+        background-color: #9E9EA1;
+        display: block;
+        border-radius: 50%;
+        opacity: 0.4;
+    }
+    
+    .typing-indicator span:nth-of-type(1) {
+        animation: 1s blink infinite 0.3333s;
+    }
+    
+    .typing-indicator span:nth-of-type(2) {
+        animation: 1s blink infinite 0.6666s;
+    }
+    
+    .typing-indicator span:nth-of-type(3) {
+        animation: 1s blink infinite 0.9999s;
+    }
+    
+    @keyframes blink {
+        50% { opacity: 1; }
+    }
+    .audio-player-container {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 10px;
+    }
+    
+    .play-audio-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #457b9d;
+        color: white;
+        border: none;
+    }
+    
+    .play-audio-btn:hover {
+        background-color: #366b8a;
+        color: white;
+    }
+    
+    .audio-progress {
+        border-radius: 4px;
+        background-color: #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-4">
+    <div class="col-lg-8">
+        <!-- Game header with progress and XP -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Cultural Event Planning</h2>
+            <div class="d-flex align-items-center">
+                <div class="xp-container me-3">
+                    <span class="xp-icon">✨</span> {{ xp }} XP
+                </div>
+                <div class="progress-container" style="width: 200px;">
+                    <div class="progress-indicator" style="width: {{ (current_step / total_steps) * 100 }}%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Level indicator -->
+        <div class="level-indicator mb-4">
+            <span>Orientation</span>
+            <span>{{ current_step }} / {{ total_steps }}</span>
+        </div>
+        
+        <!-- Main game interface -->
+        <div class="game-interface">
+            <!-- Scene header with background image -->
+            <div class="scene-header" style="background-image: url('/static/images/scenes/{{ scene }}.jpg');">
+                <div class="scene-header-overlay"></div>
+                <div class="scene-title">
+                    <h3 class="mb-0">{{ scene|replace('_', ' ')|title }}</h3>
+                </div>
+            </div>
+            
+            <!-- Scene description -->
+            <div class="container py-4">
+                <div class="scene-description mb-4">
+                    {{ scene_description }}
+                </div>
+                
+                <!-- Skill being assessed -->
+                <div class="skills-container">
+                    <span>Skill:</span>
+                    <div class="skill-badge">
+                        {{ skill|replace('_', ' ')|title }}
+                    </div>
+                    <div class="ms-2 small text-muted">
+                        {{ skill_description }}
+                    </div>
+                </div>
+                
+                <!-- NPC dialogue section -->
+                <div class="d-flex mb-4">
+                    <div class="avatar-container me-3">
+                        {% if npcs[question.speaker].avatar %}
+                            <img src="/static/images/avatars/{{ npcs[question.speaker].avatar }}" alt="{{ question.speaker }}" class="avatar-img">
+                        {% else %}
+                            <div class="avatar-fallback">
+                                {{ question.speaker[0] }}{{ question.speaker[1]|default("") }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="mb-2">
+                            <span class="speaker-name">{{ question.speaker }}</span>
+                            <span class="speaker-role">({{ npcs[question.speaker].role }})</span>
+                        </div>
+                        <div class="dialogue-bubble">
+                            {% if not question.audio_cue %}
+                            <p>{{ question.question }}</p>
+                            {% endif %}
+                            {% if question.instruction   %}
+                                <div class="dialogue-instruction">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    {{ question.instruction }}
+                                </div>
+                            {% endif %}
+                            
+                            {% if question.step == 4 and question.audio_cue %}
+                            <div class="mt-3 audio-player-container">
+                                <div class="d-flex align-items-center">
+                                    <button id="play-audio-btn" class="btn btn-sm btn-outline-secondary me-2 play-audio-btn">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                    <div class="flex-grow-1">
+                                        <audio id="audio-player" class="w-100">
+                                            <source src="/static/audio/{{ question.audio_cue }}" type="audio/mpeg">
+                                            Your browser does not support the audio element.
+                                        </audio>
+                                        <div class="progress audio-progress" style="height: 6px;">
+                                            <div id="audio-progress-bar" class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Listen to SKANDER's suggestion and answer what he said.
+                                    </small>
+                                </div>
+                                <div class="mt-1 text-center">
+                                    <button id="replay-audio-btn" class="btn btn-sm btn-outline-primary replay-btn">
+                                        <i class="fas fa-redo-alt"></i> Replay Audio
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                            
+                            {% if question.scenario_image %}
+                                <div class="mt-3">
+                                    <img src="/static/images/scenarios/{{ question.scenario_image }}" alt="Scenario" class="img-fluid rounded">
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI feedback will be displayed here after response -->
+                <div id="feedback-container" class="d-none mb-4">
+                    <div class="d-flex">
+                        <div class="avatar-container me-3">
+                            {% if npcs[question.speaker].avatar %}
+                                <img src="/static/images/avatars/{{ npcs[question.speaker].avatar }}" alt="{{ question.speaker }}" class="avatar-img">
+                            {% else %}
+                                <div class="avatar-fallback">
+                                    {{ question.speaker[0] }}{{ question.speaker[1]|default("") }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="mb-2">
+                                <span class="speaker-name">{{ question.speaker }}</span>
+                                <span class="speaker-role">({{ npcs[question.speaker].role }})</span>
+                            </div>
+                            
+                            <!-- Typing indicator (will be shown while waiting for feedback) -->
+                            <div id="typing-indicator" class="typing-indicator d-none">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            
+                            <div id="ai-feedback-bubble" class="dialogue-bubble">
+                                <div id="ai-feedback"></div>
+                                
+                                <div id="assessment-feedback" class="feedback-suggestions d-none">
+                                    <div class="mb-2">
+                                        <strong>Level: <span id="assessment-level"></span></strong>
+                                        <div id="assessment-level-indicator" class="assessment-indicator"></div>
+                                    </div>
+                                    
+                                    <div id="assessment-strengths-container" class="d-none">
+                                        <strong>Strengths:</strong>
+                                        <ul id="assessment-strengths" class="mb-0"></ul>
+                                    </div>
+                                    
+                                    <div id="assessment-improvements-container" class="d-none">
+                                        <strong>Focus on:</strong>
+                                        <ul id="assessment-improvements" class="mb-0"></ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Example responses for guidance (collapsible) -->
+                <div class="mb-4">
+                    <p>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#exampleResponses">
+                            <i class="fas fa-lightbulb me-1"></i> Need help? See example responses
+                        </button>
+                    </p>
+                    <div class="collapse" id="exampleResponses">
+                        <div class="card card-body">
+                            <p class="small text-muted mb-2">Here are example responses at different levels:</p>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <span class="badge bg-secondary">A1 (Beginner)</span>
+                                        <p class="small mt-1">{{ question.example_responses.A1 }}</p>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <span class="badge bg-info">A2 (Elementary)</span>
+                                        <p class="small mt-1">{{ question.example_responses.A2 }}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <span class="badge bg-primary">B1 (Intermediate)</span>
+                                        <p class="small mt-1">{{ question.example_responses.B1 }}</p>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <span class="badge bg-success">B2 (Upper Intermediate)</span>
+                                        <p class="small mt-1">{{ question.example_responses.B2 }}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div>
+                                        <span class="badge bg-warning text-dark">C1 (Advanced)</span>
+                                        <p class="small mt-1">{{ question.example_responses.C1 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Response form -->
+                <div class="player-response-container">
+                    <form id="response-form" action="{{ url_for('submit_response') }}" method="post">
+                        <input type="hidden" name="question_type" value="{{ question.type }}">
+                        
+                        <div class="form-group mb-3">
+                            <label for="response" class="form-label">Your Response:</label>
+                            <textarea class="form-control" id="response" name="response" rows="5" placeholder="Type your response here..." required></textarea>
+                            
+                            <!-- Word counter -->
+                            <div class="d-flex justify-content-between mt-2">
+                                <small class="text-muted" id="word-counter">0 words</small>
+                                <small class="text-muted">Aim for at least 20-30 words for a good response</small>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="button" id="get-feedback" class="btn btn-outline-primary">
+                                <i class="fas fa-comment-dots me-1"></i> Get Feedback
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-1"></i> Submit & Continue
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Tips section -->
+                <div class="mt-4">
+                    <p>
+                        <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#languageTips">
+                            <i class="fas fa-book me-1"></i> Language Tips
+                        </button>
+                    </p>
+                    <div class="collapse" id="languageTips">
+                        <div class="card card-body">
+                            <h5 class="card-title">Tips for this level</h5>
+                            <div id="tips-container">
+                                <div class="text-center py-3">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get references to audio elements
+    const audioPlayer = document.getElementById('audio-player');
+    const playButton = document.getElementById('play-audio-btn');
+    const replayButton = document.getElementById('replay-audio-btn');
+    const progressBar = document.getElementById('audio-progress-bar');
+    
+    if (audioPlayer) {
+        // Initialize audio player
+        console.log('Audio player initialized');
+        
+        // Update progress bar during playback
+        audioPlayer.addEventListener('timeupdate', function() {
+            if (audioPlayer.duration) {
+                const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progressBar.style.width = progress + '%';
+            }
+        });
+        
+        // Handle play button click
+        if (playButton) {
+            playButton.addEventListener('click', function() {
+                console.log('Play button clicked');
+                if (audioPlayer.paused) {
+                    audioPlayer.play().catch(e => {
+                        console.error('Error playing audio:', e);
+                    });
+                    playButton.innerHTML = '<i class="fas fa-pause"></i>';
+                } else {
+                    audioPlayer.pause();
+                    playButton.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            });
+        }
+        
+        // Handle replay button click
+        if (replayButton) {
+            replayButton.addEventListener('click', function() {
+                console.log('Replay button clicked');
+                audioPlayer.currentTime = 0;
+                audioPlayer.play().catch(e => {
+                    console.error('Error replaying audio:', e);
+                });
+                playButton.innerHTML = '<i class="fas fa-pause"></i>';
+            });
+        }
+        
+        // When audio ends, reset play button
+        audioPlayer.addEventListener('ended', function() {
+            playButton.innerHTML = '<i class="fas fa-play"></i>';
+            progressBar.style.width = '0%';
+        });
+        
+        // Log when audio is loaded
+        audioPlayer.addEventListener('loadeddata', function() {
+            console.log('Audio loaded successfully, duration:', audioPlayer.duration);
+        });
+        
+        // Log errors
+        audioPlayer.addEventListener('error', function() {
+            console.error('Audio error:', audioPlayer.error);
+        });
+        
+        // Auto-play attempt with delay
+        setTimeout(function() {
+            console.log('Attempting to auto-play audio');
+            audioPlayer.play().catch(e => {
+                console.error('Auto-play failed:', e, 'This is normal in most browsers that require user interaction');
+            });
+        }, 1500);
+    }
+});
+
+    $(document).ready(function() {
+        // Word counter functionality
+        $('#response').on('input', function() {
+            const words = $(this).val().split(/\s+/).filter(word => word.length > 0).length;
+            $('#word-counter').text(words + ' words');
+        });
+        
+        // Get feedback button click handler
+        $('#get-feedback').click(function() {
+            const response = $('#response').val();
+            if (!response) {
+                alert("Please type a response first.");
+                return;
+            }
+            
+            // Show typing indicator
+            $('#feedback-container').removeClass('d-none');
+            $('#typing-indicator').removeClass('d-none');
+            $('#ai-feedback-bubble').addClass('d-none');
+            
+            // Disable button and show loading state
+            $(this).prop('disabled', true);
+            $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Getting feedback...');
+            
+            // Get AI feedback on the response
+            $.ajax({
+                url: "{{ url_for('get_ai_feedback') }}",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    question: "{{ question.question }}",
+                    response: response,
+                    speaker: "{{ question.speaker }}",
+                    type: "{{ question.type }}"
+                }),
+                success: function(data) {
+                    // Hide typing indicator after a slight delay to simulate natural typing
+                    setTimeout(function() {
+                        $('#typing-indicator').addClass('d-none');
+                        $('#ai-feedback-bubble').removeClass('d-none');
+                        
+                        // Show assessment data if available
+                        if (data.assessment) {
+                            const level = data.assessment.level;
+                            const strengths = data.assessment.strengths;
+                            const improvements = data.assessment.improvements;
+                            
+                            // Show assessment level
+                            $('#assessment-feedback').removeClass('d-none');
+                            $('#assessment-level').text(level);
+                            
+                            // Update level indicator color
+                            const levelClass = {
+                                'A1': 'assessment-a1',
+                                'A2': 'assessment-a2',
+                                'B1': 'assessment-b1',
+                                'B2': 'assessment-b2',
+                                'C1': 'assessment-c1'
+                            }[level] || 'assessment-b1';
+                            
+                            $('#assessment-level-indicator').removeClass('assessment-a1 assessment-a2 assessment-b1 assessment-b2 assessment-c1')
+                                .addClass(levelClass);
+                            
+                            // Show strengths if available
+                            if (strengths && strengths.length > 0) {
+                                $('#assessment-strengths-container').removeClass('d-none');
+                                $('#assessment-strengths').empty();
+                                strengths.forEach(function(strength) {
+                                    $('#assessment-strengths').append('<li>' + strength + '</li>');
+                                });
+                            } else {
+                                $('#assessment-strengths-container').addClass('d-none');
+                            }
+                            
+                            // Show improvements if available
+                            if (improvements && improvements.length > 0) {
+                                $('#assessment-improvements-container').removeClass('d-none');
+                                $('#assessment-improvements').empty();
+                                improvements.forEach(function(improvement) {
+                                    $('#assessment-improvements').append('<li>' + improvement + '</li>');
+                                });
+                            } else {
+                                $('#assessment-improvements-container').addClass('d-none');
+                            }
+                        }
+                    }, 1500);
+                    
+                    // Re-enable button
+                    $('#get-feedback').prop('disabled', false);
+                    $('#get-feedback').html('<i class="fas fa-comment-dots me-1"></i> Get Feedback');
+                },
+                error: function() {
+                    // Hide typing indicator
+                    $('#typing-indicator').addClass('d-none');
+                    $('#ai-feedback-bubble').removeClass('d-none');
+                    
+                    // Show error message
+                    $('#ai-feedback').text("I'm sorry, I couldn't analyze your response at the moment. Please try again or continue to the next question.");
+                    
+                    // Re-enable button
+                    $('#get-feedback').prop('disabled', false);
+                    $('#get-feedback').html('<i class="fas fa-comment-dots me-1"></i> Get Feedback');
+                }
+            });
+        });
+        
+        // Load language tips when tips section is expanded
+        $('#languageTips').on('show.bs.collapse', function() {
+            // Load tips from API
+            $.ajax({
+                url: "{{ url_for('language_tips') }}",
+                type: "GET",
+                data: { level: "B1" }, // Default level, could be dynamic based on previous assessments
+                success: function(data) {
+                    // Display tips
+                    const tipsContainer = $('#tips-container');
+                    tipsContainer.empty();
+                    
+                    if (data.tips && data.tips.length > 0) {
+                        const tipsList = $('<ul class="mb-0"></ul>');
+                        data.tips.forEach(function(tip) {
+                            tipsList.append('<li>' + tip + '</li>');
+                        });
+                        tipsContainer.append(tipsList);
+                        
+                        // Add a "Get more tips" button
+                        const moreButton = $('<button class="btn btn-sm btn-outline-primary mt-3">Get more tips</button>');
+                        moreButton.on('click', function() {
+                            // Reload tips with the same level
+                            $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
+                            $.ajax({
+                                url: "{{ url_for('language_tips') }}",
+                                type: "GET",
+                                data: { level: data.level },
+                                success: function(newData) {
+                                    // Update tips
+                                    tipsList.empty();
+                                    newData.tips.forEach(function(tip) {
+                                        tipsList.append('<li>' + tip + '</li>');
+                                    });
+                                    
+                                    // Reset button
+                                    moreButton.html('Get more tips');
+                                },
+                                error: function() {
+                                    moreButton.html('Get more tips');
+                                    alert("Couldn't load more tips. Please try again.");
+                                }
+                            });
+                        });
+                        
+                        tipsContainer.append(moreButton);
+                    } else {
+                        tipsContainer.html('<p>No tips available for this level.</p>');
+                    }
+                },
+                error: function() {
+                    $('#tips-container').html('<p class="text-danger">Could not load language tips. Please try again later.</p>');
+                }
+            });
+        });
+        
+        // Show flash messages as toasts
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    const toast = $(`
+                        <div class="toast align-items-center text-white bg-${category === 'success' ? 'success' : 'primary'}" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    ${message}
+                                </div>
+                                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    `);
+                    
+                    $('body').append(toast);
+                    toast.toast({ autohide: true, delay: 5000 }).toast('show');
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    });
+
+ 
+    </script>
+
+{% endblock %}

@@ -1,0 +1,408 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block title %}Welcome to the Cultural Event Planning Committee{% endblock %}
+
+{% block extra_head %}
+<style>
+    .hero-section {
+        background: linear-gradient(to right, rgba(29, 53, 87, 0.8), rgba(230, 57, 70, 0.8)), 
+                    url('https://images.unsplash.com/photo-1552832230-c0197dd311b5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 80px 0;
+        margin-bottom: 40px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .hero-heading {
+        font-size: 3rem;
+        font-weight: bold;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        margin-bottom: 15px;
+    }
+    
+    .hero-subheading {
+        font-size: 1.5rem;
+        margin-bottom: 30px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .hero-text {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .game-description {
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        border: 1px solid #e1e1e1;
+    }
+    
+    .character-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+        height: 100%;
+        border: 1px solid #e1e1e1;
+    }
+    
+    .character-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .character-header {
+        background-color: #457b9d;
+        color: white;
+        padding: 15px;
+        text-align: center;
+    }
+    
+    .character-body {
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .character-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        background-color: #457b9d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        color: white;
+        border: 3px solid white;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .character-name {
+        font-size: 1.4rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .character-role {
+        color: #457b9d;
+        font-weight: 500;
+        margin-bottom: 15px;
+    }
+    
+    .feature-box {
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 20px;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: transform 0.3s;
+        height: 100%;
+        border: 1px solid #e1e1e1;
+    }
+    
+    .feature-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        color: #457b9d;
+    }
+    
+    .start-button {
+        background: linear-gradient(to right, #e63946, #457b9d);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        font-size: 1.2rem;
+        border-radius: 30px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        transition: all 0.3s;
+    }
+    
+    .start-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+        background: linear-gradient(to right, #d52b39, #3d6e8d);
+        color: white;
+    }
+    
+    .tunisia-map {
+        position: relative;
+        max-width: 100%;
+        height: auto;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    }
+    
+    .cefr-levels {
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 40px;
+        border: 1px solid #e1e1e1;
+    }
+    
+    .cefr-header {
+        background-color: #457b9d;
+        color: white;
+        padding: 15px;
+        text-align: center;
+    }
+    
+    .cefr-level {
+        padding: 15px;
+        border-bottom: 1px solid #e1e1e1;
+        display: flex;
+        align-items: center;
+    }
+    
+    .cefr-level:last-child {
+        border-bottom: none;
+    }
+    
+    .level-badge {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 15px;
+        color: white;
+    }
+    
+    .a1-badge { background-color: #dc3545; }
+    .a2-badge { background-color: #fd7e14; }
+    .b1-badge { background-color: #ffc107; color: #333; }
+    .b2-badge { background-color: #28a745; }
+    .c1-badge { background-color: #17a2b8; }
+    
+    .cefr-description {
+        flex-grow: 1;
+        font-size: 0.9rem;
+    }
+    
+    .name-input {
+        border-radius: 25px;
+        padding: 12px 20px;
+        font-size: 1.1rem;
+        border: 2px solid #ced4da;
+        transition: all 0.3s;
+        margin-right: 15px;
+    }
+    
+    .name-input:focus {
+        border-color: #457b9d;
+        box-shadow: 0 0 0 0.25rem rgba(69, 123, 157, 0.25);
+    }
+    
+    .player-form {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 30px;
+        margin-bottom: 20px;
+    }
+    
+    @media (max-width: 768px) {
+        .player-form {
+            flex-direction: column;
+        }
+        
+        .name-input {
+            width: 100%;
+            margin-right: 0;
+            margin-bottom: 15px;
+        }
+        
+        .start-button {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero section -->
+<section class="hero-section text-center">
+    <div class="container">
+        <div class="hero-text">
+            <h1 class="hero-heading">Welcome to Tunisia!</h1>
+            <p class="hero-subheading">Join the Cultural Event Planning Committee and showcase your language skills</p>
+            <a href="#start-game" class="btn btn-light btn-lg px-4">
+                <i class="fas fa-play-circle me-2"></i>Get Started
+            </a>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Game description -->
+            <div class="game-description mb-4">
+                <h2 class="mb-3"><i class="fas fa-info-circle text-primary me-2"></i>About The Game</h2>
+                <p>You've been selected to join the <strong>Cultural Event Planning Committee</strong> at a Tunisian university. Your mission is to help organize a major event showcasing various cultural traditions.</p>
+                <p>Before taking on responsibilities, you'll attend an orientation meeting where your language abilities will be assessed through natural conversations with committee members.</p>
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i> This interactive experience will evaluate your language skills based on the Common European Framework of Reference (CEFR) levels from A1 to C1.
+                </div>
+            </div>
+            
+            <!-- Game features -->
+            <h3 class="mb-4"><i class="fas fa-star text-primary me-2"></i>Key Features</h3>
+            <div class="row mb-4">
+                <div class="col-md-6 mb-4">
+                    <div class="feature-box">
+                        <div class="feature-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h4>Interactive Dialogue</h4>
+                        <p>Engage in meaningful conversations with committee members to showcase your language skills.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="feature-box">
+                        <div class="feature-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h4>AI Assessment</h4>
+                        <p>Advanced AI evaluates your vocabulary, grammar, comprehension, and fluency in real-time.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="feature-box">
+                        <div class="feature-icon">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <h4>Achievements & XP</h4>
+                        <p>Earn experience points and unlock special achievements as you progress.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="feature-box">
+                        <div class="feature-icon">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                        <h4>CEFR Certification</h4>
+                        <p>Receive a detailed assessment of your language level based on international standards.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Start game section -->
+            <div id="start-game" class="game-container text-center p-5 mb-5">
+                <h2 class="mb-4">Ready to Join the Committee?</h2>
+                <p class="mb-4">Enter your name to begin the orientation meeting and assess your language skills.</p>
+                
+                <form action="{{ url_for('start_game') }}" method="post" class="player-form">
+                    <input type="text" class="form-control name-input" id="player_name" name="player_name" placeholder="Enter your name" required>
+                    <button type="submit" class="btn start-button">
+                        <i class="fas fa-play-circle me-2"></i>Begin Adventure
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Committee members -->
+            <div class="game-container mb-4">
+                <h3 class="text-center mb-4"><i class="fas fa-users text-primary me-2"></i>Meet The Committee</h3>
+                
+                <div class="characters-carousel">
+                    {% for name, character in npcs.items() %}
+                        <div class="character-card mb-4">
+                            <div class="character-header">
+                                <h5 class="mb-0">{{ name }}</h5>
+                            </div>
+                            <div class="character-body">
+                                <div class="character-avatar">
+                                    {{ name[0] }}{{ name[1]|default("") }}
+                                </div>
+                                <div class="character-name">{{ name }}</div>
+                                <div class="character-role">{{ character.role }}</div>
+                                <p class="mb-0 small">{{ character.description }}</p>
+                                {% if character.personality %}
+                                    <div class="mt-3">
+                                        <span class="badge bg-light text-dark">{{ character.personality }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- CEFR Levels -->
+            <div class="cefr-levels">
+                <div class="cefr-header">
+                    <h4 class="mb-0">CEFR Language Levels</h4>
+                </div>
+                <div class="cefr-level">
+                    <div class="level-badge a1-badge">A1</div>
+                    <div class="cefr-description">
+                        <strong>Beginner</strong> - Basic phrases and expressions
+                    </div>
+                </div>
+                <div class="cefr-level">
+                    <div class="level-badge a2-badge">A2</div>
+                    <div class="cefr-description">
+                        <strong>Elementary</strong> - Simple exchanges of information
+                    </div>
+                </div>
+                <div class="cefr-level">
+                    <div class="level-badge b1-badge">B1</div>
+                    <div class="cefr-description">
+                        <strong>Intermediate</strong> - Clear communication on familiar topics
+                    </div>
+                </div>
+                <div class="cefr-level">
+                    <div class="level-badge b2-badge">B2</div>
+                    <div class="cefr-description">
+                        <strong>Upper Intermediate</strong> - Fluent interaction with native speakers
+                    </div>
+                </div>
+                <div class="cefr-level">
+                    <div class="level-badge c1-badge">C1</div>
+                    <div class="cefr-description">
+                        <strong>Advanced</strong> - Fluent and spontaneous expression
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Smooth scrolling for anchor links
+        $('a[href^="#"]').on('click', function(event) {
+            event.preventDefault();
+            
+            $('html, body').animate({
+                scrollTop: $($.attr(this, 'href')).offset().top - 100
+            }, 800);
+        });
+        
+        // Random name placeholder
+        const names = [
+            'Ahmed', 'Mariam', 'Ismail', 'Layla', 'Omar', 
+            'Fatima', 'Youssef', 'Noor', 'Malik', 'Zainab'
+        ];
+        
+        const randomName = names[Math.floor(Math.random() * names.length)];
+        $('#player_name').attr('placeholder', `Enter your name (e.g., ${randomName})`);
+    });
+</script>
+{% endblock %}
