@@ -96,6 +96,27 @@ The Common European Framework of Reference for Languages (CEFR) levels used in t
 - **B2 (Upper Intermediate)**: Can interact with a degree of fluency that makes regular interaction with native speakers possible
 - **C1 (Advanced)**: Can express ideas fluently and spontaneously without much obvious searching for expressions
 
+## Key Functions
+
+### Assessment Functions
+- `assess_response(question, answer, question_type)`: Evaluates responses using Groq API with detailed CEFR criteria
+- `assess_listening_response(expected_sentence, user_response)`: Specialized assessment for listening comprehension tasks using text similarity algorithms
+- `determine_overall_level(assessment_data)`: Calculates final CEFR level using weighted scoring across all responses
+
+### Text Analysis Functions
+- `get_keyword_analysis(text)`: Analyzes vocabulary sophistication by counting basic, intermediate, and advanced words
+- `get_grammar_analysis(text)`: Examines grammatical structures, conditional forms, and sentence complexity
+- `get_level_assessment_prompt(question, answer, question_type)`: Creates detailed prompts for the AI assessment system
+
+### Audio Generation Functions
+- `generate_audio(text, output_path, voice)`: Creates spoken audio files using Edge TTS with character-specific voices
+- `initialize_audio_files()`: Ensures all required audio files exist at application startup
+
+### Game Logic Functions
+- `calculate_achievements(assessments, start_time)`: Determines which achievements the player has earned
+- `calculate_xp(assessments)`: Awards experience points based on performance and CEFR level
+- `get_ai_response(prompt, character)`: Generates in-character AI responses for personalized feedback
+
 ## API Endpoints
 
 - `/api/get-ai-feedback`: Get AI character feedback on responses
@@ -111,12 +132,10 @@ The Common European Framework of Reference for Languages (CEFR) levels used in t
 - Flask-Session: Server-side session management
 - python-dotenv: Environment variable management
 
-## Development
-
-### Project Structure
+## Project Structure
 
 ```
-tunisian-cultural-event-game/
+FARDI/
 ├── app.py              # Main application file
 ├── static/             # Static assets (CSS, JS, images, audio)
 │   ├── audio/          # Generated speech files
@@ -131,9 +150,6 @@ tunisian-cultural-event-game/
 └── requirements.txt    # Python dependencies
 ```
 
-### Adding New Features
+## License
 
-- **New Dialogues**: Add new entries to the `DIALOGUE_QUESTIONS` list
-- **New Characters**: Expand the `NPCS` dictionary with character details
-- **Assessment Criteria**: Modify the assessment weights in question objects
-
+MIT License
