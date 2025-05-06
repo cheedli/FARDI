@@ -523,12 +523,12 @@
                 
                 <!-- Response form -->
                 <div class="player-response-container">
-                    <form id="response-form" action="{{ url_for('submit_response') }}" method="post">
+                    <form id="responseForm" action="{{ url_for('submit_response') }}" method="post">
                         <input type="hidden" name="question_type" value="{{ question.type }}">
                         
                         <div class="form-group mb-3">
-                            <label for="response" class="form-label">Your Response:</label>
-                            <textarea class="form-control" id="response" name="response" rows="5" placeholder="Type your response here..." required></textarea>
+                            <label for="responseInput" class="form-label">Your Response:</label>
+                            <textarea class="form-control no-paste" id="responseInput" name="response" rows="5" placeholder="Type your response here..." required></textarea>
                             
                             <!-- Word counter -->
                             <div class="d-flex justify-content-between mt-2">
@@ -649,21 +649,46 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-    $(document).ready(function() {
-        // Word counter functionality
-        $('#response').on('input', function() {
-            const words = $(this).val().split(/\s+/).filter(word => word.length > 0).length;
-            $('#word-counter').text(words + ' words');
-        });
+$(document).ready(function() {
+    // Word counter functionality
+    $('#responseInput').on('input', function() {
+        const words = $(this).val().split(/\s+/).filter(word => word.length > 0).length;
+        $('#word-counter').text(words + ' words');
+    });
+    
+    // Fonction commune pour vérifier si le texte semble généré par IA
+    function checkAIDetection(text, callback) {
+        // Vérification locale des indices d'IA
+        const aiIndicators = checkForAiIndicators(text);
         
-        // Get feedback button click handler
-        $('#get-feedback').click(function() {
-            const response = $('#response').val();
-            if (!response) {
-                alert("Please type a response first.");
-                return;
+        if (aiIndicators.score > 0.7) {
+            // Afficher une alerte avec les raisons
+            if (confirm(`⚠️ ATTENTION ⚠️\n\nVotre réponse présente certaines caractéristiques d'un texte généré par IA:\n\n${aiIndicators.reasons.join('\n')}\n\nNous encourageons les réponses originales et personnelles.\n\nVoulez-vous quand même continuer?`)) {
+                // Si l'utilisateur confirme, procéder
+                callback(true);
+            } else {
+                // L'utilisateur a annulé
+                callback(false);
             }
+        } else {
+            // Pas d'indice d'IA ou score faible, procéder directement
+            callback(true);
+        }
+    }
+    
+    // Get feedback button click handler avec vérification IA
+    $('#get-feedback').click(function() {
+        const response = $('#responseInput').val().trim();
+        if (!response) {
+            alert("Please type a response first.");
+            return;
+        }
+        
+        // Vérifier si la réponse semble générée par IA
+        checkAIDetection(response, (shouldProceed) => {
+            if (!shouldProceed) return;
             
+            // Le reste du code pour get-feedback reste identique
             // Show typing indicator
             $('#feedback-container').removeClass('d-none');
             $('#typing-indicator').removeClass('d-none');
@@ -689,6 +714,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     setTimeout(function() {
                         $('#typing-indicator').addClass('d-none');
                         $('#ai-feedback-bubble').removeClass('d-none');
+                        $('#ai-feedback').html(data.ai_response);
                         
                         // Show assessment data if available
                         if (data.assessment) {
@@ -754,84 +780,193 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+    });
+    
+    // Gestionnaire d'événement pour le formulaire de soumission (Submit & Continue)
+    $('#responseForm').on('submit', function(e) {
+        // Empêcher la soumission par défaut
+        e.preventDefault();
         
-        // Load language tips when tips section is expanded
-        $('#languageTips').on('show.bs.collapse', function() {
-            // Load tips from API
-            $.ajax({
-                url: "{{ url_for('language_tips') }}",
-                type: "GET",
-                data: { level: "B1" }, // Default level, could be dynamic based on previous assessments
-                success: function(data) {
-                    // Display tips
-                    const tipsContainer = $('#tips-container');
-                    tipsContainer.empty();
-                    
-                    if (data.tips && data.tips.length > 0) {
-                        const tipsList = $('<ul class="mb-0"></ul>');
-                        data.tips.forEach(function(tip) {
-                            tipsList.append('<li>' + tip + '</li>');
-                        });
-                        tipsContainer.append(tipsList);
-                        
-                        // Add a "Get more tips" button
-                        const moreButton = $('<button class="btn btn-sm btn-outline-primary mt-3">Get more tips</button>');
-                        moreButton.on('click', function() {
-                            // Reload tips with the same level
-                            $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
-                            $.ajax({
-                                url: "{{ url_for('language_tips') }}",
-                                type: "GET",
-                                data: { level: data.level },
-                                success: function(newData) {
-                                    // Update tips
-                                    tipsList.empty();
-                                    newData.tips.forEach(function(tip) {
-                                        tipsList.append('<li>' + tip + '</li>');
-                                    });
-                                    
-                                    // Reset button
-                                    moreButton.html('Get more tips');
-                                },
-                                error: function() {
-                                    moreButton.html('Get more tips');
-                                    alert("Couldn't load more tips. Please try again.");
-                                }
-                            });
-                        });
-                        
-                        tipsContainer.append(moreButton);
-                    } else {
-                        tipsContainer.html('<p>No tips available for this level.</p>');
-                    }
-                },
-                error: function() {
-                    $('#tips-container').html('<p class="text-danger">Could not load language tips. Please try again later.</p>');
-                }
-            });
+        // Récupérer la réponse
+        const response = $('#responseInput').val().trim();
+        
+        // Si la réponse est vide, alerter l'utilisateur
+        if (!response) {
+            alert("Please type a response first.");
+            return false;
+        }
+        
+        // Vérifier si la réponse semble générée par IA
+        checkAIDetection(response, (shouldProceed) => {
+            if (shouldProceed) {
+                // Si l'utilisateur confirme ou si pas d'alerte, soumettre le formulaire
+                this.submit();
+            }
+        });
+    });
+    
+    // Fonction pour vérifier les indices de texte généré par IA
+    function checkForAiIndicators(text) {
+        const reasons = [];
+        let score = 0;
+        
+        // Texte trop court pour l'analyse
+        if (text.length < 50) {
+            return { score: 0, reasons: [] };
+        }
+        
+        // 1. Vérifier la longueur (les réponses IA tendent à être longues et élaborées)
+        if (text.length > 500) {
+            reasons.push("La réponse est inhabituellement longue");
+            score += 0.1;
+        }
+        
+        // 2. Vérifier les formulations typiques des IA
+        const aiPhrases = [
+            "en tant que", "je suis heureux de", "je suis ravi de", "il est important de noter que",
+            "il convient de souligner", "comme mentionné précédemment", "pour résumer", 
+            "en conclusion", "je n'ai pas accès à", "je ne peux pas", "en effet,", "par conséquent,"
+        ];
+        
+        let phrasesFound = 0;
+        aiPhrases.forEach(phrase => {
+            if (text.toLowerCase().includes(phrase.toLowerCase())) {
+                phrasesFound++;
+            }
         });
         
-        // Show flash messages as toasts
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    const toast = $(`
-                        <div class="toast align-items-center text-white bg-${category === 'success' ? 'success' : 'primary'}" role="alert" aria-live="assertive" aria-atomic="true">
-                            <div class="d-flex">
-                                <div class="toast-body">
-                                    ${message}
-                                </div>
-                                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                            </div>
-                        </div>
-                    `);
+        if (phrasesFound >= 2) {
+            reasons.push(`Contient ${phrasesFound} expressions souvent utilisées par les IA`);
+            score += 0.25 * Math.min(phrasesFound / 3, 1); // Plafond à 0.25
+        }
+        
+        // 3. Vérifier la structure trop parfaite (paragraphes, ponctuation)
+        const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+        const avgSentenceLength = text.length / Math.max(sentences.length, 1);
+        
+        // Les phrases des IA ont souvent une longueur constante
+        const sentenceLengths = sentences.map(s => s.length);
+        const stdDeviation = calculateStdDeviation(sentenceLengths);
+        const variationCoeff = stdDeviation / Math.max(avgSentenceLength, 1);
+        
+        if (variationCoeff < 0.4 && sentences.length > 3) {
+            reasons.push("La structure des phrases est inhabituellement régulière");
+            score += 0.2;
+        }
+        
+        // 4. Vérifier la diversité du vocabulaire (trop élevée pour un humain sous pression)
+        const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 0);
+        const uniqueWords = new Set(words);
+        const lexicalDiversity = uniqueWords.size / Math.max(words.length, 1);
+        
+        if (lexicalDiversity > 0.8 && words.length > 30) {
+            reasons.push("La diversité du vocabulaire est inhabituellement élevée");
+            score += 0.15;
+        }
+        
+        // Réduire légèrement le score pour les réponses très courtes (< 200 caractères)
+        // car l'analyse est moins fiable
+        if (text.length < 200) {
+            score *= 0.7;
+        }
+        
+        return {
+            score: Math.min(score, 1), // Plafonner à 1
+            reasons: reasons
+        };
+    }
+    
+    // Fonction pour calculer l'écart-type
+    function calculateStdDeviation(values) {
+        if (values.length < 2) return 0;
+        
+        const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
+        const squareDiffs = values.map(value => {
+            const diff = value - avg;
+            return diff * diff;
+        });
+        const avgSquareDiff = squareDiffs.reduce((sum, val) => sum + val, 0) / squareDiffs.length;
+        return Math.sqrt(avgSquareDiff);
+    }
+    
+    // Le reste de votre code original pour les language tips et les flash messages
+    // Load language tips when tips section is expanded
+    $('#languageTips').on('show.bs.collapse', function() {
+        // Load tips from API
+        $.ajax({
+            url: "{{ url_for('language_tips') }}",
+            type: "GET",
+            data: { level: "B1" }, // Default level, could be dynamic based on previous assessments
+            success: function(data) {
+                // Display tips
+                const tipsContainer = $('#tips-container');
+                tipsContainer.empty();
+                
+                if (data.tips && data.tips.length > 0) {
+                    const tipsList = $('<ul class="mb-0"></ul>');
+                    data.tips.forEach(function(tip) {
+                        tipsList.append('<li>' + tip + '</li>');
+                    });
+                    tipsContainer.append(tipsList);
                     
-                    $('body').append(toast);
-                    toast.toast({ autohide: true, delay: 5000 }).toast('show');
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+                    // Add a "Get more tips" button
+                    const moreButton = $('<button class="btn btn-sm btn-outline-primary mt-3">Get more tips</button>');
+                    moreButton.on('click', function() {
+                        // Reload tips with the same level
+                        $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
+                        $.ajax({
+                            url: "{{ url_for('language_tips') }}",
+                            type: "GET",
+                            data: { level: data.level },
+                            success: function(newData) {
+                                // Update tips
+                                tipsList.empty();
+                                newData.tips.forEach(function(tip) {
+                                    tipsList.append('<li>' + tip + '</li>');
+                                });
+                                
+                                // Reset button
+                                moreButton.html('Get more tips');
+                            },
+                            error: function() {
+                                moreButton.html('Get more tips');
+                                alert("Couldn't load more tips. Please try again.");
+                            }
+                        });
+                    });
+                    
+                    tipsContainer.append(moreButton);
+                } else {
+                    tipsContainer.html('<p>No tips available for this level.</p>');
+                }
+            },
+            error: function() {
+                $('#tips-container').html('<p class="text-danger">Could not load language tips. Please try again later.</p>');
+            }
+        });
     });
+    
+    // Show flash messages as toasts
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                const toast = $(`
+                    <div class="toast align-items-center text-white bg-${category === 'success' ? 'success' : 'primary'}" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                ${message}
+                            </div>
+                            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                `);
+                
+                $('body').append(toast);
+                toast.toast({ autohide: true, delay: 5000 }).toast('show');
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+});
 
  
     </script>
