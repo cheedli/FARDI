@@ -5,12 +5,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const responseForm = document.getElementById('responseForm');
     const responseInput = document.getElementById('responseInput');
     
+    // Debug - vérifier si les éléments sont trouvés
+    console.log("Form found:", responseForm);
+    console.log("Input found:", responseInput);
+    
     if (responseForm && responseInput) {
         // Remplacer l'ID du compteur de mots pour qu'il fonctionne avec notre nouveau formulaire
-        if (document.getElementById('word-counter')) {
+        const wordCounter = document.getElementById('word-counter');
+        if (wordCounter) {
             responseInput.addEventListener('input', function() {
                 const words = this.value.split(/\s+/).filter(word => word.length > 0).length;
-                document.getElementById('word-counter').textContent = words + ' words';
+                wordCounter.textContent = words + ' words';
             });
         }
         
@@ -19,8 +24,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const text = responseInput.value.trim();
             
             // Vérification locale de base pour des indices d'IA
-            // Notez que cette vérification est très basique et n'est pas fiable comme l'API
             const aiIndicators = checkForAiIndicators(text);
+            console.log("AI detection result:", aiIndicators);
             
             if (aiIndicators.score > 0.7) {
                 // Empêcher la soumission automatique
@@ -32,6 +37,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     responseForm.submit();
                 }
             }
+        });
+    } else {
+        console.error("Le formulaire ou le champ de réponse n'ont pas été trouvés!");
+    }
+    
+    // Ajouter une vérification manuelle pour tester sans soumettre
+    const testButton = document.getElementById('test-ai-detection');
+    if (testButton && responseInput) {
+        testButton.addEventListener('click', function() {
+            const text = responseInput.value.trim();
+            const aiIndicators = checkForAiIndicators(text);
+            
+            // Afficher les résultats dans la console
+            console.log("Test AI Detection Result:", aiIndicators);
+            
+            // Créer ou mettre à jour l'élément de résultat de test
+            let resultElement = document.getElementById('ai-test-result');
+            if (!resultElement) {
+                resultElement = document.createElement('div');
+                resultElement.id = 'ai-test-result';
+                this.parentNode.appendChild(resultElement);
+            }
+            
+            // Afficher les résultats
+            resultElement.innerHTML = `
+                <div class="mt-3 p-3 border ${aiIndicators.score > 0.7 ? 'border-warning bg-warning-subtle' : 'border-success bg-success-subtle'}">
+                    <h5>Résultat du test IA (score: ${(aiIndicators.score * 100).toFixed(1)}%)</h5>
+                    ${aiIndicators.reasons.length > 0 
+                        ? `<ul>${aiIndicators.reasons.map(reason => `<li>${reason}</li>`).join('')}</ul>` 
+                        : '<p>Aucun indicateur d\'IA détecté.</p>'}
+                </div>
+            `;
         });
     }
 });

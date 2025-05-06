@@ -1,0 +1,997 @@
+<!-- templates/results.html -->
+{% extends "base.html" %} {% block title %}Assessment Results{% endblock %} {%
+block extra_head %}
+<style>
+  .results-container {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e1e1e1;
+    padding: 30px;
+    margin-bottom: 30px;
+  }
+
+  .level-badge {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin: 0 auto 20px;
+  }
+
+  .level-badge.a1 {
+    background: linear-gradient(135deg, #dc3545, #ff7d8c);
+  }
+  .level-badge.a2 {
+    background: linear-gradient(135deg, #fd7e14, #ffb686);
+  }
+  .level-badge.b1 {
+    background: linear-gradient(135deg, #ffc107, #ffe083);
+    color: #333;
+  }
+  .level-badge.b2 {
+    background: linear-gradient(135deg, #28a745, #5dd879);
+  }
+  .level-badge.c1 {
+    background: linear-gradient(135deg, #17a2b8, #61dafb);
+  }
+
+  .level-badge .level {
+    font-size: 2.5rem;
+    line-height: 1;
+  }
+
+  .level-badge .level-name {
+    font-size: 0.85rem;
+    margin-top: 5px;
+  }
+
+  .congrats-header {
+    background: linear-gradient(135deg, #457b9d, #e63946);
+    border-radius: 10px;
+    color: white;
+    padding: 20px;
+    margin-bottom: 30px;
+    text-align: center;
+  }
+
+  .congrats-header h1 {
+    margin-bottom: 0;
+    font-size: 2.5rem;
+  }
+
+  .skill-progress {
+    height: 10px;
+    border-radius: 5px;
+  }
+
+  .skill-label {
+    font-weight: 500;
+    margin-bottom: 5px;
+  }
+
+  .skill-level {
+    font-weight: bold;
+    text-align: right;
+  }
+
+  .card-header-success {
+    background-color: #28a745;
+    color: white;
+  }
+
+  .card-header-primary {
+    background-color: #457b9d;
+    color: white;
+  }
+
+  .card-header-info {
+    background-color: #17a2b8;
+    color: white;
+  }
+
+  .level-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .level-card.active {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    border-color: #457b9d;
+  }
+
+  .achievement-card {
+    text-align: center;
+    transition: transform 0.3s;
+  }
+
+  .achievement-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .achievement-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: #457b9d;
+  }
+
+  .achievement-title {
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+
+  .achievement-desc {
+    font-size: 0.9rem;
+    color: #6c757d;
+  }
+
+  .achievement-locked {
+    opacity: 0.5;
+    filter: grayscale(1);
+  }
+
+  .xp-container {
+    background-color: #28a745;
+    color: white;
+    border-radius: 20px;
+    padding: 5px 15px;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .xp-icon {
+    font-size: 1.2rem;
+    margin-right: 5px;
+  }
+
+  .progress-levels {
+    margin-top: 30px;
+  }
+
+  .progress-level {
+    display: flex;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #e1e1e1;
+    align-items: center;
+  }
+
+  .progress-level.locked {
+    opacity: 0.7;
+    filter: grayscale(0.5);
+  }
+
+  .progress-level-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #457b9d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    color: white;
+    font-size: 1.5rem;
+  }
+
+  .progress-level-icon.locked {
+    background-color: #6c757d;
+  }
+
+  .progress-level-content {
+    flex-grow: 1;
+  }
+
+  .progress-level-status {
+    font-size: 0.9rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .progress-level-status.unlocked {
+    background-color: #28a745;
+    color: white;
+  }
+
+  .progress-level-status.locked {
+    background-color: #6c757d;
+    color: white;
+  }
+
+  .certificate-btn {
+    background: linear-gradient(135deg, #457b9d, #e63946);
+    border: none;
+  }
+
+  .certificate-btn:hover {
+    background: linear-gradient(135deg, #3d6e8d, #d52b39);
+  }
+
+  .response-text {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 10px 15px;
+    border-left: 4px solid #457b9d;
+  }
+
+  .assessment-detail {
+    background-color: #e9ecef;
+    border-radius: 5px;
+    padding: 10px 15px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="row justify-content-center my-4">
+  <div class="col-lg-9">
+    <!-- Congratulations header -->
+    <div class="congrats-header">
+      <h1>Congratulations, {{ player_name }}!</h1>
+      <p class="lead mb-0">
+        You've completed the Cultural Event Planning orientation.
+      </p>
+    </div>
+
+    <div class="row">
+      <!-- Main results column -->
+      <div class="col-md-8">
+        <!-- CEFR Level results -->
+         <!-- CEFR Level results -->
+        <div class="results-container mb-4">
+          <div class="text-center mb-4">
+            <div class="level-badge {{ overall_level|lower }}">
+              <div class="level">{{ overall_level }}</div>
+              <div class="level-name">{{ overall_level.split('-')[0] }}</div>
+            </div>
+            <h3>Your Language Level</h3>
+            <p class="lead">{{ level_description }}</p>
+
+            <div class="xp-container my-3">
+              <span class="xp-icon">✨</span> {{ xp }} XP Earned
+            </div>
+          </div>
+
+          <!-- Language skills breakdown -->
+          <h4 class="mb-3">Skills Breakdown</h4>
+
+          <div class="row mb-3">
+            <div class="col-8 col-md-9">
+              <div class="skill-label">Vocabulary</div>
+              <div class="progress">
+                <div
+                  class="progress-bar bg-success"
+                  role="progressbar"
+                  style="width: {{ {'A1': 20, 'A2': 40, 'B1': 60, 'B2': 80, 'C1': 100}[skill_levels.vocabulary|default(overall_level)] }}%"
+                  aria-valuenow="{{ {'A1': 20, 'A2': 40, 'B1': 60, 'B2': 80, 'C1': 100}[skill_levels.vocabulary|default(overall_level)] }}"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                ></div>
+              </div>
+            </div>
+            <div class="col-4 col-md-3">
+              <div class="skill-level">
+                {{ skill_levels.vocabulary|default(overall_level) }}
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-8 col-md-9">
+              <div class="skill-label">Grammar</div>
+              <div class="progress">
+                <div
+                  class="progress-bar bg-info"
+                  role="progressbar"
+                  style="width: {{ {'A1': 20, 'A2': 40, 'B1': 60, 'B2': 80, 'C1': 100}[skill_levels.grammar|default(overall_level)] }}%"
+                  aria-valuenow="{{ {'A1': 20, 'A2': 40, 'B1': 60, 'B2': 80, 'C1': 100}[skill_levels.grammar|default(overall_level)] }}"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                ></div>
+              </div>
+            </div>
+            <div class="col-4 col-md-3">
+              <div class="skill-level">
+                {{ skill_levels.grammar|default(overall_level) }}
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-8 col-md-9">
+              <div class="skill-label">Fluency</div>
+              <div class="progress">
+                <div
+                  class="progress-bar bg-warning"
+                  role="progressbar"
+                  style="width: {{ {'A1': 20, 'A2': 40, 'B1': 60, 'B2': 80, 'C1': 100}[skill_levels.fluency|default(overall_level)] }}%"
+                  aria-valuenow="{{ {'A1': 20, 'A2': 40, 'B1': 60, 'B2': 80, 'C1': 100}[skill_levels.fluency|default(overall_level)] }}"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                ></div>
+              </div>
+            </div>
+            <div class="col-4 col-md-3">
+              <div class="skill-level">
+                {{ skill_levels.fluency|default(overall_level) }}
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-8 col-md-9">
+              <div class="skill-label">Spelling</div>
+              <div class="progress">
+                <div
+                  class="progress-bar bg-danger"
+                  role="progressbar"
+                  style="width: {{ {'A1': 20, 'A2': 40, 'B1': 60, 'B2': 80, 'C1': 100}[skill_levels.spelling|default(overall_level)] }}%"
+                  aria-valuenow="{{ {'A1': 20, 'A2': 40, 'B1': 60, 'B2': 80, 'C1': 100}[skill_levels.spelling|default(overall_level)] }}"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                ></div>
+              </div>
+            </div>
+            <div class="col-4 col-md-3">
+              <div class="skill-level">
+                {{ skill_levels.spelling|default(overall_level) }}
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-8 col-md-9">
+              <div class="skill-label">Comprehension</div>
+              <div class="progress">
+                <div
+                  class="progress-bar bg-primary"
+                  role="progressbar"
+                  style="width: {{ {'A1': 20, 'A2': 40, 'B1': 60, 'B2': 80, 'C1': 100}[skill_levels.comprehension|default(overall_level)] }}%"
+                  aria-valuenow="{{ {'A1': 20, 'A2': 40, 'B1': 60, 'B2': 80, 'C1': 100}[skill_levels.comprehension|default(overall_level)] }}"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                ></div>
+              </div>
+            </div>
+            <div class="col-4 col-md-3">
+              <div class="skill-level">
+                {{ skill_levels.comprehension|default(overall_level) }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- AI Usage Detection Section -->
+        <div class="results-container mb-4">
+          <h4 class="mb-3">AI Usage Detection</h4>
+          <div class="text-center mb-3">
+              <div class="progress" style="height: 24px;">
+                  <div class="progress-bar {% if ai_percentage > 50 %}bg-warning{% else %}bg-success{% endif %}" 
+                      role="progressbar" 
+                      style="width: {{ ai_percentage }}%" 
+                      aria-valuenow="{{ ai_percentage }}" 
+                      aria-valuemin="0" 
+                      aria-valuemax="100">
+                      {{ ai_percentage }}%
+                  </div>
+              </div>
+              <div class="mt-2 text-muted">
+                  {{ ai_responses_count }} out of {{ responses_length }} responses detected as AI-generated
+              </div>
+          </div>
+          
+          {% if ai_percentage > 70 %}
+              <div class="alert alert-warning">
+                  <i class="fas fa-exclamation-triangle"></i> High AI usage detected in your responses. For better language learning, try to respond with your own words.
+              </div>
+          {% elif ai_percentage > 30 %}
+              <div class="alert alert-info">
+                  <i class="fas fa-info-circle"></i> Moderate AI usage detected. While AI can be helpful, personal responses promote better learning.
+              </div>
+          {% else %}
+              <div class="alert alert-success">
+                  <i class="fas fa-check-circle"></i> Congratulations on your authentic and personal responses!
+              </div>
+          {% endif %}
+          
+          {% if ai_responses_count > 0 %}
+              <div class="mt-3">
+                  <h5>AI Detection Patterns</h5>
+                  <ul class="list-group">
+                      {% for response in responses %}
+                          {% if response.ai_generated and response.ai_score > 0.5 %}
+                              <li class="list-group-item">
+                                  <strong>Question {{ response.step }}:</strong> AI score: {{ (response.ai_score * 100)|round }}%
+                                  {% if response.ai_reasons %}
+                                      <ul class="mt-2 mb-0">
+                                          {% for reason in response.ai_reasons[:2] %}
+                                              <li>{{ reason }}</li>
+                                          {% endfor %}
+                                      </ul>
+                                  {% endif %}
+                              </li>
+                          {% endif %}
+                      {% endfor %}
+                  </ul>
+              </div>
+          {% endif %}
+        </div>
+
+        <!-- Achievements section -->
+        <div class="results-container mb-4">
+          <h3 class="mb-4">Achievements</h3>
+
+          <div class="row row-cols-1 row-cols-md-3 g-4">
+            {% for achievement_key, achievement in achievements.items() %}
+            <div class="col">
+              <div
+                class="card h-100 achievement-card {{ 'achievement-locked' if achievement_key not in achievements_earned }}"
+              >
+                <div class="card-body">
+                  <div class="achievement-icon">
+                    {% if achievement_key == 'quick_thinker' %}
+                    <i class="fas fa-bolt"></i>
+                    {% elif achievement_key == 'consistent_performer' %}
+                    <i class="fas fa-bullseye"></i>
+                    {% elif achievement_key == 'vocabulary_master' %}
+                    <i class="fas fa-book"></i>
+                    {% elif achievement_key == 'grammar_expert' %}
+                    <i class="fas fa-pen-fancy"></i>
+                    {% elif achievement_key == 'communicator' %}
+                    <i class="fas fa-comments"></i>
+                    {% else %}
+                    <i class="fas fa-medal"></i>
+                    {% endif %}
+                  </div>
+                  <h5 class="achievement-title">{{ achievement.name }}</h5>
+                  <p class="achievement-desc">{{ achievement.description }}</p>
+                </div>
+                <div class="card-footer text-center">
+                  {% if achievement_key in achievements_earned %}
+                  <span class="badge bg-success">Unlocked!</span>
+                  {% else %}
+                  <span class="badge bg-secondary">Locked</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- CEFR Level guide -->
+        <div class="results-container mb-4">
+          <h3 class="mb-4">CEFR Level Guide</h3>
+
+          <div class="row row-cols-1 row-cols-md-2 g-4">
+            {% for level, description in cefr_levels.items() %}
+            <div class="col">
+              <div
+                class="card level-card h-100 {{ 'active' if level == overall_level }}"
+              >
+                <div
+                  class="card-header {{ 'card-header-primary' if level == overall_level }}"
+                >
+                  <h5 class="mb-0">{{ level }}</h5>
+                </div>
+                <div class="card-body">
+                  <p class="card-text">{{ description }}</p>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Progress levels -->
+        <div class="progress-levels mb-4">
+          <h3 class="mb-4">Your Progress Path</h3>
+
+          {% for level in progress_levels %}
+          <div class="progress-level {{ 'locked' if not level.is_unlocked }}">
+            <div
+              class="progress-level-icon {{ 'locked' if not level.is_unlocked }}"
+            >
+              <i
+                class="fas fa-{{ 'lock' if not level.is_unlocked else 'check' }}"
+              ></i>
+            </div>
+            <div class="progress-level-content">
+              <h5 class="mb-1">{{ level.name }}</h5>
+              <p class="mb-0">{{ level.description }}</p>
+              {% if level.required_level %}
+              <small class="text-muted"
+                >Required level: {{ level.required_level }}</small
+              >
+              {% endif %}
+            </div>
+            <div
+              class="progress-level-status {{ 'unlocked' if level.is_unlocked else 'locked' }}"
+            >
+              {{ 'Unlocked' if level.is_unlocked else 'Locked' }}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Response details (collapsible) -->
+        <div class="results-container">
+          <h3 class="mb-4">Detailed Assessment</h3>
+
+          <div class="accordion" id="assessmentAccordion">
+            {% for assessment in assessments %}
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="heading{{ assessment.step }}">
+                <button
+                  class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapse{{ assessment.step }}"
+                  aria-expanded="false"
+                  aria-controls="collapse{{ assessment.step }}"
+                >
+                  <strong
+                    >Question {{ assessment.step }}: {{
+                    assessment.type|replace('_', ' ')|title }}</strong
+                  >
+                  <span
+                    class="ms-auto badge bg-{{ 'secondary' if assessment.level == 'A1' else 'info' if assessment.level == 'A2' else 'primary' if assessment.level == 'B1' else 'success' if assessment.level == 'B2' else 'warning text-dark' }}"
+                  >
+                    Level: {{ assessment.level }}
+                  </span>
+                </button>
+              </h2>
+              <div
+                id="collapse{{ assessment.step }}"
+                class="accordion-collapse collapse"
+                aria-labelledby="heading{{ assessment.step }}"
+                data-bs-parent="#assessmentAccordion"
+              >
+                <div class="accordion-body">
+                  <div class="mb-3">
+                    <strong>Your Response:</strong>
+                    <div class="response-text mt-2">
+                      {{ responses[assessment.step-1].response }}
+                    </div>
+                  </div>
+
+                  <!-- Display detailed assessment if available -->
+                  {% if assessment.vocabulary_assessment or assessment.grammar_assessment or assessment.spelling_assessment or assessment.fluency_assessment or assessment.comprehension_assessment %}
+                  <div class="mt-4">
+                    <strong>Assessment Details:</strong>
+
+                    {% if assessment.vocabulary_assessment %}
+                    <div class="assessment-detail">
+                      <strong>Vocabulary:</strong> {{
+                      assessment.vocabulary_assessment }}
+                    </div>
+                    {% endif %} {% if assessment.grammar_assessment %}
+                    <div class="assessment-detail">
+                      <strong>Grammar:</strong> {{ assessment.grammar_assessment
+                      }}
+                    </div>
+                    {% endif %}{% if assessment.spelling_assessment %}
+                    <div class="assessment-detail">
+                      <strong>Spelling:</strong> {{ assessment.spelling_assessment|default("No spelling assessment available.")
+                      }}
+                    </div>
+                    {% endif %}{% if assessment.fluency_assessment %}
+                    <div class="assessment-detail">
+                      <strong>Fluency:</strong> {{ assessment.fluency_assessment
+                      }}
+                    </div>
+                    {% endif %} {% if assessment.comprehension_assessment %}
+                    <div class="assessment-detail">
+                      <strong>Comprehension:</strong> {{
+                      assessment.comprehension_assessment }}
+                    </div>
+                    {% endif %}
+                    {% if assessment.ai_generated %}
+    <div class="alert alert-warning mt-3">
+        <strong><i class="fas fa-robot"></i> Content likely AI-generated ({{ (assessment.ai_score * 100)|round }}%)</strong>
+        <p class="mt-2 mb-0">This response was detected as likely generated by artificial intelligence. Original and personal responses are encouraged for better learning.</p>
+              {% if assessment.ai_reasons %}
+                  <div class="mt-2">
+                      <strong>Detected patterns:</strong>
+                      <ul class="mb-0">
+                          {% for reason in assessment.ai_reasons[:3] %}
+                              <li>{{ reason }}</li>
+                          {% endfor %}
+                      </ul>
+                  </div>
+              {% endif %}
+          </div>
+      {% endif %}
+                  </div>
+                  {% else %}
+                  <div>
+                    <strong>Assessment:</strong>
+                    <p class="mt-2">{{ assessment.justification }}</p>
+                  </div>
+                  {% endif %}
+
+                  <!-- Tips for improvement if available -->
+                  {% if assessment.tips_for_improvement %}
+                  <div class="mt-3">
+                    <strong>Tips for Improvement:</strong>
+                    <p class="mt-2">{{ assessment.tips_for_improvement }}</p>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="col-md-4">
+        <!-- Ms. Mabrouki's feedback -->
+        <div class="results-container mb-4">
+          <h4 class="mb-3">Feedback from Ms. Mabrouki</h4>
+          <div class="text-center mb-3">
+            <div class="avatar-container mx-auto">
+              <div class="avatar-fallback">MB</div>
+            </div>
+          </div>
+          <div class="dialogue-bubble">
+            <p>
+              "Thank you for participating in our orientation, {{ player_name
+              }}. Based on our discussions, I can see that your language skills
+              are at the {{ overall_level }} level.
+            </p>
+
+            <p>This means {{ level_description|lower }}</p>
+
+            <p>
+              I look forward to working with you on the cultural event planning
+              committee, where we'll continue to develop your language skills
+              while organizing a meaningful celebration of Tunisian culture."
+            </p>
+          </div>
+        </div>
+
+        <!-- Badge earned -->
+        <div class="results-container mb-4">
+          <h4 class="mb-3">Badge Earned</h4>
+          <div class="text-center">
+            <div class="mb-3">
+              <img
+                src="/static/images/badges/{{ badges[overall_level].icon }}"
+                alt="{{ badges[overall_level].name }}"
+                style="width: 100px; height: 100px"
+              />
+            </div>
+            <h5>{{ badges[overall_level].name }}</h5>
+            <p class="text-muted">{{ badges[overall_level].description }}</p>
+          </div>
+        </div>
+
+        <!-- Next challenge -->
+        <div class="results-container mb-4">
+          <h4 class="mb-3">Next Challenge</h4>
+          <div id="next-challenge-container">
+            <div class="text-center py-3">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+<!--
+        <div class="results-container mb-4">
+          <h4 class="mb-3">Utilisation de l'IA</h4>
+                    
+                    {% set ai_responses_count = 3 %}
+                    {% set responses_length = 10 %}
+                    {% set ai_percentage = (ai_responses_count / responses_length * 100)|round %}
+          <div class="text-center mb-3">
+            <div class="progress" style="height: 24px;">
+                <div class="progress-bar {% if ai_percentage > 50 %}bg-warning{% else %}bg-success{% endif %}" 
+                    role="progressbar" 
+                    style="width: {{ ai_percentage }}%" 
+                    aria-valuenow="{{ ai_percentage }}" 
+                    aria-valuemin="0" 
+                    aria-valuemax="100">
+                    {{ ai_percentage }}%
+                </div>
+            </div>
+            <div class="mt-2 text-muted">
+                {{ ai_responses_count }} sur {{ responses_length }} réponses détectées comme générées par IA
+            </div>
+        </div>
+        
+        {% if ai_percentage > 70 %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> Une utilisation élevée de l'IA a été détectée dans vos réponses. Pour un meilleur apprentissage des langues, essayez de répondre avec vos propres mots.
+            </div>
+        {% elif ai_percentage > 30 %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Une utilisation modérée de l'IA a été détectée. Bien que l'IA puisse être utile, les réponses personnelles favorisent un meilleur apprentissage.
+            </div>
+        {% else %}
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> Félicitations pour vos réponses authentiques et personnelles !
+            </div>
+        {% endif %}
+    </div>
+
+-->
+
+        <!-- Actions -->
+        <div class="results-container">
+          <h4 class="mb-3">Next Steps</h4>
+          <div class="d-grid gap-3">
+            <a
+              href="{{ url_for('certificate') }}"
+              class="btn btn-lg certificate-btn"
+            >
+              <i class="fas fa-certificate me-2"></i> Get Certificate
+            </a>
+            <a
+              href="{{ url_for('index') }}"
+              class="btn btn-lg btn-outline-primary"
+            >
+              <i class="fas fa-redo me-2"></i> Start New Assessment
+            </a>
+            <button
+              type="button"
+              class="btn btn-lg btn-outline-secondary"
+              data-bs-toggle="modal"
+              data-bs-target="#feedbackModal"
+            >
+              <i class="fas fa-comment me-2"></i> Provide Feedback
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Feedback Modal -->
+<div
+  class="modal fade"
+  id="feedbackModal"
+  tabindex="-1"
+  aria-labelledby="feedbackModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="feedbackModalLabel">Provide Feedback</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <form action="/feedback" method="post">
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="rating" class="form-label"
+              >How would you rate your experience?</label
+            >
+            <div class="rating-stars">
+              <div class="form-check form-check-inline">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="rating"
+                  id="rating1"
+                  value="1"
+                />
+                <label class="form-check-label" for="rating1">1 ★</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="rating"
+                  id="rating2"
+                  value="2"
+                />
+                <label class="form-check-label" for="rating2">2 ★</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="rating"
+                  id="rating3"
+                  value="3"
+                />
+                <label class="form-check-label" for="rating3">3 ★</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="rating"
+                  id="rating4"
+                  value="4"
+                />
+                <label class="form-check-label" for="rating4">4 ★</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="rating"
+                  id="rating5"
+                  value="5"
+                  checked
+                />
+                <label class="form-check-label" for="rating5">5 ★</label>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="feedback_text" class="form-label"
+              >What did you like about the experience?</label
+            >
+            <textarea
+              class="form-control"
+              id="feedback_text"
+              name="feedback_text"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="suggestions" class="form-label"
+              >How can we improve?</label
+            >
+            <textarea
+              class="form-control"
+              id="suggestions"
+              name="suggestions"
+              rows="3"
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Close
+          </button>
+          <button type="submit" class="btn btn-primary">Submit Feedback</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  $(document).ready(function () {
+    // Load next challenge
+    $.ajax({
+      url: "{{ url_for('next_challenge') }}",
+      type: "GET",
+      data: { level: "{{ overall_level }}" },
+      success: function (data) {
+        const challengeContainer = $("#next-challenge-container");
+        challengeContainer.empty();
+
+        const challengeCard = $(`
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Try this ${data.level} level challenge:</h5>
+                            <p class="card-text">${data.challenge}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="text-success"><i class="fas fa-award"></i> +${data.xp_reward} XP reward</span>
+                                <button class="btn btn-sm btn-outline-primary">Accept Challenge</button>
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+        challengeContainer.append(challengeCard);
+
+        // Handle the "Accept Challenge" button
+        challengeCard.find("button").on("click", function () {
+          // In a real app, this would take you to a new challenge
+          // For now, we'll just show a message
+          $(this)
+            .prop("disabled", true)
+            .html('<i class="fas fa-check"></i> Accepted');
+          alert("This feature will be available in the next version!");
+        });
+      },
+      error: function () {
+        $("#next-challenge-container").html(
+          '<p class="text-danger">Could not load next challenge. Please try again later.</p>'
+        );
+      },
+    });
+
+    // Animate skill bars on load
+    $(".progress-bar").each(function () {
+      const bar = $(this);
+      const width = bar.attr("aria-valuenow") + "%";
+      bar.css("width", "0%").animate({ width: width }, 1000);
+    });
+
+    // Create confetti effect
+    const createConfetti = () => {
+      const canvas = document.createElement("canvas");
+      canvas.style.position = "fixed";
+      canvas.style.top = "0";
+      canvas.style.left = "0";
+      canvas.style.pointerEvents = "none";
+      canvas.style.zIndex = "1000";
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      document.body.appendChild(canvas);
+
+      const ctx = canvas.getContext("2d");
+      const pieces = [];
+      const numberOfPieces = 100;
+      const colors = ["#e63946", "#457b9d", "#1d3557", "#f1faee", "#a8dadc"];
+
+      for (let i = 0; i < numberOfPieces; i++) {
+        pieces.push({
+          x: Math.random() * canvas.width,
+          y: -20,
+          rotation: Math.random() * 360,
+          size: Math.random() * 15 + 5,
+          speed: Math.random() * 2 + 1,
+          color: colors[Math.floor(Math.random() * colors.length)],
+        });
+      }
+
+      const animate = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        pieces.forEach((piece) => {
+          piece.y += piece.speed;
+          piece.rotation += 2;
+
+          ctx.save();
+          ctx.translate(piece.x, piece.y);
+          ctx.rotate((piece.rotation * Math.PI) / 180);
+          ctx.fillStyle = piece.color;
+          ctx.fillRect(
+            -piece.size / 2,
+            -piece.size / 2,
+            piece.size,
+            piece.size
+          );
+          ctx.restore();
+
+          if (piece.y > canvas.height) {
+            piece.y = -20;
+            piece.x = Math.random() * canvas.width;
+          }
+        });
+
+        requestAnimationFrame(animate);
+      };
+
+      animate();
+
+      // Remove confetti after 5 seconds
+      setTimeout(() => {
+        canvas.remove();
+      }, 5000);
+    };
+
+    // Trigger confetti
+    setTimeout(createConfetti, 500);
+  });
+</script>
+{% endblock %}
