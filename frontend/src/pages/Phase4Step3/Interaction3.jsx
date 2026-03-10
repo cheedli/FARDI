@@ -14,6 +14,7 @@ import {
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import SushiSpellGame from '../../components/SushiSpellGame.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 3 Interaction 3: Sushi Spell Game
@@ -28,6 +29,7 @@ const VOCABULARY_WORDS = [
 
 export default function Phase4Step3Interaction3() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 3, context: 'main' })
   const [answer, setAnswer] = useState('')
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -35,6 +37,7 @@ export default function Phase4Step3Interaction3() {
   const [gameResult, setGameResult] = useState(null)
 
   const handleGameComplete = (result) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: result })
     console.log('Game completed:', result)
     setGameResult(result)
   }

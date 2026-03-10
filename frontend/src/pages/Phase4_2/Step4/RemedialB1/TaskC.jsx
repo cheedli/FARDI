@@ -16,6 +16,7 @@ import {
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 4 - Level B1 - Task C: Wordshake Quiz
@@ -81,6 +82,7 @@ const QUESTIONS = [
 
 export default function Phase4_2Step4RemedialB1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 3, context: 'remedial_b1' })
   const [selectedAnswers, setSelectedAnswers] = useState(Array(6).fill(null))
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
@@ -113,6 +115,7 @@ export default function Phase4_2Step4RemedialB1TaskC() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

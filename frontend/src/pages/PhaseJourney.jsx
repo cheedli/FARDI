@@ -30,7 +30,7 @@ const PHASES = [
     icon: GroupIcon,
     color: '#0ea5e9',
     gradient: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
-    path: '/phase2/intro',
+    path: '/phase2',
     description: 'Plan a Tunisian cultural celebration with your team',
   },
   {
@@ -110,10 +110,21 @@ export default function PhaseJourney() {
     return 0
   }, [data, phaseStates])
 
+  const isDark = theme.palette.mode === 'dark'
+  const bg = isDark ? '#0f172a' : 'white'
+  const cardBg = isDark ? '#1e293b' : 'white'
+  const border = isDark ? '#334155' : '#e2e8f0'
+  const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
+  const textSecondary = isDark ? '#94a3b8' : '#64748b'
+  const textMuted = isDark ? '#64748b' : '#94a3b8'
+  const lockedNodeBg = isDark ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' : 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)'
+  const lockedBorder = isDark ? '#475569' : '#f1f5f9'
+  const progressTrack = isDark ? '#1e293b' : '#f1f5f9'
+
   const completedCount = PHASES.filter(p => phaseStates[p.id]?.completed).length
 
   if (loading) return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'white' }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: bg }}>
       <Box sx={{ width: 200 }}>
         <LinearProgress sx={{ borderRadius: 4, height: 4, bgcolor: '#f1f5f9', '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #6366f1, #0ea5e9)' } }} />
       </Box>
@@ -127,7 +138,7 @@ export default function PhaseJourney() {
   return (
     <Box sx={{
       minHeight: '100vh',
-      bgcolor: 'white',
+      bgcolor: bg,
       position: 'relative',
       overflow: 'hidden',
     }}>
@@ -156,10 +167,10 @@ export default function PhaseJourney() {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box>
-              <Typography sx={{ fontWeight: 800, fontSize: { xs: '1.4rem', md: '1.6rem' }, color: '#0f172a', lineHeight: 1.2 }}>
+              <Typography sx={{ fontWeight: 800, fontSize: { xs: '1.4rem', md: '1.6rem' }, color: textPrimary, lineHeight: 1.2 }}>
                 Learning Journey
               </Typography>
-              <Typography sx={{ color: '#94a3b8', fontSize: '0.88rem', mt: 0.5 }}>
+              <Typography sx={{ color: textMuted, fontSize: '0.88rem', mt: 0.5 }}>
                 Track your progress through all phases
               </Typography>
             </Box>
@@ -168,7 +179,7 @@ export default function PhaseJourney() {
               label={`${completedCount}/${PHASES.length}`}
               sx={{
                 height: 30, fontWeight: 700, fontSize: '0.82rem',
-                bgcolor: '#fef3c710', color: '#92400e',
+                bgcolor: isDark ? '#451a0320' : '#fef3c710', color: isDark ? '#fbbf24' : '#92400e',
                 border: '1px solid #fde68a40',
               }}
             />
@@ -177,7 +188,7 @@ export default function PhaseJourney() {
           {/* Progress bar */}
           <Box sx={{ mt: 2, mb: 1 }}>
             <Box sx={{
-              height: 6, borderRadius: 3, bgcolor: '#f1f5f9',
+              height: 6, borderRadius: 3, bgcolor: progressTrack,
               overflow: 'hidden',
             }}>
               <motion.div
@@ -243,7 +254,7 @@ export default function PhaseJourney() {
                 <path
                   d={`M ${fromX} ${fromY} C ${fromX} ${midY}, ${toX} ${midY}, ${toX} ${toY}`}
                   fill="none"
-                  stroke="#e2e8f0"
+                  stroke={border}
                   strokeWidth="2"
                   strokeDasharray="6 6"
                 />
@@ -323,7 +334,7 @@ export default function PhaseJourney() {
                       height: 36,
                       borderRadius: '50%',
                       background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-                      border: '3px solid white',
+                      border: `3px solid ${isDark ? '#334155' : 'white'}`,
                       boxShadow: '0 4px 16px rgba(251,191,36,0.4)',
                       display: 'flex',
                       alignItems: 'center',
@@ -336,7 +347,7 @@ export default function PhaseJourney() {
                       width: 0, height: 0,
                       borderLeft: '5px solid transparent',
                       borderRight: '5px solid transparent',
-                      borderTop: '6px solid white',
+                      borderTop: `6px solid ${isDark ? '#334155' : 'white'}`,
                       mt: '-1px',
                     }} />
                   </motion.div>
@@ -365,7 +376,7 @@ export default function PhaseJourney() {
                     width: nodeSize,
                     height: nodeSize,
                     borderRadius: '50%',
-                    background: state.unlocked ? phase.gradient : 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)',
+                    background: state.unlocked ? phase.gradient : lockedNodeBg,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -377,8 +388,8 @@ export default function PhaseJourney() {
                       : isActive
                       ? `4px solid ${phase.color}`
                       : state.unlocked
-                      ? '4px solid white'
-                      : '4px solid #f1f5f9',
+                      ? `4px solid ${isDark ? '#334155' : 'white'}`
+                      : `4px solid ${lockedBorder}`,
                     position: 'relative',
                     flexShrink: 0,
                   }}
@@ -409,7 +420,7 @@ export default function PhaseJourney() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        border: '2px solid white',
+                        border: `2px solid ${isDark ? '#0f172a' : 'white'}`,
                       }}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
@@ -423,7 +434,7 @@ export default function PhaseJourney() {
                 {/* Phase label */}
                 <Box sx={{ textAlign: 'center', mt: 1.5, maxWidth: 130 }}>
                   <Typography sx={{
-                    color: state.unlocked ? '#0f172a' : '#cbd5e1',
+                    color: state.unlocked ? textPrimary : (isDark ? '#475569' : '#cbd5e1'),
                     fontWeight: 700,
                     fontSize: isMobile ? '0.8rem' : '0.88rem',
                     lineHeight: 1.2,
@@ -431,7 +442,7 @@ export default function PhaseJourney() {
                     {phase.title}
                   </Typography>
                   <Typography sx={{
-                    color: state.unlocked ? '#94a3b8' : '#e2e8f0',
+                    color: state.unlocked ? textMuted : (isDark ? '#374151' : '#e2e8f0'),
                     fontSize: '0.72rem',
                     mt: 0.3,
                     fontWeight: 500,
@@ -447,9 +458,9 @@ export default function PhaseJourney() {
                         height: 20,
                         fontSize: '0.65rem',
                         fontWeight: 700,
-                        bgcolor: '#f0fdf4',
-                        color: '#16a34a',
-                        border: '1px solid #bbf7d0',
+                        bgcolor: isDark ? '#14532d' : '#f0fdf4',
+                        color: isDark ? '#4ade80' : '#16a34a',
+                        border: isDark ? '1px solid #166534' : '1px solid #bbf7d0',
                       }}
                     />
                   )}
@@ -492,10 +503,10 @@ export default function PhaseJourney() {
             borderRadius: '50%',
             background: PHASES.every(p => phaseStates[p.id]?.completed)
               ? 'linear-gradient(135deg, #fbbf24, #f59e0b)'
-              : '#f8fafc',
+              : (isDark ? '#1e293b' : '#f8fafc'),
             border: PHASES.every(p => phaseStates[p.id]?.completed)
               ? '3px solid #fde68a'
-              : '3px solid #e2e8f0',
+              : `3px solid ${border}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -505,11 +516,11 @@ export default function PhaseJourney() {
           }}>
             <EmojiEventsIcon sx={{
               fontSize: 22,
-              color: PHASES.every(p => phaseStates[p.id]?.completed) ? 'white' : '#cbd5e1',
+              color: PHASES.every(p => phaseStates[p.id]?.completed) ? 'white' : (isDark ? '#475569' : '#cbd5e1'),
             }} />
           </Box>
           <Typography sx={{
-            color: PHASES.every(p => phaseStates[p.id]?.completed) ? '#92400e' : '#cbd5e1',
+            color: PHASES.every(p => phaseStates[p.id]?.completed) ? (isDark ? '#fbbf24' : '#92400e') : (isDark ? '#475569' : '#cbd5e1'),
             fontSize: '0.75rem', mt: 1, fontWeight: 600,
           }}>
             Journey Complete
@@ -554,7 +565,7 @@ export default function PhaseJourney() {
                 const IconComp = phase.icon
                 return (
                   <Box sx={{
-                    background: 'white',
+                    background: cardBg,
                     borderTop: `3px solid ${phase.color}`,
                     borderRadius: '20px 20px 0 0',
                     p: 3, pb: 4,
@@ -562,7 +573,7 @@ export default function PhaseJourney() {
                   }}>
                     {/* Drag handle */}
                     <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                      <Box sx={{ width: 40, height: 4, borderRadius: 2, bgcolor: '#e2e8f0' }} />
+                      <Box sx={{ width: 40, height: 4, borderRadius: 2, bgcolor: border }} />
                     </Box>
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
                       <Box sx={{
@@ -576,13 +587,13 @@ export default function PhaseJourney() {
                         <IconComp sx={{ fontSize: 26, color: 'white' }} />
                       </Box>
                       <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography sx={{ color: '#94a3b8', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                        <Typography sx={{ color: textMuted, fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                           Phase {phase.id} · {phase.subtitle}
                         </Typography>
-                        <Typography sx={{ color: '#0f172a', fontWeight: 750, fontSize: '1.15rem', mt: 0.3 }}>
+                        <Typography sx={{ color: textPrimary, fontWeight: 750, fontSize: '1.15rem', mt: 0.3 }}>
                           {phase.title}
                         </Typography>
-                        <Typography sx={{ color: '#64748b', fontSize: '0.85rem', mt: 0.5 }}>
+                        <Typography sx={{ color: textSecondary, fontSize: '0.85rem', mt: 0.5 }}>
                           {phase.description}
                         </Typography>
                       </Box>
@@ -615,8 +626,8 @@ export default function PhaseJourney() {
                         <Box sx={{
                           py: 1.6,
                           borderRadius: 3,
-                          bgcolor: '#f8fafc',
-                          color: '#94a3b8',
+                          bgcolor: isDark ? '#1e293b' : '#f8fafc',
+                          color: isDark ? '#475569' : '#94a3b8',
                           fontWeight: 600,
                           fontSize: '0.9rem',
                           textAlign: 'center',
@@ -624,7 +635,7 @@ export default function PhaseJourney() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: 1,
-                          border: '1px solid #f1f5f9',
+                          border: `1px solid ${border}`,
                         }}>
                           <LockIcon sx={{ fontSize: 18 }} />
                           Complete previous phase to unlock

@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, TextField, Alert, Chip, LinearProgress 
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import CreateIcon from '@mui/icons-material/Create'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 1 - Remedial B2 - Task B: Writing
@@ -14,6 +15,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 
 export default function RemedialB2TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 2, context: 'remedial_b2' })
   const [paragraph, setParagraph] = useState('')
   const [sentenceCount, setSentenceCount] = useState(0)
   const [submitted, setSubmitted] = useState(false)

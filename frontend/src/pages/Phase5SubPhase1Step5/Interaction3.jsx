@@ -16,6 +16,7 @@ import WordshakeGame from '../../components/phase5/WordshakeGame.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 5 Step 5: Evaluate
@@ -42,6 +43,7 @@ const ENHANCEMENT_AREAS = [
 
 export default function Phase5Step5Interaction3() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 5, interaction: 3, context: 'main' })
   const [grammarCorrectedText, setGrammarCorrectedText] = useState('')
   const [enhancedText, setEnhancedText] = useState('')
   const [gameCompleted, setGameCompleted] = useState(false)
@@ -61,6 +63,7 @@ export default function Phase5Step5Interaction3() {
   }, [])
 
   const handleGameComplete = (gameData) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: gameData })
     setGameCompleted(true)
   }
 

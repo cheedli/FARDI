@@ -7,6 +7,7 @@ import CancelIcon from '@mui/icons-material/Cancel'
 import TimerIcon from '@mui/icons-material/Timer'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 2 - Remedial B2 - Task C: Matching Game
@@ -32,6 +33,7 @@ const TIME_LIMIT = 120 // 2 minutes for all matches
 
 export default function RemedialB2TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 3, context: 'remedial_b2' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT)
@@ -130,6 +132,7 @@ export default function RemedialB2TaskC() {
   }
 
   const logTaskCompletion = async (finalScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: finalScore })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

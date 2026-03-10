@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import WordleGame from '../../../components/WordleGame.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Level A1 - Task B: Wordle-style Word Guessing Game
@@ -46,6 +47,7 @@ const SENTENCES = [
 
 export default function RemedialA1TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 2, context: 'remedial_a1' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
   const [showFinalResults, setShowFinalResults] = useState(false)
@@ -65,6 +67,7 @@ export default function RemedialA1TaskB() {
   }
 
   const logTaskCompletion = async (score, completed) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/remedial/log', {
         method: 'POST',

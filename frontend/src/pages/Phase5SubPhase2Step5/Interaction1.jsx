@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, CircularProgress, Alert } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 const FAULTY_TEXTS = {
   A2: 'Pleese welcom gests. Furst chek tiket. Then guied.',
@@ -13,6 +14,7 @@ const FAULTY_TEXTS = {
 
 export default function Phase5SubPhase2Step5Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 5, interaction: 1, context: 'main' })
   const [faultyText, setFaultyText] = useState(FAULTY_TEXTS.B1)
   const [correctedText, setCorrectedText] = useState('')
   const [evaluation, setEvaluation] = useState(null)

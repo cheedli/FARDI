@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, Alert, TextField, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { ErrorOutline, CheckCircle } from '@mui/icons-material'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 - Remedial B2 - Task D: Error Correction Game
@@ -88,6 +89,7 @@ const ERROR_SENTENCES = [
 
 export default function RemedialB2TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 4, context: 'remedial_b2' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [corrections, setCorrections] = useState(
     ERROR_SENTENCES.map(sentence =>
@@ -154,6 +156,7 @@ export default function RemedialB2TaskD() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskD', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

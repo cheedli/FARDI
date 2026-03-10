@@ -17,6 +17,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import TimerIcon from '@mui/icons-material/Timer'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 2 - Level A2 - Task A: Match Race
@@ -130,6 +131,7 @@ function DropZone({ pair, droppedWord, isCorrect, showResults }) {
 
 export default function Phase4_2Step2RemedialA2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 1, context: 'remedial_a2' })
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION)
   const [timerActive, setTimerActive] = useState(true)
   const [matches, setMatches] = useState({})
@@ -204,6 +206,7 @@ export default function Phase4_2Step2RemedialA2TaskA() {
   }
 
   const logTaskCompletion = async (score, maxScore, timeRemaining) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

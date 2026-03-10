@@ -14,6 +14,7 @@ import {
 } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 // Spec word bank
 const WORD_BANK = ['positive', 'strength', 'weakness', 'suggestion', 'improve', 'specific']
@@ -37,6 +38,7 @@ const SPEAKER_COLORS = {
 
 export default function Phase6SP2Step4RemB2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 4, interaction: 1, context: 'remedial_b2' })
   const [answers, setAnswers] = useState({
     blank1: '',
     blank2: '',

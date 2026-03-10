@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Select, MenuItem, FormControl, Alert, Chip, Stack } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const WORD_BANK = ['feedback', 'positive', 'suggestion', 'strength', 'weakness', 'improve']
 
@@ -17,6 +18,7 @@ const GAPS = [
 
 export default function Phase6SP2Step4RemA2TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 4, interaction: 2, context: 'remedial_a2' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

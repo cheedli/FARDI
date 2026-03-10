@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Stack, Alert } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import GapFillStory from '../../../components/GapFillStory.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 5 SubPhase 2 Step 2 - Level A2 - Task A: Match Race
@@ -24,6 +25,7 @@ const MATCHING_PAIRS = [
 
 export default function Phase5SubPhase2Step2RemedialA2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 2, interaction: 1, context: 'remedial_a2' })
   const [matches, setMatches] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

@@ -14,6 +14,7 @@ import {
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 3 - Level B1 - Task A
@@ -35,6 +36,7 @@ const CORRECT_ANSWERS = {
 
 export default function Phase6SP1Step3RemedialB1TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 3, interaction: 1, context: 'remedial_b1' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

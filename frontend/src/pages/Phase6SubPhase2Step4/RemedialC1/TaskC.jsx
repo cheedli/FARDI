@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, RadioGroup, FormControlLabel, Radio, Al
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const QUESTIONS = [
   {
@@ -87,6 +88,7 @@ const QUESTIONS = [
 
 export default function Phase6SP2Step4RemC1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 4, interaction: 3, context: 'remedial_c1' })
   const [selections, setSelections] = useState(QUESTIONS.map(() => null))
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

@@ -5,6 +5,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 import SendIcon from '@mui/icons-material/Send'
 import CheckIcon from '@mui/icons-material/Check'
 import DoneAllIcon from '@mui/icons-material/DoneAll'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Level A2 - Task A: Dialogue Adventure
@@ -33,46 +34,65 @@ const DIALOGUE_MESSAGES = [
 
 export default function Phase4Step5RemedialA2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 1, context: 'remedial_a2' })
   const [wordBank] = useState(() => [...WORD_BANK_ORIGINAL].sort(() => Math.random() - 0.5))
   const [selectedWord, setSelectedWord] = useState(null)
   const [answers, setAnswers] = useState({})
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
   const [displayedMessages, setDisplayedMessages] = useState([])
   const [score, setScore] = useState(0)
   const [completed, setCompleted] = useState(false)
   const messagesEndRef = useRef(null)
+  // Use ref to track index to avoid stale closures
+  const nextIndexRef = useRef(0)
+  const addingRef = useRef(false)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [displayedMessages])
 
   useEffect(() => {
-    setTimeout(() => addNextMessage(), 500)
+    const timer = setTimeout(() => addNextMessage(), 500)
+    return () => clearTimeout(timer)
   }, [])
 
   const addNextMessage = () => {
-    if (currentMessageIndex >= DIALOGUE_MESSAGES.length) return
-    const message = DIALOGUE_MESSAGES[currentMessageIndex]
-    setTimeout(() => {
-      setDisplayedMessages(prev => [...prev, {
-        ...message, status: message.sender === 'YOU' ? null : 'delivered',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }])
-      setCurrentMessageIndex(prev => prev + 1)
+    const idx = nextIndexRef.current
+    if (idx >= DIALOGUE_MESSAGES.length || addingRef.current) return
+    addingRef.current = true
+    const message = DIALOGUE_MESSAGES[idx]
 
-      // If this was a question, immediately show the next message (user's response)
-      if (message.type === 'question' && currentMessageIndex + 1 < DIALOGUE_MESSAGES.length) {
-        const nextMessage = DIALOGUE_MESSAGES[currentMessageIndex + 1]
+    setTimeout(() => {
+      setDisplayedMessages(prev => {
+        // Guard against duplicates
+        if (prev.some(m => m.id === message.id)) return prev
+        return [...prev, {
+          ...message,
+          status: message.sender === 'YOU' ? null : 'delivered',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }]
+      })
+      nextIndexRef.current = idx + 1
+
+      // If this was a question, also show the following response message
+      if (message.type === 'question' && idx + 1 < DIALOGUE_MESSAGES.length) {
+        const nextMessage = DIALOGUE_MESSAGES[idx + 1]
         if (nextMessage.type === 'response') {
           setTimeout(() => {
-            setDisplayedMessages(prev => [...prev, {
-              ...nextMessage, status: null,
-              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }])
-            setCurrentMessageIndex(prev => prev + 1)
+            setDisplayedMessages(prev => {
+              if (prev.some(m => m.id === nextMessage.id)) return prev
+              return [...prev, {
+                ...nextMessage,
+                status: null,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              }]
+            })
+            nextIndexRef.current = idx + 2
+            addingRef.current = false
           }, 600)
+          return
         }
       }
+      addingRef.current = false
     }, 800)
   }
 
@@ -130,7 +150,7 @@ export default function Phase4Step5RemedialA2TaskA() {
     setTimeout(() => setDisplayedMessages(prev => prev.map(msg => msg.id === messageId ? { ...msg, status: 'delivered' } : msg)), 500)
     setTimeout(() => setDisplayedMessages(prev => prev.map(msg => msg.id === messageId ? { ...msg, status: 'read' } : msg)), 1000)
 
-    if (currentMessageIndex < DIALOGUE_MESSAGES.length) {
+    if (nextIndexRef.current < DIALOGUE_MESSAGES.length) {
       setTimeout(() => addNextMessage(), 1500)
     } else {
       setTimeout(() => handleComplete(), 2000)
@@ -271,7 +291,7 @@ export default function Phase4Step5RemedialA2TaskA() {
           {selectedWord && <Typography variant="caption" sx={{ display: 'block', mt: 1.5, color: '#1a252f', fontWeight: 700, fontSize: '0.9rem', bgcolor: '#fff3cd', p: 1, borderRadius: 1, border: '2px solid #ffc107' }}>Filling next blank with: "{selectedWord}"</Typography>}
         </Box>
 
-        <LinearProgress variant="determinate" value={(currentMessageIndex / DIALOGUE_MESSAGES.length) * 100} sx={{ height: 3, bgcolor: 'rgba(0,0,0,0.1)', '& .MuiLinearProgress-bar': { bgcolor: '#25D366' } }} />
+        <LinearProgress variant="determinate" value={(displayedMessages.length / DIALOGUE_MESSAGES.length) * 100} sx={{ height: 3, bgcolor: 'rgba(0,0,0,0.1)', '& .MuiLinearProgress-bar': { bgcolor: '#25D366' } }} />
       </Paper>
     </Box>
   )

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, Alert, TextField, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { CheckCircle, Cancel } from '@mui/icons-material'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 - Remedial C1 - Task B: Quizlet Live Advanced Quiz
@@ -52,6 +53,7 @@ const QUIZ_QUESTIONS = [
 
 export default function RemedialC1TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 2, context: 'remedial_c1' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState(Array(QUIZ_QUESTIONS.length).fill(''))
   const [submitted, setSubmitted] = useState(false)
@@ -116,6 +118,7 @@ export default function RemedialC1TaskB() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, TextField, Alert, CircularProgress, Sta
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 const TARGET_VOCABULARY = ['correct', 'grammar', 'tense', 'past', 'present', 'agreement', 'verb']
 
@@ -21,6 +22,7 @@ function fallbackEvaluate(text) {
 
 export default function Phase6SP1Step5Int2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 5, interaction: 2, context: 'main' })
   const [text, setText] = useState('')
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)

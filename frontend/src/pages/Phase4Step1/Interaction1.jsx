@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, LinearProgress, Alert, Stack } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import MatchingGame from '../../components/MatchingGame.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 1: Engage - Marketing & Promotion
@@ -57,6 +58,7 @@ const VOCABULARY_PAIRS = [
 
 export default function Phase4Step1Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 1, context: 'main' })
   const [stepData, setStepData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

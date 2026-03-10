@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import WordshakeGame from '../../../components/WordshakeGame.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 1 - Interaction 1: Wordshake Game
@@ -22,6 +23,7 @@ const TARGET_WORDS = [
 
 export default function Phase4_2Step1Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 1, context: 'main' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
 

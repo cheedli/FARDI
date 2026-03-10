@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, Stack, Alert } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 - Remedial B1 - Task E: Tense Time Travel (Past Tense)
@@ -50,6 +51,7 @@ const SENTENCES = [
 
 export default function RemedialB1TaskE() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 5, context: 'remedial_b1' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
@@ -83,6 +85,7 @@ export default function RemedialB1TaskE() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskE', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

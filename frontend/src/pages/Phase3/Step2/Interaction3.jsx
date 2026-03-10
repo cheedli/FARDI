@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Card, CardContent, Select, MenuItem, Alert, Chip, Stack, FormControl } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 3 Step 2 - Interaction 3: Guided Explanation
@@ -51,6 +52,7 @@ const SENTENCE_PROMPTS = [
 
 export default function Phase3Step2Interaction3() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 2, interaction: 3, context: 'main' })
   const [answers, setAnswers] = useState({})
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
@@ -88,6 +90,7 @@ export default function Phase3Step2Interaction3() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/interaction/log', {
         method: 'POST',

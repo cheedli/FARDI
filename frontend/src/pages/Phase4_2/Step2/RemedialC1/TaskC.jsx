@@ -17,6 +17,7 @@ import {
 } from '@mui/material'
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 2 - Level C1 - Task C: Advanced Quiz
@@ -94,6 +95,7 @@ const QUESTIONS = [
 
 export default function Phase4_2Step2RemedialC1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 3, context: 'remedial_c1' })
   const [answers, setAnswers] = useState({})
   const [justifications, setJustifications] = useState({})
   const [showResults, setShowResults] = useState(false)
@@ -129,6 +131,7 @@ export default function Phase4_2Step2RemedialC1TaskC() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, TextField, Alert, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const STRATEGIES = [
   { id: 1, strategy: 'Find alternative', exampleCritique: 'Essential but must be quick.' },
@@ -15,6 +16,7 @@ const STRATEGIES = [
 
 export default function Phase5Step1RemedialC1TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 1, interaction: 4, context: 'remedial_c1' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [critiques, setCritiques] = useState(Array(6).fill(''))
   const [submitted, setSubmitted] = useState(false)

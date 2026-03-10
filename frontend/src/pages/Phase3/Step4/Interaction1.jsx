@@ -21,6 +21,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
 import InfoIcon from '@mui/icons-material/Info'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 3 Step 4 - Interaction 1: Budget Creation
@@ -40,6 +41,7 @@ const DEFAULT_FUNDING_SOURCES = [
 
 export default function Phase3Step4Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 4, interaction: 1, context: 'main' })
   const [costItems, setCostItems] = useState(DEFAULT_COST_ITEMS)
   const [fundingSources, setFundingSources] = useState(DEFAULT_FUNDING_SOURCES)
   const [budgetJustification, setBudgetJustification] = useState('')

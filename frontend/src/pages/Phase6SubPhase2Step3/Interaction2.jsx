@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, Alert, CircularProgress, Stack, Chip } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 const TARGET_VOCABULARY = ['specific', 'actionable', 'clear', 'example', 'improve', 'understand', 'vague', 'general']
 
@@ -20,6 +21,7 @@ function fallbackEvaluate(text) {
 
 export default function Phase6SP2Step3Int2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 3, interaction: 2, context: 'main' })
   const [text, setText] = useState('')
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)

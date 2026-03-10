@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Card, CardContent, Alert, TextField, Ci
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import CreateIcon from '@mui/icons-material/Create'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 3 Step 3 - Interaction 3: Justification Practice
@@ -53,6 +54,7 @@ const REQUIRED_CONNECTORS = ['because', 'so', 'due to']
 
 export default function Phase3Step3Interaction3() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 3, interaction: 3, context: 'main' })
   const [selectedItem, setSelectedItem] = useState(null)
   const [response, setResponse] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -151,6 +153,7 @@ export default function Phase3Step3Interaction3() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/interaction/log', {
         method: 'POST',

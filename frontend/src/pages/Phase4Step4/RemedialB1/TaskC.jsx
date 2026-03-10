@@ -5,6 +5,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 import TimerIcon from '@mui/icons-material/Timer'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 - Remedial B1 - Task C: Quiz Game
@@ -59,6 +60,7 @@ const QUIZ_QUESTIONS = [
 
 export default function RemedialB1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 3, context: 'remedial_b1' })
   const [gameStarted, setGameStarted] = useState(false)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState(null)
@@ -162,6 +164,7 @@ export default function RemedialB1TaskC() {
   }
 
   const logTaskCompletion = async (finalScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: finalScore })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

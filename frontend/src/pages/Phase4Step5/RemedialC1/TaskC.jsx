@@ -12,6 +12,7 @@ import {
 } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Level C1 - Task C: Quizlet Live
@@ -61,6 +62,7 @@ const QUESTIONS = [
 
 export default function Phase4Step5RemedialC1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 3, context: 'remedial_c1' })
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [userAnswer, setUserAnswer] = useState('')
   const [score, setScore] = useState(0)
@@ -176,6 +178,7 @@ export default function Phase4Step5RemedialC1TaskC() {
   }
 
   const logTaskCompletion = async (finalScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: finalScore })
     try {
       const response = await fetch('/api/phase4/step5/remedial/log', {
         method: 'POST',

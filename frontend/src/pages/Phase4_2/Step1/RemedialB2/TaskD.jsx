@@ -8,6 +8,7 @@ import TimerIcon from '@mui/icons-material/Timer'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import SpellcheckIcon from '@mui/icons-material/Spellcheck'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 1 - Remedial B2 - Task D: Spell & Explain
@@ -60,6 +61,7 @@ const TIME_PER_TERM = 45 // 45 seconds per term
 
 export default function RemedialB2TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 4, context: 'remedial_b2' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
   const [currentTermIndex, setCurrentTermIndex] = useState(0)
@@ -299,6 +301,7 @@ export default function RemedialB2TaskD() {
   }
 
   const logTaskCompletion = async (finalScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskD', is_correct: true, score: finalScore })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

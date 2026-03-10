@@ -8,6 +8,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ForumIcon from '@mui/icons-material/Forum'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const WORD_BANK = ['constructive', 'empathy', 'growth mindset', 'balanced', 'actionable', 'nuanced']
 
@@ -55,6 +56,7 @@ const DIALOGUE = [
 
 export default function Phase6SP2Step3RemC1TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 3, interaction: 1, context: 'remedial_c1' })
   const [answers, setAnswers] = useState({ gap1: '', gap2: '', gap3: '', gap4: '' })
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

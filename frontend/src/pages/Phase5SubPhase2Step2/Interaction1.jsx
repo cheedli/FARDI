@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, TextField, Alert, CircularProgress } fr
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import SushiSpellGame from '../../components/phase5/SushiSpellGame.jsx'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 5 SubPhase 2 Step 2: Explore
@@ -15,6 +16,7 @@ const TARGET_WORDS = ['please', 'thank you', 'first', 'then', 'careful']
 
 export default function Phase5SubPhase2Step2Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 2, interaction: 1, context: 'main' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [instructions, setInstructions] = useState('')
   const [evaluation, setEvaluation] = useState(null)
@@ -22,6 +24,7 @@ export default function Phase5SubPhase2Step2Interaction1() {
   const [submitted, setSubmitted] = useState(false)
 
   const handleGameComplete = (gameData) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction1', is_correct: true, score: gameData })
     setGameCompleted(true)
     sessionStorage.setItem('phase5_subphase2_step2_interaction1_game_score', gameData.score || '0')
   }

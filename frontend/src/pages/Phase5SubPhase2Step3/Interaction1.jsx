@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, CircularProgress, Alert } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 export default function Phase5SubPhase2Step3Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 3, interaction: 1, context: 'main' })
   const [explanation, setExplanation] = useState('')
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)

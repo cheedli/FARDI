@@ -11,9 +11,11 @@ import {
   Grid
 } from '@mui/material';
 import { CharacterMessage } from '../../../../components/Avatar.jsx';
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 const TaskD = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 4, context: 'remedial_b2' });
   const [answers, setAnswers] = useState({
     term1_spelling: '',
     term1_explanation: '',

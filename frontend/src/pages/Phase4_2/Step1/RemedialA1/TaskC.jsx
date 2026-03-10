@@ -14,6 +14,7 @@ import {
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 - Level A1 - Task C: Sentence Builder
@@ -31,6 +32,7 @@ const SENTENCE_PROMPTS = [
 
 export default function Phase4_2RemedialA1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 3, context: 'remedial_a1' })
   const [sentences, setSentences] = useState({})
   const [showResults, setShowResults] = useState(false)
   const [evaluation, setEvaluation] = useState({})
@@ -85,6 +87,7 @@ export default function Phase4_2RemedialA1TaskC() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

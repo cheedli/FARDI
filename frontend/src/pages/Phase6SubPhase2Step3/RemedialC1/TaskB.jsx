@@ -9,6 +9,7 @@ import EditNoteIcon from '@mui/icons-material/EditNote'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const PROMPTS = [
   {
@@ -79,6 +80,7 @@ function scorePromptResponse(text, prompt) {
 
 export default function Phase6SP2Step3RemC1TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 3, interaction: 2, context: 'remedial_c1' })
   const [responses, setResponses] = useState(Array(8).fill(''))
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

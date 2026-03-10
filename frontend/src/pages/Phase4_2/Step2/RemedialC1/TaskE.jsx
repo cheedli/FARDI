@@ -8,6 +8,7 @@ import TimerIcon from '@mui/icons-material/Timer'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver'
 import ExploreIcon from '@mui/icons-material/Explore'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 2 - Remedial C1 - Task E: Grammar Exercise (Mixed Tenses/Conditionals)
@@ -94,6 +95,7 @@ const TIME_LIMIT = 300 // 5 minutes for all 6 sentences
 
 export default function Phase4_2Step2RemedialC1TaskE() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 5, context: 'remedial_c1' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0)
@@ -187,6 +189,7 @@ export default function Phase4_2Step2RemedialC1TaskE() {
   }
 
   const logTaskCompletion = async (finalScore, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskE', is_correct: true, score: finalScore })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

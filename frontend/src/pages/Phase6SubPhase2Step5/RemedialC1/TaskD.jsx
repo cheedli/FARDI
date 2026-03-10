@@ -7,6 +7,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CrisisAlertIcon from '@mui/icons-material/CrisisAlert'
 import BuildIcon from '@mui/icons-material/Build'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const EXTRACTS = [
   {
@@ -58,6 +59,7 @@ const EXTRACTS = [
 
 export default function Phase6SP2Step5RemC1TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 5, interaction: 4, context: 'remedial_c1' })
   const [critiques, setCritiques] = useState(Array(EXTRACTS.length).fill(''))
   const [revealed, setRevealed] = useState(Array(EXTRACTS.length).fill(false))
   const [submitted, setSubmitted] = useState(false)

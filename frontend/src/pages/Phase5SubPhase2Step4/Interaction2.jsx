@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, CircularProgress } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 const QUEUE_TEMPLATE = `Step 1 (Preparation): Get ready.
 Example: First, position yourself at the queue area and smile.
@@ -18,6 +19,7 @@ Example: Be careful: remind guests to keep pathways clear and watch for children
 
 export default function Phase5SubPhase2Step4Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 4, interaction: 2, context: 'main' })
   const [instructions, setInstructions] = useState('')
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)

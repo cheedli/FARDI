@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import {
-  Box, Typography, Stack, Button, Chip, LinearProgress, Container, Avatar
+  Box, Typography, Stack, Button, Chip, LinearProgress, Container, Avatar, useTheme
 } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import LockIcon from '@mui/icons-material/Lock'
@@ -34,6 +35,20 @@ const PHASE_CONFIG = [
 ]
 
 export default function Dashboard() {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const navigate = useNavigate()
+
+  const bg = isDark ? '#0f172a' : 'white'
+  const cardBg = isDark ? '#1e293b' : 'white'
+  const border = isDark ? '#334155' : '#f1f5f9'
+  const borderSubtle = isDark ? '#1e293b' : '#f1f5f9'
+  const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
+  const textSecondary = isDark ? '#94a3b8' : '#64748b'
+  const textMuted = isDark ? '#64748b' : '#94a3b8'
+  const divider = isDark ? '#1e293b' : '#e2e8f0'
+  const hoverBg = isDark ? '#273344' : '#fafafa'
+
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -47,8 +62,8 @@ export default function Dashboard() {
   }, [])
 
   if (loading) return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'white' }}>
-      <Box sx={{ width: 200 }}><LinearProgress sx={{ borderRadius: 4, height: 4, bgcolor: '#f1f5f9', '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #6366f1, #0ea5e9)' } }} /></Box>
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: bg }}>
+      <Box sx={{ width: 200 }}><LinearProgress sx={{ borderRadius: 4, height: 4, bgcolor: border, '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #6366f1, #0ea5e9)' } }} /></Box>
     </Box>
   )
   if (error) return <Box sx={{ p: 6, textAlign: 'center' }}><Typography color="error">Error: {error}</Typography></Box>
@@ -112,7 +127,7 @@ export default function Dashboard() {
       if (hasPhase2Progress && currentPhase2Step) {
         return currentPhase2Step.type === 'remedial' ? currentPhase2Step.url : `/phase2/step/${currentPhase2Step.stepId}`
       }
-      return '/phase2/intro'
+      return '/phase2'
     }
     if (phase.id === 6) return '/phase6/subphase/1/step/1'
     return phase.path
@@ -128,6 +143,48 @@ export default function Dashboard() {
     }
   }
 
+  // Resume helpers
+  const getPhaseStartUrl = (phaseId) => {
+    if (phaseId === 1) return '/game'
+    if (phaseId === 2) return '/phase2'
+    if (phaseId === 4) return '/phase4/step/1/interaction/1'
+    if (phaseId === 5) return '/phase5/subphase/1/step/1/interaction/1'
+    if (phaseId === 6) return '/phase6/subphase/1/step/1/interaction/1'
+    return '/'
+  }
+
+  const buildResumeUrl = (resumeData) => {
+    const { phase, subphase, step, interaction } = resumeData
+    if (phase === 1 || phase === 2) return getPhaseStartUrl(phase)
+    if (subphase) return `/phase${phase}/subphase/${subphase}/step/${step}/interaction/${interaction}`
+    return `/phase${phase}/step/${step}/interaction/${interaction}`
+  }
+
+  const handlePhaseClick = useCallback(async (phase, state) => {
+    const href = getPhaseHref(phase)
+    // For phases 3-6 in progress, try to resume
+    if (state.inProgress && phase.id >= 3) {
+      try {
+        const res = await fetch(`/api/progress/resume?phase=${phase.id}`, { credentials: 'include' })
+        const data = await res.json()
+        if (data.success && data.data) {
+          const url = buildResumeUrl(data.data)
+          navigate(url, {
+            state: {
+              resumeFrom: data.data.item_index,
+              previousResponses: data.data.previous_responses,
+              sessionId: data.data.session_id,
+            }
+          })
+          return
+        }
+      } catch (e) {
+        // Fall through to default href
+      }
+    }
+    navigate(href)
+  }, [navigate])
+
   const completedPhases = [hasCompletedPhase1, hasCompletedPhase2, hasCompletedPhase4, hasCompletedPhase5, hasCompletedPhase6].filter(Boolean).length
   const overallProgress = (completedPhases / 5) * 100
 
@@ -139,7 +196,7 @@ export default function Dashboard() {
   ]
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'white' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: bg }}>
 
       {/* ── HEADER WITH GRADIENT ACCENT ── */}
       <Box sx={{ position: 'relative', overflow: 'hidden' }}>
@@ -152,7 +209,7 @@ export default function Dashboard() {
             <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2}>
               <Box>
                 <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 0.5 }}>
-                  <Typography sx={{ fontSize: { xs: '1.8rem', md: '2.2rem' }, fontWeight: 800, color: '#0f172a', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+                  <Typography sx={{ fontSize: { xs: '1.8rem', md: '2.2rem' }, fontWeight: 800, color: textPrimary, lineHeight: 1.2, letterSpacing: '-0.02em' }}>
                     Welcome back, {name}
                   </Typography>
                   {completedPhases === 5 && (
@@ -161,7 +218,7 @@ export default function Dashboard() {
                     </motion.div>
                   )}
                 </Stack>
-                <Typography sx={{ color: '#64748b', fontSize: '0.95rem' }}>
+                <Typography sx={{ color: textSecondary, fontSize: '0.95rem' }}>
                   {completedPhases === 5 ? 'All phases completed — amazing work!' : completedPhases > 0 ? `${completedPhases} of 5 phases completed` : 'Start your learning journey today'}
                 </Typography>
               </Box>
@@ -172,12 +229,12 @@ export default function Dashboard() {
                 sx={{
                   px: 2.5, py: 1,
                   borderRadius: 3,
-                  border: '1px solid #e2e8f0',
-                  color: '#475569',
+                  border: `1px solid ${divider}`,
+                  color: textSecondary,
                   fontWeight: 600,
-                  bgcolor: 'white',
+                  bgcolor: cardBg,
                   boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                  '&:hover': { borderColor: '#cbd5e1', bgcolor: '#fafafa', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }
+                  '&:hover': { borderColor: border, bgcolor: hoverBg, boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }
                 }}
               >
                 Learning Journey
@@ -188,12 +245,12 @@ export default function Dashboard() {
           {/* Overall progress bar */}
           {completedPhases > 0 && completedPhases < 4 && (
             <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={1}>
-              <Box sx={{ mt: 3, p: 2.5, borderRadius: 3, bgcolor: '#fafafa', border: '1px solid #f1f5f9' }}>
+              <Box sx={{ mt: 3, p: 2.5, borderRadius: 3, bgcolor: hoverBg, border: `1px solid ${borderSubtle}` }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                  <Typography sx={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>Overall Progress</Typography>
+                  <Typography sx={{ fontSize: '0.82rem', color: textSecondary, fontWeight: 600 }}>Overall Progress</Typography>
                   <Typography sx={{ fontSize: '0.82rem', color: '#6366f1', fontWeight: 700 }}>{completedPhases}/5 phases</Typography>
                 </Stack>
-                <Box sx={{ height: 6, borderRadius: 3, bgcolor: '#e2e8f0', overflow: 'hidden' }}>
+                <Box sx={{ height: 6, borderRadius: 3, bgcolor: divider, overflow: 'hidden' }}>
                   <motion.div
                     initial={{ width: '0%' }}
                     animate={{ width: `${overallProgress}%` }}
@@ -205,7 +262,7 @@ export default function Dashboard() {
             </motion.div>
           )}
         </Container>
-        <Box sx={{ height: 1, background: 'linear-gradient(90deg, transparent, #e2e8f0 20%, #e2e8f0 80%, transparent)' }} />
+        <Box sx={{ height: 1, background: `linear-gradient(90deg, transparent, ${divider} 20%, ${divider} 80%, transparent)` }} />
       </Box>
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
@@ -223,8 +280,8 @@ export default function Dashboard() {
                 <Box sx={{
                   p: 3,
                   borderRadius: 4,
-                  bgcolor: 'white',
-                  border: '1px solid #f1f5f9',
+                  bgcolor: cardBg,
+                  border: `1px solid ${border}`,
                   transition: 'all 0.3s',
                   cursor: 'default',
                   '&:hover': { borderColor: `${stat.color}30`, boxShadow: `0 12px 32px ${stat.color}12` },
@@ -238,10 +295,10 @@ export default function Dashboard() {
                       {React.cloneElement(stat.icon, { sx: { fontSize: 22, color: 'white' } })}
                     </Avatar>
                     <Box>
-                      <Typography sx={{ fontWeight: 800, fontSize: '1.5rem', color: '#0f172a', lineHeight: 1.1, letterSpacing: '-0.01em' }}>
+                      <Typography sx={{ fontWeight: 800, fontSize: '1.5rem', color: textPrimary, lineHeight: 1.1, letterSpacing: '-0.01em' }}>
                         {stat.value}
                       </Typography>
-                      <Typography sx={{ color: '#94a3b8', fontSize: '0.78rem', fontWeight: 500, mt: 0.3 }}>
+                      <Typography sx={{ color: textMuted, fontSize: '0.78rem', fontWeight: 500, mt: 0.3 }}>
                         {stat.label}
                       </Typography>
                     </Box>
@@ -255,7 +312,7 @@ export default function Dashboard() {
         {/* ── PHASE CARDS ── */}
         <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={3}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2.5 }}>
-            <Typography sx={{ fontWeight: 800, fontSize: '1.3rem', color: '#0f172a', letterSpacing: '-0.01em' }}>
+            <Typography sx={{ fontWeight: 800, fontSize: '1.3rem', color: textPrimary, letterSpacing: '-0.01em' }}>
               Assessment Phases
             </Typography>
             <Chip
@@ -263,9 +320,9 @@ export default function Dashboard() {
               size="small"
               sx={{
                 fontWeight: 700, fontSize: '0.75rem',
-                bgcolor: completedPhases === 4 ? '#f0fdf4' : '#f8fafc',
-                color: completedPhases === 4 ? '#16a34a' : '#64748b',
-                border: `1px solid ${completedPhases === 4 ? '#bbf7d0' : '#e2e8f0'}`,
+                bgcolor: completedPhases === 4 ? (isDark ? '#14532d' : '#f0fdf4') : (isDark ? '#1e293b' : '#f8fafc'),
+                color: completedPhases === 4 ? '#16a34a' : textSecondary,
+                border: `1px solid ${completedPhases === 4 ? '#bbf7d0' : divider}`,
               }}
             />
           </Stack>
@@ -288,8 +345,8 @@ export default function Dashboard() {
                   <Box sx={{
                     p: 3,
                     borderRadius: 4,
-                    bgcolor: 'white',
-                    border: '1px solid #f1f5f9',
+                    bgcolor: cardBg,
+                    border: `1px solid ${border}`,
                     opacity: state.unlocked ? 1 : 0.5,
                     transition: 'all 0.3s',
                     height: '100%',
@@ -327,10 +384,10 @@ export default function Dashboard() {
                             )}
                           </Avatar>
                           <Box>
-                            <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: state.unlocked ? '#0f172a' : '#94a3b8', lineHeight: 1.2 }}>
+                            <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: state.unlocked ? textPrimary : textMuted, lineHeight: 1.2 }}>
                               Phase {phase.id}
                             </Typography>
-                            <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: state.unlocked ? '#64748b' : '#cbd5e1' }}>
+                            <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: state.unlocked ? textSecondary : textMuted }}>
                               {phase.title}
                             </Typography>
                           </Box>
@@ -339,25 +396,25 @@ export default function Dashboard() {
                         {state.completed && (
                           <Chip size="small" label="Completed" sx={{
                             height: 22, fontSize: '0.68rem', fontWeight: 700,
-                            bgcolor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0',
+                            bgcolor: isDark ? '#14532d' : '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0',
                           }} />
                         )}
                         {state.inProgress && !state.completed && (
                           <Chip size="small" label="In Progress" sx={{
                             height: 22, fontSize: '0.68rem', fontWeight: 700,
-                            bgcolor: `${phase.color}08`, color: phase.color, border: `1px solid ${phase.color}25`,
+                            bgcolor: `${phase.color}15`, color: phase.color, border: `1px solid ${phase.color}35`,
                           }} />
                         )}
                         {!state.unlocked && (
                           <Chip size="small" label="Locked" icon={<LockIcon sx={{ fontSize: '12px !important' }} />} sx={{
                             height: 22, fontSize: '0.68rem', fontWeight: 600,
-                            bgcolor: '#f8fafc', color: '#94a3b8', border: '1px solid #f1f5f9',
+                            bgcolor: isDark ? '#1e293b' : '#f8fafc', color: textMuted, border: `1px solid ${border}`,
                           }} />
                         )}
                       </Stack>
 
                       {/* Description */}
-                      <Typography sx={{ color: '#94a3b8', fontSize: '0.83rem', lineHeight: 1.5 }}>
+                      <Typography sx={{ color: textMuted, fontSize: '0.83rem', lineHeight: 1.5 }}>
                         {phase.subtitle}
                       </Typography>
 
@@ -365,10 +422,10 @@ export default function Dashboard() {
                       {state.unlocked && progress > 0 && !state.completed && (
                         <Box>
                           <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
-                            <Typography sx={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 500 }}>Progress</Typography>
+                            <Typography sx={{ fontSize: '0.72rem', color: textMuted, fontWeight: 500 }}>Progress</Typography>
                             <Typography sx={{ fontSize: '0.72rem', color: phase.color, fontWeight: 700 }}>{Math.round(Math.min(progress, 100))}%</Typography>
                           </Stack>
-                          <Box sx={{ height: 5, borderRadius: 3, bgcolor: '#f1f5f9', overflow: 'hidden' }}>
+                          <Box sx={{ height: 5, borderRadius: 3, bgcolor: isDark ? '#334155' : '#f1f5f9', overflow: 'hidden' }}>
                             <motion.div
                               initial={{ width: '0%' }}
                               animate={{ width: `${Math.min(progress, 100)}%` }}
@@ -382,7 +439,7 @@ export default function Dashboard() {
                       {/* Action button */}
                       {state.unlocked && (
                         <Button
-                          href={getPhaseHref(phase)}
+                          onClick={() => handlePhaseClick(phase, state)}
                           fullWidth
                           endIcon={<ArrowForwardIcon sx={{ fontSize: '16px !important' }} />}
                           sx={{
@@ -391,10 +448,10 @@ export default function Dashboard() {
                             fontWeight: 600,
                             fontSize: '0.85rem',
                             ...(state.completed ? {
-                              bgcolor: '#fafafa',
-                              color: '#475569',
-                              border: '1px solid #e2e8f0',
-                              '&:hover': { bgcolor: '#f1f5f9' },
+                              bgcolor: isDark ? '#1e293b' : '#fafafa',
+                              color: textSecondary,
+                              border: `1px solid ${divider}`,
+                              '&:hover': { bgcolor: hoverBg },
                             } : {
                               background: phase.gradient,
                               color: 'white',
@@ -419,14 +476,23 @@ export default function Dashboard() {
           <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={8}>
             <Box sx={{ mb: 4 }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2.5 }}>
-                <Typography sx={{ fontWeight: 800, fontSize: '1.3rem', color: '#0f172a', letterSpacing: '-0.01em' }}>
+                <Typography sx={{ fontWeight: 800, fontSize: '1.3rem', color: textPrimary, letterSpacing: '-0.01em' }}>
                   Recent Activity
                 </Typography>
                 <Button
                   href="/results"
                   size="small"
                   endIcon={<ArrowForwardIcon sx={{ fontSize: '14px !important' }} />}
-                  sx={{ color: '#6366f1', fontWeight: 600, fontSize: '0.82rem' }}
+                  sx={{
+                    color: 'white',
+                    fontWeight: 600,
+                    fontSize: '0.82rem',
+                    bgcolor: '#6366f1',
+                    px: 2,
+                    py: 0.6,
+                    borderRadius: 2,
+                    '&:hover': { bgcolor: '#5356e8' }
+                  }}
                 >
                   View All
                 </Button>
@@ -438,8 +504,8 @@ export default function Dashboard() {
                     <Box sx={{
                       p: 2.5,
                       borderRadius: 3,
-                      bgcolor: 'white',
-                      border: '1px solid #f1f5f9',
+                      bgcolor: cardBg,
+                      border: `1px solid ${border}`,
                       transition: 'all 0.3s',
                       '&:hover': { borderColor: '#6366f125', boxShadow: '0 8px 24px rgba(99,102,241,0.08)' },
                     }}>
@@ -454,7 +520,7 @@ export default function Dashboard() {
                           </Avatar>
                           <Box>
                             <Stack direction="row" spacing={1} alignItems="center">
-                              <Typography sx={{ fontWeight: 600, fontSize: '0.92rem', color: '#0f172a' }}>
+                              <Typography sx={{ fontWeight: 600, fontSize: '0.92rem', color: textPrimary }}>
                                 Phase 1 Assessment
                               </Typography>
                               <Chip size="small" label={assessment.cefr_level} sx={{
@@ -464,10 +530,10 @@ export default function Dashboard() {
                               }} />
                             </Stack>
                             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 0.3 }}>
-                              <Typography sx={{ color: '#94a3b8', fontSize: '0.78rem' }}>
+                              <Typography sx={{ color: textMuted, fontSize: '0.78rem' }}>
                                 {assessment.completed_at ? new Date(assessment.completed_at).toLocaleDateString() : 'In Progress'}
                               </Typography>
-                              <Box sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: '#e2e8f0' }} />
+                              <Box sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: divider }} />
                               <Typography sx={{ color: '#f59e0b', fontSize: '0.78rem', fontWeight: 600 }}>
                                 {assessment.total_xp} XP
                               </Typography>
@@ -478,8 +544,15 @@ export default function Dashboard() {
                           href={assessment.completed_at ? '/results' : '/game'}
                           size="small"
                           sx={{
-                            color: '#6366f1', fontWeight: 600, fontSize: '0.8rem', minWidth: 'auto',
-                            '&:hover': { bgcolor: '#6366f108' }
+                            color: 'white',
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            bgcolor: '#6366f1',
+                            px: 2,
+                            py: 0.6,
+                            borderRadius: 2,
+                            whiteSpace: 'nowrap',
+                            '&:hover': { bgcolor: '#5356e8' }
                           }}
                         >
                           {assessment.completed_at ? 'View' : 'Continue'}
@@ -502,8 +575,8 @@ export default function Dashboard() {
               textAlign: 'center',
               position: 'relative',
               overflow: 'hidden',
-              background: 'linear-gradient(145deg, #fafafa, #ffffff)',
-              border: '1px solid #f1f5f9',
+              background: isDark ? 'linear-gradient(145deg, #1a2438, #1e293b)' : 'linear-gradient(145deg, #fafafa, #ffffff)',
+              border: `1px solid ${border}`,
             }}>
               {/* Decorative circles */}
               <Box sx={{ position: 'absolute', top: -30, right: -30, width: 150, height: 150, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.06), transparent 70%)', pointerEvents: 'none' }} />
@@ -523,10 +596,10 @@ export default function Dashboard() {
                     <RocketLaunchIcon sx={{ fontSize: 36, color: 'white' }} />
                   </Avatar>
                 </motion.div>
-                <Typography sx={{ fontWeight: 800, fontSize: '1.5rem', color: '#0f172a', mb: 1, letterSpacing: '-0.02em' }}>
+                <Typography sx={{ fontWeight: 800, fontSize: '1.5rem', color: textPrimary, mb: 1, letterSpacing: '-0.02em' }}>
                   Ready to begin?
                 </Typography>
-                <Typography sx={{ color: '#64748b', mb: 4, maxWidth: 420, mx: 'auto', fontSize: '1rem', lineHeight: 1.6 }}>
+                <Typography sx={{ color: textSecondary, mb: 4, maxWidth: 420, mx: 'auto', fontSize: '1rem', lineHeight: 1.6 }}>
                   Take a 15-minute CEFR assessment to discover your English level and unlock the full learning journey.
                 </Typography>
                 <Button

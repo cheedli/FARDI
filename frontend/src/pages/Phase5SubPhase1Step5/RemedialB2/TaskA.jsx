@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Stack, Alert } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import GapFillStory from '../../../components/GapFillStory.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const WORD_BANK_ORIGINAL = ['panic', 'fix', 'fixing']
 
@@ -21,6 +22,7 @@ const CORRECT_ANSWERS = {
 
 export default function Phase5Step5RemedialB2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 5, interaction: 1, context: 'remedial_b2' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

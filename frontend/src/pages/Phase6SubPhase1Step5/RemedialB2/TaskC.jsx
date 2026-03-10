@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Chip, Alert, Stack } from '@mui/materia
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 5 - Level B2 - Task C
@@ -23,6 +24,7 @@ const PAIRS = [
 
 export default function Phase6SP1Step5RemB2TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 5, interaction: 3, context: 'remedial_b2' })
   const [matches, setMatches] = useState({})
   const [selectedError, setSelectedError] = useState(null)
   const [submitted, setSubmitted] = useState(false)

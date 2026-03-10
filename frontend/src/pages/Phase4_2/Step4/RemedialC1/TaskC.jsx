@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, TextField, Button, Card, CardContent, Alert } from '@mui/material'
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 4 - Level C1 - Task C: Advanced Quiz
@@ -20,6 +21,7 @@ const QUIZ_ITEMS = [
 
 export default function Phase4_2Step4RemedialC1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 3, context: 'remedial_c1' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
@@ -66,6 +68,7 @@ export default function Phase4_2Step4RemedialC1TaskC() {
   }
 
   const logTaskCompletion = async (finalScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: finalScore })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

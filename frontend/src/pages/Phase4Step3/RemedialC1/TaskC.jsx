@@ -7,6 +7,7 @@ import CancelIcon from '@mui/icons-material/Cancel'
 import TimerIcon from '@mui/icons-material/Timer'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import QuizIcon from '@mui/icons-material/Quiz'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 3 - Remedial C1 - Task C: Kahoot Quiz
@@ -76,6 +77,7 @@ const TIME_PER_QUESTION = 20 // 20 seconds per question
 
 export default function RemedialC1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 3, context: 'remedial_c1' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -165,6 +167,7 @@ export default function RemedialC1TaskC() {
   }
 
   const logTaskCompletion = async (finalScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: finalScore })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

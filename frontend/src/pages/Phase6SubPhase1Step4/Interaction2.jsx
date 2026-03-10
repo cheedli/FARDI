@@ -14,6 +14,7 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 4 - Interaction 2
@@ -85,6 +86,7 @@ function fallbackEvaluate(text) {
 
 export default function Phase6SP1Step4Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 4, interaction: 2, context: 'main' })
   const [text, setText] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)

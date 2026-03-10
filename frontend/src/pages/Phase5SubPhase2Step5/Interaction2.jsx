@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, CircularProgress } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 export default function Phase5SubPhase2Step5Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 5, interaction: 2, context: 'main' })
   const [originalText, setOriginalText] = useState(sessionStorage.getItem('phase5_subphase2_step5_spelling_corrected') || '')
   const [correctedText, setCorrectedText] = useState('')
   const [evaluation, setEvaluation] = useState(null)

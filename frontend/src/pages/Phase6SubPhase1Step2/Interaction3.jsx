@@ -9,6 +9,7 @@ import {
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import SushiSpellGame from '../../components/phase5/SushiSpellGame.jsx'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 2: Explore - Interaction 3
@@ -19,9 +20,11 @@ const TARGET_WORDS = ['summary', 'report', 'evidence', 'recommend', 'achieve', '
 
 export default function Phase6SP1Step2Interaction3() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 2, interaction: 3, context: 'main' })
   const [gameCompleted, setGameCompleted] = useState(false)
 
   const handleGameComplete = async (gameData) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: gameData })
     setGameCompleted(true)
     sessionStorage.setItem('phase6_sp1_step2_interaction3_score', '1')
     try {

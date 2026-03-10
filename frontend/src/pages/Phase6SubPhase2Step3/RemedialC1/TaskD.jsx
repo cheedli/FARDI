@@ -9,6 +9,7 @@ import BuildIcon from '@mui/icons-material/Build'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const EXTRACTS = [
   {
@@ -81,6 +82,7 @@ function scoreTextField(text, keyWords) {
 
 export default function Phase6SP2Step3RemC1TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 3, interaction: 4, context: 'remedial_c1' })
   const [critiques, setCritiques] = useState(Array(5).fill(''))
   const [fixes, setFixes] = useState(Array(5).fill(''))
   const [submitted, setSubmitted] = useState(false)

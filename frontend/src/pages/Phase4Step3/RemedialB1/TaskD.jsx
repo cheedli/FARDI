@@ -7,6 +7,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import TimerIcon from '@mui/icons-material/Timer'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 3 - Remedial B1 - Task D: Flashcard Game
@@ -60,6 +61,7 @@ const FLASHCARDS = [
 
 export default function RemedialB1TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 4, context: 'remedial_b1' })
   const [gameStarted, setGameStarted] = useState(false)
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
@@ -173,6 +175,7 @@ export default function RemedialB1TaskD() {
   }
 
   const logTaskCompletion = async (score, bonus) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskD', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

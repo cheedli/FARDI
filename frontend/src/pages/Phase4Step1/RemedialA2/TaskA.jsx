@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Button, Stack, Paper, Typography, LinearProgress } from '@mui/material'
 import { PhoneCallSim } from '../../../components/exercises'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Level A2 - Task A: Chat Challenge (Dialogue Completion)
@@ -44,6 +45,7 @@ const EXERCISE_DATA = {
 
 export default function RemedialA2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 1, context: 'remedial_a2' })
   const [exerciseCompleted, setExerciseCompleted] = useState(false)
   const [exerciseResult, setExerciseResult] = useState(null)
   const [currentScore, setCurrentScore] = useState(0)
@@ -72,6 +74,7 @@ export default function RemedialA2TaskA() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/remedial/log', {
         method: 'POST',

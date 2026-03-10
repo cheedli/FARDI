@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, TextField, Alert } from '@mui/material'
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import RateReviewIcon from '@mui/icons-material/RateReview'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 3 - Level C1 - Task A: Critical Reflection
@@ -12,6 +13,7 @@ import RateReviewIcon from '@mui/icons-material/RateReview'
 
 export default function Phase3RemedialC1TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 1, context: 'remedial_c1' })
   const [critique, setCritique] = useState('')
   const [showResults, setShowResults] = useState(false)
   const [wordCount, setWordCount] = useState(0)
@@ -32,6 +34,7 @@ export default function Phase3RemedialC1TaskA() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',

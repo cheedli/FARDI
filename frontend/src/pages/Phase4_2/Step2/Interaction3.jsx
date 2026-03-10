@@ -17,6 +17,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 import SushiSpellGame from '../../../components/SushiSpellGame.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 2 - Interaction 3: Revise & Improve
@@ -27,6 +28,7 @@ const TARGET_WORDS = ['hashtag', 'caption', 'emoji', 'tag', 'call-to-action']
 
 export default function Phase4_2Step2Interaction3() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 3, context: 'main' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
   const [revision, setRevision] = useState('')
@@ -49,6 +51,7 @@ export default function Phase4_2Step2Interaction3() {
   }, [navigate])
 
   const handleGameComplete = (result) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: result })
     console.log('Sushi Spell completed:', result)
     setGameCompleted(true)
     setGameResult(result)

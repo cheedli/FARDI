@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, Card, CardContent, CardActionArea } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 5 Step 1 - Remedial B1 - Task D: Quizlet Flashcards
@@ -22,6 +23,7 @@ const FLASHCARDS = [
 
 export default function Phase5Step1RemedialB1TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 1, interaction: 4, context: 'remedial_b1' })
   const [flipped, setFlipped] = useState({})
   const [matched, setMatched] = useState(new Set())
   const [submitted, setSubmitted] = useState(false)

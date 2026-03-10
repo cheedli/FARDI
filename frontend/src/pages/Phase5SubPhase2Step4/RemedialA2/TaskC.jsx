@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 5 SubPhase 2 Step 4 - Level A2 - Task C: Sentence Builder
@@ -20,6 +21,7 @@ const EXPECTED_SENTENCES = [
 
 export default function Phase5SubPhase2Step4RemedialA2TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 4, interaction: 3, context: 'remedial_a2' })
   const [sentences, setSentences] = useState(['', '', '', '', '', ''])
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

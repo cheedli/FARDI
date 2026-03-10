@@ -16,6 +16,7 @@ import {
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 Interaction 1: Poster Description Writing
@@ -24,6 +25,7 @@ import InfoIcon from '@mui/icons-material/Info'
 
 export default function Phase4Step4Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 1, context: 'main' })
   const [description, setDescription] = useState('')
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)

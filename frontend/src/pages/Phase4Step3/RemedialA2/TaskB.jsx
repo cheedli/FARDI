@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, TextField, Alert, LinearProgress, CircularProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { CheckCircle, Cancel, TipsAndUpdates } from '@mui/icons-material'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 3 - Remedial A2 - Task B: Expand Empire
@@ -55,6 +56,7 @@ const SENTENCE_PROMPTS = [
 
 export default function RemedialA2TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 2, context: 'remedial_a2' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState(Array(SENTENCE_PROMPTS.length).fill(''))
   const [submitted, setSubmitted] = useState(false)
@@ -191,6 +193,7 @@ export default function RemedialA2TaskB() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/remedial/log', {
         method: 'POST',

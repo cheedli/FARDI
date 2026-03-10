@@ -4,6 +4,7 @@ import { Box, Paper, Typography } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import WordshakeGame from '../../components/phase5/WordshakeGame.jsx'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 1: Engage
@@ -18,8 +19,10 @@ const TARGET_WORDS = [
 
 export default function Phase6SP1Step1Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 1, interaction: 1, context: 'main' })
 
   const handleGameComplete = async (gameData) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction1', is_correct: true, score: gameData })
     // Store score in sessionStorage
     const score = gameData.score !== undefined ? gameData.score : (gameData.completed ? 1 : 0)
     sessionStorage.setItem('phase6_sp1_step1_interaction1_score', score.toString())

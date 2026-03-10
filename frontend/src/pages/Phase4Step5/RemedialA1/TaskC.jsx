@@ -12,6 +12,7 @@ import {
 } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Level A1 - Task C: Grammar Exercise (Simple Sentences)
@@ -30,6 +31,7 @@ const GRAMMAR_FIXES = [
 
 export default function Phase4Step5RemedialA1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 3, context: 'remedial_a1' })
   const [currentSentence, setCurrentSentence] = useState(0)
   const [userAnswer, setUserAnswer] = useState(GRAMMAR_FIXES[0].faulty)
   const [score, setScore] = useState(0)
@@ -74,6 +76,7 @@ export default function Phase4Step5RemedialA1TaskC() {
   }
 
   const logTaskCompletion = async (taskScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: taskScore })
     try {
       const response = await fetch('/api/phase4/step5/remedial/log', {
         method: 'POST',

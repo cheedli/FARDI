@@ -15,6 +15,7 @@ import { CharacterMessage } from '../../components/Avatar.jsx'
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Interaction 3: Coherence & Vocabulary Enhancement
@@ -39,6 +40,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 
 export default function Phase4Step5Interaction3() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 3, context: 'main' })
   const [grammarCorrected, setGrammarCorrected] = useState('')
   const [enhancedText, setEnhancedText] = useState('')
   const [evaluation, setEvaluation] = useState(null)

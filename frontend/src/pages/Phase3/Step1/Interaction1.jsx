@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import SimpleLineMatchingGame from '../../../components/SimpleLineMatchingGame.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 3 Step 1 - Interaction 1: Vocabulary Matching
@@ -46,6 +47,7 @@ const MATCHING_PAIRS = [
 
 export default function Phase3Step1Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 1, context: 'main' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
 
@@ -65,6 +67,7 @@ export default function Phase3Step1Interaction1() {
   }
 
   const logTaskCompletion = async (score, timeElapsed) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction1', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase3/interaction/log', {
         method: 'POST',

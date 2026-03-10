@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, Alert, Chip, Collapse, Stack } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const EXTRACTS = [
   {
@@ -54,6 +55,7 @@ const EXTRACTS = [
 
 export default function Phase6SP2Step4RemC1TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 4, interaction: 4, context: 'remedial_c1' })
   const [critiques, setCritiques] = useState(EXTRACTS.map(() => ''))
   const [revealed, setRevealed] = useState(EXTRACTS.map(() => false))
   const [submitted, setSubmitted] = useState(false)

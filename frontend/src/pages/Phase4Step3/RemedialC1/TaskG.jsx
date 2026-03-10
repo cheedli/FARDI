@@ -8,6 +8,7 @@ import TimerIcon from '@mui/icons-material/Timer'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver'
 import GavelIcon from '@mui/icons-material/Gavel'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 3 - Remedial C1 - Task G: Debate Duel Advanced
@@ -89,6 +90,7 @@ const TIME_LIMIT = 300 // 5 minutes for all 6 lines
 
 export default function RemedialC1TaskG() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 7, context: 'remedial_c1' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
   const [currentLineIndex, setCurrentLineIndex] = useState(0)
@@ -172,6 +174,7 @@ export default function RemedialC1TaskG() {
   }
 
   const logTaskCompletion = async (finalScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskG', is_correct: true, score: finalScore })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

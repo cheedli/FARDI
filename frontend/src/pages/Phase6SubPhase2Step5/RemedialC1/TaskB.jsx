@@ -6,6 +6,7 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const FAULTY_TEXT =
   'This report is ok. Sucesses are good. Challange part needs work. Grammer errors. Recomendations not specific. Structure is bad. Do better. Good luck!'
@@ -28,6 +29,7 @@ const PROMPTS = [
 
 export default function Phase6SP2Step5RemC1TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 5, interaction: 2, context: 'remedial_c1' })
   const [answers, setAnswers] = useState(Array(PROMPTS.length).fill(''))
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

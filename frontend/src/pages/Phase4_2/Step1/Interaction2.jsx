@@ -17,6 +17,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 import InfoIcon from '@mui/icons-material/Info'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 1 - Interaction 2: Social Media Post Discussion
@@ -36,6 +37,7 @@ const GLOSSARY_TERMS = [
 
 export default function Phase4_2Step1Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 2, context: 'main' })
   const [response, setResponse] = useState('')
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)

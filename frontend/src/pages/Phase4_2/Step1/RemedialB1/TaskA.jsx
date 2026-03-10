@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import DragDropGapFill from '../../../../components/DragDropGapFill.jsx'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 - Level B1 - Task A: Fill Quest
@@ -40,6 +41,7 @@ const ANSWERS_PART2 = {
 
 export default function Phase4_2RemedialB1TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 1, context: 'remedial_b1' })
   const [phase, setPhase] = useState(1) // 1 = first 3 sentences, 2 = second 3 sentences, 3 = complete
   const [part1Score, setPart1Score] = useState(null)
   const [totalScore, setTotalScore] = useState(0)
@@ -69,6 +71,7 @@ export default function Phase4_2RemedialB1TaskA() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/remedial/log', {
         method: 'POST',

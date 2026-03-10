@@ -5,6 +5,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 import TimerIcon from '@mui/icons-material/Timer'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Remedial B1 - Task F: Grammar Kahoot
@@ -60,6 +61,7 @@ const QUIZ_QUESTIONS = [
 
 export default function Phase4Step5RemedialB1TaskF() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 6, context: 'remedial_b1' })
   const [gameStarted, setGameStarted] = useState(false)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState(null)
@@ -163,6 +165,7 @@ export default function Phase4Step5RemedialB1TaskF() {
   }
 
   const logTaskCompletion = async (finalScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskF', is_correct: true, score: finalScore })
     try {
       await fetch('/api/phase4/step5/remedial/log', {
         method: 'POST',

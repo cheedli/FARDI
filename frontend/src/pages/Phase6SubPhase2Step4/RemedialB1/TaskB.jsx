@@ -13,6 +13,7 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const PROMPTS = [
   {
@@ -49,6 +50,7 @@ const wordCount = (text) =>
 
 export default function Phase6SP2Step4RemB1TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 4, interaction: 2, context: 'remedial_b1' })
   const [answers, setAnswers] = useState(PROMPTS.map(() => ''))
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

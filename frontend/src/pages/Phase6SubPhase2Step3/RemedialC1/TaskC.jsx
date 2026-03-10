@@ -9,6 +9,7 @@ import CancelIcon from '@mui/icons-material/Cancel'
 import QuizIcon from '@mui/icons-material/Quiz'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const QUESTIONS = [
   {
@@ -99,6 +100,7 @@ const QUESTIONS = [
 
 export default function Phase6SP2Step3RemC1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 3, interaction: 3, context: 'remedial_c1' })
   const [selected, setSelected] = useState(Array(6).fill(null))
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

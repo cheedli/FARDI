@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import QuizletLiveDebateGame from '../../../components/QuizletLiveDebateGame.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const DEBATE_PROMPTS = [
   {
@@ -19,6 +20,7 @@ const GLOSSARY_TERMS = [
 
 export default function RemedialC1TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 4, context: 'remedial_c1' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
   const [showFinalResults, setShowFinalResults] = useState(false)
@@ -40,6 +42,7 @@ export default function RemedialC1TaskD() {
   }
 
   const logTaskCompletion = async (score, responses) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskD', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

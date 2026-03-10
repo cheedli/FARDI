@@ -19,6 +19,7 @@ import CampaignIcon from '@mui/icons-material/Campaign'
 import InfoIcon from '@mui/icons-material/Info'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 3 Step 4 - Interaction 2: Sponsor Pitch
@@ -57,6 +58,7 @@ const KEY_POINTS = [
 
 export default function Phase3Step4Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 4, interaction: 2, context: 'main' })
   const [selectedSponsor, setSelectedSponsor] = useState(null)
   const [pitch, setPitch] = useState('')
   const [evaluation, setEvaluation] = useState(null)

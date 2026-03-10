@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, TextField, Alert } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const TERMS = [
   { term: 'emergency', explanation: 'Urgent problem' },
@@ -15,6 +16,7 @@ const TERMS = [
 
 export default function Phase5Step2RemedialB2TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 2, interaction: 4, context: 'remedial_b2' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [spellings, setSpellings] = useState(Array(6).fill(''))
   const [explanations, setExplanations] = useState(Array(6).fill(''))

@@ -7,6 +7,7 @@ import CancelIcon from '@mui/icons-material/Cancel'
 import TimerIcon from '@mui/icons-material/Timer'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import EditNoteIcon from '@mui/icons-material/EditNote'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 1 - Remedial B1 - Task E: Tense Time Travel
@@ -76,6 +77,7 @@ const TIME_LIMIT = 300 // 5 minutes for all 6 sentences
 
 export default function Phase4_2RemedialB1TaskE() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 5, context: 'remedial_b1' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0)
@@ -158,6 +160,7 @@ export default function Phase4_2RemedialB1TaskE() {
   }
 
   const logTaskCompletion = async (finalScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskE', is_correct: true, score: finalScore })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Stack, TextField, Alert, LinearProgress
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { CheckCircle, Cancel } from '@mui/icons-material'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 5 Step 1 - Level A2 - Task B: Sentence Expansion
@@ -56,6 +57,7 @@ const SENTENCE_PROMPTS = [
 
 export default function Phase5Step1RemedialA2TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 1, interaction: 2, context: 'remedial_a2' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState(Array(SENTENCE_PROMPTS.length).fill(''))
   const [submitted, setSubmitted] = useState(false)

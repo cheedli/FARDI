@@ -245,12 +245,13 @@ export default function VocabularyWarmup() {
       </Paper>
 
       {/* 3D Flashcard */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4, perspective: '1200px' }}>
         <Paper
           elevation={8}
           onClick={handleFlipCard}
           sx={{
-            width: 700,
+            width: { xs: '100%', sm: 700 },
+            maxWidth: 700,
             height: 450,
             display: 'flex',
             alignItems: 'center',
@@ -258,11 +259,12 @@ export default function VocabularyWarmup() {
             cursor: 'pointer',
             position: 'relative',
             transformStyle: 'preserve-3d',
-            transition: 'transform 0.6s',
+            transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
             transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-            backgroundColor: isFlipped ? '#1976d2' : '#46178f',
+            backgroundColor: 'transparent',
+            boxShadow: 'none',
             '&:hover': {
-              boxShadow: 16
+              filter: 'brightness(1.05)'
             }
           }}
         >
@@ -273,12 +275,16 @@ export default function VocabularyWarmup() {
               width: '100%',
               height: '100%',
               backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               p: 4,
-              color: 'white'
+              color: 'white',
+              backgroundColor: '#46178f',
+              borderRadius: 2,
+              boxShadow: 8
             }}
           >
             <Typography variant="overline" sx={{ mb: 2, opacity: 0.8, fontSize: '1rem' }}>
@@ -300,13 +306,17 @@ export default function VocabularyWarmup() {
               width: '100%',
               height: '100%',
               backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
               transform: 'rotateY(180deg)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               p: 5,
-              color: 'white'
+              color: 'white',
+              backgroundColor: '#1976d2',
+              borderRadius: 2,
+              boxShadow: 8
             }}
           >
             <Typography variant="overline" sx={{ mb: 2, opacity: 0.8, fontSize: '1rem' }}>

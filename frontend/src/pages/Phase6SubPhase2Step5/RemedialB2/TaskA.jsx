@@ -6,6 +6,7 @@ import {
 } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const WORD_BANK = ['positive', 'suggestion', 'specific', 'balanced', 'polite']
 
@@ -18,6 +19,7 @@ const GAPS = [
 
 export default function Phase6SP2Step5RemB2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 5, interaction: 1, context: 'remedial_b2' })
   const [selections, setSelections] = useState({ ans1: '', ans2: '', ans3: '', ans4: '' })
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

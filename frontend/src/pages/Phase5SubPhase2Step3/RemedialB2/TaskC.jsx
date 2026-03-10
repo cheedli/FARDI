@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, Radio, RadioGroup, FormControlLabel, FormControl } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 5 SubPhase 2 Step 3 - Remedial B2 - Task C: Kahoot Match
@@ -24,6 +25,7 @@ const DEFINITIONS = MATCHING_PAIRS.map(p => p.definition)
 
 export default function Phase5SubPhase2Step3RemedialB2TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 3, interaction: 3, context: 'remedial_b2' })
   const [matches, setMatches] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

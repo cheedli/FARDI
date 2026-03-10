@@ -16,6 +16,7 @@ import {
 } from '@mui/material'
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 - Level B1 - Task F: Multiple Choice Grammar Quiz
@@ -69,6 +70,7 @@ const QUESTIONS = [
 
 export default function Phase4_2RemedialB1TaskF() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 6, context: 'remedial_b1' })
   const [answers, setAnswers] = useState({})
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
@@ -99,6 +101,7 @@ export default function Phase4_2RemedialB1TaskF() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskF', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

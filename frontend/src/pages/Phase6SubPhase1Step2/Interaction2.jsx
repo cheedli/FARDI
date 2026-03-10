@@ -17,6 +17,7 @@ import { CharacterMessage } from '../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 2: Explore - Interaction 2
@@ -49,6 +50,7 @@ const determineLevel = (text) => {
 
 export default function Phase6SP1Step2Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 2, interaction: 2, context: 'main' })
   const [trialSummary, setTrialSummary] = useState('')
   const [explanation, setExplanation] = useState('')
   const [evaluation, setEvaluation] = useState(null)

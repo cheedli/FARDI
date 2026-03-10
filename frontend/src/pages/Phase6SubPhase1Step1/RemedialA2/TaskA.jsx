@@ -14,6 +14,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 1 - Level A2 - Task A
@@ -40,6 +41,7 @@ function shuffle(arr) {
 
 export default function Phase6SP1Step1RemedialA2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 1, interaction: 1, context: 'remedial_a2' })
   const shuffledDefinitions = useMemo(() => shuffle(MATCHING_PAIRS.map((p, i) => ({ ...p, idx: i }))), [])
   const [selectedWord, setSelectedWord] = useState(null) // index in MATCHING_PAIRS
   const [matches, setMatches] = useState({}) // { wordIndex: definitionIndex }

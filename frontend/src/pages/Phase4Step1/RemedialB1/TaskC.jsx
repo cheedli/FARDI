@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import QuizGameComponent from '../../../components/QuizGameComponent.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Level B1 - Task C: Wordshake Challenge (Quiz Game)
@@ -74,6 +75,7 @@ const QUIZ_QUESTIONS = [
 
 export default function RemedialB1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 3, context: 'remedial_b1' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
 
@@ -91,6 +93,7 @@ export default function RemedialB1TaskC() {
   }
 
   const logTaskCompletion = async (score, passed) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/remedial/log', {
         method: 'POST',

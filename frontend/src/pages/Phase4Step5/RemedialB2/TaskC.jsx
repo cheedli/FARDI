@@ -5,6 +5,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import AutorenewIcon from '@mui/icons-material/Autorenew'
 import TimerIcon from '@mui/icons-material/Timer'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Remedial B2 - Task C: Kahoot Match
@@ -26,6 +27,7 @@ const MATCHING_PAIRS = [
 
 export default function Phase4Step5RemedialB2TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 3, context: 'remedial_b2' })
   const [flippedCards, setFlippedCards] = useState([])
   const [matchedPairs, setMatchedPairs] = useState([])
   const [attempts, setAttempts] = useState(0)
@@ -101,6 +103,7 @@ export default function Phase4Step5RemedialB2TaskC() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/step5/remedial/log', {
         method: 'POST',

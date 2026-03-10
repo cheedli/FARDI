@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Stack, Alert } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import GapFillStory from '../../../components/GapFillStory.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 5 SubPhase 2 Step 3 - Remedial B1 - Task A: Negotiation Battle
@@ -30,6 +31,7 @@ const CORRECT_ANSWERS = {
 
 export default function Phase5SubPhase2Step3RemedialB1TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 3, interaction: 1, context: 'remedial_b1' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

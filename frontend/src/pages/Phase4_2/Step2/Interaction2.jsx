@@ -16,6 +16,7 @@ import {
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 2 - Interaction 2: Explain Engagement Element
@@ -24,6 +25,7 @@ import InfoIcon from '@mui/icons-material/Info'
 
 export default function Phase4_2Step2Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 2, context: 'main' })
   const [explanation, setExplanation] = useState('')
   const [originalCaption, setOriginalCaption] = useState('')
   const [evaluation, setEvaluation] = useState(null)

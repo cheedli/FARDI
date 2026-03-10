@@ -8,6 +8,7 @@ import TimerIcon from '@mui/icons-material/Timer'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import QuizIcon from '@mui/icons-material/Quiz'
 import RateReviewIcon from '@mui/icons-material/RateReview'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 3 - Remedial C1 - Task D: Critique Kahoot
@@ -65,6 +66,7 @@ const TIME_PER_TERM = 45 // 45 seconds per critique
 
 export default function RemedialC1TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 4, context: 'remedial_c1' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
   const [currentTermIndex, setCurrentTermIndex] = useState(0)
@@ -228,6 +230,7 @@ export default function RemedialC1TaskD() {
   }
 
   const logTaskCompletion = async (finalScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskD', is_correct: true, score: finalScore })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

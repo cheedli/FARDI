@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, Stack, Alert, CircularProgress, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const GUIDED_QUESTIONS = [
   { id: 1, term: 'promotional', question: 'What is promotional?' },
@@ -16,6 +17,7 @@ const GUIDED_QUESTIONS = [
 
 export default function RemedialB1TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 2, context: 'remedial_b1' })
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [error, setError] = useState(null)
   const [answers, setAnswers] = useState({ promotional: '', persuasive: '', targeted: '', original: '', creative: '', consistent: '', personalized: '', ethical: '' })

@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, TextField, Alert, Stack } from '@mui/ma
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 1 - Level A2 - Task C
@@ -22,6 +23,7 @@ const SENTENCE_PROMPTS = [
 
 export default function Phase6SP1Step1RemA2TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 1, interaction: 3, context: 'remedial_a2' })
   const [sentences, setSentences] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, Alert, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { CheckCircle, Cancel } from '@mui/icons-material'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 - Remedial B2 - Task C: Debate Grammar Game (Subjunctives/Modals)
@@ -88,6 +89,7 @@ const GRAMMAR_SENTENCES = [
 
 export default function RemedialB2TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 3, context: 'remedial_b2' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState(Array(GRAMMAR_SENTENCES.length).fill(''))
   const [submitted, setSubmitted] = useState(false)
@@ -139,6 +141,7 @@ export default function RemedialB2TaskC() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

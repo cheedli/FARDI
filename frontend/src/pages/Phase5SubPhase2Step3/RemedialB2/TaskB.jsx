@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, Stack, Alert, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 5 SubPhase 2 Step 3 - Remedial B2 - Task B: Explain Expedition
@@ -22,6 +23,7 @@ const GUIDED_QUESTIONS = [
 
 export default function Phase5SubPhase2Step3RemedialB2TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 3, interaction: 2, context: 'remedial_b2' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState(Array(8).fill(''))
   const [submitted, setSubmitted] = useState(false)

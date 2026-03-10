@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Alert, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import SushiSpellGame from '../../../components/SushiSpellGame.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 3 Step 1 - Interaction 2: Sushi Spell Game
@@ -23,9 +24,11 @@ const TARGET_WORDS = [
 
 export default function Phase3Step1Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 2, context: 'main' })
   const [gameResult, setGameResult] = useState(null)
 
   const handleGameComplete = (result) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction2', is_correct: true, score: result })
     console.log('Sushi Spell Game completed:', result)
     setGameResult(result)
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import SimpleLineMatchingGame from '../../../../components/SimpleLineMatchingGame.jsx'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 5 - Level A2 - Task A: Match Master
@@ -46,6 +47,7 @@ const MATCHING_PAIRS = [
 
 export default function Phase4_2Step5RemedialA2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 1, context: 'remedial_a2' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
 
@@ -63,6 +65,7 @@ export default function Phase4_2Step5RemedialA2TaskA() {
   }
 
   const logTaskCompletion = async (score, timeElapsed) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/remedial/log', {
         method: 'POST',

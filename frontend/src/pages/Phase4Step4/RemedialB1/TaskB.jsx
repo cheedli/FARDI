@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, Stack, Alert, CircularProgress, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 - Remedial B1 - Task B: Definition Duel
@@ -22,6 +23,7 @@ const GUIDED_QUESTIONS = [
 
 export default function RemedialB1TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 2, context: 'remedial_b1' })
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [error, setError] = useState(null)
   const [answers, setAnswers] = useState({

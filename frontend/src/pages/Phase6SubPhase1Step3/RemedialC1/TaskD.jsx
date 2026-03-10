@@ -13,6 +13,7 @@ import {
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 3 - Level C1 - Task D
@@ -60,6 +61,7 @@ const WEAKNESSES = [
 
 export default function Phase6SP1Step3RemedialC1TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 3, interaction: 4, context: 'remedial_c1' })
   const [critiques, setCritiques] = useState(Array(WEAKNESSES.length).fill(''))
   const [fixes, setFixes] = useState(Array(WEAKNESSES.length).fill(''))
   const [submitted, setSubmitted] = useState(false)

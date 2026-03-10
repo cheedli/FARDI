@@ -12,9 +12,11 @@ import {
   Alert
 } from '@mui/material';
 import { CharacterMessage } from '../../../../components/Avatar.jsx';
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 const TaskB = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 2, context: 'remedial_a2' });
   const [answers, setAnswers] = useState({
     q1: '',
     q2: '',

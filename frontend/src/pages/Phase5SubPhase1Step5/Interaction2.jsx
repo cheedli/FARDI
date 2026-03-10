@@ -15,6 +15,7 @@ import { CharacterMessage } from '../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 5 Step 5: Evaluate
@@ -39,6 +40,7 @@ const GRAMMAR_ERRORS_TO_FIX = [
 
 export default function Phase5Step5Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 5, interaction: 2, context: 'main' })
   const [spellingCorrectedText, setSpellingCorrectedText] = useState('')
   const [grammarCorrectedText, setGrammarCorrectedText] = useState('')
   const [evaluation, setEvaluation] = useState(null)

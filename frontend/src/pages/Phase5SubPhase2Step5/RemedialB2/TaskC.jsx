@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, Radio, RadioGroup, FormControlLabel, FormControl } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 5 SubPhase 2 Step 5 - Remedial B2 - Task C: Matching Game
@@ -24,6 +25,7 @@ const CORRECTIONS = ERROR_PAIRS.map(p => p.correction)
 
 export default function Phase5SubPhase2Step5RemedialB2TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 5, interaction: 3, context: 'remedial_b2' })
   const [matches, setMatches] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

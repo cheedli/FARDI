@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, CircularProgress } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 5 SubPhase 2 Step 2: Explore
@@ -12,6 +13,7 @@ import { phase5API } from '../../lib/phase5_api.jsx'
 
 export default function Phase5SubPhase2Step2Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 2, interaction: 2, context: 'main' })
   const [reflection, setReflection] = useState('')
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)

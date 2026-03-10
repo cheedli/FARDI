@@ -5,6 +5,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 import SendIcon from '@mui/icons-material/Send'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 3 Step 1 - Interaction 3: Guided Sentence Production
@@ -14,6 +15,7 @@ import LightbulbIcon from '@mui/icons-material/Lightbulb'
 
 export default function Phase3Step1Interaction3() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 3, context: 'main' })
   const [userSentence, setUserSentence] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [feedback, setFeedback] = useState(null)

@@ -17,6 +17,7 @@ import SushiSpellGame from '../../components/phase5/SushiSpellGame.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 5 Step 2: Explore
@@ -35,6 +36,7 @@ const EXPECTED_EXAMPLES = {
 
 export default function Phase5Step2Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 2, interaction: 1, context: 'main' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [announcement, setAnnouncement] = useState('')
   const [evaluation, setEvaluation] = useState(null)
@@ -42,6 +44,7 @@ export default function Phase5Step2Interaction1() {
   const [submitted, setSubmitted] = useState(false)
 
   const handleGameComplete = (gameData) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction1', is_correct: true, score: gameData })
     setGameCompleted(true)
     // Game completion is tracked automatically
   }

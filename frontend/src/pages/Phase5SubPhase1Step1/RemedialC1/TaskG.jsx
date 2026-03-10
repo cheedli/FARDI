@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, TextField, Alert, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const SUBJUNCTIVE_SENTENCES = [
   { id: 1, template: 'It is vital that alternative _______ immediately.', answer: 'be found', hint: 'Use subjunctive (be + past participle)' },
@@ -15,6 +16,7 @@ const SUBJUNCTIVE_SENTENCES = [
 
 export default function Phase5Step1RemedialC1TaskG() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 1, interaction: 7, context: 'remedial_c1' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState(Array(6).fill(''))
   const [submitted, setSubmitted] = useState(false)

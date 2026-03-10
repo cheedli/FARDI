@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, TextField } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const QUESTIONS = [
   { id: 1, faulty: 'Contingency plan are activated', error: 'Agreement', correct: 'Contingency plan is activated' },
@@ -15,6 +16,7 @@ const QUESTIONS = [
 
 export default function Phase5Step5RemedialC1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 5, interaction: 3, context: 'remedial_c1' })
   const [answers, setAnswers] = useState({})
   const [corrections, setCorrections] = useState({})
   const [submitted, setSubmitted] = useState(false)

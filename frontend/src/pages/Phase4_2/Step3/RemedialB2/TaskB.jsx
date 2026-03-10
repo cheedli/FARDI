@@ -5,6 +5,7 @@ import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import CreateIcon from '@mui/icons-material/Create'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import QuizIcon from '@mui/icons-material/Quiz'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 3 - Remedial B2 - Task B: Explain Expedition
@@ -27,6 +28,7 @@ const GUIDED_QUESTIONS = [
 
 export default function RemedialB2TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 2, context: 'remedial_b2' })
   const [explanation, setExplanation] = useState('')
   const [sentenceCount, setSentenceCount] = useState(0)
   const [submitted, setSubmitted] = useState(false)

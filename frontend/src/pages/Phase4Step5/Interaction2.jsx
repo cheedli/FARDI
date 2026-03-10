@@ -13,6 +13,7 @@ import {
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import ArticleIcon from '@mui/icons-material/Article'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Interaction 2: Grammar Correction
@@ -50,6 +51,7 @@ const GRAMMAR_CORRECTIONS = {
 
 export default function Phase4Step5Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 2, context: 'main' })
   const [spellingCorrected, setSpellingCorrected] = useState('')
   const [correctedText, setCorrectedText] = useState('')
   const [evaluation, setEvaluation] = useState(null)

@@ -2,9 +2,11 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, Alert } from '@mui/material'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 export default function Phase6SP2Step5Int1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 5, interaction: 1, context: 'main' })
   const [response, setResponse] = useState('')
   const [submitted, setSubmitted] = useState(false)
 

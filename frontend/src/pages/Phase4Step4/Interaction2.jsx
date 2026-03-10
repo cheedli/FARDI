@@ -17,6 +17,7 @@ import { CharacterMessage } from '../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 Interaction 2: Video Script Writing
@@ -25,6 +26,7 @@ import VideoLibraryIcon from '@mui/icons-material/VideoLibrary'
 
 export default function Phase4Step4Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 2, context: 'main' })
   const [script, setScript] = useState('')
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)

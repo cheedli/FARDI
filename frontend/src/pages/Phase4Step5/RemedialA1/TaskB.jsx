@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import DragDropGapFill from '../../../components/DragDropGapFill.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Level A1 - Task B: Gap Fill Exercise
@@ -44,8 +45,10 @@ const ANSWERS_PART2 = {
 
 export default function Phase4Step5RemedialA1TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 2, context: 'remedial_a1' })
   const [phase, setPhase] = useState(1) // 1 = first 4 sentences, 2 = second 4 sentences, 3 = complete
   const [part1Score, setPart1Score] = useState(null)
+  const [part2Completed, setPart2Completed] = useState(false)
   const [totalScore, setTotalScore] = useState(0)
 
   const handlePart1Complete = (result) => {
@@ -54,11 +57,12 @@ export default function Phase4Step5RemedialA1TaskB() {
   }
 
   const handlePart2Complete = (result) => {
-    const finalScore = part1Score + result.score
+    const finalScore = (part1Score ?? 0) + result.score
     console.log('[Phase 4 Step 5] A1 Task B - Part 2 completed:', result.score, '/', result.total)
     console.log('[Phase 4 Step 5] A1 Task B - Total Score:', finalScore, '/ 8')
 
     setTotalScore(finalScore)
+    setPart2Completed(true)
     sessionStorage.setItem('phase4_step5_remedial_a1_taskB_score', finalScore)
     logTaskCompletion(finalScore)
     // Don't immediately switch to phase 3 - let user see the feedback first
@@ -72,7 +76,15 @@ export default function Phase4Step5RemedialA1TaskB() {
     setPhase(2)
   }
 
+  const handleReset = () => {
+    setPhase(1)
+    setPart1Score(null)
+    setPart2Completed(false)
+    setTotalScore(0)
+  }
+
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/step5/remedial/log', {
         method: 'POST',
@@ -103,7 +115,7 @@ export default function Phase4Step5RemedialA1TaskB() {
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
+    <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 1.5, sm: 3 } }}>
       {/* Header */}
       <Paper elevation={0} sx={{ p: 3, mb: 3, backgroundColor: '#e74c3c', color: 'white' }}>
         <Typography variant="h4" gutterBottom>
@@ -176,8 +188,13 @@ export default function Phase4Step5RemedialA1TaskB() {
           </Paper>
 
           {/* Show Next button after Part 2 is completed */}
-          {totalScore > 0 && (
-            <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 3 }}>
+          {part2Completed && (
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="flex-end" sx={{ mt: 3 }}>
+              {totalScore < 8 && (
+                <Button variant="outlined" color="secondary" size="large" onClick={handleReset}>
+                  Try Again
+                </Button>
+              )}
               <Button
                 variant="contained"
                 color="success"

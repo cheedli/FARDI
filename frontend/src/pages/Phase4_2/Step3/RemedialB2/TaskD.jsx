@@ -6,6 +6,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import SpellcheckIcon from '@mui/icons-material/Spellcheck'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 3 - Remedial B2 - Task D: Spell Quest
@@ -28,6 +29,7 @@ const TERMS = [
 
 export default function RemedialB2TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 4, context: 'remedial_b2' })
   const [currentTermIndex, setCurrentTermIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState([])
   const [currentSpelling, setCurrentSpelling] = useState('')

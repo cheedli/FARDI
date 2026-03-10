@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, Alert, TextField, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 - Remedial C1 - Task C: Tense Odyssey
@@ -50,6 +51,7 @@ const TENSE_EXERCISES = [
 
 export default function RemedialC1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 3, context: 'remedial_c1' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [rewrites, setRewrites] = useState(Array(TENSE_EXERCISES.length).fill(''))
   const [submitted, setSubmitted] = useState(false)
@@ -113,6 +115,7 @@ export default function RemedialC1TaskC() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

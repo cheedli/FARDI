@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, CircularProgress, Alert } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 const TEMPLATE = `Step 1 (Greeting): Start with welcome.
 Example: First, warmly welcome every guest: "Welcome to the Global Cultures Festival!"
@@ -24,6 +25,7 @@ Example: Thank every guest for coming and wish them a great time.`
 
 export default function Phase5SubPhase2Step4Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 4, interaction: 1, context: 'main' })
   const [instructions, setInstructions] = useState('')
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)

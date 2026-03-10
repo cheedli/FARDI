@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, TextField, Alert } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Remedial C1 - Task F: Debate Duel Advanced
@@ -51,6 +52,7 @@ const DEBATE_SENTENCES = [
 
 export default function Phase4Step5RemedialC1TaskF() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 6, context: 'remedial_c1' })
   // Initialize answers with the faulty sentences so users can modify them
   const [answers, setAnswers] = useState(() => {
     const initial = {}
@@ -108,6 +110,7 @@ export default function Phase4Step5RemedialC1TaskF() {
 
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskF', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/step5/remedial/log', {
         method: 'POST',

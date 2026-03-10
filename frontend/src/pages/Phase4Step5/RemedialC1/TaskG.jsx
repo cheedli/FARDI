@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, TextField, Alert } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Remedial C1 - Task G: Correction Crusade
@@ -51,6 +52,7 @@ const CRUSADE_SENTENCES = [
 
 export default function Phase4Step5RemedialC1TaskG() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 7, context: 'remedial_c1' })
   const [answers, setAnswers] = useState(() => {
     const initial = {}
     CRUSADE_SENTENCES.forEach(s => {
@@ -105,6 +107,7 @@ export default function Phase4Step5RemedialC1TaskG() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskG', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/step5/remedial/log', {
         method: 'POST',

@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import DragDropGapFill from '../../../components/DragDropGapFill.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 5 Step 1 - Level A1 - Task B: Gap Fill
@@ -37,6 +38,7 @@ const ANSWERS = {
 
 export default function Phase5Step1RemedialA1TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 1, interaction: 2, context: 'remedial_a1' })
   const [phase, setPhase] = useState(1)
   const [part1Score, setPart1Score] = useState(null)
   const [totalScore, setTotalScore] = useState(0)

@@ -18,6 +18,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 3: Explain
@@ -42,6 +43,7 @@ function scorePurposeResponse(text) {
 
 export default function Phase6SP1Step3Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 3, interaction: 1, context: 'main' })
   const [videoWatched, setVideoWatched] = useState(false)
   const [response, setResponse] = useState('')
   const [evaluation, setEvaluation] = useState(null)

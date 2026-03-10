@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import DragDropMatchingGame from '../../../components/DragDropMatchingGame.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 5 Step 5 - Level A2 - Task A: Spelling Rescue
@@ -23,10 +24,12 @@ const SPELLING_PAIRS = [
 
 export default function Phase5Step5RemedialA2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 5, interaction: 1, context: 'remedial_a2' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
 
   const handleGameComplete = async (result) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: result })
     setGameCompleted(true)
     setGameResult(result)
     const score = result.score || 0

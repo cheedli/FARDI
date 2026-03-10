@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, Grid, Chip } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const PAIRS = [
   { mistake: 'report bad', correction: 'report could be better' },
@@ -26,6 +27,7 @@ function shuffle(arr) {
 
 export default function Phase6SP2Step5RemA2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 5, interaction: 1, context: 'remedial_a2' })
   const shuffledCorrections = useMemo(() => shuffle(PAIRS.map((p, i) => ({ ...p, idx: i }))), [])
   const [selectedMistake, setSelectedMistake] = useState(null)
   const [matches, setMatches] = useState({})

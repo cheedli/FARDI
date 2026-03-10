@@ -26,7 +26,7 @@ export default function Phase3Step1ScoreCalculation() {
       if (result.success) {
         setRouting(result.data.total)
       } else {
-        setRouting({ should_proceed: i3 >= 3, remedial_level: determineLevel(i3), next_url: i3 >= 3 ? '/phase3/step/2' : `/phase3/step/1/remedial/${determineLevel(i3).toLowerCase()}/task/a` })
+        setRouting({ should_proceed: i3 >= 3, remedial_level: determineLevel(i3), next_url: i3 >= 3 ? '/phase3/step/2' : `/phase3/step/1/remedial/${determineLevel(i3).toLowerCase()}/taskA` })
       }
     } catch {
       setRouting({ should_proceed: i3 >= 3, remedial_level: determineLevel(i3), next_url: '/phase3/step/2' })
@@ -49,7 +49,7 @@ export default function Phase3Step1ScoreCalculation() {
       navigate('/phase3/step/2')
     } else {
       const level = (routing.remedial_level || 'a1').toLowerCase()
-      navigate(`/phase3/step/1/remedial/${level}/task/a`)
+      navigate(`/phase3/step/1/remedial/${level}/taskA`)
     }
   }
 

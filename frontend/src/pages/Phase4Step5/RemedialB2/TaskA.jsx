@@ -5,6 +5,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 import SendIcon from '@mui/icons-material/Send'
 import CheckIcon from '@mui/icons-material/Check'
 import DoneAllIcon from '@mui/icons-material/DoneAll'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Level B2 - Task A: Role-Play Saga
@@ -33,6 +34,7 @@ const DIALOGUE_MESSAGES = [
 
 export default function Phase4Step5RemedialB2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 1, context: 'remedial_b2' })
   const [wordBank] = useState(() => [...WORD_BANK_ORIGINAL].sort(() => Math.random() - 0.5))
   const [selectedWord, setSelectedWord] = useState(null)
   const [answers, setAnswers] = useState({})

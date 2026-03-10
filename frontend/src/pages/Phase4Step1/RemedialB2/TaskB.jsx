@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Card, CardContent } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CompareQuestGame from '../../../components/CompareQuestGame.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Level B2 - Task B: Compare Quest Writing
@@ -72,6 +73,7 @@ const EVALUATION_CRITERIA = {
 
 export default function RemedialB2TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 2, context: 'remedial_b2' })
 
   const handleGameComplete = (result) => {
     console.log('B2 Compare Quest completed:', result)
@@ -95,6 +97,7 @@ export default function RemedialB2TaskB() {
   }
 
   const logTaskCompletion = async (score, level, answers) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/remedial/log', {
         method: 'POST',

@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Chip, Alert } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LinkIcon from '@mui/icons-material/Link'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const PAIRS = [
   { id: 1, term: 'constructive', definition: 'Helpful criticism' },
@@ -27,6 +28,7 @@ function shuffle(arr) {
 
 export default function Phase6SP2Step3RemB2TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 3, interaction: 3, context: 'remedial_b2' })
   const [shuffledDefs] = useState(() => shuffle(PAIRS))
   const [selectedTerm, setSelectedTerm] = useState(null)
   const [selectedDef, setSelectedDef] = useState(null)

@@ -18,6 +18,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 5 Step 3: Explain
@@ -41,6 +42,7 @@ const VIDEO_LINKS = [
 
 export default function Phase5Step3Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 3, interaction: 1, context: 'main' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [videosWatched, setVideosWatched] = useState(false)
   const [definition, setDefinition] = useState('')
@@ -49,6 +51,7 @@ export default function Phase5Step3Interaction1() {
   const [submitted, setSubmitted] = useState(false)
 
   const handleGameComplete = (gameData) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction1', is_correct: true, score: gameData })
     setGameCompleted(true)
   }
 

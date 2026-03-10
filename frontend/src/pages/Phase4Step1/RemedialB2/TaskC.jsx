@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Card, CardContent } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import SushiSpellAdvancedGame from '../../../components/SushiSpellAdvancedGame.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Level B2 - Task C: Sushi Spell Advanced
@@ -46,6 +47,7 @@ const ADVANCED_TERMS = [
 
 export default function RemedialB2TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 3, context: 'remedial_b2' })
 
   const handleGameComplete = (result) => {
     console.log('B2 Sushi Spell completed:', result)
@@ -67,6 +69,7 @@ export default function RemedialB2TaskC() {
   }
 
   const logTaskCompletion = async (score, timeElapsed, spelledTerms) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/remedial/log', {
         method: 'POST',

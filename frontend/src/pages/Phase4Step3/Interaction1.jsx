@@ -15,6 +15,7 @@ import {
 } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 3 Interaction 1: Watch Video and Define "Persuasive"
@@ -28,6 +29,7 @@ const KEY_TERMS = [
 
 export default function Phase4Step3Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 1, context: 'main' })
   const [answer, setAnswer] = useState('')
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)

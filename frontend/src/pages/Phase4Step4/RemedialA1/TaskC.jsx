@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, Alert } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import SentenceBuilder from '../../../components/exercises/SentenceBuilder.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 - Level A1 - Task C: Grammar Exercise (Simple Sentences)
@@ -42,6 +43,7 @@ const SENTENCE_TEMPLATES = [
 
 export default function Phase4Step4RemedialA1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 3, context: 'remedial_a1' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [showFinalResults, setShowFinalResults] = useState(false)
   const [finalScore, setFinalScore] = useState({ taskA: 0, taskB: 0, taskC: 0, total: 0, passed: false })
@@ -60,6 +62,7 @@ export default function Phase4Step4RemedialA1TaskC() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/step4/remedial/log', {
         method: 'POST',

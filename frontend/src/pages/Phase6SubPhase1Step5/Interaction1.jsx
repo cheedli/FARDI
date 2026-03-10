@@ -18,6 +18,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import SpellcheckIcon from '@mui/icons-material/Spellcheck'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 5: Evaluate
@@ -43,6 +44,7 @@ const SPELLING_ERRORS = [
 
 export default function Phase6SubPhase1Step5Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 5, interaction: 1, context: 'main' })
   const [correctedText, setCorrectedText] = useState(FAULTY_TEXT)
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)

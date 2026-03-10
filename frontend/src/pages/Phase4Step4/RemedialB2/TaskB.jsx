@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, Alert, TextField, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 - Remedial B2 - Task B: Critique Game (Kahoot-style)
@@ -50,6 +51,7 @@ const CRITIQUE_TERMS = [
 
 export default function RemedialB2TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 2, context: 'remedial_b2' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [critiques, setCritiques] = useState(Array(CRITIQUE_TERMS.length).fill(''))
   const [submitted, setSubmitted] = useState(false)
@@ -151,6 +153,7 @@ export default function RemedialB2TaskB() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

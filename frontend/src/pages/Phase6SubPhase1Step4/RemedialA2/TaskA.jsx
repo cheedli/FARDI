@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, Grid, Chip, Alert } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const PAIRS = [
   { word: 'success', definition: 'when something goes well' },
@@ -17,6 +18,7 @@ function shuffle(arr) { const a = [...arr]; for (let i = a.length-1; i > 0; i--)
 
 export default function Phase6SP1Step4RemA2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 4, interaction: 1, context: 'remedial_a2' })
   const shuffledDefs = useMemo(() => shuffle(PAIRS.map((p,i) => ({...p, idx: i}))), [])
   const [selectedWord, setSelectedWord] = useState(null)
   const [matches, setMatches] = useState({})

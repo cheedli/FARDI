@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, Stack, Alert, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const GUIDED_QUESTIONS = [
   { id: 1, question: 'Emergency assessment.', example: 'Rapid assessment of crisis scope.' },
@@ -17,6 +18,7 @@ const GUIDED_QUESTIONS = [
 
 export default function Phase5Step3RemedialC1TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 3, interaction: 2, context: 'remedial_c1' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState(Array(8).fill(''))
   const [submitted, setSubmitted] = useState(false)

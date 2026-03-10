@@ -14,6 +14,7 @@ import {
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import SpellcheckIcon from '@mui/icons-material/Spellcheck'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Interaction 1: Spelling Correction
@@ -60,6 +61,7 @@ const CORRECT_WORDS = {
 
 export default function Phase4Step5Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 1, context: 'main' })
   const [correctedText, setCorrectedText] = useState('')
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)

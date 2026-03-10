@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Stack, LinearProgress, IconButton } fro
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import { ArrowForward, ArrowBack } from '@mui/icons-material'
 import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 3 - Level B1 - Task D: Flashcard Game
@@ -56,6 +57,7 @@ const FLASHCARDS = [
 
 export default function Phase4_2Step3RemedialB1TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 4, context: 'remedial_b1' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [viewed, setViewed] = useState(new Set())
@@ -103,6 +105,7 @@ export default function Phase4_2Step3RemedialB1TaskD() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskD', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

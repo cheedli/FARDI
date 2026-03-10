@@ -5,6 +5,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 3 Step 3 - Interaction 1: Guided Explanation (Teacher Modeling)
@@ -65,6 +66,7 @@ const SENTENCES = [
 
 export default function Phase3Step3Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 3, interaction: 1, context: 'main' })
   const [selectedText, setSelectedText] = useState({}) // { sentenceId: selectedText }
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
@@ -114,6 +116,7 @@ export default function Phase3Step3Interaction1() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction1', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/interaction/log', {
         method: 'POST',

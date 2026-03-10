@@ -14,6 +14,7 @@ import {
 } from '@mui/material'
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 4.2 Step 3 - Level B1 - Task B: Definition Duel
@@ -33,6 +34,7 @@ const TERMS = [
 
 export default function Phase4_2Step3RemedialB1TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 2, context: 'remedial_b1' })
   const [definitions, setDefinitions] = useState(Array(8).fill(''))
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
@@ -86,6 +88,7 @@ export default function Phase4_2Step3RemedialB1TaskB() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

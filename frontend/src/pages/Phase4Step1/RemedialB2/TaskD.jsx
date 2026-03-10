@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import KahootQuizGame from '../../../components/KahootQuizGame.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Level B2 - Task D: Kahoot-Inspired Quiz
@@ -81,6 +82,7 @@ const QUIZ_QUESTIONS = [
 
 export default function RemedialB2TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 4, context: 'remedial_b2' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
   const [showFinalResults, setShowFinalResults] = useState(false)
@@ -104,6 +106,7 @@ export default function RemedialB2TaskD() {
   }
 
   const logTaskCompletion = async (score, points, answeredQuestions) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskD', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/remedial/log', {
         method: 'POST',

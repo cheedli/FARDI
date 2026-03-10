@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Alert, MenuItem, Select, FormControl } 
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 3 - Level A1 - Task B: Gap Fill
@@ -39,8 +40,12 @@ const GAP_FILL_SENTENCES = [
 
 export default function Phase3RemedialA1TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 2, context: 'remedial_a1' })
   const [answers, setAnswers] = useState({})
   const [showResults, setShowResults] = useState(false)
+
+  // Track which words are already used in other sentences
+  const usedWords = Object.values(answers).filter(Boolean)
 
   const handleAnswerChange = (sentenceId, value) => {
     setAnswers({
@@ -56,6 +61,7 @@ export default function Phase3RemedialA1TaskB() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',
@@ -143,11 +149,15 @@ export default function Phase3RemedialA1TaskB() {
                   <MenuItem value="" disabled sx={{ color: '#555555' }}>
                     <em>Choose...</em>
                   </MenuItem>
-                  {sentence.options.map((option) => (
-                    <MenuItem key={option} value={option} sx={{ color: '#000000', fontWeight: 500 }}>
-                      {option}
-                    </MenuItem>
-                  ))}
+                  {sentence.options.map((option) => {
+                    // Disable words already used in another sentence
+                    const usedElsewhere = usedWords.includes(option) && answers[sentence.id] !== option
+                    return (
+                      <MenuItem key={option} value={option} disabled={usedElsewhere} sx={{ color: usedElsewhere ? '#aaaaaa' : '#000000', fontWeight: 500 }}>
+                        {option}{usedElsewhere ? ' (used)' : ''}
+                      </MenuItem>
+                    )
+                  })}
                 </Select>
               </FormControl>
               {sentence.sentence.split('____')[1]}

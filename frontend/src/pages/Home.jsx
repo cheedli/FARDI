@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useApiContext } from '../lib/api.jsx'
-import { Box, Typography, Button, Stack, Container, Avatar } from '@mui/material'
+import { Box, Typography, Button, Stack, Container, Avatar, useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import SchoolIcon from '@mui/icons-material/School'
@@ -30,6 +30,15 @@ const PHASES_PREVIEW = [
 export default function Home() {
   const { user, client, loading } = useApiContext()
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+
+  const border = isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0'
+  const borderSubtle = isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid #f1f5f9'
+  const cardBg = isDark ? theme.palette.background.paper : '#ffffff'
+  const sectionBg = isDark ? 'rgba(255,255,255,0.02)' : '#fafafa'
+  const muted = theme.palette.text.secondary
+  const textPrimary = theme.palette.text.primary
 
   const onStart = async () => {
     try {
@@ -43,7 +52,7 @@ export default function Home() {
   const isLoggedIn = !loading && user
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'white', overflowX: 'hidden' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', overflowX: 'hidden' }}>
 
       {/* ── HERO ── */}
       <Box sx={{ position: 'relative', pt: { xs: 8, md: 12 }, pb: { xs: 10, md: 16 } }}>
@@ -77,7 +86,7 @@ export default function Home() {
                   fontWeight: 800,
                   lineHeight: 1.08,
                   letterSpacing: '-0.03em',
-                  color: '#0f172a',
+                  color: textPrimary,
                   mb: 2.5,
                 }}>
                   Discover your{' '}
@@ -93,7 +102,7 @@ export default function Home() {
               </motion.div>
 
               <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={2}>
-                <Typography sx={{ fontSize: { xs: '1.05rem', md: '1.15rem' }, color: '#64748b', lineHeight: 1.7, mb: 4, maxWidth: 480 }}>
+                <Typography sx={{ fontSize: { xs: '1.05rem', md: '1.15rem' }, color: muted, lineHeight: 1.7, mb: 4, maxWidth: 480 }}>
                   Take a professional CEFR assessment, plan cultural events, create marketing campaigns, and solve real problems — all while improving your English.
                 </Typography>
               </motion.div>
@@ -127,12 +136,12 @@ export default function Home() {
                     to={isLoggedIn ? '/dashboard' : '/login'}
                     sx={{
                       px: 4, py: 1.6,
-                      borderColor: '#e2e8f0',
-                      color: '#475569',
+                      borderColor: isDark ? 'rgba(255,255,255,0.15)' : '#e2e8f0',
+                      color: 'text.primary',
                       fontSize: '1rem',
-                      bgcolor: 'white',
+                      bgcolor: cardBg,
                       boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                      '&:hover': { borderColor: '#cbd5e1', bgcolor: '#fafafa', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }
+                      '&:hover': { borderColor: isDark ? 'rgba(255,255,255,0.25)' : '#cbd5e1', bgcolor: sectionBg, boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }
                     }}
                   >
                     {isLoggedIn ? 'Dashboard' : 'Sign In'}
@@ -149,7 +158,7 @@ export default function Home() {
                   ].map((item) => (
                     <Stack key={item.text} direction="row" alignItems="center" spacing={0.7}>
                       <Box sx={{ color: '#22c55e' }}>{item.icon}</Box>
-                      <Typography sx={{ fontSize: '0.83rem', color: '#64748b', fontWeight: 500 }}>{item.text}</Typography>
+                      <Typography sx={{ fontSize: '0.83rem', color: muted, fontWeight: 500 }}>{item.text}</Typography>
                     </Stack>
                   ))}
                 </Stack>
@@ -167,9 +176,9 @@ export default function Home() {
                 {/* Main card */}
                 <Box sx={{
                   p: 4, borderRadius: 4,
-                  background: 'linear-gradient(145deg, #f8fafc, #ffffff)',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)',
+                  bgcolor: cardBg,
+                  border,
+                  boxShadow: isDark ? '0 20px 60px rgba(0,0,0,0.4)' : '0 20px 60px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)',
                   position: 'relative', zIndex: 2,
                 }}>
                   <Stack spacing={2.5}>
@@ -178,18 +187,18 @@ export default function Home() {
                         <SchoolIcon sx={{ fontSize: 24 }} />
                       </Avatar>
                       <Box>
-                        <Typography sx={{ fontWeight: 700, color: '#0f172a', fontSize: '1.05rem' }}>CEFR Assessment</Typography>
-                        <Typography sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>English Proficiency Test</Typography>
+                        <Typography sx={{ fontWeight: 700, color: textPrimary, fontSize: '1.05rem' }}>CEFR Assessment</Typography>
+                        <Typography sx={{ color: muted, fontSize: '0.8rem' }}>English Proficiency Test</Typography>
                       </Box>
                     </Stack>
 
                     {/* Fake level meter */}
                     <Box>
                       <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
-                        <Typography sx={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 500 }}>Your Level</Typography>
+                        <Typography sx={{ fontSize: '0.78rem', color: muted, fontWeight: 500 }}>Your Level</Typography>
                         <Typography sx={{ fontSize: '0.78rem', color: '#6366f1', fontWeight: 700 }}>B2</Typography>
                       </Stack>
-                      <Box sx={{ height: 8, borderRadius: 4, bgcolor: '#f1f5f9', overflow: 'hidden' }}>
+                      <Box sx={{ height: 8, borderRadius: 4, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9', overflow: 'hidden' }}>
                         <motion.div
                           initial={{ width: '0%' }}
                           animate={{ width: '72%' }}
@@ -199,7 +208,7 @@ export default function Home() {
                       </Box>
                       <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.5 }}>
                         {['A1', 'A2', 'B1', 'B2', 'C1'].map(l => (
-                          <Typography key={l} sx={{ fontSize: '0.65rem', color: l === 'B2' ? '#6366f1' : '#cbd5e1', fontWeight: l === 'B2' ? 700 : 400 }}>{l}</Typography>
+                          <Typography key={l} sx={{ fontSize: '0.65rem', color: l === 'B2' ? '#6366f1' : muted, fontWeight: l === 'B2' ? 700 : 400 }}>{l}</Typography>
                         ))}
                       </Stack>
                     </Box>
@@ -211,9 +220,9 @@ export default function Home() {
                         { label: 'Vocabulary', pct: 72, color: '#0ea5e9' },
                         { label: 'Fluency', pct: 68, color: '#f97316' },
                       ].map(s => (
-                        <Box key={s.label} sx={{ flex: 1, p: 1.5, borderRadius: 2, bgcolor: '#fafafa', border: '1px solid #f1f5f9', textAlign: 'center' }}>
+                        <Box key={s.label} sx={{ flex: 1, p: 1.5, borderRadius: 2, bgcolor: sectionBg, border: borderSubtle, textAlign: 'center' }}>
                           <Typography sx={{ fontSize: '1.1rem', fontWeight: 800, color: s.color }}>{s.pct}%</Typography>
-                          <Typography sx={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 500 }}>{s.label}</Typography>
+                          <Typography sx={{ fontSize: '0.65rem', color: muted, fontWeight: 500 }}>{s.label}</Typography>
                         </Box>
                       ))}
                     </Stack>
@@ -246,13 +255,13 @@ export default function Home() {
                 >
                   <Box sx={{
                     px: 2.5, py: 1.5, borderRadius: 3,
-                    bgcolor: 'white',
-                    border: '1px solid #e2e8f0',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                    bgcolor: cardBg,
+                    border,
+                    boxShadow: isDark ? '0 8px 24px rgba(0,0,0,0.4)' : '0 8px 24px rgba(0,0,0,0.08)',
                     display: 'flex', alignItems: 'center', gap: 1,
                   }}>
                     <AutoAwesomeIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
-                    <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#0f172a' }}>+250 XP</Typography>
+                    <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: textPrimary }}>+250 XP</Typography>
                   </Box>
                 </motion.div>
               </motion.div>
@@ -262,14 +271,14 @@ export default function Home() {
       </Box>
 
       {/* ── HOW IT WORKS ── */}
-      <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: '#fafafa', borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}>
+      <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: sectionBg, borderTop: borderSubtle, borderBottom: borderSubtle }}>
         <Container maxWidth="lg">
           <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <Box sx={{ textAlign: 'center', mb: 7 }}>
-              <Typography sx={{ fontWeight: 800, fontSize: { xs: '1.8rem', md: '2.3rem' }, color: '#0f172a', mb: 1.5, letterSpacing: '-0.02em' }}>
+              <Typography sx={{ fontWeight: 800, fontSize: { xs: '1.8rem', md: '2.3rem' }, color: textPrimary, mb: 1.5, letterSpacing: '-0.02em' }}>
                 How it works
               </Typography>
-              <Typography sx={{ color: '#64748b', fontSize: '1.05rem', maxWidth: 450, mx: 'auto' }}>
+              <Typography sx={{ color: muted, fontSize: '1.05rem', maxWidth: 450, mx: 'auto' }}>
                 Three steps to assess and grow your English skills
               </Typography>
             </Box>
@@ -283,8 +292,8 @@ export default function Home() {
             ].map((step, i) => (
               <motion.div key={step.num} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={i + 1} style={{ flex: 1 }}>
                 <Box sx={{
-                  p: 4, borderRadius: 4, bgcolor: 'white',
-                  border: '1px solid #f1f5f9',
+                  p: 4, borderRadius: 4, bgcolor: cardBg,
+                  border: borderSubtle,
                   height: '100%',
                   transition: 'all 0.3s',
                   '&:hover': { transform: 'translateY(-4px)', boxShadow: `0 16px 40px ${step.color}15`, borderColor: `${step.color}30` }
@@ -297,8 +306,8 @@ export default function Home() {
                   }}>
                     {React.cloneElement(step.icon, { sx: { fontSize: 24, color: step.color } })}
                   </Box>
-                  <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1 }}>{step.title}</Typography>
-                  <Typography sx={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.65 }}>{step.desc}</Typography>
+                  <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', color: textPrimary, mb: 1 }}>{step.title}</Typography>
+                  <Typography sx={{ color: muted, fontSize: '0.9rem', lineHeight: 1.65 }}>{step.desc}</Typography>
                 </Box>
               </motion.div>
             ))}
@@ -311,10 +320,10 @@ export default function Home() {
         <Container maxWidth="lg">
           <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <Box sx={{ textAlign: 'center', mb: 7 }}>
-              <Typography sx={{ fontWeight: 800, fontSize: { xs: '1.8rem', md: '2.3rem' }, color: '#0f172a', mb: 1.5, letterSpacing: '-0.02em' }}>
+              <Typography sx={{ fontWeight: 800, fontSize: { xs: '1.8rem', md: '2.3rem' }, color: textPrimary, mb: 1.5, letterSpacing: '-0.02em' }}>
                 Built for real learning
               </Typography>
-              <Typography sx={{ color: '#64748b', fontSize: '1.05rem', maxWidth: 480, mx: 'auto' }}>
+              <Typography sx={{ color: muted, fontSize: '1.05rem', maxWidth: 480, mx: 'auto' }}>
                 Not just another quiz — a complete assessment journey with real scenarios
               </Typography>
             </Box>
@@ -351,32 +360,32 @@ export default function Home() {
             <Stack spacing={3}>
               <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={2}>
                 <Box sx={{
-                  p: 4, borderRadius: 4, bgcolor: 'white',
-                  border: '1px solid #e2e8f0',
+                  p: 4, borderRadius: 4, bgcolor: cardBg,
+                  border,
                   transition: 'all 0.3s',
                   '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 30px rgba(14,165,233,0.12)', borderColor: '#0ea5e930' }
                 }}>
                   <Box sx={{ width: 44, height: 44, borderRadius: 2.5, bgcolor: '#0ea5e910', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
                     <GroupsIcon sx={{ fontSize: 22, color: '#0ea5e9' }} />
                   </Box>
-                  <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 0.5 }}>Real-World Scenarios</Typography>
-                  <Typography sx={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.6 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', color: textPrimary, mb: 0.5 }}>Real-World Scenarios</Typography>
+                  <Typography sx={{ color: muted, fontSize: '0.9rem', lineHeight: 1.6 }}>
                     Plan cultural events, create marketing campaigns, and coordinate teams — all while practicing English communication.
                   </Typography>
                 </Box>
               </motion.div>
               <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={3}>
                 <Box sx={{
-                  p: 4, borderRadius: 4, bgcolor: 'white',
-                  border: '1px solid #e2e8f0',
+                  p: 4, borderRadius: 4, bgcolor: cardBg,
+                  border,
                   transition: 'all 0.3s',
                   '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 30px rgba(34,197,94,0.12)', borderColor: '#22c55e30' }
                 }}>
                   <Box sx={{ width: 44, height: 44, borderRadius: 2.5, bgcolor: '#22c55e10', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
                     <TrendingUpIcon sx={{ fontSize: 22, color: '#22c55e' }} />
                   </Box>
-                  <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 0.5 }}>Track Your Growth</Typography>
-                  <Typography sx={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.6 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', color: textPrimary, mb: 0.5 }}>Track Your Growth</Typography>
+                  <Typography sx={{ color: muted, fontSize: '0.9rem', lineHeight: 1.6 }}>
                     Detailed XP tracking, CEFR level progress, and remedial activities tailored to your exact skill gaps.
                   </Typography>
                 </Box>
@@ -387,14 +396,14 @@ export default function Home() {
       </Box>
 
       {/* ── JOURNEY PREVIEW ── */}
-      <Box sx={{ py: { xs: 8, md: 10 }, bgcolor: '#fafafa', borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}>
+      <Box sx={{ py: { xs: 8, md: 10 }, bgcolor: sectionBg, borderTop: borderSubtle, borderBottom: borderSubtle }}>
         <Container maxWidth="lg">
           <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <Box sx={{ textAlign: 'center', mb: 5 }}>
-              <Typography sx={{ fontWeight: 800, fontSize: { xs: '1.8rem', md: '2.3rem' }, color: '#0f172a', mb: 1.5, letterSpacing: '-0.02em' }}>
+              <Typography sx={{ fontWeight: 800, fontSize: { xs: '1.8rem', md: '2.3rem' }, color: textPrimary, mb: 1.5, letterSpacing: '-0.02em' }}>
                 Your learning journey
               </Typography>
-              <Typography sx={{ color: '#64748b', fontSize: '1.05rem' }}>
+              <Typography sx={{ color: muted, fontSize: '1.05rem' }}>
                 4 phases of the Global Cultures Festival project
               </Typography>
             </Box>
@@ -408,8 +417,8 @@ export default function Home() {
             {PHASES_PREVIEW.map((phase, i) => (
               <motion.div key={phase.id} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={i}>
                 <Box sx={{
-                  p: 3, borderRadius: 3, bgcolor: 'white',
-                  border: '1px solid #f1f5f9',
+                  p: 3, borderRadius: 3, bgcolor: cardBg,
+                  border: borderSubtle,
                   textAlign: 'center',
                   transition: 'all 0.3s',
                   '&:hover': { transform: 'translateY(-4px)', boxShadow: `0 12px 32px ${phase.color}15`, borderColor: `${phase.color}25` }
@@ -421,8 +430,8 @@ export default function Home() {
                   }}>
                     <phase.icon sx={{ fontSize: 26, color: 'white' }} />
                   </Avatar>
-                  <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a', mb: 0.3 }}>Phase {phase.id}</Typography>
-                  <Typography sx={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 500 }}>{phase.title}</Typography>
+                  <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: textPrimary, mb: 0.3 }}>Phase {phase.id}</Typography>
+                  <Typography sx={{ fontSize: '0.78rem', color: muted, fontWeight: 500 }}>{phase.title}</Typography>
                 </Box>
               </motion.div>
             ))}
@@ -435,9 +444,9 @@ export default function Home() {
               variant="outlined"
               endIcon={<ArrowForwardIcon />}
               sx={{
-                borderColor: '#e2e8f0', color: '#475569', bgcolor: 'white',
+                borderColor: isDark ? 'rgba(255,255,255,0.15)' : '#e2e8f0', color: 'text.primary', bgcolor: cardBg,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-                '&:hover': { borderColor: '#cbd5e1', bgcolor: '#fafafa' }
+                '&:hover': { borderColor: isDark ? 'rgba(255,255,255,0.25)' : '#cbd5e1', bgcolor: sectionBg }
               }}
             >
               Explore the full journey
@@ -450,10 +459,10 @@ export default function Home() {
       <Box sx={{ py: { xs: 10, md: 14 } }}>
         <Container maxWidth="sm" sx={{ textAlign: 'center' }}>
           <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <Typography sx={{ fontWeight: 800, fontSize: { xs: '2rem', md: '2.5rem' }, color: '#0f172a', mb: 2, lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+            <Typography sx={{ fontWeight: 800, fontSize: { xs: '2rem', md: '2.5rem' }, color: textPrimary, mb: 2, lineHeight: 1.15, letterSpacing: '-0.02em' }}>
               Ready to find out your level?
             </Typography>
-            <Typography sx={{ color: '#64748b', mb: 4, fontSize: '1.05rem', lineHeight: 1.6 }}>
+            <Typography sx={{ color: muted, mb: 4, fontSize: '1.05rem', lineHeight: 1.6 }}>
               It's free, takes 15 minutes, and you get detailed AI feedback on your English proficiency.
             </Typography>
             <Button
@@ -477,11 +486,11 @@ export default function Home() {
       </Box>
 
       {/* Footer */}
-      <Box sx={{ py: 4, borderTop: '1px solid #f1f5f9' }}>
+      <Box sx={{ py: 4, borderTop: borderSubtle }}>
         <Container maxWidth="lg">
           <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography sx={{ color: '#94a3b8', fontSize: '0.82rem' }}>FARDI Language Assessment</Typography>
-            <Typography sx={{ color: '#cbd5e1', fontSize: '0.78rem' }}>CEFR A1-C1</Typography>
+            <Typography sx={{ color: muted, fontSize: '0.82rem' }}>FARDI Language Assessment</Typography>
+            <Typography sx={{ color: muted, fontSize: '0.78rem' }}>CEFR A1-C1</Typography>
           </Stack>
         </Container>
       </Box>

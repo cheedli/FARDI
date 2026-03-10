@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Card, CardContent } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import RolePlayRPGGame from '../../../components/RolePlayRPGGame.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Level B2 - Task A: Role-Play Dialogue (Advanced)
@@ -51,6 +52,7 @@ const WORD_BANK = shuffleArray([
 
 export default function RemedialB2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 1, context: 'remedial_b2' })
 
   const handleGameComplete = (result) => {
     console.log('B2 Role-Play RPG completed:', result)
@@ -74,6 +76,7 @@ export default function RemedialB2TaskA() {
   }
 
   const logTaskCompletion = async (score, level, xp) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/remedial/log', {
         method: 'POST',

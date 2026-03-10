@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, TextField, Alert } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Remedial B2 - Task E: Conditional Challenge
@@ -57,6 +58,7 @@ const CONDITIONAL_PROMPTS = [
 
 export default function Phase4Step5RemedialB2TaskE() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 5, context: 'remedial_b2' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [results, setResults] = useState([])
@@ -106,6 +108,7 @@ export default function Phase4Step5RemedialB2TaskE() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskE', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/step5/remedial/log', {
         method: 'POST',

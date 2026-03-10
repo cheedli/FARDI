@@ -18,6 +18,7 @@ import SushiSpellGame from '../../components/phase5/SushiSpellGame.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 2: Explore - Interaction 1
@@ -35,6 +36,7 @@ const SUMMARY_TIPS = [
 
 export default function Phase6SP1Step2Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 2, interaction: 1, context: 'main' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameData, setGameData] = useState(null)
   const [summary, setSummary] = useState('')
@@ -42,6 +44,7 @@ export default function Phase6SP1Step2Interaction1() {
   const [loading, setLoading] = useState(false)
 
   const handleGameComplete = async (data) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction1', is_correct: true, score: data })
     setGameCompleted(true)
     setGameData(data)
     sessionStorage.setItem('phase6_sp1_step2_interaction1_score', '1')

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import SentenceEvaluator from '../../components/SentenceEvaluator.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 1 Interaction 3: Using "slogan" in context with AI evaluation
@@ -19,6 +20,7 @@ const EXAMPLE_SENTENCES = {
 
 export default function Phase4Step1Interaction3() {
     const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 3, context: 'main' })
     const [completed, setCompleted] = useState(false)
     const [evaluationResult, setEvaluationResult] = useState(null)
     const [isCalculating, setIsCalculating] = useState(false)

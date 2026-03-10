@@ -7,6 +7,7 @@ import CancelIcon from '@mui/icons-material/Cancel'
 import TimerIcon from '@mui/icons-material/Timer'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import AccountTreeIcon from '@mui/icons-material/AccountTree'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 3 - Remedial C1 - Task F: Clause Conquest
@@ -100,6 +101,7 @@ const TIME_LIMIT = 420 // 7 minutes for all 6 sentences
 
 export default function RemedialC1TaskF() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 6, context: 'remedial_c1' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0)
@@ -281,6 +283,7 @@ export default function RemedialC1TaskF() {
   }
 
   const logTaskCompletion = async (finalScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskF', is_correct: true, score: finalScore })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

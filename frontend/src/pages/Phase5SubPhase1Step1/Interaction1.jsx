@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import WordshakeGame from '../../components/phase5/WordshakeGame.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 5 Step 1: Engage
@@ -14,8 +15,10 @@ const TARGET_WORDS = ['problem', 'cancel', 'change', 'solution', 'sorry', 'alter
 
 export default function Phase5Step1Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 1, interaction: 1, context: 'main' })
 
   const handleGameComplete = (gameData) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction1', is_correct: true, score: gameData })
     // Game completion is tracked automatically
     // Navigate to next interaction after a short delay
     setTimeout(() => {

@@ -14,6 +14,7 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 4 - Interaction 1
@@ -55,6 +56,7 @@ const TEMPLATE_SECTIONS = [
 
 export default function Phase6SP1Step4Interaction1() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 4, interaction: 1, context: 'main' })
   const [summary, setSummary] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [result, setResult] = useState(null)

@@ -5,6 +5,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import AutorenewIcon from '@mui/icons-material/Autorenew'
 import TimerIcon from '@mui/icons-material/Timer'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 - Remedial B1 - Task D: Flashcard Game
@@ -25,6 +26,7 @@ const FLASHCARD_PAIRS = [
 
 export default function RemedialB1TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 4, context: 'remedial_b1' })
   const [flippedCards, setFlippedCards] = useState([])
   const [matchedPairs, setMatchedPairs] = useState([])
   const [attempts, setAttempts] = useState(0)
@@ -101,6 +103,7 @@ export default function RemedialB1TaskD() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskD', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

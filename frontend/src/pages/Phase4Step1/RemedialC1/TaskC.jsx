@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Card, CardContent } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import WordshakeC1Game from '../../../components/WordshakeC1Game.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Level C1 - Task C: Advanced Wordshake + Sentence Writing
@@ -20,6 +21,7 @@ const TARGET_WORDS = [
 
 export default function RemedialC1TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 3, context: 'remedial_c1' })
 
   const handleGameComplete = (result) => {
     console.log('C1 Wordshake Challenge completed:', result)
@@ -47,6 +49,7 @@ export default function RemedialC1TaskC() {
   }
 
   const logTaskCompletion = async (taskScore, result) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: taskScore })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

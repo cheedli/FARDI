@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, TextField, Alert, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 5 Step 1 - Remedial B1 - Task E: Tense Time Travel
@@ -20,6 +21,7 @@ const SENTENCES = [
 
 export default function Phase5Step1RemedialB1TaskE() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 1, interaction: 5, context: 'remedial_b1' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState(Array(6).fill(''))
   const [submitted, setSubmitted] = useState(false)

@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Card, CardContent, Radio, RadioGroup, F
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 3 Step 2 - Interaction 2: Funding Choice Game
@@ -70,6 +71,7 @@ const SCENARIOS = [
 
 export default function Phase3Step2Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 2, interaction: 2, context: 'main' })
   const [answers, setAnswers] = useState({})
   const [justifications, setJustifications] = useState({})
   const [showResults, setShowResults] = useState(false)
@@ -112,6 +114,7 @@ export default function Phase3Step2Interaction2() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction2', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/interaction/log', {
         method: 'POST',

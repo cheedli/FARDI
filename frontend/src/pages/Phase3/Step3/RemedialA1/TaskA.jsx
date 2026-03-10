@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Card, CardContent, Alert, Stack, Chip }
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import ShuffleIcon from '@mui/icons-material/Shuffle'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 3 Step 3 - Level A1 - Task A: Sentence Building
@@ -50,6 +51,7 @@ const shuffleArray = (array) => {
 
 export default function Phase3Step3RemedialA1TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 3, interaction: 1, context: 'remedial_a1' })
 
   // Initialize with shuffled words
   const [exercises, setExercises] = useState(
@@ -117,6 +119,7 @@ export default function Phase3Step3RemedialA1TaskA() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',

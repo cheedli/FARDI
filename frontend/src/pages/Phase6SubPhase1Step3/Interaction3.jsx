@@ -4,6 +4,7 @@ import { Box, Paper, Typography } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import SushiSpellGame from '../../components/phase5/SushiSpellGame.jsx'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 6 SubPhase 1 Step 3: Explain - Interaction 3
@@ -14,8 +15,10 @@ const TARGET_WORDS = ['success', 'challenge', 'feedback', 'improve', 'achievemen
 
 export default function Phase6SP1Step3Int3() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 3, interaction: 3, context: 'main' })
 
   const handleGameComplete = async (gameData) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: gameData })
     const score = gameData.score !== undefined ? gameData.score : (gameData.completed ? 1 : 0)
     sessionStorage.setItem('phase6_sp1_step3_interaction3_score', score.toString())
     try { await phase6API.trackGame(3, 3, gameData, 1) } catch (e) { console.error('Track failed:', e) }

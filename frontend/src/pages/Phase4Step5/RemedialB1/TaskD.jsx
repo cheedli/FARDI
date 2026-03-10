@@ -5,6 +5,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import AutorenewIcon from '@mui/icons-material/Autorenew'
 import TimerIcon from '@mui/icons-material/Timer'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Remedial B1 - Task D: Quizlet Flashcards
@@ -25,6 +26,7 @@ const FLASHCARD_PAIRS = [
 
 export default function Phase4Step5RemedialB1TaskD() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 4, context: 'remedial_b1' })
   const [flippedCards, setFlippedCards] = useState([])
   const [matchedPairs, setMatchedPairs] = useState([])
   const [attempts, setAttempts] = useState(0)
@@ -101,6 +103,7 @@ export default function Phase4Step5RemedialB1TaskD() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskD', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/step5/remedial/log', {
         method: 'POST',
@@ -126,7 +129,7 @@ export default function Phase4Step5RemedialB1TaskD() {
   const allMatched = matchedPairs.length === FLASHCARD_PAIRS.length
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
+    <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 1.5, sm: 3 } }}>
       <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #3498db 0%, #2c3e50 100%)', color: 'white' }}>
         <Typography variant="h4" gutterBottom fontWeight="bold">
           Phase 4 Step 5: Evaluate - Remedial Practice
@@ -147,18 +150,18 @@ export default function Phase4Step5RemedialB1TaskD() {
       </Paper>
 
       {/* Game Stats with Timer */}
-      <Paper elevation={2} sx={{ p: 2, mb: 3, backgroundColor: 'info.lighter' }}>
-        <Stack direction="row" spacing={3} justifyContent="center" alignItems="center">
+      <Paper elevation={2} sx={{ p: { xs: 1.5, sm: 2 }, mb: 3, backgroundColor: 'info.lighter' }}>
+        <Stack direction="row" spacing={{ xs: 1.5, sm: 3 }} justifyContent="center" alignItems="center" flexWrap="wrap">
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4" fontWeight="bold" color="primary">
+            <Typography variant={{ xs: 'h5', sm: 'h4' }} fontWeight="bold" color="primary">
               {matchedPairs.length} / 8
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Matches Found
+              Matches
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h4" fontWeight="bold" color="secondary">
+            <Typography variant={{ xs: 'h5', sm: 'h4' }} fontWeight="bold" color="secondary">
               {attempts}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -206,18 +209,18 @@ export default function Phase4Step5RemedialB1TaskD() {
       {!submitted && (
         <>
           {/* Flashcard Grid */}
-          <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: 3 }}>
             {cards.map((card) => {
               const flipped = isCardFlipped(card.id)
               const matched = isCardMatched(card.id)
 
               return (
-                <Grid item xs={6} sm={4} md={3} key={card.id}>
+                <Grid item xs={4} sm={3} md={3} key={card.id}>
                   <Paper
                     onClick={() => handleCardClick(card.id)}
                     elevation={flipped ? 6 : 2}
                     sx={{
-                      height: 150,
+                      height: { xs: 90, sm: 130, md: 150 },
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -236,11 +239,12 @@ export default function Phase4Step5RemedialB1TaskD() {
                     {flipped ? (
                       <Box sx={{ p: 2, textAlign: 'center' }}>
                         <Typography
-                          variant="body1"
+                          variant="body2"
                           fontWeight="bold"
                           sx={{
                             color: matched ? 'success.dark' : (card.type === 'faulty' ? 'error.dark' : 'primary.dark'),
-                            wordBreak: 'break-word'
+                            wordBreak: 'break-word',
+                            fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' }
                           }}
                         >
                           {card.value}
@@ -253,7 +257,7 @@ export default function Phase4Step5RemedialB1TaskD() {
                         )}
                       </Box>
                     ) : (
-                      <AutorenewIcon sx={{ fontSize: 50, color: 'grey.500' }} />
+                      <AutorenewIcon sx={{ fontSize: { xs: 30, sm: 40, md: 50 }, color: 'grey.500' }} />
                     )}
                   </Paper>
                 </Grid>

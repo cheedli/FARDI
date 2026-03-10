@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import DragDropGapFill from '../../../components/DragDropGapFill.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const TEMPLATES = [
   'It is ___.',
@@ -29,6 +30,7 @@ const ANSWERS = {
 
 export default function Phase5Step3RemedialA2TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 3, interaction: 2, context: 'remedial_a2' })
   const [phase, setPhase] = useState(1)
   const [part1Score, setPart1Score] = useState(null)
   const [totalScore, setTotalScore] = useState(0)

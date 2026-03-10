@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, Alert, TextField, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 - Remedial B2 - Task A: Debate Simulation
@@ -50,6 +51,7 @@ const DEBATE_PROMPTS = [
 
 export default function RemedialB2TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 1, context: 'remedial_b2' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [responses, setResponses] = useState(Array(DEBATE_PROMPTS.length).fill(''))
   const [submitted, setSubmitted] = useState(false)
@@ -146,6 +148,7 @@ export default function RemedialB2TaskA() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

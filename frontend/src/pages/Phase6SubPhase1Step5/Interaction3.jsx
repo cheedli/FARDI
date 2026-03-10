@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, Alert } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 const SAMPLE_TEXT = "The festival had many visitors last week. Students were very excited and they participated in all activities. The organizers planned well and every booth was successful. We recommend improvements for next time."
 
 export default function Phase6SP1Step5Int3() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 5, interaction: 3, context: 'main' })
   const [text, setText] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

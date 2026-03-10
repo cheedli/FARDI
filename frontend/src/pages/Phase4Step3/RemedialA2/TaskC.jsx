@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack, Alert, LinearProgress, ButtonGroup } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { CheckCircle, Cancel, Link as LinkIcon } from '@mui/icons-material'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 3 - Remedial A2 - Task C: Connector Quest
@@ -45,6 +46,7 @@ const SENTENCES = [
 
 export default function RemedialA2TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 3, context: 'remedial_a2' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState(Array(SENTENCES.length).fill(''))
   const [submitted, setSubmitted] = useState(false)
@@ -98,6 +100,7 @@ export default function RemedialA2TaskC() {
   }
 
   const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/remedial/log', {
         method: 'POST',

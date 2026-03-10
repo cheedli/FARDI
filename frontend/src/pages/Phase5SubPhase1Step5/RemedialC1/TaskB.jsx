@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, Stack, Alert } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const FAULTY_TEXT = 'Lighting fail bad. We fix soon but maybe delay. Announce now. Backup use but not sure work. Thank patience. Festival maybe ok. Update later. Sorry issue.'
 
@@ -10,6 +11,7 @@ const CORRECTED_EXAMPLE = 'A temporary technical malfunction has affected the ma
 
 export default function Phase5Step5RemedialC1TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 5, interaction: 2, context: 'remedial_c1' })
   const [correctedText, setCorrectedText] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

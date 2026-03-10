@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, Alert, Card, CardContent } from '@mui/material'
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
  * Phase 3 Step 2 - Level C1 - Task A: Budget Evaluation
@@ -34,6 +35,7 @@ const WEAK_BUDGET = {
 
 export default function Phase3Step2RemedialC1TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 2, interaction: 1, context: 'remedial_c1' })
   const [critique, setCritique] = useState('')
   const [showResults, setShowResults] = useState(false)
   const [wordCount, setWordCount] = useState(0)
@@ -54,6 +56,7 @@ export default function Phase3Step2RemedialC1TaskA() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',

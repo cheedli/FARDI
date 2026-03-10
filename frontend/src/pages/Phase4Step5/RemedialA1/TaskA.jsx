@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Stack } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import DragDropMatchingGame from '../../../components/DragDropMatchingGame.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 5 - Level A1 - Task A: Drag and Drop Matching
@@ -57,6 +58,7 @@ const SPELLING_PAIRS = [
 
 export default function Phase4Step5RemedialA1TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 1, context: 'remedial_a1' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
 
@@ -74,6 +76,7 @@ export default function Phase4Step5RemedialA1TaskA() {
   }
 
   const logTaskCompletion = async (score, timeTaken) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase4/step5/remedial/log', {
         method: 'POST',

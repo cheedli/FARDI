@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, TextField, Stack, Alert } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 5 SubPhase 2 Step 5 - Remedial B2 - Task B: Analysis Odyssey
@@ -15,6 +16,7 @@ const CORRECTED_EXAMPLE = `First, please warmly welcome guests: "Welcome to the 
 
 export default function Phase5SubPhase2Step5RemedialB2TaskB() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 5, interaction: 2, context: 'remedial_b2' })
   const [correctedText, setCorrectedText] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

@@ -16,6 +16,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import ArticleIcon from '@mui/icons-material/Article'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 5 Step 3: Explain
@@ -37,6 +38,7 @@ const EXAMPLE_LINKS = [
 
 export default function Phase5Step3Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 3, interaction: 2, context: 'main' })
   const [examplesRead, setExamplesRead] = useState(false)
   const [explanation, setExplanation] = useState('')
   const [evaluation, setEvaluation] = useState(null)

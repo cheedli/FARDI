@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography, Button, Select, MenuItem, FormControl, Alert, Chip, Stack } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const WORD_BANK = ['accountability', 'objectivity', 'evidence-based', 'growth mindset', 'nuanced', 'empathy']
 
@@ -44,6 +45,7 @@ const SPEAKER_COLORS = {
 
 export default function Phase6SP2Step4RemC1TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 4, interaction: 1, context: 'remedial_c1' })
   const [answers, setAnswers] = useState({ 0: '', 1: '', 2: '', 3: '' })
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)

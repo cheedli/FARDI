@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Paper, Typography } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import DebateDuelGame from '../../../components/DebateDuelGame.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const DEBATE_LINES = [
   {
@@ -37,6 +38,7 @@ const WORD_BANK = shuffleArray([
 
 export default function RemedialC1TaskA() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 1, context: 'remedial_c1' })
 
   const handleGameComplete = (result) => {
     console.log('C1 Debate Duel completed:', result)
@@ -69,6 +71,7 @@ export default function RemedialC1TaskA() {
   }
 
   const logTaskCompletion = async (score, won) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',

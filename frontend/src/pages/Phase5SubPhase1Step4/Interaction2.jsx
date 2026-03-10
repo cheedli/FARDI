@@ -16,6 +16,7 @@ import { CharacterMessage } from '../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
  * Phase 5 Step 4: Elaborate
@@ -71,6 +72,7 @@ const EXPECTED_EXAMPLES = {
 
 export default function Phase5Step4Interaction2() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 4, interaction: 2, context: 'main' })
   const [subject, setSubject] = useState('')
   const [emailBody, setEmailBody] = useState('')
   const [evaluation, setEvaluation] = useState(null)

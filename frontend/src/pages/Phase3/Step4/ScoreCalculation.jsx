@@ -51,7 +51,7 @@ export default function Phase3Step4ScoreCalculation() {
       navigate('/phase4/step/1')
     } else {
       const level = (routing.remedial_level || 'a1').toLowerCase()
-      navigate(`/phase3/step/4/remedial/${level}/task/a`)
+      navigate(`/phase3/step/4/remedial/${level}/taskA`)
     }
   }
 

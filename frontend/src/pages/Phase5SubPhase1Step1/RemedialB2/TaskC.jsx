@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Button, Stack, Chip } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import DragDropMatchingGame from '../../../components/DragDropMatchingGame.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const MATCHING_PAIRS = [
   { word: 'alternative', definition: 'Another singer' },
@@ -18,10 +19,12 @@ const MATCHING_PAIRS = [
 
 export default function Phase5Step1RemedialB2TaskC() {
   const navigate = useNavigate()
+  const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 1, interaction: 3, context: 'remedial_b2' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
 
   const handleGameComplete = async (result) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: result })
     setGameCompleted(true)
     setGameResult(result)
     const score = result.score || 0
