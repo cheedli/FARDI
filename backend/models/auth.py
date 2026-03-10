@@ -519,6 +519,7 @@ class DatabaseManager:
                     subphase INTEGER,
                     step INTEGER NOT NULL,
                     interaction INTEGER NOT NULL,
+                    context TEXT DEFAULT 'main',
                     item_index INTEGER NOT NULL DEFAULT 0,
                     session_id TEXT,
                     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -537,6 +538,7 @@ class DatabaseManager:
                     subphase INTEGER,
                     step INTEGER NOT NULL,
                     interaction INTEGER NOT NULL,
+                    context TEXT DEFAULT 'main',
                     item_index INTEGER NOT NULL,
                     item_type TEXT NOT NULL,
                     item_id TEXT,
@@ -553,7 +555,7 @@ class DatabaseManager:
 
             conn.execute('''
                 CREATE INDEX IF NOT EXISTS idx_student_responses_lookup
-                    ON student_responses (user_id, phase, step, interaction)
+                    ON student_responses (user_id, phase, step, interaction, context)
             ''')
 
             conn.commit()
