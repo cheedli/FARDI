@@ -551,6 +551,11 @@ class DatabaseManager:
                 )
             ''')
 
+            conn.execute('''
+                CREATE INDEX IF NOT EXISTS idx_student_responses_lookup
+                    ON student_responses (user_id, phase, step, interaction)
+            ''')
+
             conn.commit()
             logger.info("Database tables initialized successfully")
 
