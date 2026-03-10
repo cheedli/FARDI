@@ -510,9 +510,50 @@ class DatabaseManager:
             except Exception as e:
                 logger.warning(f"Migration warning (non-critical): {str(e)}")
             
+            # Student progress tracking - generic cross-phase progress
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS student_progress (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    phase INTEGER NOT NULL,
+                    subphase INTEGER,
+                    step INTEGER NOT NULL,
+                    interaction INTEGER NOT NULL,
+                    item_index INTEGER NOT NULL DEFAULT 0,
+                    session_id TEXT,
+                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    is_complete BOOLEAN DEFAULT 0,
+                    UNIQUE(user_id, phase),
+                    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+                )
+            ''')
+
+            # Student responses - stores individual item responses across phases
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS student_responses (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    phase INTEGER NOT NULL,
+                    subphase INTEGER,
+                    step INTEGER NOT NULL,
+                    interaction INTEGER NOT NULL,
+                    item_index INTEGER NOT NULL,
+                    item_type TEXT NOT NULL,
+                    item_id TEXT,
+                    prompt TEXT,
+                    response TEXT NOT NULL,
+                    is_correct INTEGER,
+                    score REAL,
+                    ai_feedback TEXT,
+                    session_id TEXT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+                )
+            ''')
+
             conn.commit()
             logger.info("Database tables initialized successfully")
-            
+
         except Exception as e:
             conn.rollback()
             logger.error(f"Error initializing database: {str(e)}")
