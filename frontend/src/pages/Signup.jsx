@@ -1,14 +1,68 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom'
 import { useApiContext } from '../lib/api.jsx'
-import { Box, Paper, Typography, TextField, Button, Stack, Alert, Grid, InputAdornment, IconButton, CircularProgress, List, ListItem, ListItemIcon, ListItemText } from '@mui/material'
+import { Box, Typography, TextField, Stack, Grid, InputAdornment, IconButton, CircularProgress } from '@mui/material'
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
+import PersonAddIcon from '@mui/icons-material/PersonAdd'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import { useColorMode } from '../theme.jsx'
+
+const LIGHT = {
+  pageBg:  '#FFFDE7',
+  cardBg:  '#ffffff',
+  heading: '#1A237E',
+  body:    '#37474F',
+  muted:   '#78909C',
+  border:  '#E0E0E0',
+  purple: { bg: '#E1BEE7', border: '#8E24AA', shadow: '#8E24AA' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1976D2' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F9A825', text: '#5D4037' },
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#388E3C' },
+  orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#F57C00' },
+  teal:   { bg: '#B2EBF2', border: '#0097A7', shadow: '#0097A7' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#C62828' },
+}
+const DARK = {
+  pageBg:  '#0F0F1A',
+  cardBg:  '#1A1A2E',
+  heading: '#E8EAFF',
+  body:    '#B0BEC5',
+  muted:   '#607D8B',
+  border:  '#2A2A4A',
+  purple: { bg: '#1E0A2E', border: '#CE93D8', shadow: '#7B1FA2' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  yellow: { bg: '#2A2200', border: '#F9A825', shadow: '#A06800', text: '#FFD54F' },
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+  teal:   { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+  red:    { bg: '#1F0000', border: '#EF9A9A', shadow: '#B71C1C' },
+}
+
+const clayField = (D) => ({
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '14px',
+    bgcolor: D.pageBg,
+    fontWeight: 600,
+    '& fieldset': { border: `2px solid ${D.border}` },
+    '&:hover fieldset': { border: `2px solid ${D.blue.border}` },
+    '&.Mui-focused fieldset': {
+      border: `2px solid ${D.purple.border}`,
+      boxShadow: `3px 3px 0 ${D.purple.shadow}`,
+    },
+    '&.Mui-error fieldset': { border: `2px solid ${D.red.border}`, boxShadow: `2px 2px 0 ${D.red.shadow}` },
+  },
+  '& .MuiInputLabel-root': { fontWeight: 700, color: D.muted },
+  '& .MuiInputLabel-root.Mui-focused': { color: D.purple.border },
+  '& .MuiFormHelperText-root': { fontWeight: 600, mt: 0.5 },
+})
 
 export default function Signup() {
   const { client } = useApiContext()
+  const { mode } = useColorMode()
+  const D = mode === 'dark' ? DARK : LIGHT
   const [form, setForm] = useState({ username: '', email: '', password: '', first_name: '', last_name: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [uStatus, setUStatus] = useState({ loading: false, available: null, message: '' })
@@ -19,7 +73,6 @@ export default function Signup() {
 
   const onChange = (k) => (e) => setForm({ ...form, [k]: e.target.value })
 
-  // Live username availability (debounced)
   useEffect(() => {
     if (!form.username) { setUStatus({ loading: false, available: null, message: '' }); return }
     setUStatus(s => ({ ...s, loading: true }))
@@ -28,14 +81,11 @@ export default function Signup() {
         const r = await fetch(`/auth/api/check-username?username=${encodeURIComponent(form.username)}`, { credentials: 'include' })
         const data = await r.json()
         setUStatus({ loading: false, available: !!data.available, message: data.message || '' })
-      } catch (err) {
-        setUStatus({ loading: false, available: null, message: 'Could not check username' })
-      }
+      } catch { setUStatus({ loading: false, available: null, message: 'Could not check username' }) }
     }, 400)
     return () => clearTimeout(h)
   }, [form.username])
 
-  // Live email availability (debounced)
   useEffect(() => {
     if (!form.email) { setEStatus({ loading: false, available: null, message: '' }); return }
     setEStatus(s => ({ ...s, loading: true }))
@@ -44,22 +94,14 @@ export default function Signup() {
         const r = await fetch(`/auth/api/check-email?email=${encodeURIComponent(form.email)}`, { credentials: 'include' })
         const data = await r.json()
         setEStatus({ loading: false, available: !!data.available, message: data.message || '' })
-      } catch (err) {
-        setEStatus({ loading: false, available: null, message: 'Could not check email' })
-      }
+      } catch { setEStatus({ loading: false, available: null, message: 'Could not check email' }) }
     }, 400)
     return () => clearTimeout(h)
   }, [form.email])
 
-  // Password rules inline validation
   const pwRules = useMemo(() => {
     const v = form.password || ''
-    return {
-      len: v.length >= 8,
-      up: /[A-Z]/.test(v),
-      low: /[a-z]/.test(v),
-      num: /\d/.test(v)
-    }
+    return { len: v.length >= 8, up: /[A-Z]/.test(v), low: /[a-z]/.test(v), num: /\d/.test(v) }
   }, [form.password])
 
   const canSubmit = Boolean(
@@ -69,331 +111,216 @@ export default function Signup() {
   )
 
   const onSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    try {
-      await client.signup(form)
-      navigate('/dashboard')
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
+    e.preventDefault(); setLoading(true); setError('')
+    try { await client.signup(form); navigate('/dashboard') }
+    catch (err) { setError(err.message) }
+    finally { setLoading(false) }
   }
 
   return (
-    <Box sx={{ 
-      minHeight: '90vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      py: 4
-    }}>
-      <Box sx={{ width: '100%', maxWidth: 560 }}>
+    <Box sx={{ minHeight: '90vh', bgcolor: D.pageBg, display: 'flex', alignItems: 'center', justifyContent: 'center', py: 6, px: 2 }}>
+      <Box sx={{ width: '100%', maxWidth: 540 }}>
+
+        {/* Header */}
         <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <Typography variant="h3" gutterBottom sx={{ fontWeight: 700 }}>
+          <Box sx={{
+            width: 56, height: 56, borderRadius: '16px', mx: 'auto', mb: 2.5,
+            bgcolor: D.green.bg, border: `2px solid ${D.green.border}`,
+            boxShadow: `4px 4px 0 ${D.green.shadow}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <AutoAwesomeIcon sx={{ fontSize: 28, color: D.green.border }} />
+          </Box>
+          <Typography sx={{ fontWeight: 900, fontSize: '2.2rem', color: D.heading, letterSpacing: '-0.02em', mb: 1 }}>
             Join FARDI
           </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography sx={{ color: D.muted, fontSize: '1rem', fontWeight: 600, mb: 3 }}>
             Quick registration for your professional CEFR assessment
           </Typography>
-          
-          {/* Why Create Account Section */}
-          <Paper 
-            sx={{ 
-              p: 3, 
-              mb: 3, 
-              bgcolor: theme => theme.palette.mode === 'dark' 
-                ? 'rgba(59, 130, 246, 0.1)' 
-                : 'rgba(59, 130, 246, 0.05)',
-              border: theme => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)'}`,
-              borderRadius: 2
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ mb: 2, color: 'primary.main', fontWeight: 600, textAlign: 'center' }}>
-              Secure your results • Official certificates • Track progress
+
+          {/* Info banner */}
+          <Box sx={{
+            px: 3, py: 2, borderRadius: '16px',
+            bgcolor: D.yellow.bg, border: `2px solid ${D.yellow.border}`,
+            boxShadow: `3px 3px 0 ${D.yellow.shadow}`,
+          }}>
+            <Typography sx={{ fontSize: '0.875rem', fontWeight: 800, color: D.yellow.text || D.yellow.border, mb: 0.25 }}>
+              ✦ Secure your results · Official certificates · Track progress
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: D.body }}>
               Registration takes 30 seconds. Your CEFR assessment is saved permanently.
             </Typography>
-          </Paper>
+          </Box>
         </Box>
 
-        <Paper 
-          elevation={0}
-          sx={{ 
-            p: { xs: 3, sm: 4 },
-            borderRadius: 4,
-            background: theme => theme.palette.mode === 'dark' 
-              ? `linear-gradient(135deg, ${theme.palette.background.paper} 0%, rgba(30, 41, 59, 0.8) 100%)`
-              : `linear-gradient(135deg, ${theme.palette.background.paper} 0%, rgba(248, 250, 252, 0.8) 100%)`,
-            border: theme => `1px solid ${theme.palette.divider}`,
-            backdropFilter: 'blur(10px)'
-          }}
-        >
+        {/* Card */}
+        <Box sx={{
+          bgcolor: D.cardBg,
+          border: `2px solid ${D.purple.border}`,
+          borderRadius: '24px',
+          boxShadow: `6px 6px 0 ${D.purple.shadow}`,
+          p: { xs: 3, sm: 4 },
+        }}>
           {error && (
-            <Alert 
-              severity="error" 
-              sx={{ 
-                mb: 3,
-                borderRadius: 2,
-                '& .MuiAlert-message': {
-                  fontSize: '0.95rem'
-                }
-              }}
-            >
-              {error}
-            </Alert>
+            <Box sx={{
+              mb: 3, p: 2, borderRadius: '14px',
+              bgcolor: D.red.bg, border: `2px solid ${D.red.border}`,
+              boxShadow: `3px 3px 0 ${D.red.shadow}`,
+            }}>
+              <Typography sx={{ color: D.red.border, fontWeight: 700, fontSize: '0.9rem' }}>⚠ {error}</Typography>
+            </Box>
           )}
 
           <Box component="form" onSubmit={onSubmit}>
-            <Stack spacing={3}>
+            <Stack spacing={2.5}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label="First name" 
-                    value={form.first_name} 
-                    onChange={onChange('first_name')}
-                    fullWidth
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 3,
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'primary.main',
-                        }
-                      }
-                    }}
-                  />
+                  <TextField label="First name" value={form.first_name} onChange={onChange('first_name')} fullWidth sx={clayField(D)} />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label="Last name" 
-                    value={form.last_name} 
-                    onChange={onChange('last_name')}
-                    fullWidth
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 3,
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'primary.main',
-                        }
-                      }
-                    }}
-                  />
+                  <TextField label="Last name" value={form.last_name} onChange={onChange('last_name')} fullWidth sx={clayField(D)} />
                 </Grid>
               </Grid>
 
               <TextField
-                label="Username"
-                value={form.username}
-                onChange={onChange('username')}
-                required
-                fullWidth
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 3,
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'primary.main',
-                    }
-                  }
-                }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      {uStatus.loading && <CircularProgress size={18} />}
-                      {!uStatus.loading && uStatus.available === true && <CheckCircleOutlineIcon color="success" fontSize="small" />}
-                      {!uStatus.loading && uStatus.available === false && <ErrorOutlineIcon color="error" fontSize="small" />}
-                    </InputAdornment>
-                  )
-                }}
-                helperText={uStatus.message}
+                label="Username" value={form.username} onChange={onChange('username')}
+                required fullWidth sx={clayField(D)}
                 error={uStatus.available === false}
-              />
-
-              <TextField
-                label="Email"
-                type="email"
-                value={form.email}
-                onChange={onChange('email')}
-                required
-                fullWidth
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 3,
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'primary.main',
-                    }
-                  }
-                }}
+                helperText={uStatus.message}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      {eStatus.loading && <CircularProgress size={18} />}
-                      {!eStatus.loading && eStatus.available === true && <CheckCircleOutlineIcon color="success" fontSize="small" />}
-                      {!eStatus.loading && eStatus.available === false && <ErrorOutlineIcon color="error" fontSize="small" />}
+                      {uStatus.loading && <CircularProgress size={18} sx={{ color: D.purple.border }} />}
+                      {!uStatus.loading && uStatus.available === true && <CheckCircleOutlineIcon sx={{ color: D.green.border, fontSize: 20 }} />}
+                      {!uStatus.loading && uStatus.available === false && <ErrorOutlineIcon sx={{ color: D.red.border, fontSize: 20 }} />}
                     </InputAdornment>
                   )
                 }}
-                helperText={eStatus.message}
-                error={eStatus.available === false}
               />
 
               <TextField
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                value={form.password}
-                onChange={onChange('password')}
-                required
-                fullWidth
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 3,
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'primary.main',
-                    }
-                  }
-                }}
+                label="Email" type="email" value={form.email} onChange={onChange('email')}
+                required fullWidth sx={clayField(D)}
+                error={eStatus.available === false}
+                helperText={eStatus.message}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(s => !s)}
-                        edge="end"
-                        aria-label="toggle password visibility"
-                        sx={{ borderRadius: 2 }}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      {eStatus.loading && <CircularProgress size={18} sx={{ color: D.purple.border }} />}
+                      {!eStatus.loading && eStatus.available === true && <CheckCircleOutlineIcon sx={{ color: D.green.border, fontSize: 20 }} />}
+                      {!eStatus.loading && eStatus.available === false && <ErrorOutlineIcon sx={{ color: D.red.border, fontSize: 20 }} />}
+                    </InputAdornment>
+                  )
+                }}
+              />
+
+              <TextField
+                label="Password" type={showPassword ? 'text' : 'password'}
+                value={form.password} onChange={onChange('password')}
+                required fullWidth sx={clayField(D)}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowPassword(s => !s)} edge="end" sx={{ borderRadius: '10px', color: D.muted }}>
+                        {showPassword ? <VisibilityOff sx={{ fontSize: 20 }} /> : <Visibility sx={{ fontSize: 20 }} />}
                       </IconButton>
                     </InputAdornment>
                   )
                 }}
               />
 
-              {/* Password Requirements */}
-              <Paper 
-                variant="outlined" 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 3,
-                  backgroundColor: 'background.default'
-                }}
-              >
-                <Typography variant="body2" fontWeight={600} gutterBottom>
+              {/* Password rules */}
+              <Box sx={{
+                p: 2.5, borderRadius: '16px',
+                bgcolor: D.pageBg, border: `2px solid ${D.border}`,
+              }}>
+                <Typography sx={{ fontWeight: 800, fontSize: '0.82rem', color: D.body, mb: 1.5 }}>
                   Password Requirements
                 </Typography>
                 <Grid container spacing={1}>
                   {[
                     { key: 'len', text: 'At least 8 characters' },
-                    { key: 'up', text: 'Uppercase letter' },
-                    { key: 'low', text: 'Lowercase letter' },
-                    { key: 'num', text: 'Number' }
-                  ].map((rule, index) => (
-                    <Grid item xs={12} sm={6} key={index}>
+                    { key: 'up',  text: 'Uppercase letter'      },
+                    { key: 'low', text: 'Lowercase letter'      },
+                    { key: 'num', text: 'Number'                },
+                  ].map(rule => (
+                    <Grid item xs={12} sm={6} key={rule.key}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        {pwRules[rule.key] ? 
-                          <CheckCircleOutlineIcon color="success" fontSize="small" /> : 
-                          <ErrorOutlineIcon color="disabled" fontSize="small" />
+                        {pwRules[rule.key]
+                          ? <CheckCircleOutlineIcon sx={{ color: D.green.border, fontSize: 17 }} />
+                          : <ErrorOutlineIcon sx={{ color: D.border, fontSize: 17 }} />
                         }
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            color: pwRules[rule.key] ? 'success.main' : 'text.secondary',
-                            fontWeight: pwRules[rule.key] ? 500 : 400
-                          }}
-                        >
+                        <Typography sx={{
+                          fontSize: '0.8rem', fontWeight: 700,
+                          color: pwRules[rule.key] ? D.green.border : D.muted,
+                        }}>
                           {rule.text}
                         </Typography>
                       </Stack>
                     </Grid>
                   ))}
                 </Grid>
-              </Paper>
+              </Box>
 
-              <Button
-                type="submit"
+              {/* Submit */}
+              <Box
+                component="button" type="submit"
                 disabled={!canSubmit}
-                fullWidth
-                size="large"
                 sx={{
-                  py: 1.5,
-                  borderRadius: 3,
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  background: theme => (!canSubmit || loading)
-                    ? 'rgba(0, 0, 0, 0.12)' 
-                    : `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                  '&:hover': {
-                    background: theme => (canSubmit && !loading)
-                      ? `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`
-                      : undefined,
-                    transform: (canSubmit && !loading) ? 'translateY(-1px)' : 'none',
-                  }
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                  width: '100%', py: 1.75, borderRadius: '14px',
+                  bgcolor: !canSubmit ? D.border : D.green.bg,
+                  border: `2px solid ${!canSubmit ? D.border : D.green.border}`,
+                  boxShadow: !canSubmit ? 'none' : `4px 4px 0 ${D.green.shadow}`,
+                  color: !canSubmit ? D.muted : D.green.border,
+                  fontWeight: 900, fontSize: '1rem',
+                  cursor: !canSubmit ? 'not-allowed' : 'pointer',
+                  transition: 'transform 0.12s, box-shadow 0.12s',
+                  '&:hover': canSubmit ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` } : {},
+                  '&:active': canSubmit ? { transform: 'translate(1px,1px)', boxShadow: `2px 2px 0 ${D.green.shadow}` } : {},
                 }}
               >
+                <PersonAddIcon sx={{ fontSize: 19 }} />
                 {loading ? 'Creating Account...' : 'Create Account'}
-              </Button>
+              </Box>
             </Stack>
           </Box>
 
-          <Box sx={{ mt: 4, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
+          <Box sx={{ mt: 3.5, textAlign: 'center' }}>
+            <Typography sx={{ fontSize: '0.875rem', color: D.muted, fontWeight: 600 }}>
               Already have an account?{' '}
-              <Button
-                component={RouterLink}
-                to="/login"
-                variant="text"
+              <Box
+                component={RouterLink} to="/login"
                 sx={{
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  '&:hover': {
-                    backgroundColor: 'transparent',
-                    textDecoration: 'underline'
-                  }
+                  color: D.purple.border, fontWeight: 800, textDecoration: 'none',
+                  borderBottom: `2px solid ${D.purple.border}`,
+                  '&:hover': { color: D.blue.border, borderColor: D.blue.border },
+                  transition: 'color 0.15s, border-color 0.15s',
                 }}
               >
                 Sign in
-              </Button>
+              </Box>
             </Typography>
           </Box>
-        </Paper>
-
-        {/* Benefits */}
-        <Box sx={{ mt: 6, textAlign: 'center' }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            What you'll get with FARDI
-          </Typography>
-          <Stack 
-            direction={{ xs: 'column', sm: 'row' }} 
-            spacing={2} 
-            justifyContent="center"
-            sx={{ mt: 2 }}
-          >
-            {[
-              'Free CEFR assessment',
-              'AI-powered coaching', 
-              'Cultural learning',
-              'Progress tracking'
-            ].map((benefit, index) => (
-              <Typography 
-                key={index}
-                variant="caption" 
-                sx={{ 
-                  px: 2, 
-                  py: 1, 
-                  backgroundColor: 'background.paper',
-                  borderRadius: 2,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  fontWeight: 500
-                }}
-              >
-                {benefit}
-              </Typography>
-            ))}
-          </Stack>
         </Box>
+
+        {/* Benefit pills */}
+        <Stack direction="row" spacing={1.5} justifyContent="center" flexWrap="wrap" useFlexGap sx={{ mt: 4 }}>
+          {[
+            { label: 'Free CEFR assessment', color: D.purple },
+            { label: 'AI-powered coaching',  color: D.teal   },
+            { label: 'Progress tracking',    color: D.orange },
+          ].map(({ label, color }) => (
+            <Box key={label} sx={{
+              px: 2, py: 0.6, borderRadius: '50px',
+              bgcolor: color.bg, border: `2px solid ${color.border}`,
+              boxShadow: `2px 2px 0 ${color.shadow}`,
+              fontSize: '0.75rem', fontWeight: 800, color: color.border,
+            }}>
+              {label}
+            </Box>
+          ))}
+        </Stack>
       </Box>
     </Box>
   )

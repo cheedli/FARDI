@@ -121,7 +121,7 @@ const DragDropGapFill = ({ wordBank = [], sentences = [], answers = {}, onComple
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-          {parts[0] && <Typography variant="h6" sx={{ color: '#CCCCCC' }}>{parts[0]}</Typography>}
+          {parts[0] && <Typography variant="h6" sx={{ color: 'text.primary' }}>{parts[0]}</Typography>}
 
           {/* Drop Zone */}
           <Paper
@@ -163,7 +163,7 @@ const DragDropGapFill = ({ wordBank = [], sentences = [], answers = {}, onComple
             )}
           </Paper>
 
-          {parts[1] && <Typography variant="h6" sx={{ color: '#CCCCCC' }}>{parts[1]}</Typography>}
+          {parts[1] && <Typography variant="h6" sx={{ color: 'text.primary' }}>{parts[1]}</Typography>}
 
           {/* Feedback Icon */}
           {submitted && (

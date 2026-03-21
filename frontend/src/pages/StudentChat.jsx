@@ -5,8 +5,29 @@ import {
 } from '@mui/material'
 import SendIcon from '@mui/icons-material/Send'
 import SupportAgentIcon from '@mui/icons-material/SupportAgent'
+import { useColorMode } from '../theme.jsx'
+
+const LIGHT = {
+  pageBg: '#FFFDE7', cardBg: '#ffffff', body: '#37474F', muted: '#78909C', border: '#E0E0E0',
+  purple: { bg: '#E1BEE7', border: '#8E24AA', shadow: '#8E24AA' },
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#388E3C' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1976D2' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F9A825' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#C62828' },
+}
+const DARK = {
+  pageBg: '#0F0F1A', cardBg: '#1A1A2E', body: '#B0BEC5', muted: '#607D8B', border: '#2A2A4A',
+  purple: { bg: '#1E0A2E', border: '#CE93D8', shadow: '#7B1FA2' },
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  yellow: { bg: '#2A2200', border: '#F9A825', shadow: '#A06800' },
+  red:    { bg: '#1F0000', border: '#EF9A9A', shadow: '#B71C1C' },
+}
 
 export default function StudentChat() {
+  const { mode } = useColorMode()
+  const D = mode === 'dark' ? DARK : LIGHT
+
   const [conversations, setConversations] = useState([])
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
@@ -83,55 +104,183 @@ export default function StudentChat() {
 
   if (loading) {
     return (
-      <Box sx={{ p: 4 }}>
-        <Typography sx={{ mb: 2, color: '#64748b' }}>Loading messages...</Typography>
-        <LinearProgress sx={{ borderRadius: 2 }} />
+      <Box sx={{
+        p: 4,
+        bgcolor: D.pageBg,
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+      }}>
+        <Typography sx={{
+          mb: 2,
+          color: D.muted,
+          fontWeight: 700,
+          fontSize: '0.95rem',
+          letterSpacing: '0.02em',
+        }}>
+          Loading messages...
+        </Typography>
+        <Box sx={{
+          width: '100%',
+          maxWidth: 320,
+          border: `2px solid ${D.yellow.border}`,
+          borderRadius: '12px',
+          overflow: 'hidden',
+          boxShadow: `4px 4px 0 ${D.yellow.shadow}`,
+        }}>
+          <LinearProgress
+            sx={{
+              height: 10,
+              bgcolor: D.yellow.bg,
+              '& .MuiLinearProgress-bar': {
+                bgcolor: D.yellow.border,
+                borderRadius: 0,
+              },
+            }}
+          />
+        </Box>
       </Box>
     )
   }
 
   if (!adminUser) {
     return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
-        <SupportAgentIcon sx={{ fontSize: 48, color: '#e2e8f0', mb: 2 }} />
-        <Typography sx={{ color: '#94a3b8' }}>No instructor available for chat</Typography>
+      <Box sx={{
+        bgcolor: D.pageBg,
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <Box sx={{
+          textAlign: 'center',
+          p: 4,
+          bgcolor: D.cardBg,
+          border: `2px solid ${D.border}`,
+          borderRadius: '20px',
+          boxShadow: `4px 4px 0 ${D.border}`,
+          maxWidth: 300,
+        }}>
+          <Box sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 64,
+            height: 64,
+            bgcolor: D.green.bg,
+            border: `2px solid ${D.green.border}`,
+            borderRadius: '16px',
+            boxShadow: `3px 3px 0 ${D.green.shadow}`,
+            mb: 2,
+          }}>
+            <SupportAgentIcon sx={{ fontSize: 32, color: D.green.border }} />
+          </Box>
+          <Typography sx={{ color: D.body, fontWeight: 700, fontSize: '0.95rem' }}>
+            No instructor available for chat
+          </Typography>
+        </Box>
       </Box>
     )
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 1px)', overflow: 'hidden' }}>
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: 'calc(100vh - 1px)',
+      overflow: 'hidden',
+      bgcolor: D.pageBg,
+    }}>
       {/* Header */}
       <Box sx={{
-        px: 2.5, py: 1.5, borderBottom: '1px solid #f1f5f9', bgcolor: 'white',
-        display: 'flex', alignItems: 'center', gap: 1.5,
+        px: 2.5,
+        py: 1.5,
+        borderBottom: `2px solid ${D.border}`,
+        boxShadow: `0 3px 0 ${D.border}`,
+        bgcolor: D.cardBg,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1.5,
+        flexShrink: 0,
       }}>
-        <Avatar sx={{
-          width: 38, height: 38,
-          background: 'linear-gradient(135deg, #10b981, #059669)',
-          fontSize: '0.85rem', fontWeight: 700,
+        <Box sx={{
+          width: 40,
+          height: 40,
+          bgcolor: D.green.bg,
+          border: `2px solid ${D.green.border}`,
+          boxShadow: `2px 2px 0 ${D.green.shadow}`,
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
         }}>
-          <SupportAgentIcon sx={{ fontSize: 20 }} />
-        </Avatar>
+          <SupportAgentIcon sx={{ fontSize: 20, color: D.green.border }} />
+        </Box>
         <Box>
-          <Typography sx={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', lineHeight: 1.2 }}>
+          <Typography sx={{
+            fontSize: '1rem',
+            fontWeight: 700,
+            color: D.body,
+            lineHeight: 1.2,
+          }}>
             {adminUser.first_name} {adminUser.last_name}
           </Typography>
-          <Typography sx={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 500 }}>
+          <Typography sx={{
+            fontSize: '0.72rem',
+            color: D.green.border,
+            fontWeight: 600,
+          }}>
             Instructor
           </Typography>
         </Box>
       </Box>
 
       {/* Messages */}
-      <Box sx={{ flex: 1, overflowY: 'auto', px: 2.5, py: 2, bgcolor: '#fafbfc' }}>
+      <Box sx={{
+        flex: 1,
+        overflowY: 'auto',
+        px: 2.5,
+        py: 2,
+        bgcolor: D.pageBg,
+      }}>
         {messages.length === 0 && (
-          <Box sx={{ textAlign: 'center', py: 6 }}>
-            <SupportAgentIcon sx={{ fontSize: 40, color: '#e2e8f0', mb: 1 }} />
-            <Typography sx={{ color: '#94a3b8', fontSize: '0.92rem', fontWeight: 500 }}>
+          <Box sx={{
+            textAlign: 'center',
+            py: 6,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 1,
+          }}>
+            <Box sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 56,
+              height: 56,
+              bgcolor: D.green.bg,
+              border: `2px solid ${D.green.border}`,
+              borderRadius: '16px',
+              boxShadow: `3px 3px 0 ${D.green.shadow}`,
+              mb: 1,
+            }}>
+              <SupportAgentIcon sx={{ fontSize: 28, color: D.green.border }} />
+            </Box>
+            <Typography sx={{
+              color: D.body,
+              fontSize: '0.95rem',
+              fontWeight: 700,
+            }}>
               Message your instructor
             </Typography>
-            <Typography sx={{ color: '#cbd5e1', fontSize: '0.78rem', mt: 0.5 }}>
+            <Typography sx={{
+              color: D.muted,
+              fontSize: '0.78rem',
+              fontWeight: 500,
+            }}>
               Ask questions about your learning progress
             </Typography>
           </Box>
@@ -145,7 +294,16 @@ export default function StudentChat() {
                   <Chip
                     label={new Date(msg.created_at).toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}
                     size="small"
-                    sx={{ fontSize: '0.65rem', bgcolor: '#f1f5f9', color: '#94a3b8', fontWeight: 500 }}
+                    sx={{
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      bgcolor: D.yellow.bg,
+                      border: `2px solid ${D.yellow.border}`,
+                      color: D.body,
+                      borderRadius: '50px',
+                      boxShadow: `2px 2px 0 ${D.yellow.shadow}`,
+                      '& .MuiChip-label': { px: 1.5 },
+                    }}
                   />
                 </Box>
               )}
@@ -153,36 +311,62 @@ export default function StudentChat() {
                 display: 'flex',
                 justifyContent: msg.is_mine ? 'flex-end' : 'flex-start',
                 mb: 1,
+                alignItems: 'flex-end',
               }}>
                 {!msg.is_mine && (
-                  <Avatar sx={{
-                    width: 28, height: 28, mr: 1, mt: 0.5,
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    fontSize: '0.65rem',
+                  <Box sx={{
+                    width: 28,
+                    height: 28,
+                    mr: 1,
+                    mb: 0.5,
+                    bgcolor: D.green.bg,
+                    border: `2px solid ${D.green.border}`,
+                    borderRadius: '8px',
+                    boxShadow: `2px 2px 0 ${D.green.shadow}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
                   }}>
-                    <SupportAgentIcon sx={{ fontSize: 14 }} />
-                  </Avatar>
+                    <SupportAgentIcon sx={{ fontSize: 14, color: D.green.border }} />
+                  </Box>
                 )}
-                <Paper sx={{
-                  px: 2, py: 1, maxWidth: '70%', borderRadius: 3,
-                  bgcolor: msg.is_mine ? '#6366f1' : 'white',
-                  color: msg.is_mine ? 'white' : '#0f172a',
-                  border: msg.is_mine ? 'none' : '1px solid #f1f5f9',
-                  boxShadow: msg.is_mine ? '0 1px 4px rgba(99,102,241,0.2)' : '0 1px 2px rgba(0,0,0,0.04)',
-                  borderBottomRightRadius: msg.is_mine ? 6 : 16,
-                  borderBottomLeftRadius: msg.is_mine ? 16 : 6,
+                <Box sx={{
+                  px: 2,
+                  py: 1,
+                  maxWidth: '70%',
+                  borderRadius: msg.is_mine
+                    ? '18px 18px 6px 18px'
+                    : '18px 18px 18px 6px',
+                  bgcolor: msg.is_mine ? D.purple.bg : D.cardBg,
+                  color: msg.is_mine ? D.purple.border : D.body,
+                  border: msg.is_mine
+                    ? `2px solid ${D.purple.border}`
+                    : `2px solid ${D.border}`,
+                  boxShadow: msg.is_mine
+                    ? `3px 3px 0 ${D.purple.shadow}`
+                    : `3px 3px 0 ${D.border}`,
                 }}>
-                  <Typography sx={{ fontSize: '0.88rem', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  <Typography sx={{
+                    fontSize: '0.88rem',
+                    lineHeight: 1.5,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    fontWeight: 500,
+                  }}>
                     {msg.message}
                   </Typography>
                   <Typography sx={{
-                    fontSize: '0.6rem', mt: 0.5,
-                    color: msg.is_mine ? 'rgba(255,255,255,0.7)' : '#94a3b8',
+                    fontSize: '0.6rem',
+                    mt: 0.5,
+                    color: msg.is_mine ? D.purple.border : D.muted,
                     textAlign: 'right',
+                    fontWeight: 600,
+                    opacity: 0.75,
                   }}>
                     {new Date(msg.created_at).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}
                   </Typography>
-                </Paper>
+                </Box>
               </Box>
             </React.Fragment>
           )
@@ -191,7 +375,14 @@ export default function StudentChat() {
       </Box>
 
       {/* Input */}
-      <Box sx={{ px: 2.5, py: 1.5, borderTop: '1px solid #f1f5f9', bgcolor: 'white' }}>
+      <Box sx={{
+        px: 2.5,
+        py: 1.5,
+        borderTop: `2px solid ${D.border}`,
+        boxShadow: `0 -3px 0 ${D.border}`,
+        bgcolor: D.cardBg,
+        flexShrink: 0,
+      }}>
         <Stack direction="row" spacing={1} alignItems="flex-end">
           <TextField
             fullWidth
@@ -209,10 +400,31 @@ export default function StudentChat() {
             }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: 3, bgcolor: '#f8fafc', fontSize: '0.88rem',
-                '& fieldset': { borderColor: '#e2e8f0' },
-                '&:hover fieldset': { borderColor: '#cbd5e1' },
-                '&.Mui-focused fieldset': { borderColor: '#6366f1' },
+                borderRadius: '14px',
+                bgcolor: D.pageBg,
+                fontSize: '0.88rem',
+                fontWeight: 500,
+                transition: 'box-shadow 0.15s ease, border-color 0.15s ease',
+                '& fieldset': {
+                  border: `2px solid ${D.border}`,
+                  borderRadius: '14px',
+                },
+                '&:hover fieldset': {
+                  border: `2px solid ${D.purple.border}`,
+                },
+                '&.Mui-focused fieldset': {
+                  border: `2px solid ${D.purple.border}`,
+                },
+                '&.Mui-focused': {
+                  boxShadow: `3px 3px 0 ${D.purple.shadow}`,
+                },
+              },
+              '& .MuiInputBase-input': {
+                color: D.body,
+              },
+              '& .MuiInputBase-input::placeholder': {
+                color: D.muted,
+                opacity: 1,
               },
             }}
           />
@@ -220,12 +432,30 @@ export default function StudentChat() {
             onClick={handleSend}
             disabled={!newMessage.trim() || sending}
             sx={{
-              width: 40, height: 40, borderRadius: 2.5,
-              bgcolor: newMessage.trim() ? '#6366f1' : '#f1f5f9',
-              color: newMessage.trim() ? 'white' : '#94a3b8',
-              '&:hover': { bgcolor: newMessage.trim() ? '#4f46e5' : '#f1f5f9' },
-              '&.Mui-disabled': { bgcolor: '#f1f5f9', color: '#cbd5e1' },
-              transition: 'all 0.2s',
+              width: 42,
+              height: 42,
+              borderRadius: '12px',
+              flexShrink: 0,
+              bgcolor: newMessage.trim() ? D.purple.bg : D.border,
+              color: newMessage.trim() ? D.purple.border : D.muted,
+              border: newMessage.trim()
+                ? `2px solid ${D.purple.border}`
+                : `2px solid ${D.border}`,
+              boxShadow: newMessage.trim()
+                ? `3px 3px 0 ${D.purple.shadow}`
+                : 'none',
+              transition: 'all 0.15s ease',
+              '&:hover': newMessage.trim() ? {
+                transform: 'translate(-2px, -2px)',
+                boxShadow: `5px 5px 0 ${D.purple.shadow}`,
+                bgcolor: D.purple.bg,
+              } : {},
+              '&.Mui-disabled': {
+                bgcolor: D.border,
+                color: D.muted,
+                border: `2px solid ${D.border}`,
+                boxShadow: 'none',
+              },
             }}
           >
             <SendIcon sx={{ fontSize: 18 }} />

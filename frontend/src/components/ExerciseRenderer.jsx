@@ -1,11 +1,13 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import {
   Box, Typography, Button, Stack, TextField, FormControl, InputLabel,
   Select, MenuItem, Chip, IconButton
 } from '@mui/material'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
+import PauseIcon from '@mui/icons-material/Pause'
 import ReplayIcon from '@mui/icons-material/Replay'
 import VolumeUpIcon from '@mui/icons-material/VolumeUp'
+import MicIcon from '@mui/icons-material/Mic'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import SendIcon from '@mui/icons-material/Send'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
@@ -28,6 +30,128 @@ const EXERCISE_CONFIG = {
 }
 
 const DEFAULT_CONFIG = { icon: '📝', title: 'Response Exercise', desc: 'Provide a thoughtful response', color: '#6366f1', placeholder: 'Type your response here...' }
+
+// Fake waveform bar heights for visual effect
+const WAVEFORM = [3,5,8,5,10,7,12,9,6,14,10,8,5,12,7,10,4,8,11,6,9,5,7,3,10,8,6,4,9,7]
+
+function VoiceNoteBubble({ question, response, setResponse }) {
+  const audioRef = useRef(null)
+  const [playing, setPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+
+  useEffect(() => {
+    const el = audioRef.current
+    if (!el) return
+    const onEnd = () => setPlaying(false)
+    const onTime = () => setCurrentTime(el.currentTime)
+    const onLoad = () => setDuration(el.duration || 0)
+    el.addEventListener('ended', onEnd)
+    el.addEventListener('timeupdate', onTime)
+    el.addEventListener('loadedmetadata', onLoad)
+    return () => {
+      el.removeEventListener('ended', onEnd)
+      el.removeEventListener('timeupdate', onTime)
+      el.removeEventListener('loadedmetadata', onLoad)
+    }
+  }, [])
+
+  const toggle = () => {
+    const el = audioRef.current
+    if (!el) return
+    if (playing) { el.pause(); setPlaying(false) }
+    else { el.play(); setPlaying(true) }
+  }
+
+  const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
+  const progress = duration > 0 ? currentTime / duration : 0
+  const activeCount = Math.round(progress * WAVEFORM.length)
+
+  return (
+    <Stack spacing={1.5}>
+      {/* Voice note bubble — incoming chat style */}
+      <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+        <Box sx={{
+          width: 36, height: 36, borderRadius: '50%',
+          bgcolor: '#8E24AA', flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <MicIcon sx={{ fontSize: 18, color: '#fff' }} />
+        </Box>
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 1.5,
+          px: 2, py: 1.5,
+          bgcolor: '#F3E8FF',
+          border: '2px solid #E8D5F5',
+          boxShadow: '3px 3px 0 #E8D5F5',
+          borderRadius: '20px 20px 20px 6px',
+          minWidth: 220, maxWidth: 340,
+        }}>
+          {question.audio_url && <audio ref={audioRef} src={question.audio_url} />}
+
+          {/* Play / pause button */}
+          <IconButton
+            onClick={toggle}
+            sx={{
+              width: 38, height: 38, flexShrink: 0,
+              bgcolor: '#8E24AA', color: '#fff',
+              '&:hover': { bgcolor: '#6A1B9A' },
+            }}
+          >
+            {playing ? <PauseIcon sx={{ fontSize: 18 }} /> : <PlayArrowIcon sx={{ fontSize: 18 }} />}
+          </IconButton>
+
+          {/* Waveform bars */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '2px', flex: 1 }}>
+            {WAVEFORM.map((h, i) => (
+              <Box key={i} sx={{
+                width: 3, borderRadius: '2px',
+                height: `${h}px`,
+                bgcolor: i < activeCount ? '#8E24AA' : '#C9A0DC',
+                transition: 'background-color 0.1s',
+                flexShrink: 0,
+              }} />
+            ))}
+          </Box>
+
+          {/* Timer */}
+          <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: '#6A1B9A', flexShrink: 0, minWidth: 32 }}>
+            {playing || currentTime > 0 ? fmt(currentTime) : duration > 0 ? fmt(duration) : '0:00'}
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Reply input */}
+      <Box sx={{
+        display: 'flex', gap: 1.5,
+        bgcolor: '#F9F5FF',
+        border: '1.5px solid #E8D5F5',
+        borderRadius: '14px',
+        p: 1.5,
+        '&:focus-within': { borderColor: '#8E24AA', boxShadow: '0 0 0 3px #F3E8FF' },
+        transition: 'border-color 0.2s, box-shadow 0.2s',
+      }}>
+        <TextField
+          value={response}
+          onChange={e => setResponse(e.target.value)}
+          multiline
+          minRows={2}
+          maxRows={4}
+          fullWidth
+          placeholder="What did you hear? Reply to the speaker…"
+          variant="standard"
+          InputProps={{ disableUnderline: true }}
+          sx={{
+            '& .MuiInputBase-input': {
+              fontSize: '0.92rem', lineHeight: 1.6, color: '#37474F',
+              '&::placeholder': { color: '#9C8DAB', opacity: 1 },
+            },
+          }}
+        />
+      </Box>
+    </Stack>
+  )
+}
 
 export default function ExerciseRenderer({ question, onSubmit, loading }) {
   const [response, setResponse] = useState('')
@@ -62,8 +186,8 @@ export default function ExerciseRenderer({ question, onSubmit, loading }) {
 
   const wordCount = response.split(' ').filter(w => w.length > 0).length
 
-  // ── Shared exercise header ──
-  const ExerciseHeader = () => (
+  // ── Shared exercise header JSX ──
+  const exerciseHeader = (
     <Box sx={{
       display: 'flex', alignItems: 'center', gap: 2,
       p: 2, borderRadius: 2.5,
@@ -90,7 +214,7 @@ export default function ExerciseRenderer({ question, onSubmit, loading }) {
   )
 
   // ── Shared text input ──
-  const ResponseInput = ({ label, placeholder, minRows = 4, showWordCount = false }) => (
+  const renderInput = (placeholder, minRows = 4, showWordCount = false) => (
     <Box>
       <TextField
         value={response}
@@ -125,41 +249,38 @@ export default function ExerciseRenderer({ question, onSubmit, loading }) {
   )
 
   // ── Hint section ──
-  const HintSection = () => {
-    if (!question.hint) return null
-    return (
-      <Box>
-        <Button
-          size="small"
-          startIcon={<LightbulbIcon sx={{ fontSize: 15 }} />}
-          onClick={() => setShowHint(!showHint)}
-          sx={{
-            borderRadius: 2, px: 1.5, py: 0.4, fontWeight: 600,
-            textTransform: 'none', fontSize: '0.8rem',
-            color: '#f59e0b', bgcolor: showHint ? '#fef3c720' : 'transparent',
-            '&:hover': { bgcolor: '#fef3c730' },
-          }}
-        >
-          {showHint ? 'Hide Hint' : 'Need a hint?'}
-        </Button>
-        {showHint && (
-          <Box sx={{
-            mt: 1, p: 2, borderRadius: 2.5,
-            bgcolor: '#fef3c710', border: '1px solid #fde68a30',
-            display: 'flex', gap: 1.5, alignItems: 'flex-start',
-          }}>
-            <LightbulbIcon sx={{ fontSize: 16, color: '#f59e0b', mt: 0.2, flexShrink: 0 }} />
-            <Typography sx={{ fontSize: '0.85rem', color: '#92400e' }}>
-              {question.hint}
-            </Typography>
-          </Box>
-        )}
-      </Box>
-    )
-  }
+  const hintSection = question.hint ? (
+    <Box>
+      <Button
+        size="small"
+        startIcon={<LightbulbIcon sx={{ fontSize: 15 }} />}
+        onClick={() => setShowHint(!showHint)}
+        sx={{
+          borderRadius: 2, px: 1.5, py: 0.4, fontWeight: 600,
+          textTransform: 'none', fontSize: '0.8rem',
+          color: '#f59e0b', bgcolor: showHint ? '#fef3c720' : 'transparent',
+          '&:hover': { bgcolor: '#fef3c730' },
+        }}
+      >
+        {showHint ? 'Hide Hint' : 'Need a hint?'}
+      </Button>
+      {showHint && (
+        <Box sx={{
+          mt: 1, p: 2, borderRadius: 2.5,
+          bgcolor: '#fef3c710', border: '1px solid #fde68a30',
+          display: 'flex', gap: 1.5, alignItems: 'flex-start',
+        }}>
+          <LightbulbIcon sx={{ fontSize: 16, color: '#f59e0b', mt: 0.2, flexShrink: 0 }} />
+          <Typography sx={{ fontSize: '0.85rem', color: '#92400e' }}>
+            {question.hint}
+          </Typography>
+        </Box>
+      )}
+    </Box>
+  ) : null
 
   // ── Tip box ──
-  const TipBox = ({ text }) => (
+  const tipBox = (text) => (
     <Box sx={{
       p: 2, borderRadius: 2.5,
       bgcolor: '#eff6ff08', border: '1px solid #dbeafe30',
@@ -175,59 +296,19 @@ export default function ExerciseRenderer({ question, onSubmit, loading }) {
   // ── Exercise type renderers ──
   const renderOpenEnded = () => (
     <Stack spacing={2.5}>
-      <ExerciseHeader />
-      <ResponseInput showWordCount />
-      <HintSection />
+      {exerciseHeader}
+      {renderInput(null, 4, true)}
+      {hintSection}
     </Stack>
   )
 
   const renderListening = () => (
-    <Stack spacing={2.5}>
-      <ExerciseHeader />
-      {question.audio_url && (
-        <Box sx={{
-          p: 2, borderRadius: 2.5,
-          bgcolor: '#f8fafc', border: '1px solid #f1f5f9',
-        }}>
-          <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
-            <audio src={question.audio_url} ref={setAudioRef} />
-            <IconButton
-              onClick={() => audioRef && audioRef.play()}
-              sx={{
-                width: 44, height: 44,
-                background: `linear-gradient(135deg, ${config.color}, ${config.color}cc)`,
-                color: 'white',
-                boxShadow: `0 2px 8px ${config.color}30`,
-                '&:hover': { background: `linear-gradient(135deg, ${config.color}dd, ${config.color}bb)` },
-              }}
-            >
-              <PlayArrowIcon sx={{ fontSize: 22 }} />
-            </IconButton>
-            <IconButton
-              onClick={() => { if (audioRef) { audioRef.currentTime = 0; audioRef.play() } }}
-              sx={{
-                width: 36, height: 36, color: '#64748b',
-                border: '1px solid #e2e8f0',
-                '&:hover': { bgcolor: '#f1f5f9' },
-              }}
-            >
-              <ReplayIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-            <Chip size="small" icon={<VolumeUpIcon sx={{ fontSize: 14 }} />} label="Audio" sx={{
-              height: 26, fontSize: '0.72rem', fontWeight: 600,
-              bgcolor: `${config.color}08`, color: config.color, border: `1px solid ${config.color}20`,
-              '& .MuiChip-icon': { color: config.color },
-            }} />
-          </Stack>
-        </Box>
-      )}
-      <ResponseInput placeholder="What did you hear? Respond to the speaker..." minRows={3} />
-    </Stack>
+    <VoiceNoteBubble question={question} response={response} setResponse={setResponse} />
   )
 
   const renderWordBank = () => (
     <Stack spacing={2.5}>
-      <ExerciseHeader />
+      {exerciseHeader}
       <Box sx={{ borderRadius: 2.5, border: '1px solid #f1f5f9', p: 2.5 }}>
         <Typography sx={{ fontSize: '0.88rem', color: '#475569', mb: 2 }}>
           Complete the sentence by selecting the appropriate words:
@@ -275,15 +356,15 @@ export default function ExerciseRenderer({ question, onSubmit, loading }) {
 
   const renderSocialInteraction = () => (
     <Stack spacing={2.5}>
-      <ExerciseHeader />
-      <TipBox text="Be polite, clear, and consider cultural context in your response." />
-      <ResponseInput showWordCount />
+      {exerciseHeader}
+      {tipBox("Be polite, clear, and consider cultural context in your response.")}
+      {renderInput(null, 4, true)}
     </Stack>
   )
 
   const renderProblemSolving = () => (
     <Stack spacing={2.5}>
-      <ExerciseHeader />
+      {exerciseHeader}
       <Box sx={{ display: 'flex', gap: 2, p: 2, borderRadius: 2.5, bgcolor: '#f8fafc', border: '1px solid #f1f5f9' }}>
         {[
           { step: '1', label: 'Understand', desc: 'Identify the key issues' },
@@ -305,21 +386,21 @@ export default function ExerciseRenderer({ question, onSubmit, loading }) {
           </Box>
         ))}
       </Box>
-      <ResponseInput showWordCount />
+      {renderInput(null, 4, true)}
     </Stack>
   )
 
   const renderWriting = () => (
     <Stack spacing={2.5}>
-      <ExerciseHeader />
-      <TipBox text="Use proper grammar, clear structure, and appropriate vocabulary." />
-      <ResponseInput minRows={6} showWordCount />
+      {exerciseHeader}
+      {tipBox("Use proper grammar, clear structure, and appropriate vocabulary.")}
+      {renderInput(null, 6, true)}
     </Stack>
   )
 
   const renderDialogue = () => (
     <Stack spacing={2.5}>
-      <ExerciseHeader />
+      {exerciseHeader}
       {question.dialogue_context && (
         <Box sx={{
           p: 2, borderRadius: 2.5,
@@ -333,7 +414,7 @@ export default function ExerciseRenderer({ question, onSubmit, loading }) {
           </Typography>
         </Box>
       )}
-      <ResponseInput minRows={3} showWordCount />
+      {renderInput(null, 3, true)}
     </Stack>
   )
 

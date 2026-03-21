@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useTheme } from '@mui/material/styles'
 import { Box, Paper, Typography, Stack, Button, LinearProgress, Chip, Grid, Divider, Dialog, DialogTitle, DialogContent, DialogActions, RadioGroup, FormControlLabel, Radio, TextField, Alert, Accordion, AccordionSummary, AccordionDetails, Tooltip, IconButton, Avatar } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
@@ -13,6 +14,43 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import NavigateNextIcon from '@mui/icons-material/NavigateNext'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import DashboardIcon from '@mui/icons-material/Dashboard'
+
+// ─── Clay palette ────────────────────────────────────────────────────────────
+const CLAY_LIGHT = {
+  pageBg: '#FFFDE7', cardBg: '#ffffff',
+  heading: '#1A237E', body: '#37474F', muted: '#78909C', divider: '#E0E0E0',
+  purple: { bg: '#E1BEE7', border: '#8E24AA', shadow: '#8E24AA', text: '#4A148C' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1976D2' },
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#388E3C' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F9A825', text: '#5D4037' },
+  orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#F57C00' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#C62828' },
+}
+const CLAY_DARK = {
+  pageBg: '#0F0F1A', cardBg: '#1A1A2E',
+  heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', divider: '#2A2A4A',
+  purple: { bg: '#1E0A2E', border: '#CE93D8', shadow: '#7B1FA2', text: '#CE93D8' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  yellow: { bg: '#2A2200', border: '#F9A825', shadow: '#A06800', text: '#FFD54F' },
+  orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+  red:    { bg: '#1F0000', border: '#EF9A9A', shadow: '#B71C1C' },
+}
+
+function ClayCard({ children, color, sx = {} }) {
+  return (
+    <Box sx={{
+      bgcolor: '#ffffff',
+      border: `2px solid ${color?.border || '#E0E0E0'}`,
+      boxShadow: `4px 4px 0 ${color?.shadow || '#E0E0E0'}`,
+      borderRadius: '16px',
+      p: 3,
+      ...sx,
+    }}>
+      {children}
+    </Box>
+  )
+}
 
 const CEFR_META = {
   A1: { name: 'Beginner', color: '#94a3b8', bg: '#f8fafc', workplace: 'Simple greetings and basic personal information', rank: 1 },
@@ -61,23 +99,22 @@ function SkillBar({ label, level, color }) {
   const pct = levelToPct(level)
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
-        <Typography variant="body2" fontWeight={500}>{label}</Typography>
-        <Chip size="small" label={level || '—'} sx={{ bgcolor: color + '22', color: color, fontWeight: 700, fontSize: '0.75rem' }} />
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.8 }}>
+        <Typography sx={{ fontWeight: 600, fontSize: '0.9rem', color: '#37474F' }}>{label}</Typography>
+        <Box sx={{ px: 1.5, py: 0.3, borderRadius: '20px', bgcolor: color + '20', border: `1.5px solid ${color}`, boxShadow: `2px 2px 0 ${color}40` }}>
+          <Typography sx={{ fontSize: '0.72rem', fontWeight: 800, color }}>{level || '—'}</Typography>
+        </Box>
       </Stack>
-      <Box sx={{ height: 8, borderRadius: 4, bgcolor: 'grey.100', overflow: 'hidden' }}>
-        <Box sx={{
-          height: '100%', borderRadius: 4,
-          background: `linear-gradient(90deg, ${color}aa, ${color})`,
-          width: `${pct}%`,
-          transition: 'width 1s ease'
-        }} />
+      <Box sx={{ height: 10, borderRadius: '50px', bgcolor: color + '18', border: `1.5px solid ${color}40`, overflow: 'hidden' }}>
+        <Box sx={{ height: '100%', borderRadius: '50px', bgcolor: color, width: `${pct}%`, transition: 'width 1s ease' }} />
       </Box>
     </Box>
   )
 }
 
 export default function Results() {
+  const theme = useTheme()
+  const C = theme.palette.mode === 'dark' ? CLAY_DARK : CLAY_LIGHT
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -151,15 +188,20 @@ export default function Results() {
   }
 
   if (loading) return (
-    <Box sx={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-      <Typography variant="h6" color="text.secondary">Loading your results…</Typography>
-      <LinearProgress sx={{ width: 240, borderRadius: 2 }} />
+    <Box sx={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, bgcolor: C.pageBg }}>
+      <Box sx={{ width: 220 }}>
+        <Box sx={{ height: 10, borderRadius: '50px', bgcolor: C.purple.bg, border: `2px solid ${C.purple.border}`, boxShadow: `3px 3px 0 ${C.purple.shadow}`, overflow: 'hidden' }}>
+          <LinearProgress sx={{ height: '100%', bgcolor: 'transparent', '& .MuiLinearProgress-bar': { bgcolor: C.purple.border, borderRadius: '50px' } }} />
+        </Box>
+        <Typography sx={{ textAlign: 'center', mt: 2, color: C.muted, fontWeight: 700, fontSize: '0.85rem' }}>Calculating your results…</Typography>
+      </Box>
     </Box>
   )
   if (error) return (
-    <Box sx={{ p: 4, textAlign: 'center' }}>
-      <Typography color="error" variant="h6">Could not load results</Typography>
-      <Typography color="text.secondary" sx={{ mt: 1 }}>{error}</Typography>
+    <Box sx={{ p: 4, textAlign: 'center', bgcolor: C.pageBg, minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box sx={{ px: 3, py: 2, borderRadius: '16px', bgcolor: C.red.bg, border: `2px solid ${C.red.border}`, boxShadow: `3px 3px 0 ${C.red.shadow}` }}>
+        <Typography sx={{ color: C.red.border, fontWeight: 700 }}>Could not load results: {error}</Typography>
+      </Box>
     </Box>
   )
   if (!data) return null
@@ -178,84 +220,80 @@ export default function Results() {
   ]
 
   return (
-    <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 2, md: 3 }, py: 4 }}>
+    <Box sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 2, md: 3 }, py: 4, bgcolor: C.pageBg, minHeight: '100vh' }}>
 
       {/* ── HERO ── */}
-      <Paper elevation={0} sx={{
-        p: { xs: 3, md: 5 }, mb: 3, borderRadius: 4, overflow: 'hidden', position: 'relative',
-        background: 'linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #4f46e5 100%)',
-        color: 'white'
+      <Box sx={{
+        p: { xs: 3, md: 4 }, mb: 3,
+        bgcolor: C.cardBg,
+        border: `2px solid ${C.purple.border}`,
+        boxShadow: `5px 5px 0 ${C.purple.shadow}`,
+        borderRadius: '20px',
       }}>
-        {/* decorative circles */}
-        {[{top:-60,right:-60,s:200},{top:20,right:120,s:80},{bottom:-40,left:-40,s:160}].map((c,i)=>(
-          <Box key={i} sx={{ position:'absolute', top:c.top, right:c.right, bottom:c.bottom, left:c.left,
-            width:c.s, height:c.s, borderRadius:'50%', background:'rgba(255,255,255,0.05)', pointerEvents:'none' }} />
-        ))}
         <Grid container spacing={4} alignItems="center">
           <Grid item xs={12} md={7}>
-            <Chip label="Assessment Complete" size="small"
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', mb: 2, fontWeight: 600, backdropFilter: 'blur(8px)' }} />
-            <Typography variant="h3" fontWeight={800} gutterBottom sx={{ lineHeight: 1.2 }}>
+            <Box sx={{ display: 'inline-flex', px: 2, py: 0.5, mb: 2, borderRadius: '20px', bgcolor: C.purple.bg, border: `1.5px solid ${C.purple.border}` }}>
+              <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: C.purple.text }}>Assessment Complete</Typography>
+            </Box>
+            <Typography sx={{ fontSize: { xs: '1.8rem', md: '2.2rem' }, fontWeight: 800, color: C.heading, lineHeight: 1.2, mb: 1 }}>
               Well done, {data.player_name}! 🎉
             </Typography>
-            <Typography variant="body1" sx={{ opacity: 0.85, mb: 3, maxWidth: 500 }}>
+            <Typography sx={{ color: C.body, mb: 3, maxWidth: 500 }}>
               You've completed the Cultural Event Planning orientation. Here's your full language profile.
             </Typography>
-            <Stack direction="row" spacing={2} flexWrap="wrap" sx={{ gap: 1.5 }}>
-              <Chip icon={<EmojiEventsIcon />} label={`${data.xp} XP Earned`}
-                sx={{ bgcolor: '#f59e0b', color: 'white', fontWeight: 700, '& .MuiChip-icon': { color: 'white' } }} />
+            <Stack direction="row" spacing={1.5} flexWrap="wrap" sx={{ gap: 1 }}>
+              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 2, py: 0.8, borderRadius: '12px', bgcolor: C.yellow.bg, border: `2px solid ${C.yellow.border}`, boxShadow: `3px 3px 0 ${C.yellow.shadow}` }}>
+                <EmojiEventsIcon sx={{ color: C.yellow.border, fontSize: 18 }} />
+                <Typography sx={{ fontWeight: 700, color: C.yellow.border, fontSize: '0.88rem' }}>{data.xp} XP Earned</Typography>
+              </Box>
               {data.session_id && (
-                <Chip icon={<WorkspacePremiumIcon />} label="Certificate Available"
-                  sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontWeight: 600, backdropFilter: 'blur(8px)', '& .MuiChip-icon': { color: 'white' } }} />
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, px: 2, py: 0.8, borderRadius: '12px', bgcolor: C.blue.bg, border: `2px solid ${C.blue.border}`, boxShadow: `3px 3px 0 ${C.blue.shadow}` }}>
+                  <WorkspacePremiumIcon sx={{ color: C.blue.border, fontSize: 18 }} />
+                  <Typography sx={{ fontWeight: 700, color: C.blue.border, fontSize: '0.88rem' }}>Certificate Available</Typography>
+                </Box>
               )}
             </Stack>
           </Grid>
           <Grid item xs={12} md={5} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
             <Box sx={{ textAlign: 'center' }}>
               <LevelBadge level={data.overall_level} size={160} />
-              <Typography variant="body2" sx={{ mt: 2, opacity: 0.75 }}>Your CEFR Level</Typography>
-              <Typography variant="body1" fontWeight={600}>{meta.name}</Typography>
+              <Typography sx={{ mt: 2, color: C.muted, fontSize: '0.82rem' }}>Your CEFR Level</Typography>
+              <Typography sx={{ fontWeight: 700, color: C.heading }}>{meta.name}</Typography>
             </Box>
           </Grid>
         </Grid>
-      </Paper>
+      </Box>
 
       {/* ── QUICK STATS ROW ── */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {[
-          { label: 'CEFR Level', value: data.overall_level, sub: meta.name, color: meta.color || '#6366f1', icon: SchoolIcon },
-          { label: 'XP Earned', value: data.xp, sub: 'experience points', color: '#f59e0b', icon: StarIcon },
-          { label: 'Responses', value: data.responses_length || (data.responses || []).length, sub: 'total answers', color: '#34d399', icon: TrendingUpIcon },
-          { label: 'AI Detection', value: `${data.ai_percentage || 0}%`, sub: 'AI-generated responses', color: aiWarn === 'success' ? '#34d399' : aiWarn === 'info' ? '#f59e0b' : '#fb7185', icon: PsychologyIcon },
-        ].map(({ label, value, sub, color, icon: Icon }) => (
+          { label: 'CEFR Level', value: data.overall_level, sub: meta.name, c: C.purple },
+          { label: 'XP Earned', value: data.xp, sub: 'experience points', c: C.yellow },
+          { label: 'Responses', value: data.responses_length || (data.responses || []).length, sub: 'total answers', c: C.green },
+          { label: 'AI Detection', value: `${data.ai_percentage || 0}%`, sub: 'AI-generated', c: aiWarn === 'success' ? C.green : aiWarn === 'info' ? C.orange : C.red },
+        ].map(({ label, value, sub, c }) => (
           <Grid item xs={6} md={3} key={label}>
-            <Paper elevation={1} sx={{ p: 2.5, borderRadius: 3, height: '100%' }}>
-              <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                <Avatar sx={{ bgcolor: color + '18', width: 40, height: 40 }}>
-                  <Icon sx={{ color, fontSize: 20 }} />
-                </Avatar>
-                <Box>
-                  <Typography variant="h5" fontWeight={800} sx={{ color, lineHeight: 1 }}>{value}</Typography>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>{label}</Typography>
-                </Box>
-              </Stack>
-            </Paper>
+            <Box sx={{ p: 2.5, borderRadius: '16px', height: '100%', bgcolor: C.cardBg, border: `2px solid ${c.border}`, boxShadow: `4px 4px 0 ${c.shadow}` }}>
+              <Typography sx={{ fontSize: '1.6rem', fontWeight: 800, color: c.border, lineHeight: 1 }}>{value}</Typography>
+              <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: C.heading, mt: 0.4 }}>{label}</Typography>
+              <Typography sx={{ fontSize: '0.74rem', color: C.muted }}>{sub}</Typography>
+            </Box>
           </Grid>
         ))}
       </Grid>
 
       {/* ── TABS ── */}
-      <Stack direction="row" spacing={0.5} sx={{ mb: 3, p: 0.5, bgcolor: 'grey.100', borderRadius: 3, width: 'fit-content' }}>
+      <Stack direction="row" spacing={0.8} sx={{ mb: 3, flexWrap: 'wrap', gap: 0.8 }}>
         {TABS.map(t => (
-          <Button key={t.id} size="small" disableElevation
-            onClick={() => setActiveTab(t.id)}
-            variant={activeTab === t.id ? 'contained' : 'text'}
+          <Button key={t.id} size="small" disableElevation onClick={() => setActiveTab(t.id)}
             sx={{
-              borderRadius: 2.5, px: 2.5, py: 1,
-              bgcolor: activeTab === t.id ? 'primary.main' : 'transparent',
-              color: activeTab === t.id ? 'white' : 'text.secondary',
-              fontWeight: activeTab === t.id ? 600 : 400,
-              '&:hover': { bgcolor: activeTab === t.id ? 'primary.dark' : 'grey.200' }
+              borderRadius: '20px', px: 2.5, py: 0.8, fontWeight: 700, textTransform: 'none', fontSize: '0.85rem',
+              bgcolor: activeTab === t.id ? C.purple.border : C.cardBg,
+              color: activeTab === t.id ? '#ffffff' : C.body,
+              border: `2px solid ${activeTab === t.id ? C.purple.border : C.divider}`,
+              boxShadow: activeTab === t.id ? `3px 3px 0 ${C.purple.shadow}` : `3px 3px 0 ${C.divider}`,
+              '&:hover': { bgcolor: activeTab === t.id ? C.purple.shadow : C.purple.bg, borderColor: C.purple.border },
+              transition: 'all 0.15s',
             }}
           >{t.label}</Button>
         ))}
@@ -266,12 +304,10 @@ export default function Results() {
         <Grid container spacing={3}>
           <Grid item xs={12} md={7}>
             {/* CEFR Journey */}
-            <Paper elevation={1} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
-              <Typography variant="h6" fontWeight={700} gutterBottom>Your CEFR Journey</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                The European Framework for language proficiency — see where you stand.
-              </Typography>
-              <Stack spacing={1.5}>
+            <ClayCard color={C.blue} sx={{ mb: 3 }}>
+              <Typography sx={{ fontSize: '1.05rem', fontWeight: 700, color: C.heading, mb: 0.5 }}>Your CEFR Journey</Typography>
+              <Typography sx={{ fontSize: '0.82rem', color: C.muted, mb: 2.5 }}>The European Framework — see where you stand.</Typography>
+              <Stack spacing={1}>
                 {allLevels.map((lv) => {
                   const m = CEFR_META[lv]
                   const isCurrent = lv === data.overall_level
@@ -279,114 +315,98 @@ export default function Results() {
                   const isLocked = m.rank > currentRank
                   return (
                     <Box key={lv} sx={{
-                      display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2,
+                      display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: '12px',
                       bgcolor: isCurrent ? m.color + '15' : 'transparent',
-                      border: isCurrent ? `2px solid ${m.color}` : '2px solid transparent',
-                      transition: 'all 0.2s'
+                      border: `2px solid ${isCurrent ? m.color : 'transparent'}`,
+                      boxShadow: isCurrent ? `3px 3px 0 ${m.color}40` : 'none',
                     }}>
-                      <Box sx={{
-                        width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        bgcolor: isPast ? '#34d39922' : isCurrent ? m.color + '22' : 'grey.100',
-                        flexShrink: 0
-                      }}>
-                        {isPast ? <CheckCircleIcon sx={{ color: '#34d399', fontSize: 20 }} />
-                          : isLocked ? <LockIcon sx={{ color: 'text.disabled', fontSize: 18 }} />
-                          : <Typography fontWeight={800} sx={{ color: m.color, fontSize: 14 }}>{lv}</Typography>}
+                      <Box sx={{ width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: isPast ? '#34d39922' : isCurrent ? m.color + '22' : C.divider, flexShrink: 0 }}>
+                        {isPast ? <CheckCircleIcon sx={{ color: '#34d399', fontSize: 18 }} />
+                          : isLocked ? <LockIcon sx={{ color: C.muted, fontSize: 16 }} />
+                          : <Typography sx={{ fontWeight: 800, color: m.color, fontSize: '0.8rem' }}>{lv}</Typography>}
                       </Box>
                       <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Stack direction="row" alignItems="center" spacing={1}>
-                          <Typography variant="body2" fontWeight={isCurrent ? 700 : 500}
-                            sx={{ color: isCurrent ? m.color : isPast ? 'text.secondary' : isLocked ? 'text.disabled' : 'text.primary' }}>
+                          <Typography sx={{ fontSize: '0.88rem', fontWeight: isCurrent ? 700 : 500, color: isCurrent ? m.color : isLocked ? C.muted : C.body }}>
                             {lv} — {m.name}
                           </Typography>
-                          {isCurrent && <Chip size="small" label="Your Level" sx={{ bgcolor: m.color, color: 'white', fontWeight: 700, fontSize: '0.7rem', height: 20 }} />}
+                          {isCurrent && <Box sx={{ px: 1, py: 0.2, borderRadius: '10px', bgcolor: m.color, boxShadow: `2px 2px 0 ${m.color}80` }}><Typography sx={{ fontSize: '0.65rem', fontWeight: 800, color: '#fff' }}>YOU</Typography></Box>}
                         </Stack>
-                        <Typography variant="caption" color={isLocked ? 'text.disabled' : 'text.secondary'} noWrap>{m.workplace}</Typography>
+                        <Typography sx={{ fontSize: '0.75rem', color: isLocked ? C.muted : C.muted }} noWrap>{m.workplace}</Typography>
                       </Box>
                     </Box>
                   )
                 })}
               </Stack>
-            </Paper>
+            </ClayCard>
 
             {/* Next steps */}
-            <Paper elevation={1} sx={{ p: 3, borderRadius: 3 }}>
-              <Typography variant="h6" fontWeight={700} gutterBottom>Next Steps</Typography>
+            <ClayCard color={C.green}>
+              <Typography sx={{ fontSize: '1.05rem', fontWeight: 700, color: C.heading, mb: 2 }}>Next Steps</Typography>
               <Stack spacing={1.5}>
-                {data.session_id && (
-                  <Button href={`/certificate?session_id=${data.session_id}`} size="large"
-                    startIcon={<WorkspacePremiumIcon />}
-                    sx={{ justifyContent: 'flex-start', background: 'linear-gradient(135deg, #1e3a8a, #4f46e5)' }}>
-                    Get Your Certificate
+                {[
+                  data.session_id && { label: 'Get Your Certificate', icon: WorkspacePremiumIcon, href: `/certificate?session_id=${data.session_id}`, c: C.purple },
+                  { label: 'Go to Dashboard', icon: DashboardIcon, href: '/dashboard', c: C.blue },
+                  { label: 'Start New Assessment', icon: RefreshIcon, href: '/start-game', c: C.green },
+                ].filter(Boolean).map(({ label, icon: Icon, href, c }) => (
+                  <Button key={label} href={href} fullWidth startIcon={<Icon sx={{ color: c.border }} />}
+                    sx={{ justifyContent: 'flex-start', py: 1.2, px: 2, borderRadius: '12px', textTransform: 'none', fontWeight: 700, fontSize: '0.9rem', bgcolor: c.bg, border: `2px solid ${c.border}`, boxShadow: `3px 3px 0 ${c.shadow}`, color: c.border, '&:hover': { bgcolor: c.bg, opacity: 0.85 } }}>
+                    {label}
                   </Button>
-                )}
-                <Button href="/app/dashboard" size="large" variant="outlined"
-                  startIcon={<DashboardIcon />} sx={{ justifyContent: 'flex-start' }}>
-                  Go to Dashboard
-                </Button>
-                <Button href="/start-game" size="large" variant="outlined"
-                  startIcon={<RefreshIcon />} sx={{ justifyContent: 'flex-start' }}>
-                  Start New Assessment
-                </Button>
-                <Button size="large" variant="outlined" onClick={() => setFeedbackOpen(true)}
-                  sx={{ justifyContent: 'flex-start' }}>
-                  Share Your Feedback
-                </Button>
+                ))}
               </Stack>
-            </Paper>
+            </ClayCard>
           </Grid>
 
           <Grid item xs={12} md={5}>
             {/* Progress path */}
-            <Paper elevation={1} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
-              <Typography variant="h6" fontWeight={700} gutterBottom>Progress Path</Typography>
+            <ClayCard color={C.orange} sx={{ mb: 3 }}>
+              <Typography sx={{ fontSize: '1.05rem', fontWeight: 700, color: C.heading, mb: 2 }}>Progress Path</Typography>
               <Stack spacing={1}>
                 {(data.progress_levels || []).map((pl, idx) => (
-                  <Stack key={idx} direction="row" spacing={1.5} alignItems="flex-start" sx={{ p: 1.5, borderRadius: 2, bgcolor: pl.is_unlocked ? 'success.light' + '18' : 'grey.50' }}>
-                    <Avatar sx={{ width: 28, height: 28, bgcolor: pl.is_unlocked ? 'success.main' : 'grey.300', flexShrink: 0 }}>
-                      {pl.is_unlocked ? <CheckCircleIcon sx={{ fontSize: 16, color: 'white' }} /> : <LockIcon sx={{ fontSize: 14 }} />}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="body2" fontWeight={600} color={pl.is_unlocked ? 'text.primary' : 'text.disabled'}>{pl.name}</Typography>
-                      <Typography variant="caption" color="text.secondary">{pl.description}</Typography>
+                  <Box key={idx} sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', p: 1.5, borderRadius: '12px', bgcolor: pl.is_unlocked ? C.green.bg : C.divider + '40', border: `1.5px solid ${pl.is_unlocked ? C.green.border : C.divider}` }}>
+                    <Box sx={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, bgcolor: pl.is_unlocked ? C.green.border : C.muted, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {pl.is_unlocked ? <CheckCircleIcon sx={{ fontSize: 14, color: '#fff' }} /> : <LockIcon sx={{ fontSize: 12, color: '#fff' }} />}
                     </Box>
-                  </Stack>
+                    <Box>
+                      <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: pl.is_unlocked ? C.heading : C.muted }}>{pl.name}</Typography>
+                      <Typography sx={{ fontSize: '0.75rem', color: C.muted }}>{pl.description}</Typography>
+                    </Box>
+                  </Box>
                 ))}
               </Stack>
-            </Paper>
+            </ClayCard>
 
             {/* Badge */}
             {data.badges?.[data.overall_level] && (
-              <Paper elevation={1} sx={{ p: 3, mb: 3, textAlign: 'center', borderRadius: 3,
-                background: `linear-gradient(135deg, ${meta.color || '#6366f1'}15, ${meta.color || '#6366f1'}05)`,
-                border: `1px solid ${meta.color || '#6366f1'}30`
-              }}>
-                <Typography variant="h6" fontWeight={700} gutterBottom>Badge Earned</Typography>
-                <Box sx={{ mb: 1.5 }}>
-                  <img src={`/static/images/badges/${data.badges[data.overall_level].icon || ''}`}
-                    alt="badge" style={{ width: 90, height: 90, objectFit: 'contain' }} />
-                </Box>
-                <Typography fontWeight={700} color={meta.color}>{data.badges[data.overall_level].name}</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{data.badges[data.overall_level].description}</Typography>
-              </Paper>
+              <ClayCard color={C.yellow} sx={{ mb: 3, textAlign: 'center' }}>
+                <Typography sx={{ fontSize: '1.05rem', fontWeight: 700, color: C.heading, mb: 1.5 }}>Badge Earned</Typography>
+                <img src={`/static/images/badges/${data.badges[data.overall_level].icon || ''}`} alt="badge" style={{ width: 80, height: 80, objectFit: 'contain' }} />
+                <Typography sx={{ fontWeight: 700, color: meta.color || C.purple.border, mt: 1 }}>{data.badges[data.overall_level].name}</Typography>
+                <Typography sx={{ fontSize: '0.82rem', color: C.muted, mt: 0.5 }}>{data.badges[data.overall_level].description}</Typography>
+              </ClayCard>
             )}
 
             {/* Next challenge */}
-            <Paper elevation={1} sx={{ p: 3, borderRadius: 3 }}>
-              <Typography variant="h6" fontWeight={700} gutterBottom>Next Challenge</Typography>
+            <ClayCard color={C.purple}>
+              <Typography sx={{ fontSize: '1.05rem', fontWeight: 700, color: C.heading, mb: 1.5 }}>Next Challenge</Typography>
               {!challenge ? (
-                <LinearProgress sx={{ borderRadius: 2 }} />
+                <Box sx={{ height: 8, borderRadius: '50px', bgcolor: C.purple.bg, border: `1.5px solid ${C.purple.border}`, overflow: 'hidden' }}>
+                  <LinearProgress sx={{ height: '100%', bgcolor: 'transparent', '& .MuiLinearProgress-bar': { bgcolor: C.purple.border } }} />
+                </Box>
               ) : (
                 <>
-                  <Chip size="small" label={`${challenge.level} Level`} sx={{ mb: 1.5, bgcolor: 'primary.main', color: 'white', fontWeight: 600 }} />
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{challenge.challenge}</Typography>
+                  <Box sx={{ display: 'inline-flex', px: 1.5, py: 0.3, mb: 1.5, borderRadius: '20px', bgcolor: C.purple.bg, border: `1.5px solid ${C.purple.border}` }}>
+                    <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: C.purple.text }}>{challenge.level} Level</Typography>
+                  </Box>
+                  <Typography sx={{ fontSize: '0.88rem', color: C.body, mb: 2 }}>{challenge.challenge}</Typography>
                   <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Typography variant="body2" color="success.main" fontWeight={600}>+{challenge.xp_reward} XP</Typography>
-                    <Button size="small" variant="outlined" endIcon={<NavigateNextIcon />}>Accept</Button>
+                    <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: C.green.border }}>+{challenge.xp_reward} XP</Typography>
+                    <Button size="small" endIcon={<NavigateNextIcon />} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700, bgcolor: C.purple.bg, color: C.purple.border, border: `2px solid ${C.purple.border}`, boxShadow: `2px 2px 0 ${C.purple.shadow}` }}>Accept</Button>
                   </Stack>
                 </>
               )}
-            </Paper>
+            </ClayCard>
           </Grid>
         </Grid>
       )}
@@ -395,21 +415,19 @@ export default function Results() {
       {activeTab === 'skills' && (
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <Paper elevation={1} sx={{ p: 3, borderRadius: 3 }}>
-              <Typography variant="h6" fontWeight={700} gutterBottom>Skill Breakdown</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Your performance across five core language skills.
-              </Typography>
+            <ClayCard color={C.blue}>
+              <Typography sx={{ fontSize: '1.05rem', fontWeight: 700, color: C.heading, mb: 0.5 }}>Skill Breakdown</Typography>
+              <Typography sx={{ fontSize: '0.82rem', color: C.muted, mb: 2.5 }}>Your performance across five core language skills.</Typography>
               <Stack spacing={2.5}>
                 {SKILLS.map(s => (
                   <SkillBar key={s.key} label={s.label} level={skill[s.key] || data.overall_level} color={s.color} />
                 ))}
               </Stack>
-            </Paper>
+            </ClayCard>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Paper elevation={1} sx={{ p: 3, borderRadius: 3, mb: 3 }}>
-              <Typography variant="h6" fontWeight={700} gutterBottom>AI Usage Analysis</Typography>
+            <ClayCard color={C.orange} sx={{ mb: 3 }}>
+              <Typography sx={{ fontSize: '1.05rem', fontWeight: 700, color: C.heading, mb: 1.5 }}>AI Usage Analysis</Typography>
               <Box sx={{ mb: 2 }}>
                 <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
                   <Typography variant="body2" color="text.secondary">AI-generated responses</Typography>
@@ -447,34 +465,34 @@ export default function Results() {
                   </Stack>
                 </Box>
               )}
-            </Paper>
+            </ClayCard>
 
-            <Paper elevation={1} sx={{ p: 3, borderRadius: 3, background: 'linear-gradient(135deg, #1e3a8a, #4f46e5)', color: 'white' }}>
-              <Typography variant="h6" fontWeight={700} gutterBottom>Advanced Practice</Typography>
-              <Typography variant="body2" sx={{ opacity: 0.85, mb: 2 }}>
+            <ClayCard color={C.blue}>
+              <Typography sx={{ fontSize: '1.05rem', fontWeight: 700, color: C.heading, mb: 0.5 }}>Advanced Practice</Typography>
+              <Typography sx={{ fontSize: '0.82rem', color: C.muted, mb: 2 }}>
                 Strengthen your {data.overall_level} level with real team collaboration scenarios.
               </Typography>
               <Grid container spacing={1.5} sx={{ mb: 2 }}>
                 {['Team Meetings', 'Project Planning', 'Problem Solving', 'Decision Making'].map((s, i) => (
                   <Grid item xs={6} key={i}>
-                    <Box sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.12)', borderRadius: 2, textAlign: 'center' }}>
-                      <Typography variant="caption" fontWeight={600}>{s}</Typography>
+                    <Box sx={{ p: 1.5, bgcolor: C.blue.bg, borderRadius: '10px', border: `1.5px solid ${C.blue.border}`, textAlign: 'center' }}>
+                      <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: C.blue.border }}>{s}</Typography>
                     </Box>
                   </Grid>
                 ))}
               </Grid>
-              <Button href="/phase2" size="large" sx={{ bgcolor: 'white', color: '#1e3a8a', fontWeight: 700, '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>
+              <Button href="/phase2" fullWidth sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 700, bgcolor: C.blue.bg, color: C.blue.border, border: `2px solid ${C.blue.border}`, boxShadow: `3px 3px 0 ${C.blue.shadow}`, '&:hover': { opacity: 0.85, bgcolor: C.blue.bg } }}>
                 Start Team Practice
               </Button>
-            </Paper>
+            </ClayCard>
           </Grid>
         </Grid>
       )}
 
       {/* ── FEEDBACK TAB ── */}
       {activeTab === 'feedback' && (
-        <Paper elevation={1} sx={{ p: 3, borderRadius: 3 }}>
-          <Typography variant="h6" fontWeight={700} gutterBottom>Response-by-Response Analysis</Typography>
+        <ClayCard color={C.purple}>
+          <Typography sx={{ fontSize: '1.05rem', fontWeight: 700, color: C.heading, mb: 2 }}>Response-by-Response Analysis</Typography>
           {(!data.responses || data.responses.length === 0) ? (
             <Box sx={{ py: 6, textAlign: 'center' }}>
               <InfoOutlinedIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
@@ -557,7 +575,7 @@ export default function Results() {
               })}
             </Stack>
           )}
-        </Paper>
+        </ClayCard>
       )}
 
       {/* ── ACHIEVEMENTS TAB ── */}
@@ -565,31 +583,21 @@ export default function Results() {
         <Grid container spacing={2}>
           {Object.entries(data.achievements || {}).map(([key, ach]) => {
             const unlocked = (data.achievements_earned || []).includes(key)
+            const c = unlocked ? C.green : { bg: C.divider + '60', border: C.divider, shadow: C.divider }
             return (
               <Grid item xs={12} sm={6} md={4} key={key}>
-                <Paper elevation={unlocked ? 2 : 0} sx={{
-                  p: 3, borderRadius: 3, height: '100%', textAlign: 'center',
-                  opacity: unlocked ? 1 : 0.55,
-                  background: unlocked
-                    ? 'linear-gradient(135deg, rgba(52,211,153,0.08), rgba(16,185,129,0.05))'
-                    : 'transparent',
-                  border: unlocked ? '1px solid rgba(52,211,153,0.3)' : '1px solid',
-                  borderColor: unlocked ? 'rgba(52,211,153,0.3)' : 'divider',
-                  transition: 'all 0.2s'
-                }}>
-                  <Avatar sx={{
-                    width: 56, height: 56, mx: 'auto', mb: 2,
-                    bgcolor: unlocked ? '#34d39922' : 'grey.100'
-                  }}>
+                <Box sx={{ p: 3, borderRadius: '16px', height: '100%', textAlign: 'center', bgcolor: C.cardBg, border: `2px solid ${c.border}`, boxShadow: `4px 4px 0 ${c.shadow}`, opacity: unlocked ? 1 : 0.6 }}>
+                  <Box sx={{ width: 54, height: 54, borderRadius: '50%', mx: 'auto', mb: 2, bgcolor: unlocked ? C.green.bg : C.divider, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${c.border}` }}>
                     {unlocked
-                      ? <EmojiEventsIcon sx={{ color: '#059669', fontSize: 28 }} />
-                      : <LockIcon sx={{ color: 'text.disabled', fontSize: 24 }} />}
-                  </Avatar>
-                  <Typography fontWeight={700} gutterBottom>{ach.name}</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{ach.description}</Typography>
-                  <Chip size="small" label={unlocked ? 'Unlocked' : 'Locked'}
-                    sx={{ bgcolor: unlocked ? '#34d39922' : 'grey.100', color: unlocked ? '#059669' : 'text.disabled', fontWeight: 600 }} />
-                </Paper>
+                      ? <EmojiEventsIcon sx={{ color: C.green.border, fontSize: 26 }} />
+                      : <LockIcon sx={{ color: C.muted, fontSize: 22 }} />}
+                  </Box>
+                  <Typography sx={{ fontWeight: 700, color: C.heading, mb: 0.5 }}>{ach.name}</Typography>
+                  <Typography sx={{ fontSize: '0.82rem', color: C.muted, mb: 2 }}>{ach.description}</Typography>
+                  <Box sx={{ display: 'inline-flex', px: 1.5, py: 0.3, borderRadius: '20px', bgcolor: unlocked ? C.green.bg : C.divider, border: `1.5px solid ${c.border}` }}>
+                    <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: unlocked ? C.green.border : C.muted }}>{unlocked ? 'Unlocked' : 'Locked'}</Typography>
+                  </Box>
+                </Box>
               </Grid>
             )
           })}

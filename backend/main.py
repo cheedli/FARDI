@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 import os
 import logging
@@ -43,6 +44,9 @@ app.include_router(phase5_router)
 app.include_router(phase6_router)
 app.include_router(chat_router)
 app.include_router(progress_router)
+
+# Serve static files (avatars, audio, images)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/api/health")
 def health_check():

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import {
   Box, Typography, Stack, Grid, Card, CardContent, LinearProgress,
-  Alert, Button, IconButton, Avatar, Chip, Paper, useTheme
+  Alert, Button, IconButton, Avatar, Chip, Paper
 } from '@mui/material'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import {
@@ -19,19 +19,79 @@ import BarChartIcon from '@mui/icons-material/BarChart'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import VisibilityIcon from '@mui/icons-material/Visibility'
+import { useColorMode } from '../theme.jsx'
 
 ChartJS.register(
   CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
   ArcElement, LineElement, PointElement, Filler
 )
 
-const PHASE_COLORS = ['#6366f1', '#0ea5e9', '#10b981', '#f97316', '#ef4444', '#8b5cf6']
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  cardBg: '#ffffff',
+  heading: '#1A237E',
+  body: '#37474F',
+  muted: '#78909C',
+  border: '#1A237E',
+  purple: { bg: '#F3E5F5', border: '#7B1FA2', shadow: '#7B1FA2' },
+  blue:   { bg: '#E3F2FD', border: '#1565C0', shadow: '#1565C0' },
+  green:  { bg: '#E8F5E9', border: '#2E7D32', shadow: '#2E7D32' },
+  yellow: { bg: '#FFFDE7', border: '#F57F17', shadow: '#F57F17' },
+  orange: { bg: '#FFF3E0', border: '#E65100', shadow: '#E65100' },
+  red:    { bg: '#FFEBEE', border: '#C62828', shadow: '#C62828' },
+  teal:   { bg: '#E0F2F1', border: '#00695C', shadow: '#00695C' },
+  indigo: { bg: '#E8EAF6', border: '#283593', shadow: '#283593' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  cardBg: '#1A1A2E',
+  heading: '#E8EAFF',
+  body: '#B0BEC5',
+  muted: '#607D8B',
+  border: '#3A3A5C',
+  purple: { bg: '#1A0A2E', border: '#CE93D8', shadow: '#9C27B0' },
+  blue:   { bg: '#0A1A2E', border: '#90CAF9', shadow: '#1565C0' },
+  green:  { bg: '#0A1A0A', border: '#A5D6A7', shadow: '#2E7D32' },
+  yellow: { bg: '#1A1A00', border: '#FFF176', shadow: '#F57F17' },
+  orange: { bg: '#1A0F00', border: '#FFCC80', shadow: '#E65100' },
+  red:    { bg: '#1A0A0A', border: '#EF9A9A', shadow: '#C62828' },
+  teal:   { bg: '#0A1A18', border: '#80CBC4', shadow: '#00695C' },
+  indigo: { bg: '#0A0E1A', border: '#9FA8DA', shadow: '#283593' },
+}
+
+const PHASE_CLAY = ['indigo', 'blue', 'green', 'orange', 'red', 'purple']
 const PHASE_NAMES = ['Foundation', 'Cultural Planning', 'Vendors & Budget', 'Marketing', 'Execution', 'Reflection']
+
+const clayCard = (D) => ({
+  background: D.cardBg,
+  border: `2px solid ${D.border}`,
+  borderRadius: '20px',
+  boxShadow: `4px 4px 0 ${D.border}`,
+  backgroundImage: 'none',
+  transition: 'all 0.15s ease',
+  '&:hover': {
+    transform: 'translate(-2px, -2px)',
+    boxShadow: `6px 6px 0 ${D.border}`,
+  },
+})
+
+const colorClayCard = (D, colorKey) => ({
+  background: D[colorKey].bg,
+  border: `2px solid ${D[colorKey].border}`,
+  borderRadius: '20px',
+  boxShadow: `4px 4px 0 ${D[colorKey].shadow}`,
+  backgroundImage: 'none',
+  transition: 'all 0.15s ease',
+  '&:hover': {
+    transform: 'translate(-2px, -2px)',
+    boxShadow: `6px 6px 0 ${D[colorKey].shadow}`,
+  },
+})
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
-  const theme = useTheme()
-  const isDark = theme.palette.mode === 'dark'
+  const { mode } = useColorMode()
+  const D = mode === 'dark' ? DARK : LIGHT
 
   const [analytics, setAnalytics] = useState(null)
   const [users, setUsers] = useState([])
@@ -61,8 +121,8 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <Box sx={{ p: { xs: 2, md: 4 } }}>
-        <Typography sx={{ fontSize: '1rem', color: 'text.secondary', mb: 2 }}>Loading dashboard...</Typography>
+      <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: D.pageBg, minHeight: '100vh' }}>
+        <Typography sx={{ fontSize: '1rem', color: D.muted, mb: 2 }}>Loading dashboard...</Typography>
         <LinearProgress sx={{ borderRadius: 2 }} />
       </Box>
     )
@@ -70,7 +130,7 @@ export default function AdminDashboard() {
 
   if (error) {
     return (
-      <Box sx={{ p: { xs: 2, md: 4 } }}>
+      <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: D.pageBg, minHeight: '100vh' }}>
         <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
         <Button onClick={loadData} startIcon={<RefreshIcon />}>Retry</Button>
       </Box>
@@ -79,21 +139,14 @@ export default function AdminDashboard() {
 
   if (!analytics) {
     return (
-      <Box sx={{ p: { xs: 2, md: 4 } }}>
-        <Typography color="text.secondary">No analytics data available</Typography>
+      <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: D.pageBg, minHeight: '100vh' }}>
+        <Typography sx={{ color: D.muted }}>No analytics data available</Typography>
       </Box>
     )
   }
 
-  const { learning_progress, engagement, quality, risk, system } = analytics
+  const { learning_progress, engagement, quality, risk } = analytics
   const totalStudents = users.filter(u => !u.is_admin).length
-
-  const cardBorder = isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #f1f5f9'
-  const cardBg = isDark ? theme.palette.background.paper : '#ffffff'
-  const textMuted = isDark ? theme.palette.text.secondary : '#94a3b8'
-  const textPrimary = theme.palette.text.primary
-  const textSubtle = isDark ? theme.palette.text.secondary : '#475569'
-  const trackBg = isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9'
 
   const activityData = {
     labels: (engagement.daily_activity || []).slice().reverse().slice(-14).map(d =>
@@ -101,8 +154,8 @@ export default function AdminDashboard() {
     ),
     datasets: [{
       data: (engagement.daily_activity || []).slice().reverse().slice(-14).map(d => d.active_users),
-      borderColor: '#6366f1',
-      backgroundColor: isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.08)',
+      borderColor: D.indigo.border,
+      backgroundColor: mode === 'dark' ? 'rgba(159,168,218,0.15)' : 'rgba(40,53,147,0.08)',
       tension: 0.4,
       fill: true,
       pointRadius: 0,
@@ -114,27 +167,29 @@ export default function AdminDashboard() {
     labels: (learning_progress.cefr_distribution || []).map(d => d.level),
     datasets: [{
       data: (learning_progress.cefr_distribution || []).map(d => d.count),
-      backgroundColor: ['#6366f1', '#0ea5e9', '#10b981', '#f97316', '#ef4444', '#8b5cf6'],
+      backgroundColor: [
+        D.indigo.border, D.blue.border, D.green.border,
+        D.orange.border, D.red.border, D.purple.border,
+      ],
       borderWidth: 0,
       hoverOffset: 4,
     }]
   }
 
-  const chartTextColor = isDark ? theme.palette.text.secondary : '#64748b'
+  const tooltipStyles = {
+    backgroundColor: D.cardBg,
+    titleColor: D.heading,
+    bodyColor: D.body,
+    borderColor: D.border,
+    borderWidth: 1,
+  }
 
   const miniChartOpts = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
-      tooltip: {
-        enabled: true,
-        backgroundColor: isDark ? '#1e293b' : '#ffffff',
-        titleColor: isDark ? '#f1f5f9' : '#0f172a',
-        bodyColor: isDark ? '#cbd5e1' : '#64748b',
-        borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
-        borderWidth: 1,
-      }
+      tooltip: { enabled: true, ...tooltipStyles },
     },
     scales: {
       x: { display: false },
@@ -148,68 +203,66 @@ export default function AdminDashboard() {
     cutout: '65%',
     plugins: {
       legend: { display: false },
-      tooltip: {
-        enabled: true,
-        backgroundColor: isDark ? '#1e293b' : '#ffffff',
-        titleColor: isDark ? '#f1f5f9' : '#0f172a',
-        bodyColor: isDark ? '#cbd5e1' : '#64748b',
-        borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
-        borderWidth: 1,
-      },
+      tooltip: { enabled: true, ...tooltipStyles },
     },
   }
 
   const phaseKeys = ['phase1_completed', 'phase2_completed', 'phase3_completed', 'phase4_completed', 'phase5_completed', 'phase6_completed']
 
-  const cardSx = {
-    border: cardBorder,
-    borderRadius: 3,
-    boxShadow: 'none',
-    bgcolor: cardBg,
-    backgroundImage: 'none',
-  }
+  const kpiCards = [
+    { label: 'Total Students', value: totalStudents, icon: <PeopleIcon />, colorKey: 'indigo' },
+    { label: 'Active (7d)', value: engagement.active_users_7d, icon: <TrendingUpIcon />, colorKey: 'green' },
+    { label: 'At Risk', value: risk.at_risk_students.length, icon: <WarningAmberIcon />, colorKey: risk.at_risk_students.length > 0 ? 'red' : 'green' },
+    { label: 'Assessments', value: quality.ai_detection.total_assessments || 0, icon: <CheckCircleOutlineIcon />, colorKey: 'blue' },
+  ]
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 } }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: D.pageBg, minHeight: '100vh' }}>
       {/* Header */}
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
         <Box>
-          <Typography sx={{ fontSize: '1.6rem', fontWeight: 700, color: textPrimary, lineHeight: 1.2 }}>
+          <Typography sx={{ fontSize: '1.6rem', fontWeight: 800, color: D.heading, lineHeight: 1.2 }}>
             Dashboard
           </Typography>
-          <Typography sx={{ fontSize: '0.88rem', color: textMuted, mt: 0.3 }}>
+          <Typography sx={{ fontSize: '0.88rem', color: D.muted, mt: 0.3 }}>
             Overview of your learning platform
           </Typography>
         </Box>
-        <IconButton onClick={loadData} sx={{ color: textMuted, '&:hover': { color: '#6366f1' } }}>
+        <IconButton
+          onClick={loadData}
+          sx={{
+            color: D.muted,
+            border: `2px solid ${D.border}`,
+            borderRadius: '12px',
+            boxShadow: `3px 3px 0 ${D.border}`,
+            '&:hover': { color: D.heading, transform: 'translate(-1px,-1px)', boxShadow: `4px 4px 0 ${D.border}` },
+            transition: 'all 0.15s ease',
+          }}
+        >
           <RefreshIcon />
         </IconButton>
       </Stack>
 
       {/* KPI Cards */}
       <Grid container spacing={2.5} sx={{ mb: 4 }}>
-        {[
-          { label: 'Total Students', value: totalStudents, icon: <PeopleIcon />, color: '#6366f1', bg: '#6366f1' },
-          { label: 'Active (7d)', value: engagement.active_users_7d, icon: <TrendingUpIcon />, color: '#10b981', bg: '#10b981' },
-          { label: 'At Risk', value: risk.at_risk_students.length, icon: <WarningAmberIcon />, color: risk.at_risk_students.length > 0 ? '#ef4444' : '#10b981', bg: risk.at_risk_students.length > 0 ? '#ef4444' : '#10b981' },
-          { label: 'Assessments', value: quality.ai_detection.total_assessments || 0, icon: <CheckCircleOutlineIcon />, color: '#0ea5e9', bg: '#0ea5e9' },
-        ].map(({ label, value, icon, color, bg }) => (
+        {kpiCards.map(({ label, value, icon, colorKey }) => (
           <Grid item xs={6} md={3} key={label}>
-            <Card sx={{ ...cardSx, '&:hover': { borderColor: color + '40', boxShadow: `0 2px 12px ${color}20` }, transition: 'all 0.2s' }}>
+            <Card sx={colorClayCard(D, colorKey)}>
               <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
                 <Stack direction="row" alignItems="center" spacing={1.5}>
                   <Box sx={{
-                    width: 40, height: 40, borderRadius: 1, display: 'flex',
-                    alignItems: 'center', justifyContent: 'center',
-                    bgcolor: bg + (isDark ? '25' : '12'),
+                    width: 44, height: 44, borderRadius: '14px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    bgcolor: D[colorKey].bg,
+                    border: `2px solid ${D[colorKey].border}`,
                   }}>
-                    {React.cloneElement(icon, { sx: { fontSize: 20, color } })}
+                    {React.cloneElement(icon, { sx: { fontSize: 22, color: D[colorKey].border } })}
                   </Box>
                   <Box>
-                    <Typography sx={{ fontSize: '1.4rem', fontWeight: 700, color: textPrimary, lineHeight: 1 }}>
+                    <Typography sx={{ fontSize: '1.5rem', fontWeight: 800, color: D[colorKey].border, lineHeight: 1 }}>
                       {value}
                     </Typography>
-                    <Typography sx={{ fontSize: '0.72rem', color: textMuted, fontWeight: 500, mt: 0.2 }}>
+                    <Typography sx={{ fontSize: '0.72rem', color: D.body, fontWeight: 600, mt: 0.2 }}>
                       {label}
                     </Typography>
                   </Box>
@@ -224,16 +277,17 @@ export default function AdminDashboard() {
       <Grid container spacing={2.5} sx={{ mb: 4 }}>
         {/* Activity Trend */}
         <Grid item xs={12} md={8}>
-          <Card sx={{ ...cardSx, height: '100%' }}>
+          <Card sx={{ ...clayCard(D), height: '100%' }}>
             <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                <Typography sx={{ fontSize: '0.92rem', fontWeight: 600, color: textPrimary }}>
+                <Typography sx={{ fontSize: '0.92rem', fontWeight: 700, color: D.heading }}>
                   Activity Trend
                 </Typography>
                 <Chip label="Last 14 days" size="small" sx={{
-                  fontSize: '0.68rem', fontWeight: 600,
-                  bgcolor: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
-                  color: textMuted,
+                  fontSize: '0.68rem', fontWeight: 700,
+                  bgcolor: D.indigo.bg,
+                  color: D.indigo.border,
+                  border: `1px solid ${D.indigo.border}`,
                 }} />
               </Stack>
               <Box sx={{ height: 200 }}>
@@ -241,7 +295,7 @@ export default function AdminDashboard() {
                   <Line data={activityData} options={miniChartOpts} />
                 ) : (
                   <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Typography sx={{ color: textMuted, fontSize: '0.85rem' }}>No activity data</Typography>
+                    <Typography sx={{ color: D.muted, fontSize: '0.85rem' }}>No activity data</Typography>
                   </Box>
                 )}
               </Box>
@@ -251,9 +305,9 @@ export default function AdminDashboard() {
 
         {/* CEFR Distribution */}
         <Grid item xs={12} md={4}>
-          <Card sx={{ ...cardSx, height: '100%' }}>
+          <Card sx={{ ...clayCard(D), height: '100%' }}>
             <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
-              <Typography sx={{ fontSize: '0.92rem', fontWeight: 600, color: textPrimary, mb: 2 }}>
+              <Typography sx={{ fontSize: '0.92rem', fontWeight: 700, color: D.heading, mb: 2 }}>
                 CEFR Distribution
               </Typography>
               <Box sx={{ height: 160, display: 'flex', justifyContent: 'center' }}>
@@ -261,24 +315,28 @@ export default function AdminDashboard() {
                   <Doughnut data={cefrData} options={doughnutOpts} />
                 ) : (
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography sx={{ color: textMuted, fontSize: '0.85rem' }}>No data</Typography>
+                    <Typography sx={{ color: D.muted, fontSize: '0.85rem' }}>No data</Typography>
                   </Box>
                 )}
               </Box>
               {(learning_progress.cefr_distribution || []).length > 0 && (
                 <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mt: 1.5, justifyContent: 'center' }}>
-                  {learning_progress.cefr_distribution.map((d, i) => (
-                    <Chip
-                      key={d.level}
-                      label={`${d.level}: ${d.count}`}
-                      size="small"
-                      sx={{
-                        fontSize: '0.68rem', fontWeight: 600, height: 22,
-                        bgcolor: PHASE_COLORS[i] + (isDark ? '25' : '15'),
-                        color: PHASE_COLORS[i],
-                      }}
-                    />
-                  ))}
+                  {learning_progress.cefr_distribution.map((d, i) => {
+                    const ck = PHASE_CLAY[i] || 'indigo'
+                    return (
+                      <Chip
+                        key={d.level}
+                        label={`${d.level}: ${d.count}`}
+                        size="small"
+                        sx={{
+                          fontSize: '0.68rem', fontWeight: 700, height: 22,
+                          bgcolor: D[ck].bg,
+                          color: D[ck].border,
+                          border: `1px solid ${D[ck].border}`,
+                        }}
+                      />
+                    )
+                  })}
                 </Stack>
               )}
             </CardContent>
@@ -287,58 +345,71 @@ export default function AdminDashboard() {
       </Grid>
 
       {/* Phase Completion Funnel */}
-      <Card sx={{ ...cardSx, mb: 4 }}>
+      <Card sx={{ ...clayCard(D), mb: 4 }}>
         <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2.5 }}>
-            <Typography sx={{ fontSize: '0.92rem', fontWeight: 600, color: textPrimary }}>
+            <Typography sx={{ fontSize: '0.92rem', fontWeight: 700, color: D.heading }}>
               Phase Completion Funnel
             </Typography>
             <Button
               component={RouterLink} to="/admin/analytics"
               endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
-              sx={{ fontSize: '0.78rem', textTransform: 'none', color: '#6366f1', fontWeight: 600 }}
+              sx={{
+                fontSize: '0.78rem', textTransform: 'none',
+                color: D.indigo.border, fontWeight: 700,
+                border: `2px solid ${D.indigo.border}`,
+                borderRadius: '10px',
+                boxShadow: `2px 2px 0 ${D.indigo.shadow}`,
+                px: 1.5, py: 0.5,
+                '&:hover': { transform: 'translate(-1px,-1px)', boxShadow: `3px 3px 0 ${D.indigo.shadow}` },
+                transition: 'all 0.15s ease',
+              }}
             >
               View Details
             </Button>
           </Stack>
           <Grid container spacing={1.5}>
             {phaseKeys.map((key, i) => {
+              const ck = PHASE_CLAY[i]
               const total = learning_progress.phase_completion.total_users || 1
               const value = learning_progress.phase_completion[key] || 0
               const pct = Math.round((value / total) * 100)
               return (
                 <Grid item xs={6} sm={4} md={2} key={key}>
                   <Box sx={{
-                    textAlign: 'center', p: 1.5, borderRadius: 1,
-                    border: cardBorder,
-                    '&:hover': { borderColor: PHASE_COLORS[i] + '50' },
-                    transition: 'all 0.2s',
+                    textAlign: 'center', p: 1.5, borderRadius: '16px',
+                    background: D[ck].bg,
+                    border: `2px solid ${D[ck].border}`,
+                    boxShadow: `3px 3px 0 ${D[ck].shadow}`,
+                    transition: 'all 0.15s ease',
+                    '&:hover': { transform: 'translate(-1px,-1px)', boxShadow: `4px 4px 0 ${D[ck].shadow}` },
                   }}>
                     <Box sx={{
                       width: 40, height: 40, borderRadius: '50%', mx: 'auto', mb: 1,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      bgcolor: PHASE_COLORS[i] + (isDark ? '25' : '15'),
-                      border: `2px solid ${PHASE_COLORS[i]}30`,
+                      bgcolor: D.cardBg,
+                      border: `2px solid ${D[ck].border}`,
                     }}>
-                      <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: PHASE_COLORS[i] }}>
+                      <Typography sx={{ fontSize: '0.82rem', fontWeight: 800, color: D[ck].border }}>
                         {value}
                       </Typography>
                     </Box>
-                    <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: textSubtle, lineHeight: 1.2 }}>
+                    <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, color: D.body, lineHeight: 1.2 }}>
                       Phase {i + 1}
                     </Typography>
-                    <Typography sx={{ fontSize: '0.62rem', color: textMuted, mt: 0.2 }}>
+                    <Typography sx={{ fontSize: '0.62rem', color: D.muted, mt: 0.2 }}>
                       {PHASE_NAMES[i]}
                     </Typography>
                     <LinearProgress
                       variant="determinate"
                       value={pct}
                       sx={{
-                        mt: 1, height: 4, borderRadius: 2, bgcolor: trackBg,
-                        '& .MuiLinearProgress-bar': { bgcolor: PHASE_COLORS[i], borderRadius: 2 },
+                        mt: 1, height: 6, borderRadius: 3,
+                        bgcolor: D.cardBg,
+                        '& .MuiLinearProgress-bar': { bgcolor: D[ck].border, borderRadius: 3 },
                       }}
                     />
-                    <Typography sx={{ fontSize: '0.62rem', color: textMuted, mt: 0.4 }}>
+                    <Typography sx={{ fontSize: '0.62rem', color: D[ck].border, fontWeight: 700, mt: 0.4 }}>
                       {pct}%
                     </Typography>
                   </Box>
@@ -353,47 +424,53 @@ export default function AdminDashboard() {
       <Grid container spacing={2.5}>
         {/* Quick Actions */}
         <Grid item xs={12} md={4}>
-          <Card sx={{ ...cardSx, height: '100%' }}>
+          <Card sx={{ ...clayCard(D), height: '100%' }}>
             <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
-              <Typography sx={{ fontSize: '0.92rem', fontWeight: 600, color: textPrimary, mb: 2 }}>
+              <Typography sx={{ fontSize: '0.92rem', fontWeight: 700, color: D.heading, mb: 2 }}>
                 Quick Actions
               </Typography>
               <Stack spacing={1.5}>
                 {[
-                  { label: 'View All Students', desc: `${totalStudents} registered`, to: '/admin/users', icon: <PeopleIcon />, color: '#10b981' },
-                  { label: 'Full Analytics', desc: 'Charts & reports', to: '/admin/analytics', icon: <BarChartIcon />, color: '#0ea5e9' },
-                  { label: 'Messages', desc: 'Chat with students', to: '/admin/chat', icon: <ChatBubbleOutlineIcon />, color: '#f97316' },
-                ].map(({ label, desc, to, icon, color }) => (
+                  { label: 'View All Students', desc: `${totalStudents} registered`, to: '/admin/users', icon: <PeopleIcon />, colorKey: 'green' },
+                  { label: 'Full Analytics', desc: 'Charts & reports', to: '/admin/analytics', icon: <BarChartIcon />, colorKey: 'blue' },
+                  { label: 'Messages', desc: 'Chat with students', to: '/admin/chat', icon: <ChatBubbleOutlineIcon />, colorKey: 'orange' },
+                ].map(({ label, desc, to, icon, colorKey }) => (
                   <Paper
                     key={to}
                     component={RouterLink}
                     to={to}
                     sx={{
                       p: 1.5, display: 'flex', alignItems: 'center', gap: 1.5,
-                      textDecoration: 'none', borderRadius: 1,
-                      border: cardBorder,
-                      bgcolor: cardBg,
+                      textDecoration: 'none', borderRadius: '14px',
+                      background: D[colorKey].bg,
+                      border: `2px solid ${D[colorKey].border}`,
+                      boxShadow: `3px 3px 0 ${D[colorKey].shadow}`,
                       backgroundImage: 'none',
-                      '&:hover': { borderColor: color + '50', bgcolor: color + (isDark ? '12' : '06') },
-                      transition: 'all 0.2s', cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        transform: 'translate(-1px,-1px)',
+                        boxShadow: `4px 4px 0 ${D[colorKey].shadow}`,
+                      },
                     }}
                   >
                     <Box sx={{
-                      width: 36, height: 36, borderRadius: 2,
+                      width: 38, height: 38, borderRadius: '10px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      bgcolor: color + (isDark ? '25' : '15'),
+                      bgcolor: D.cardBg,
+                      border: `2px solid ${D[colorKey].border}`,
                     }}>
-                      {React.cloneElement(icon, { sx: { fontSize: 18, color } })}
+                      {React.cloneElement(icon, { sx: { fontSize: 18, color: D[colorKey].border } })}
                     </Box>
                     <Box sx={{ flex: 1 }}>
-                      <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: textPrimary }}>
+                      <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: D.heading }}>
                         {label}
                       </Typography>
-                      <Typography sx={{ fontSize: '0.7rem', color: textMuted }}>
+                      <Typography sx={{ fontSize: '0.7rem', color: D.muted }}>
                         {desc}
                       </Typography>
                     </Box>
-                    <ArrowForwardIcon sx={{ fontSize: 16, color: textMuted }} />
+                    <ArrowForwardIcon sx={{ fontSize: 16, color: D[colorKey].border }} />
                   </Paper>
                 ))}
               </Stack>
@@ -403,10 +480,10 @@ export default function AdminDashboard() {
 
         {/* At-Risk & Stuck Students */}
         <Grid item xs={12} md={8}>
-          <Card sx={{ ...cardSx, height: '100%' }}>
+          <Card sx={{ ...clayCard(D), height: '100%' }}>
             <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                <Typography sx={{ fontSize: '0.92rem', fontWeight: 600, color: textPrimary }}>
+                <Typography sx={{ fontSize: '0.92rem', fontWeight: 700, color: D.heading }}>
                   Attention Required
                 </Typography>
                 <Stack direction="row" spacing={1}>
@@ -415,10 +492,10 @@ export default function AdminDashboard() {
                       label={`${risk.at_risk_students.length} at risk`}
                       size="small"
                       sx={{
-                        fontSize: '0.68rem', fontWeight: 600,
-                        bgcolor: isDark ? 'rgba(239,68,68,0.15)' : '#fef2f2',
-                        color: '#ef4444',
-                        border: `1px solid ${isDark ? 'rgba(239,68,68,0.3)' : '#fecaca'}`,
+                        fontSize: '0.68rem', fontWeight: 700,
+                        bgcolor: D.red.bg,
+                        color: D.red.border,
+                        border: `1px solid ${D.red.border}`,
                       }}
                     />
                   )}
@@ -427,10 +504,10 @@ export default function AdminDashboard() {
                       label={`${risk.stuck_students.length} stuck`}
                       size="small"
                       sx={{
-                        fontSize: '0.68rem', fontWeight: 600,
-                        bgcolor: isDark ? 'rgba(245,158,11,0.15)' : '#fffbeb',
-                        color: '#f59e0b',
-                        border: `1px solid ${isDark ? 'rgba(245,158,11,0.3)' : '#fde68a'}`,
+                        fontSize: '0.68rem', fontWeight: 700,
+                        bgcolor: D.yellow.bg,
+                        color: D.yellow.border,
+                        border: `1px solid ${D.yellow.border}`,
                       }}
                     />
                   )}
@@ -439,12 +516,13 @@ export default function AdminDashboard() {
 
               {risk.at_risk_students.length === 0 && risk.stuck_students.length === 0 ? (
                 <Box sx={{
-                  py: 4, textAlign: 'center', borderRadius: 2,
-                  bgcolor: isDark ? 'rgba(16,185,129,0.08)' : '#f0fdf4',
-                  border: `1px solid ${isDark ? 'rgba(16,185,129,0.2)' : '#bbf7d0'}`,
+                  py: 4, textAlign: 'center', borderRadius: '14px',
+                  bgcolor: D.green.bg,
+                  border: `2px solid ${D.green.border}`,
+                  boxShadow: `3px 3px 0 ${D.green.shadow}`,
                 }}>
-                  <CheckCircleOutlineIcon sx={{ fontSize: 32, color: '#10b981', mb: 1 }} />
-                  <Typography sx={{ fontSize: '0.88rem', fontWeight: 600, color: '#10b981' }}>
+                  <CheckCircleOutlineIcon sx={{ fontSize: 32, color: D.green.border, mb: 1 }} />
+                  <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: D.green.border }}>
                     All students are on track!
                   </Typography>
                 </Box>
@@ -455,34 +533,40 @@ export default function AdminDashboard() {
                       key={`risk-${i}`}
                       direction="row" alignItems="center" spacing={1.5}
                       sx={{
-                        p: 1.5, borderRadius: 2,
-                        border: `1px solid ${isDark ? 'rgba(239,68,68,0.2)' : '#fef2f2'}`,
-                        bgcolor: isDark ? 'rgba(239,68,68,0.06)' : '#fef2f204',
-                        '&:hover': { bgcolor: isDark ? 'rgba(239,68,68,0.1)' : '#fef2f2' },
-                        transition: 'all 0.2s',
+                        p: 1.5, borderRadius: '12px',
+                        bgcolor: D.red.bg,
+                        border: `2px solid ${D.red.border}`,
+                        transition: 'all 0.15s ease',
+                        '&:hover': { transform: 'translate(-1px,-1px)', boxShadow: `3px 3px 0 ${D.red.shadow}` },
                       }}
                     >
-                      <Avatar sx={{ width: 30, height: 30, bgcolor: isDark ? 'rgba(239,68,68,0.15)' : '#fef2f2', color: '#ef4444', fontSize: '0.75rem', fontWeight: 700 }}>
+                      <Avatar sx={{
+                        width: 30, height: 30,
+                        bgcolor: D.cardBg,
+                        color: D.red.border,
+                        fontSize: '0.75rem', fontWeight: 800,
+                        border: `2px solid ${D.red.border}`,
+                      }}>
                         {(s.first_name || s.username || '?')[0].toUpperCase()}
                       </Avatar>
                       <Box sx={{ flex: 1 }}>
-                        <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: textPrimary }}>
+                        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: D.heading }}>
                           {s.first_name} {s.last_name}
                         </Typography>
-                        <Typography sx={{ fontSize: '0.68rem', color: textMuted }}>
+                        <Typography sx={{ fontSize: '0.68rem', color: D.muted }}>
                           Last active: {s.last_activity ? new Date(s.last_activity).toLocaleDateString() : 'Unknown'}
                         </Typography>
                       </Box>
                       <Chip label="At Risk" size="small" sx={{
                         fontSize: '0.62rem', fontWeight: 700, height: 20,
-                        bgcolor: isDark ? 'rgba(239,68,68,0.15)' : '#fef2f2',
-                        color: '#ef4444',
-                        border: `1px solid ${isDark ? 'rgba(239,68,68,0.3)' : '#fecaca'}`,
+                        bgcolor: D.cardBg,
+                        color: D.red.border,
+                        border: `1px solid ${D.red.border}`,
                       }} />
                       <IconButton
                         size="small"
                         onClick={() => navigate(`/admin/users/${s.id}`)}
-                        sx={{ color: textMuted, '&:hover': { color: '#6366f1' } }}
+                        sx={{ color: D.muted, '&:hover': { color: D.heading } }}
                       >
                         <VisibilityIcon sx={{ fontSize: 16 }} />
                       </IconButton>
@@ -493,34 +577,40 @@ export default function AdminDashboard() {
                       key={`stuck-${i}`}
                       direction="row" alignItems="center" spacing={1.5}
                       sx={{
-                        p: 1.5, borderRadius: 2,
-                        border: `1px solid ${isDark ? 'rgba(245,158,11,0.2)' : '#fffbeb'}`,
-                        bgcolor: isDark ? 'rgba(245,158,11,0.06)' : '#fffbeb04',
-                        '&:hover': { bgcolor: isDark ? 'rgba(245,158,11,0.1)' : '#fffbeb' },
-                        transition: 'all 0.2s',
+                        p: 1.5, borderRadius: '12px',
+                        bgcolor: D.yellow.bg,
+                        border: `2px solid ${D.yellow.border}`,
+                        transition: 'all 0.15s ease',
+                        '&:hover': { transform: 'translate(-1px,-1px)', boxShadow: `3px 3px 0 ${D.yellow.shadow}` },
                       }}
                     >
-                      <Avatar sx={{ width: 30, height: 30, bgcolor: isDark ? 'rgba(245,158,11,0.15)' : '#fffbeb', color: '#f59e0b', fontSize: '0.75rem', fontWeight: 700 }}>
+                      <Avatar sx={{
+                        width: 30, height: 30,
+                        bgcolor: D.cardBg,
+                        color: D.yellow.border,
+                        fontSize: '0.75rem', fontWeight: 800,
+                        border: `2px solid ${D.yellow.border}`,
+                      }}>
                         {(s.first_name || '?')[0].toUpperCase()}
                       </Avatar>
                       <Box sx={{ flex: 1 }}>
-                        <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: textPrimary }}>
+                        <Typography sx={{ fontSize: '0.82rem', fontWeight: 700, color: D.heading }}>
                           {s.first_name} {s.last_name}
                         </Typography>
-                        <Typography sx={{ fontSize: '0.68rem', color: textMuted }}>
+                        <Typography sx={{ fontSize: '0.68rem', color: D.muted }}>
                           Stuck on {(s.step_id?.replace('_', ' ') || 'unknown').toUpperCase()} for {s.days_stuck} days
                         </Typography>
                       </Box>
                       <Chip label="Stuck" size="small" sx={{
                         fontSize: '0.62rem', fontWeight: 700, height: 20,
-                        bgcolor: isDark ? 'rgba(245,158,11,0.15)' : '#fffbeb',
-                        color: '#f59e0b',
-                        border: `1px solid ${isDark ? 'rgba(245,158,11,0.3)' : '#fde68a'}`,
+                        bgcolor: D.cardBg,
+                        color: D.yellow.border,
+                        border: `1px solid ${D.yellow.border}`,
                       }} />
                       <IconButton
                         size="small"
                         onClick={() => navigate(`/admin/users/${s.id}`)}
-                        sx={{ color: textMuted, '&:hover': { color: '#6366f1' } }}
+                        sx={{ color: D.muted, '&:hover': { color: D.heading } }}
                       >
                         <VisibilityIcon sx={{ fontSize: 16 }} />
                       </IconButton>
@@ -529,7 +619,10 @@ export default function AdminDashboard() {
                   {(risk.at_risk_students.length > 3 || risk.stuck_students.length > 3) && (
                     <Button
                       component={RouterLink} to="/admin/analytics"
-                      sx={{ fontSize: '0.78rem', textTransform: 'none', color: '#6366f1', fontWeight: 600, mt: 0.5 }}
+                      sx={{
+                        fontSize: '0.78rem', textTransform: 'none',
+                        color: D.indigo.border, fontWeight: 700, mt: 0.5,
+                      }}
                     >
                       View all in Analytics
                     </Button>

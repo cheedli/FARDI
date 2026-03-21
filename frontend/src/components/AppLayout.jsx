@@ -30,11 +30,37 @@ import { useColorMode } from '../theme.jsx'
 import { useAuth } from '../lib/api.jsx'
 import { useUserStats } from '../hooks/useUserStats.jsx'
 
+const LIGHT = {
+  pageBg: '#FFFDE7', cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', border: '#E0E0E0',
+  purple: { bg: '#E1BEE7', border: '#8E24AA', shadow: '#8E24AA' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1976D2' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F9A825' },
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#388E3C' },
+  orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#F57C00' },
+  teal:   { bg: '#B2EBF2', border: '#0097A7', shadow: '#0097A7' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#C62828' },
+  indigo: { bg: '#C5CAE9', border: '#3949AB', shadow: '#3949AB' },
+}
+const DARK = {
+  pageBg: '#0F0F1A', cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', border: '#2A2A4A',
+  purple: { bg: '#1E0A2E', border: '#CE93D8', shadow: '#7B1FA2' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  yellow: { bg: '#2A2200', border: '#F9A825', shadow: '#A06800' },
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+  teal:   { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+  red:    { bg: '#1F0000', border: '#EF9A9A', shadow: '#B71C1C' },
+  indigo: { bg: '#0D0F2A', border: '#7986CB', shadow: '#283593' },
+}
+
+// Map legacy hex phase colors to palette keys
+const PHASE_COLOR_KEY = ['indigo', 'blue', 'green', 'orange', 'red', 'purple']
+
 const SIDEBAR_W = 260
 
 const PHASES = [
   { id: 1, title: 'Foundation', subtitle: 'Language Assessment', icon: SchoolIcon, color: '#6366f1', path: '/game' },
-  { id: 2, title: 'Cultural Planning', subtitle: 'Event Organization', icon: GroupIcon, color: '#0ea5e9', path: '/phase2/intro' },
+  { id: 2, title: 'Cultural Planning', subtitle: 'Event Organization', icon: GroupIcon, color: '#0ea5e9', path: '/phase2' },
   { id: 3, title: 'Vendors & Budget', subtitle: 'Negotiation', icon: StorefrontIcon, color: '#10b981', path: '/phase3/step/1' },
   { id: 4, title: 'Marketing', subtitle: 'Promotion & Outreach', icon: CampaignIcon, color: '#f97316', path: '/phase4/step/1' },
   { id: 5, title: 'Execution', subtitle: 'Problem-Solving', icon: BuildIcon, color: '#ef4444', path: '/phase5/subphase/1/step/1' },
@@ -48,13 +74,15 @@ export default function AppLayout() {
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = React.useState(false)
 
+  const D = mode === 'dark' ? DARK : LIGHT
+
   // Close drawer on route change
   React.useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
   if (loading || statsLoading) {
     return (
-      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'white' }}>
-        <Typography sx={{ color: '#94a3b8' }}>Loading...</Typography>
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: D.pageBg }}>
+        <Typography sx={{ color: D.muted }}>Loading...</Typography>
       </Box>
     )
   }
@@ -98,24 +126,58 @@ export default function AppLayout() {
 
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
 
+  // Clay nav item styles helper
+  const navItemSx = (active, colorKey) => {
+    const c = D[colorKey] || D.indigo
+    return {
+      borderRadius: '10px',
+      py: 1,
+      px: 1.5,
+      mb: 0.5,
+      border: active ? `2px solid ${c.border}` : '2px solid transparent',
+      borderLeft: active ? `3px solid ${c.border}` : '3px solid transparent',
+      bgcolor: active ? c.bg : 'transparent',
+      boxShadow: active ? `3px 3px 0 ${c.shadow}` : 'none',
+      transition: 'all 0.12s ease',
+      '&:hover': active ? {} : {
+        bgcolor: D.cardBg,
+        border: `2px solid ${D.border}`,
+        borderLeft: `3px solid ${D.border}`,
+        boxShadow: `3px 3px 0 ${D.border}`,
+        transform: 'translate(-1px,-1px)',
+      },
+      '&:active': {
+        transform: 'translate(1px,1px)',
+        boxShadow: active ? `2px 2px 0 ${c.shadow}` : `2px 2px 0 ${D.border}`,
+      },
+    }
+  }
+
   // ── Sidebar content (shared desktop + mobile) ──
   const sidebar = (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'white' }}>
+    <Box sx={{
+      display: 'flex', flexDirection: 'column', height: '100%',
+      bgcolor: D.pageBg,
+    }}>
       {/* Logo */}
-      <Box sx={{ px: 2.5, py: 2.5, borderBottom: '1px solid #f1f5f9' }}>
+      <Box sx={{
+        px: 2.5, py: 2.5,
+        borderBottom: `2px solid ${D.border}`,
+        boxShadow: `0 2px 0 ${D.border}`,
+      }}>
         <RouterLink to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
           <Box sx={{
-            width: 34, height: 34, borderRadius: 2.5,
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            width: 36, height: 36, borderRadius: '11px',
+            bgcolor: D.purple.bg,
+            border: `2px solid ${D.purple.border}`,
+            boxShadow: `3px 3px 0 ${D.purple.shadow}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
           }}>
-            <AutoAwesomeIcon sx={{ fontSize: 18, color: 'white' }} />
+            <AutoAwesomeIcon sx={{ fontSize: 18, color: D.purple.border }} />
           </Box>
           <Typography sx={{
             fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em',
-            background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            color: D.heading,
           }}>
             FARDI
           </Typography>
@@ -130,41 +192,39 @@ export default function AppLayout() {
             <Box sx={{ px: 1, mb: 2 }}>
               <Box sx={{
                 display: 'flex', alignItems: 'center', gap: 1,
-                px: 1.5, py: 0.8, borderRadius: 2,
-                background: 'linear-gradient(135deg, #6366f108, #8b5cf608)',
-                border: '1px solid #6366f115',
+                px: 1.5, py: 0.8, borderRadius: '10px',
+                bgcolor: D.red.bg,
+                border: `2px solid ${D.red.border}`,
+                boxShadow: `3px 3px 0 ${D.red.shadow}`,
               }}>
-                <SecurityIcon sx={{ fontSize: 16, color: '#6366f1' }} />
-                <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <SecurityIcon sx={{ fontSize: 16, color: D.red.border }} />
+                <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: D.red.border, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Admin Panel
                 </Typography>
               </Box>
             </Box>
 
-            <Typography sx={{ px: 1, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <Typography sx={{ px: 1, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Overview
             </Typography>
             <List disablePadding>
               {[
-                { to: '/admin', icon: <DashboardIcon />, label: 'Dashboard', color: '#6366f1' },
-                { to: '/admin/analytics', icon: <BarChartIcon />, label: 'Analytics', color: '#0ea5e9' },
+                { to: '/admin', icon: <DashboardIcon />, label: 'Dashboard', colorKey: 'indigo' },
+                { to: '/admin/analytics', icon: <BarChartIcon />, label: 'Analytics', colorKey: 'blue' },
               ].map((item) => {
                 const active = location.pathname === item.to
+                const c = D[item.colorKey]
                 return (
                   <ListItem key={item.to} disablePadding sx={{ mb: 0.5 }}>
                     <ListItemButton
                       component={RouterLink} to={item.to}
-                      sx={{
-                        borderRadius: 2.5, py: 1, px: 1.5,
-                        bgcolor: active ? `${item.color}10` : 'transparent',
-                        '&:hover': { bgcolor: '#f8fafc' },
-                      }}
+                      sx={navItemSx(active, item.colorKey)}
                     >
-                      <ListItemIcon sx={{ color: active ? item.color : '#94a3b8', minWidth: 36 }}>
+                      <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: 36 }}>
                         {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
                       </ListItemIcon>
                       <ListItemText primary={
-                        <Typography sx={{ fontWeight: active ? 650 : 500, fontSize: '0.88rem', color: active ? item.color : '#475569' }}>
+                        <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
                           {item.label}
                         </Typography>
                       } />
@@ -174,29 +234,26 @@ export default function AppLayout() {
               })}
             </List>
 
-            <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Students
             </Typography>
             <List disablePadding>
               {[
-                { to: '/admin/users', icon: <PeopleIcon />, label: 'All Students', color: '#10b981', match: '/admin/users' },
+                { to: '/admin/users', icon: <PeopleIcon />, label: 'All Students', colorKey: 'green', match: '/admin/users' },
               ].map((item) => {
                 const active = isActive(item.match || item.to)
+                const c = D[item.colorKey]
                 return (
                   <ListItem key={item.to} disablePadding sx={{ mb: 0.5 }}>
                     <ListItemButton
                       component={RouterLink} to={item.to}
-                      sx={{
-                        borderRadius: 2.5, py: 1, px: 1.5,
-                        bgcolor: active ? `${item.color}10` : 'transparent',
-                        '&:hover': { bgcolor: '#f8fafc' },
-                      }}
+                      sx={navItemSx(active, item.colorKey)}
                     >
-                      <ListItemIcon sx={{ color: active ? item.color : '#94a3b8', minWidth: 36 }}>
+                      <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: 36 }}>
                         {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
                       </ListItemIcon>
                       <ListItemText primary={
-                        <Typography sx={{ fontWeight: active ? 650 : 500, fontSize: '0.88rem', color: active ? item.color : '#475569' }}>
+                        <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
                           {item.label}
                         </Typography>
                       } />
@@ -206,29 +263,26 @@ export default function AppLayout() {
               })}
             </List>
 
-            <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Communication
             </Typography>
             <List disablePadding>
               {[
-                { to: '/admin/chat', icon: <ChatBubbleOutlineIcon />, label: 'Messages', color: '#f97316', match: '/admin/chat' },
+                { to: '/admin/chat', icon: <ChatBubbleOutlineIcon />, label: 'Messages', colorKey: 'orange', match: '/admin/chat' },
               ].map((item) => {
                 const active = isActive(item.match || item.to)
+                const c = D[item.colorKey]
                 return (
                   <ListItem key={item.to} disablePadding sx={{ mb: 0.5 }}>
                     <ListItemButton
                       component={RouterLink} to={item.to}
-                      sx={{
-                        borderRadius: 2.5, py: 1, px: 1.5,
-                        bgcolor: active ? `${item.color}10` : 'transparent',
-                        '&:hover': { bgcolor: '#f8fafc' },
-                      }}
+                      sx={navItemSx(active, item.colorKey)}
                     >
-                      <ListItemIcon sx={{ color: active ? item.color : '#94a3b8', minWidth: 36 }}>
+                      <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: 36 }}>
                         {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
                       </ListItemIcon>
                       <ListItemText primary={
-                        <Typography sx={{ fontWeight: active ? 650 : 500, fontSize: '0.88rem', color: active ? item.color : '#475569' }}>
+                        <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
                           {item.label}
                         </Typography>
                       } />
@@ -238,25 +292,26 @@ export default function AppLayout() {
               })}
             </List>
 
-            <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Account
             </Typography>
             <List disablePadding>
               {[
-                { to: '/profile', icon: <PersonIcon />, label: 'Profile', color: '#64748b' },
+                { to: '/profile', icon: <PersonIcon />, label: 'Profile', colorKey: 'teal' },
               ].map((item) => {
                 const active = isActive(item.to)
+                const c = D[item.colorKey]
                 return (
                   <ListItem key={item.to} disablePadding sx={{ mb: 0.5 }}>
                     <ListItemButton
                       component={RouterLink} to={item.to}
-                      sx={{ borderRadius: 2.5, py: 1, px: 1.5, bgcolor: active ? '#6366f108' : 'transparent', '&:hover': { bgcolor: '#f8fafc' } }}
+                      sx={navItemSx(active, item.colorKey)}
                     >
-                      <ListItemIcon sx={{ color: active ? '#6366f1' : '#94a3b8', minWidth: 36 }}>
+                      <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: 36 }}>
                         {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
                       </ListItemIcon>
                       <ListItemText primary={
-                        <Typography sx={{ fontWeight: active ? 650 : 500, fontSize: '0.88rem', color: active ? '#6366f1' : '#475569' }}>
+                        <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
                           {item.label}
                         </Typography>
                       } />
@@ -268,32 +323,29 @@ export default function AppLayout() {
           </>
         ) : (
           <>
-            <Typography sx={{ px: 1, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <Typography sx={{ px: 1, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Menu
             </Typography>
             <List disablePadding>
               {[
-                { to: '/dashboard', icon: <DashboardIcon />, label: 'Dashboard' },
-                { to: '/chat', icon: <ChatBubbleOutlineIcon />, label: 'Messages' },
-                { to: '/profile', icon: <PersonIcon />, label: 'Profile' },
-                { to: '/phase-journey', icon: <MapIcon />, label: 'Learning Journey' },
+                { to: '/dashboard', icon: <DashboardIcon />, label: 'Dashboard', colorKey: 'indigo' },
+                { to: '/chat', icon: <ChatBubbleOutlineIcon />, label: 'Messages', colorKey: 'orange' },
+                { to: '/profile', icon: <PersonIcon />, label: 'Profile', colorKey: 'teal' },
+                { to: '/phase-journey', icon: <MapIcon />, label: 'Learning Journey', colorKey: 'blue' },
               ].map((item) => {
                 const active = isActive(item.to)
+                const c = D[item.colorKey]
                 return (
                   <ListItem key={item.to} disablePadding sx={{ mb: 0.5 }}>
                     <ListItemButton
                       component={RouterLink} to={item.to}
-                      sx={{
-                        borderRadius: 2.5, py: 1, px: 1.5,
-                        bgcolor: active ? '#6366f108' : 'transparent',
-                        '&:hover': { bgcolor: '#f8fafc' },
-                      }}
+                      sx={navItemSx(active, item.colorKey)}
                     >
-                      <ListItemIcon sx={{ color: active ? '#6366f1' : '#94a3b8', minWidth: 36 }}>
+                      <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: 36 }}>
                         {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
                       </ListItemIcon>
                       <ListItemText primary={
-                        <Typography sx={{ fontWeight: active ? 650 : 500, fontSize: '0.88rem', color: active ? '#6366f1' : '#475569' }}>
+                        <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
                           {item.label}
                         </Typography>
                       } />
@@ -304,7 +356,7 @@ export default function AppLayout() {
             </List>
 
             {/* Phases */}
-            <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Phases
             </Typography>
             <List disablePadding>
@@ -319,6 +371,8 @@ export default function AppLayout() {
                   (phase.id === 4 && isActive('/phase4')) ||
                   (phase.id === 5 && isActive('/phase5')) ||
                   (phase.id === 6 && isActive('/phase6'))
+                const colorKey = PHASE_COLOR_KEY[phase.id - 1]
+                const c = D[colorKey]
 
                 return (
                   <ListItem key={phase.id} disablePadding sx={{ mb: 0.5 }}>
@@ -327,43 +381,68 @@ export default function AppLayout() {
                       to={unlocked ? phase.path : undefined}
                       disabled={!unlocked}
                       sx={{
-                        borderRadius: 2.5, py: 1, px: 1.5,
-                        opacity: unlocked ? 1 : 0.5,
-                        bgcolor: active ? `${phase.color}08` : 'transparent',
-                        '&:hover': unlocked ? { bgcolor: '#f8fafc' } : {},
+                        borderRadius: '10px',
+                        py: 1,
+                        px: 1.5,
+                        opacity: unlocked ? 1 : 0.45,
+                        border: active ? `2px solid ${c.border}` : '2px solid transparent',
+                        borderLeft: active ? `3px solid ${c.border}` : '3px solid transparent',
+                        bgcolor: active ? c.bg : 'transparent',
+                        boxShadow: active ? `3px 3px 0 ${c.shadow}` : 'none',
+                        transition: 'all 0.12s ease',
+                        '&:hover': (unlocked && !active) ? {
+                          bgcolor: D.cardBg,
+                          border: `2px solid ${D.border}`,
+                          borderLeft: `3px solid ${D.border}`,
+                          boxShadow: `3px 3px 0 ${D.border}`,
+                          transform: 'translate(-1px,-1px)',
+                        } : {},
+                        '&:active': unlocked ? {
+                          transform: 'translate(1px,1px)',
+                          boxShadow: `2px 2px 0 ${active ? c.shadow : D.border}`,
+                        } : {},
                       }}
                     >
                       <ListItemIcon sx={{ minWidth: 36 }}>
-                        <Avatar sx={{
+                        <Box sx={{
                           width: 28, height: 28,
-                          background: unlocked ? `linear-gradient(135deg, ${phase.color}, ${phase.color}cc)` : '#f1f5f9',
-                          boxShadow: unlocked ? `0 2px 6px ${phase.color}30` : 'none',
+                          borderRadius: '8px',
+                          bgcolor: unlocked ? c.bg : D.border,
+                          border: unlocked ? `2px solid ${c.border}` : `2px solid ${D.border}`,
+                          boxShadow: unlocked ? `2px 2px 0 ${c.shadow}` : 'none',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
                           {completed ? (
-                            <CheckCircleIcon sx={{ fontSize: 14, color: 'white' }} />
+                            <CheckCircleIcon sx={{ fontSize: 14, color: c.border }} />
                           ) : !unlocked ? (
-                            <LockIcon sx={{ fontSize: 13, color: '#cbd5e1' }} />
+                            <LockIcon sx={{ fontSize: 13, color: D.muted }} />
                           ) : (
-                            <IconComp sx={{ fontSize: 14, color: 'white' }} />
+                            <IconComp sx={{ fontSize: 14, color: c.border }} />
                           )}
-                        </Avatar>
+                        </Box>
                       </ListItemIcon>
                       <ListItemText
                         primary={
-                          <Typography sx={{ fontWeight: active ? 650 : 500, fontSize: '0.85rem', color: unlocked ? (active ? phase.color : '#475569') : '#94a3b8' }}>
+                          <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.85rem', color: unlocked ? (active ? c.border : D.body) : D.muted }}>
                             Phase {phase.id}
                           </Typography>
                         }
                         secondary={
-                          <Typography sx={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                          <Typography sx={{ fontSize: '0.72rem', color: D.muted }}>
                             {phase.title}
                           </Typography>
                         }
                       />
                       {completed && (
                         <Chip size="small" label="Done" sx={{
-                          height: 18, fontSize: '0.6rem', fontWeight: 700,
-                          bgcolor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0',
+                          height: 20,
+                          fontSize: '0.6rem',
+                          fontWeight: 700,
+                          bgcolor: D.green.bg,
+                          border: `2px solid ${D.green.border}`,
+                          color: D.green.border,
+                          borderRadius: '50px',
+                          boxShadow: `2px 2px 0 ${D.green.shadow}`,
                         }} />
                       )}
                     </ListItemButton>
@@ -375,14 +454,32 @@ export default function AppLayout() {
         )}
 
         {/* Theme toggle */}
-        <Divider sx={{ my: 2, mx: 0.5 }} />
+        <Box sx={{ my: 2, mx: 0.5, height: '2px', bgcolor: D.border }} />
         <ListItem disablePadding>
-          <ListItemButton onClick={toggle} sx={{ borderRadius: 2.5, py: 1, px: 1.5, '&:hover': { bgcolor: '#f8fafc' } }}>
-            <ListItemIcon sx={{ color: '#94a3b8', minWidth: 36 }}>
+          <ListItemButton
+            onClick={toggle}
+            sx={{
+              borderRadius: '12px',
+              py: 1, px: 1.5,
+              bgcolor: D.yellow.bg,
+              border: `2px solid ${D.yellow.border}`,
+              boxShadow: `4px 4px 0 ${D.yellow.shadow}`,
+              transition: 'all 0.12s ease',
+              '&:hover': {
+                transform: 'translate(-2px,-2px)',
+                boxShadow: `6px 6px 0 ${D.yellow.shadow}`,
+              },
+              '&:active': {
+                transform: 'translate(1px,1px)',
+                boxShadow: `2px 2px 0 ${D.yellow.shadow}`,
+              },
+            }}
+          >
+            <ListItemIcon sx={{ color: D.yellow.border, minWidth: 36 }}>
               {mode === 'light' ? <DarkModeIcon sx={{ fontSize: 20 }} /> : <LightModeIcon sx={{ fontSize: 20 }} />}
             </ListItemIcon>
             <ListItemText primary={
-              <Typography sx={{ fontWeight: 500, fontSize: '0.85rem', color: '#475569' }}>
+              <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: D.yellow.border }}>
                 {mode === 'light' ? 'Dark Mode' : 'Light Mode'}
               </Typography>
             } />
@@ -391,31 +488,43 @@ export default function AppLayout() {
       </Box>
 
       {/* User section (pinned bottom) */}
-      <Box sx={{ borderTop: '1px solid #f1f5f9', p: 2 }}>
+      <Box sx={{
+        borderTop: `2px solid ${D.border}`,
+        p: 2,
+        bgcolor: D.cardBg,
+      }}>
         <Stack direction="row" alignItems="center" spacing={1.5}>
           <Avatar sx={{
             width: 36, height: 36,
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            bgcolor: D.purple.bg,
+            border: `2px solid ${D.purple.border}`,
+            boxShadow: `3px 3px 0 ${D.purple.shadow}`,
             fontSize: '0.85rem', fontWeight: 700,
-            boxShadow: '0 2px 6px rgba(99,102,241,0.25)',
+            color: D.purple.border,
           }}>
             {userName[0].toUpperCase()}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontWeight: 600, fontSize: '0.88rem', color: '#0f172a', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <Typography sx={{ fontWeight: 600, fontSize: '0.88rem', color: D.heading, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {userName}
             </Typography>
             {isAdmin ? (
               <Chip size="small" label="Admin" sx={{
-                height: 18, mt: 0.3, fontSize: '0.6rem', fontWeight: 700,
-                background: 'linear-gradient(135deg, #dc262610, #ef444410)',
-                color: '#dc2626', border: '1px solid #dc262620',
+                height: 20, mt: 0.3, fontSize: '0.6rem', fontWeight: 700,
+                bgcolor: D.red.bg,
+                color: D.red.border,
+                border: `2px solid ${D.red.border}`,
+                borderRadius: '50px',
+                boxShadow: `2px 2px 0 ${D.red.shadow}`,
               }} />
             ) : userLevel ? (
               <Chip size="small" label={`CEFR ${userLevel}`} sx={{
-                height: 18, mt: 0.3, fontSize: '0.6rem', fontWeight: 700,
-                background: 'linear-gradient(135deg, #6366f110, #8b5cf610)',
-                color: '#6366f1', border: '1px solid #6366f120',
+                height: 20, mt: 0.3, fontSize: '0.6rem', fontWeight: 700,
+                bgcolor: D.purple.bg,
+                color: D.purple.border,
+                border: `2px solid ${D.purple.border}`,
+                borderRadius: '50px',
+                boxShadow: `2px 2px 0 ${D.purple.shadow}`,
               }} />
             ) : null}
           </Box>
@@ -424,9 +533,20 @@ export default function AppLayout() {
               href="/auth/logout"
               size="small"
               sx={{
-                width: 32, height: 32, borderRadius: 2,
-                color: '#94a3b8',
-                '&:hover': { bgcolor: '#fef2f2', color: '#ef4444' },
+                width: 32, height: 32, borderRadius: '8px',
+                color: D.muted,
+                border: `2px solid transparent`,
+                transition: 'all 0.12s ease',
+                '&:hover': {
+                  bgcolor: D.red.bg,
+                  border: `2px solid ${D.red.border}`,
+                  color: D.red.border,
+                  boxShadow: `2px 2px 0 ${D.red.shadow}`,
+                },
+                '&:active': {
+                  transform: 'translate(1px,1px)',
+                  boxShadow: 'none',
+                },
               }}
             >
               <LogoutIcon sx={{ fontSize: 18 }} />
@@ -438,12 +558,15 @@ export default function AppLayout() {
   )
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'white' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: D.pageBg }}>
       {/* Desktop sidebar — fixed */}
       <Box component="nav" sx={{ width: SIDEBAR_W, flexShrink: 0, display: { xs: 'none', md: 'block' } }}>
         <Box sx={{
           width: SIDEBAR_W, height: '100vh', position: 'fixed', top: 0, left: 0,
-          borderRight: '1px solid #f1f5f9', overflowY: 'auto',
+          borderRight: `2px solid ${D.border}`,
+          boxShadow: `3px 0 0 ${D.border}`,
+          overflowY: 'auto',
+          bgcolor: D.pageBg,
         }}>
           {sidebar}
         </Box>
@@ -457,38 +580,65 @@ export default function AppLayout() {
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { width: SIDEBAR_W, border: 'none' },
+          '& .MuiDrawer-paper': {
+            width: SIDEBAR_W,
+            border: 'none',
+            borderRight: `2px solid ${D.border}`,
+            bgcolor: D.pageBg,
+          },
         }}
       >
         {sidebar}
       </Drawer>
 
       {/* Main content */}
-      <Box component="main" sx={{ flexGrow: 1, minHeight: '100vh', width: { xs: '100%', md: `calc(100% - ${SIDEBAR_W}px)` } }}>
+      <Box component="main" sx={{ flexGrow: 1, minHeight: '100vh', width: { xs: '100%', md: `calc(100% - ${SIDEBAR_W}px)` }, bgcolor: D.pageBg }}>
         {/* Mobile header bar */}
         <Box sx={{
           display: { xs: 'flex', md: 'none' },
           alignItems: 'center',
           px: 2, py: 1.5,
-          borderBottom: '1px solid #f1f5f9',
-          bgcolor: 'white',
+          borderBottom: `2px solid ${D.border}`,
+          boxShadow: `0 2px 0 ${D.border}`,
+          bgcolor: D.pageBg,
           position: 'sticky', top: 0, zIndex: 1000,
         }}>
-          <IconButton onClick={() => setMobileOpen(true)} sx={{ color: '#475569', mr: 1.5 }}>
-            <MenuIcon sx={{ fontSize: 22 }} />
+          <IconButton
+            onClick={() => setMobileOpen(true)}
+            sx={{
+              mr: 1.5,
+              width: 36, height: 36,
+              borderRadius: '10px',
+              bgcolor: D.purple.bg,
+              border: `2px solid ${D.purple.border}`,
+              boxShadow: `3px 3px 0 ${D.purple.shadow}`,
+              color: D.purple.border,
+              transition: 'all 0.12s ease',
+              '&:hover': {
+                transform: 'translate(-2px,-2px)',
+                boxShadow: `5px 5px 0 ${D.purple.shadow}`,
+              },
+              '&:active': {
+                transform: 'translate(1px,1px)',
+                boxShadow: `2px 2px 0 ${D.purple.shadow}`,
+              },
+            }}
+          >
+            <MenuIcon sx={{ fontSize: 20 }} />
           </IconButton>
           <RouterLink to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Box sx={{
-              width: 26, height: 26, borderRadius: 1.5,
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              width: 28, height: 28, borderRadius: '9px',
+              bgcolor: D.purple.bg,
+              border: `2px solid ${D.purple.border}`,
+              boxShadow: `2px 2px 0 ${D.purple.shadow}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <AutoAwesomeIcon sx={{ fontSize: 14, color: 'white' }} />
+              <AutoAwesomeIcon sx={{ fontSize: 14, color: D.purple.border }} />
             </Box>
             <Typography sx={{
               fontWeight: 800, fontSize: '1rem',
-              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              color: D.heading,
             }}>
               FARDI
             </Typography>

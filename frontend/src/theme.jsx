@@ -123,7 +123,7 @@ function getDesignTokens(mode) {
   
   return {
     palette: { mode, ...base },
-    shape: { borderRadius: 16 },
+    shape: { borderRadius: 8 },
     typography: {
       fontFamily: '"Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"',
       h1: { 
@@ -238,7 +238,7 @@ function getDesignTokens(mode) {
         styleOverrides: {
           root: {
             textTransform: 'none',
-            borderRadius: 12,
+            borderRadius: 8,
             fontWeight: 600,
             transition: 'all 200ms ease',
           },
@@ -251,21 +251,20 @@ function getDesignTokens(mode) {
           sizeLarge: {
             padding: '14px 28px',
             fontSize: '1rem',
-            borderRadius: 14
+            borderRadius: 8
           },
           sizeSmall: {
             padding: '8px 16px',
             fontSize: '0.85rem',
-            borderRadius: 10
+            borderRadius: 6
           }
         }
       },
-      MuiPaper: { 
-        styleOverrides: { 
-          root: { 
-            borderRadius: 20,
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
             backgroundImage: 'none',
-            border: isDark ? '1px solid rgba(203, 213, 225, 0.1)' : '1px solid rgba(30, 41, 59, 0.08)',
           },
           elevation1: {
             boxShadow: isDark ? '0px 2px 8px rgba(0, 0, 0, 0.2)' : '0px 2px 8px rgba(30, 41, 59, 0.08)',
@@ -281,22 +280,9 @@ function getDesignTokens(mode) {
       MuiCard: {
         styleOverrides: {
           root: {
-            borderRadius: 16,
-            border: isDark ? '1px solid rgba(51, 65, 85, 0.3)' : '1px solid rgba(229, 231, 235, 0.8)',
-            background: isDark 
-              ? 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%)' 
-              : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%)',
-            backdropFilter: 'blur(20px)',
-            boxShadow: isDark 
-              ? '0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 1px 3px 0 rgba(0, 0, 0, 0.2)' 
-              : '0 8px 32px 0 rgba(30, 41, 59, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-            transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
-            '&:hover': {
-              transform: 'translateY(-4px)',
-              boxShadow: isDark 
-                ? '0 12px 48px 0 rgba(0, 0, 0, 0.4), 0 4px 16px 0 rgba(0, 0, 0, 0.3)' 
-                : '0 12px 48px 0 rgba(30, 41, 59, 0.12), 0 4px 16px 0 rgba(0, 0, 0, 0.15)',
-            }
+            borderRadius: 8,
+            backgroundImage: 'none',
+            transition: 'all 200ms ease',
           }
         }
       },
@@ -304,7 +290,7 @@ function getDesignTokens(mode) {
         styleOverrides: {
           root: {
             '& .MuiOutlinedInput-root': {
-              borderRadius: 12,
+              borderRadius: 6,
               transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
               '&:hover': {
                 '& .MuiOutlinedInput-notchedOutline': {
@@ -321,7 +307,7 @@ function getDesignTokens(mode) {
       MuiChip: {
         styleOverrides: {
           root: {
-            borderRadius: 12,
+            borderRadius: 6,
             fontWeight: 500,
           },
           filled: {

@@ -391,13 +391,16 @@ async def get_results(user: dict = Depends(get_current_user)):
 
 
 @router.get('/game/state')
-async def get_game_state(user: dict = Depends(get_current_user)):
+async def get_game_state(user: dict = Depends(get_current_user), step: int = None):
     try:
         user_id = user["user_id"]
         gs = get_game_session(user_id)
 
-        current_step = gs.get('current_step') or 0
+        session_step = gs.get('current_step') or 0
         total_steps = len(DIALOGUE_QUESTIONS)
+        # If a specific step is requested via URL param, serve that question
+        # but only if it's within bounds and not beyond the session's progress
+        current_step = step if (step is not None and 0 <= step < total_steps) else session_step
         xp = gs.get('xp') or 0
 
         if current_step >= total_steps:

@@ -1,7 +1,6 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home.jsx'
-import Welcome from './pages/Welcome.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Game from './pages/Game.jsx'
 import Results from './pages/Results.jsx'
@@ -22,6 +21,9 @@ import Phase3Step1ScoreCalculation from './pages/Phase3/Step1/ScoreCalculation.j
 import Phase3Step1RemedialA1TaskA from './pages/Phase3/Step1/RemedialA1/TaskA.jsx'
 import Phase3Step1RemedialA1TaskB from './pages/Phase3/Step1/RemedialA1/TaskB.jsx'
 import Phase3Step1RemedialA2TaskA from './pages/Phase3/Step1/RemedialA2/TaskA.jsx'
+import Phase3Step1RemedialA2TaskB from './pages/Phase3/Step1/RemedialA2/TaskB.jsx'
+import Phase3Step1RemedialA2TaskC from './pages/Phase3/Step1/RemedialA2/TaskC.jsx'
+import Phase3Step1RemedialA2TaskD from './pages/Phase3/Step1/RemedialA2/TaskD.jsx'
 import Phase3Step1RemedialB1TaskA from './pages/Phase3/Step1/RemedialB1/TaskA.jsx'
 import Phase3Step1RemedialB2TaskA from './pages/Phase3/Step1/RemedialB2/TaskA.jsx'
 import Phase3Step1RemedialC1TaskA from './pages/Phase3/Step1/RemedialC1/TaskA.jsx'
@@ -865,7 +867,6 @@ function App() {
           {/* Public routes — SaaS top bar */}
           <Route element={<LandingLayout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/welcome" element={<Welcome />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
           </Route>
@@ -874,7 +875,8 @@ function App() {
           <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/phase-journey" element={<PhaseJourney />} />
-          <Route path="/game" element={<Game />} />
+          <Route path="/game" element={<Navigate to="/phase1/interaction/1" replace />} />
+          <Route path="/phase1/interaction/:step" element={<Game />} />
           <Route path="/results" element={<Results />} />
           <Route path="/certificate" element={<Certificate />} />
 
@@ -904,7 +906,13 @@ function App() {
           <Route path="/app/phase3/step/1/remedial/a1/taskB" element={<Phase3Step1RemedialA1TaskB />} />
 
           <Route path="/phase3/step/1/remedial/a2/taskA" element={<Phase3Step1RemedialA2TaskA />} />
+          <Route path="/phase3/step/1/remedial/a2/taskB" element={<Phase3Step1RemedialA2TaskB />} />
+          <Route path="/phase3/step/1/remedial/a2/taskC" element={<Phase3Step1RemedialA2TaskC />} />
+          <Route path="/phase3/step/1/remedial/a2/taskD" element={<Phase3Step1RemedialA2TaskD />} />
           <Route path="/app/phase3/step/1/remedial/a2/taskA" element={<Phase3Step1RemedialA2TaskA />} />
+          <Route path="/app/phase3/step/1/remedial/a2/taskB" element={<Phase3Step1RemedialA2TaskB />} />
+          <Route path="/app/phase3/step/1/remedial/a2/taskC" element={<Phase3Step1RemedialA2TaskC />} />
+          <Route path="/app/phase3/step/1/remedial/a2/taskD" element={<Phase3Step1RemedialA2TaskD />} />
 
           <Route path="/phase3/step/1/remedial/b1/taskA" element={<Phase3Step1RemedialB1TaskA />} />
           <Route path="/app/phase3/step/1/remedial/b1/taskA" element={<Phase3Step1RemedialB1TaskA />} />

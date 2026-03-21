@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react'
-import { Box, Typography, LinearProgress, Chip, useMediaQuery, useTheme } from '@mui/material'
+import { Box, Typography, LinearProgress } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
@@ -7,10 +7,24 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LockIcon from '@mui/icons-material/Lock'
 import SchoolIcon from '@mui/icons-material/School'
 import GroupIcon from '@mui/icons-material/Group'
+import StorefrontIcon from '@mui/icons-material/Storefront'
 import CampaignIcon from '@mui/icons-material/Campaign'
 import BuildIcon from '@mui/icons-material/Build'
+import AutoStoriesIcon from '@mui/icons-material/AutoStories'
 import StarIcon from '@mui/icons-material/Star'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import { useColorMode } from '../theme.jsx'
+
+const LIGHT = {
+  pageBg: '#FFFDE7', cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', border: '#E0E0E0',
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F9A825' },
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#388E3C' },
+}
+const DARK = {
+  pageBg: '#0F0F1A', cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', border: '#2A2A4A',
+  yellow: { bg: '#2A2200', border: '#F9A825', shadow: '#A06800' },
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+}
 
 const PHASES = [
   {
@@ -34,6 +48,16 @@ const PHASES = [
     description: 'Plan a Tunisian cultural celebration with your team',
   },
   {
+    id: 3,
+    title: 'Vendors & Budget',
+    subtitle: 'Negotiation',
+    icon: StorefrontIcon,
+    color: '#10b981',
+    gradient: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+    path: '/phase3/step/1',
+    description: 'Negotiate with vendors and manage your event budget',
+  },
+  {
     id: 4,
     title: 'Marketing',
     subtitle: 'Promotion & Outreach',
@@ -52,18 +76,27 @@ const PHASES = [
     gradient: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)',
     path: '/phase5/subphase/1/step/1',
     description: 'Handle last-minute issues and coordinate the event',
-  }
+  },
+  {
+    id: 6,
+    title: 'Reflection',
+    subtitle: 'Evaluation & Feedback',
+    icon: AutoStoriesIcon,
+    color: '#8b5cf6',
+    gradient: 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)',
+    path: '/phase6/subphase/1/step/1',
+    description: 'Evaluate the event and reflect on your language growth',
+  },
 ]
-
-const NODE_OFFSETS = [-1, 1, -1, 1]
 
 export default function PhaseJourney() {
   const navigate = useNavigate()
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeNode, setActiveNode] = useState(null)
+
+  const { mode } = useColorMode()
+  const D = mode === 'dark' ? DARK : LIGHT
 
   useEffect(() => {
     fetch('/api/dashboard', { credentials: 'include' })
@@ -83,8 +116,10 @@ export default function PhaseJourney() {
 
     const hasCompletedPhase1 = totalAssessments > 0
     const hasCompletedPhase2 = isComplete(2) || p2Completed >= 9
+    const hasCompletedPhase3 = isComplete(3)
     const hasCompletedPhase4 = isComplete(4)
     const hasCompletedPhase5 = isComplete(5)
+    const hasCompletedPhase6 = isComplete(6)
 
     const hasPhase2Progress = phase2_progress?.responses?.length > 0 || phase2_progress?.steps?.length > 0
     const p5Sub1Steps = Object.keys(phase5_progress?.subphase1 || {}).length
@@ -94,8 +129,10 @@ export default function PhaseJourney() {
     return {
       1: { completed: hasCompletedPhase1, unlocked: true, inProgress: !hasCompletedPhase1 && totalAssessments === 0 ? false : !hasCompletedPhase1 },
       2: { completed: hasCompletedPhase2, unlocked: hasCompletedPhase1, inProgress: hasCompletedPhase1 && !hasCompletedPhase2 && hasPhase2Progress },
-      4: { completed: hasCompletedPhase4, unlocked: hasCompletedPhase2, inProgress: hasCompletedPhase2 && !hasCompletedPhase4 },
-      5: { completed: hasCompletedPhase5, unlocked: hasCompletedPhase4, inProgress: hasCompletedPhase4 && !hasCompletedPhase5 && hasPhase5Progress }
+      3: { completed: hasCompletedPhase3, unlocked: hasCompletedPhase2, inProgress: hasCompletedPhase2 && !hasCompletedPhase3 },
+      4: { completed: hasCompletedPhase4, unlocked: hasCompletedPhase3, inProgress: hasCompletedPhase3 && !hasCompletedPhase4 },
+      5: { completed: hasCompletedPhase5, unlocked: hasCompletedPhase4, inProgress: hasCompletedPhase4 && !hasCompletedPhase5 && hasPhase5Progress },
+      6: { completed: hasCompletedPhase6, unlocked: hasCompletedPhase5, inProgress: hasCompletedPhase5 && !hasCompletedPhase6 },
     }
   }, [data])
 
@@ -110,91 +147,72 @@ export default function PhaseJourney() {
     return 0
   }, [data, phaseStates])
 
-  const isDark = theme.palette.mode === 'dark'
-  const bg = isDark ? '#0f172a' : 'white'
-  const cardBg = isDark ? '#1e293b' : 'white'
-  const border = isDark ? '#334155' : '#e2e8f0'
-  const textPrimary = isDark ? '#f1f5f9' : '#0f172a'
-  const textSecondary = isDark ? '#94a3b8' : '#64748b'
-  const textMuted = isDark ? '#64748b' : '#94a3b8'
-  const lockedNodeBg = isDark ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' : 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)'
-  const lockedBorder = isDark ? '#475569' : '#f1f5f9'
-  const progressTrack = isDark ? '#1e293b' : '#f1f5f9'
-
   const completedCount = PHASES.filter(p => phaseStates[p.id]?.completed).length
+  const allDone = PHASES.every(p => phaseStates[p.id]?.completed)
 
   if (loading) return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: bg }}>
-      <Box sx={{ width: 200 }}>
-        <LinearProgress sx={{ borderRadius: 4, height: 4, bgcolor: '#f1f5f9', '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #6366f1, #0ea5e9)' } }} />
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: D.pageBg }}>
+      <Box sx={{
+        px: 3, py: 1.5, borderRadius: '50px',
+        bgcolor: D.yellow.bg, border: `2px solid ${D.yellow.border}`,
+        boxShadow: `3px 3px 0 ${D.yellow.shadow}`,
+      }}>
+        <LinearProgress sx={{
+          width: 160, borderRadius: 4, height: 6,
+          bgcolor: D.border,
+          '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #6366f1, #0ea5e9)' }
+        }} />
       </Box>
     </Box>
   )
 
-  const nodeSize = isMobile ? 68 : 80
-  const rowHeight = isMobile ? 170 : 190
-  const xShift = isMobile ? 55 : 80
-
   return (
     <Box sx={{
       minHeight: '100vh',
-      bgcolor: bg,
-      position: 'relative',
-      overflow: 'hidden',
+      bgcolor: D.pageBg,
+      py: 4,
+      px: { xs: 2, md: 4 },
     }}>
-      {/* Subtle background decoration */}
-      <Box sx={{
-        position: 'absolute', top: -200, right: -200,
-        width: 500, height: 500, borderRadius: '50%',
-        background: 'radial-gradient(circle, #6366f106 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
-      <Box sx={{
-        position: 'absolute', bottom: -100, left: -100,
-        width: 400, height: 400, borderRadius: '50%',
-        background: 'radial-gradient(circle, #0ea5e906 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
+      <Box sx={{ maxWidth: 680, mx: 'auto' }}>
 
-      {/* Header */}
-      <Box sx={{
-        px: { xs: 2.5, md: 4 },
-        pt: { xs: 3, md: 4 },
-        pb: 1,
-        maxWidth: 600,
-        mx: 'auto',
-      }}>
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Header row */}
+        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
             <Box>
-              <Typography sx={{ fontWeight: 800, fontSize: { xs: '1.4rem', md: '1.6rem' }, color: textPrimary, lineHeight: 1.2 }}>
+              <Typography sx={{
+                fontWeight: 900,
+                fontSize: '1.8rem',
+                color: D.heading,
+                lineHeight: 1.1,
+              }}>
                 Learning Journey
               </Typography>
-              <Typography sx={{ color: textMuted, fontSize: '0.88rem', mt: 0.5 }}>
-                Track your progress through all phases
+              <Typography sx={{ color: D.muted, fontSize: '0.88rem', mt: 0.5 }}>
+                Track your progress
               </Typography>
             </Box>
-            <Chip
-              icon={<StarIcon sx={{ fontSize: 14, color: '#f59e0b !important' }} />}
-              label={`${completedCount}/${PHASES.length}`}
-              sx={{
-                height: 30, fontWeight: 700, fontSize: '0.82rem',
-                bgcolor: isDark ? '#451a0320' : '#fef3c710', color: isDark ? '#fbbf24' : '#92400e',
-                border: '1px solid #fde68a40',
-              }}
-            />
+            {/* Yellow clay pill */}
+            <Box sx={{
+              px: 2, py: 0.75, borderRadius: '50px',
+              bgcolor: D.yellow.bg, border: `2px solid ${D.yellow.border}`,
+              boxShadow: `3px 3px 0 ${D.yellow.shadow}`,
+              display: 'flex', alignItems: 'center', gap: 0.75,
+              flexShrink: 0, mt: 0.5,
+            }}>
+              <StarIcon sx={{ fontSize: 15, color: D.yellow.border }} />
+              <Typography sx={{ fontWeight: 800, fontSize: '0.85rem', color: D.yellow.border }}>
+                {completedCount}/{PHASES.length}
+              </Typography>
+            </Box>
           </Box>
 
           {/* Progress bar */}
-          <Box sx={{ mt: 2, mb: 1 }}>
-            <Box sx={{
-              height: 6, borderRadius: 3, bgcolor: progressTrack,
-              overflow: 'hidden',
-            }}>
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ height: 8, borderRadius: 4, bgcolor: D.border, overflow: 'hidden' }}>
               <motion.div
                 style={{
                   height: '100%',
-                  borderRadius: 3,
+                  borderRadius: 4,
                   background: 'linear-gradient(90deg, #6366f1, #0ea5e9, #f97316, #ef4444)',
                 }}
                 initial={{ width: 0 }}
@@ -204,451 +222,264 @@ export default function PhaseJourney() {
             </Box>
           </Box>
         </motion.div>
-      </Box>
 
-      {/* Journey path container */}
-      <Box sx={{
-        position: 'relative',
-        maxWidth: 500,
-        mx: 'auto',
-        px: 3,
-        pt: 3,
-        pb: 16,
-      }}>
-        {/* Connecting path lines between nodes */}
-        <svg
-          viewBox={`0 0 200 ${PHASES.length * 100 + 20}`}
-          preserveAspectRatio="xMidYMid meet"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: PHASES.length * rowHeight + 40,
-            pointerEvents: 'none',
-            zIndex: 1,
-          }}
-        >
-          <defs>
-            <linearGradient id="lineGradLight" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="33%" stopColor="#0ea5e9" />
-              <stop offset="66%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#ef4444" />
-            </linearGradient>
-          </defs>
-          {PHASES.map((_, i) => {
-            if (i === PHASES.length - 1) return null
-            const svgShift = 36
-            const fromX = 100 + NODE_OFFSETS[i] * svgShift
-            const fromY = i * 100 + 28
-            const toX = 100 + NODE_OFFSETS[i + 1] * svgShift
-            const toY = (i + 1) * 100 + 28
+        {/* Phase cards */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {PHASES.map((phase, index) => {
+            const state = phaseStates[phase.id] || {}
+            const isActive = currentPhaseIndex === index
+            const isUnlocked = state.unlocked
+            const isExpanded = activeNode === index
+            const IconComp = phase.icon
 
-            const midY = (fromY + toY) / 2
-            const nextState = phaseStates[PHASES[i + 1].id] || {}
-            const isReached = nextState.unlocked || nextState.completed
+            const cardBorderColor = isUnlocked ? phase.color : D.border
+            const cardShadow = isUnlocked
+              ? `4px 4px 0 ${phase.color}`
+              : `4px 4px 0 ${D.border}`
 
             return (
-              <g key={`line-${i}`}>
-                <path
-                  d={`M ${fromX} ${fromY} C ${fromX} ${midY}, ${toX} ${midY}, ${toX} ${toY}`}
-                  fill="none"
-                  stroke={border}
-                  strokeWidth="2"
-                  strokeDasharray="6 6"
-                />
-                {isReached && (
-                  <motion.path
-                    d={`M ${fromX} ${fromY} C ${fromX} ${midY}, ${toX} ${midY}, ${toX} ${toY}`}
-                    fill="none"
-                    stroke="url(#lineGradLight)"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 1, delay: i * 0.4 + 0.5, ease: 'easeOut' }}
-                  />
-                )}
-              </g>
-            )
-          })}
-        </svg>
-
-        {/* Phase nodes */}
-        {PHASES.map((phase, index) => {
-          const state = phaseStates[phase.id] || {}
-          const isActive = currentPhaseIndex === index
-          const IconComp = phase.icon
-          const xOffset = NODE_OFFSETS[index]
-
-          return (
-            <motion.div
-              key={phase.id}
-              style={{
-                position: 'relative',
-                height: rowHeight,
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'center',
-                zIndex: 5,
-              }}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.15 + 0.2, duration: 0.5 }}
-            >
-              <Box
-                onClick={() => {
-                  if (!state.unlocked) return
-                  if (activeNode === index) {
-                    navigate(phase.path)
-                  } else {
-                    setActiveNode(index)
-                  }
-                }}
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  cursor: state.unlocked ? 'pointer' : 'default',
-                  transform: `translateX(${xOffset * xShift}px)`,
-                  position: 'relative',
-                }}
+              <motion.div
+                key={phase.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 + 0.2, duration: 0.4 }}
               >
-                {/* Character hovering above active node */}
-                {isActive && (
-                  <motion.div
-                    style={{
-                      position: 'absolute',
-                      top: -44,
-                      zIndex: 20,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                    }}
-                    animate={{ y: [0, -6, 0] }}
-                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    <Box sx={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-                      border: `3px solid ${isDark ? '#334155' : 'white'}`,
-                      boxShadow: '0 4px 16px rgba(251,191,36,0.4)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '1.1rem',
-                    }}>
-                      🧑‍🎓
-                    </Box>
-                    <Box sx={{
-                      width: 0, height: 0,
-                      borderLeft: '5px solid transparent',
-                      borderRight: '5px solid transparent',
-                      borderTop: `6px solid ${isDark ? '#334155' : 'white'}`,
-                      mt: '-1px',
-                    }} />
-                  </motion.div>
-                )}
-
-                {/* Pulse ring */}
-                {isActive && (
-                  <motion.div
-                    style={{
-                      position: 'absolute',
-                      top: nodeSize * -0.15,
-                      width: nodeSize * 1.3,
-                      height: nodeSize * 1.3,
-                      borderRadius: '50%',
-                      border: `2px solid ${phase.color}40`,
-                      zIndex: -1,
-                    }}
-                    animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
-                    transition={{ duration: 2.5, repeat: Infinity }}
-                  />
-                )}
-
-                {/* Main node circle */}
-                <motion.div
-                  style={{
-                    width: nodeSize,
-                    height: nodeSize,
-                    borderRadius: '50%',
-                    background: state.unlocked ? phase.gradient : lockedNodeBg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: state.unlocked
-                      ? `0 4px 20px ${phase.color}25, 0 8px 25px rgba(0,0,0,0.08)`
-                      : '0 2px 8px rgba(0,0,0,0.06)',
-                    border: state.completed
-                      ? '4px solid #22c55e'
-                      : isActive
-                      ? `4px solid ${phase.color}`
-                      : state.unlocked
-                      ? `4px solid ${isDark ? '#334155' : 'white'}`
-                      : `4px solid ${lockedBorder}`,
-                    position: 'relative',
-                    flexShrink: 0,
+                <Box
+                  sx={{
+                    bgcolor: D.cardBg,
+                    border: `2px solid ${cardBorderColor}`,
+                    boxShadow: cardShadow,
+                    borderRadius: '20px',
+                    overflow: 'hidden',
+                    cursor: isUnlocked ? 'pointer' : 'default',
+                    opacity: isUnlocked ? 1 : 0.6,
+                    transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                    ...(isUnlocked && {
+                      '&:hover': {
+                        transform: 'translate(-2px, -2px)',
+                        boxShadow: `6px 6px 0 ${phase.color}`,
+                      },
+                    }),
                   }}
-                  whileHover={state.unlocked ? { scale: 1.08 } : {}}
-                  whileTap={state.unlocked ? { scale: 0.95 } : {}}
+                  onClick={() => {
+                    if (!isUnlocked) return
+                    if (isExpanded) {
+                      setActiveNode(null)
+                    } else {
+                      setActiveNode(index)
+                    }
+                  }}
                 >
-                  {state.completed ? (
-                    <CheckCircleIcon sx={{ fontSize: nodeSize * 0.45, color: 'white' }} />
-                  ) : !state.unlocked ? (
-                    <LockIcon sx={{ fontSize: nodeSize * 0.38, color: '#94a3b8' }} />
-                  ) : isActive ? (
-                    <PlayArrowIcon sx={{ fontSize: nodeSize * 0.45, color: 'white' }} />
-                  ) : (
-                    <IconComp sx={{ fontSize: nodeSize * 0.4, color: 'white' }} />
-                  )}
-
-                  {/* Star badge for completed */}
-                  {state.completed && (
-                    <motion.div
-                      style={{
-                        position: 'absolute',
-                        top: -2,
-                        right: -2,
-                        width: 24,
-                        height: 24,
-                        borderRadius: '50%',
-                        background: '#22c55e',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: `2px solid ${isDark ? '#0f172a' : 'white'}`,
-                      }}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: index * 0.2 + 0.6, type: 'spring' }}
-                    >
-                      <StarIcon sx={{ fontSize: 13, color: '#ffd740' }} />
-                    </motion.div>
-                  )}
-                </motion.div>
-
-                {/* Phase label */}
-                <Box sx={{ textAlign: 'center', mt: 1.5, maxWidth: 130 }}>
-                  <Typography sx={{
-                    color: state.unlocked ? textPrimary : (isDark ? '#475569' : '#cbd5e1'),
-                    fontWeight: 700,
-                    fontSize: isMobile ? '0.8rem' : '0.88rem',
-                    lineHeight: 1.2,
-                  }}>
-                    {phase.title}
-                  </Typography>
-                  <Typography sx={{
-                    color: state.unlocked ? textMuted : (isDark ? '#374151' : '#e2e8f0'),
-                    fontSize: '0.72rem',
-                    mt: 0.3,
-                    fontWeight: 500,
-                  }}>
-                    Phase {phase.id}
-                  </Typography>
-                  {state.completed && (
-                    <Chip
-                      size="small"
-                      label="Done"
-                      sx={{
-                        mt: 0.5,
-                        height: 20,
-                        fontSize: '0.65rem',
-                        fontWeight: 700,
-                        bgcolor: isDark ? '#14532d' : '#f0fdf4',
-                        color: isDark ? '#4ade80' : '#16a34a',
-                        border: isDark ? '1px solid #166534' : '1px solid #bbf7d0',
-                      }}
-                    />
-                  )}
-                  {state.inProgress && !state.completed && (
-                    <Chip
-                      size="small"
-                      label="In Progress"
-                      sx={{
-                        mt: 0.5,
-                        height: 20,
-                        fontSize: '0.65rem',
-                        fontWeight: 700,
-                        bgcolor: `${phase.color}08`,
-                        color: phase.color,
-                        border: `1px solid ${phase.color}20`,
-                      }}
-                    />
-                  )}
-                </Box>
-              </Box>
-            </motion.div>
-          )
-        })}
-
-        {/* Finish flag at the bottom */}
-        <motion.div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            paddingTop: 10,
-          }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-        >
-          <Box sx={{
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            background: PHASES.every(p => phaseStates[p.id]?.completed)
-              ? 'linear-gradient(135deg, #fbbf24, #f59e0b)'
-              : (isDark ? '#1e293b' : '#f8fafc'),
-            border: PHASES.every(p => phaseStates[p.id]?.completed)
-              ? '3px solid #fde68a'
-              : `3px solid ${border}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: PHASES.every(p => phaseStates[p.id]?.completed)
-              ? '0 4px 16px rgba(251,191,36,0.3)'
-              : 'none',
-          }}>
-            <EmojiEventsIcon sx={{
-              fontSize: 22,
-              color: PHASES.every(p => phaseStates[p.id]?.completed) ? 'white' : (isDark ? '#475569' : '#cbd5e1'),
-            }} />
-          </Box>
-          <Typography sx={{
-            color: PHASES.every(p => phaseStates[p.id]?.completed) ? (isDark ? '#fbbf24' : '#92400e') : (isDark ? '#475569' : '#cbd5e1'),
-            fontSize: '0.75rem', mt: 1, fontWeight: 600,
-          }}>
-            Journey Complete
-          </Typography>
-        </motion.div>
-      </Box>
-
-      {/* Bottom detail card */}
-      <AnimatePresence>
-        {activeNode !== null && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              style={{
-                position: 'fixed',
-                top: 0, left: 0, right: 0, bottom: 0,
-                zIndex: 40,
-                background: 'rgba(15,23,42,0.3)',
-                backdropFilter: 'blur(4px)',
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setActiveNode(null)}
-            />
-            {/* Card */}
-            <motion.div
-              key={`card-${activeNode}`}
-              style={{
-                position: 'fixed',
-                bottom: 0, left: 0, right: 0,
-                zIndex: 50,
-              }}
-              initial={{ y: 300 }}
-              animate={{ y: 0 }}
-              exit={{ y: 300 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            >
-              {(() => {
-                const phase = PHASES[activeNode]
-                const state = phaseStates[phase.id] || {}
-                const IconComp = phase.icon
-                return (
-                  <Box sx={{
-                    background: cardBg,
-                    borderTop: `3px solid ${phase.color}`,
-                    borderRadius: '20px 20px 0 0',
-                    p: 3, pb: 4,
-                    boxShadow: '0 -8px 40px rgba(0,0,0,0.1)',
-                  }}>
-                    {/* Drag handle */}
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                      <Box sx={{ width: 40, height: 4, borderRadius: 2, bgcolor: border }} />
+                  {/* Always-visible row */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2 }}>
+                    {/* Icon box */}
+                    <Box sx={{
+                      width: 48, height: 48, borderRadius: '14px', flexShrink: 0,
+                      bgcolor: state.completed
+                        ? D.green.bg
+                        : !isUnlocked
+                        ? D.border
+                        : `${phase.color}15`,
+                      border: `2px solid ${state.completed ? D.green.border : !isUnlocked ? D.border : phase.color}`,
+                      boxShadow: state.completed
+                        ? `3px 3px 0 ${D.green.shadow}`
+                        : !isUnlocked
+                        ? `3px 3px 0 ${D.border}`
+                        : `3px 3px 0 ${phase.color}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {state.completed ? (
+                        <CheckCircleIcon sx={{ fontSize: 24, color: D.green.border }} />
+                      ) : !isUnlocked ? (
+                        <LockIcon sx={{ fontSize: 22, color: D.muted }} />
+                      ) : isActive ? (
+                        <PlayArrowIcon sx={{ fontSize: 24, color: phase.color }} />
+                      ) : (
+                        <IconComp sx={{ fontSize: 22, color: phase.color }} />
+                      )}
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                      <Box sx={{
-                        width: 56, height: 56,
-                        borderRadius: 3,
-                        background: phase.gradient,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0,
-                        boxShadow: `0 4px 16px ${phase.color}30`,
+
+                    {/* Text middle */}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{
+                        color: D.muted, fontSize: '0.72rem', fontWeight: 600,
+                        textTransform: 'uppercase', letterSpacing: '0.07em',
                       }}>
-                        <IconComp sx={{ fontSize: 26, color: 'white' }} />
-                      </Box>
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography sx={{ color: textMuted, fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                          Phase {phase.id} · {phase.subtitle}
-                        </Typography>
-                        <Typography sx={{ color: textPrimary, fontWeight: 750, fontSize: '1.15rem', mt: 0.3 }}>
-                          {phase.title}
-                        </Typography>
-                        <Typography sx={{ color: textSecondary, fontSize: '0.85rem', mt: 0.5 }}>
-                          {phase.description}
-                        </Typography>
-                      </Box>
+                        Phase {phase.id}
+                      </Typography>
+                      <Typography sx={{
+                        color: D.heading, fontWeight: 800, fontSize: '1rem', lineHeight: 1.2,
+                      }}>
+                        {phase.title}
+                      </Typography>
+                      <Typography sx={{ color: D.muted, fontSize: '0.8rem', mt: 0.2 }}>
+                        {phase.subtitle}
+                      </Typography>
                     </Box>
 
-                    {/* Action button */}
-                    <Box sx={{ mt: 3 }}>
-                      {state.unlocked ? (
-                        <motion.div whileTap={{ scale: 0.97 }}>
-                          <Box
-                            onClick={() => navigate(phase.path)}
-                            sx={{
-                              py: 1.6,
-                              borderRadius: 3,
-                              background: phase.gradient,
-                              color: 'white',
-                              fontWeight: 700,
-                              fontSize: '0.95rem',
-                              textAlign: 'center',
-                              cursor: 'pointer',
-                              boxShadow: `0 4px 16px ${phase.color}30`,
-                              transition: 'box-shadow 0.2s',
-                              '&:hover': { boxShadow: `0 6px 24px ${phase.color}40` },
-                            }}
-                          >
-                            {state.completed ? 'Review Phase' : state.inProgress ? 'Continue Phase' : 'Start Phase'}
-                          </Box>
-                        </motion.div>
+                    {/* Status pill */}
+                    <Box sx={{ flexShrink: 0 }}>
+                      {state.completed ? (
+                        <Box sx={{
+                          px: 1.5, py: 0.4, borderRadius: '50px',
+                          bgcolor: D.green.bg, border: `2px solid ${D.green.border}`,
+                          boxShadow: `2px 2px 0 ${D.green.shadow}`,
+                          display: 'flex', alignItems: 'center', gap: 0.5,
+                        }}>
+                          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: D.green.border }}>
+                            ✓ Done
+                          </Typography>
+                        </Box>
+                      ) : state.inProgress ? (
+                        <Box sx={{
+                          px: 1.5, py: 0.4, borderRadius: '50px',
+                          bgcolor: `${phase.color}15`, border: `2px solid ${phase.color}`,
+                          boxShadow: `2px 2px 0 ${phase.color}`,
+                          display: 'flex', alignItems: 'center', gap: 0.5,
+                        }}>
+                          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: phase.color }}>
+                            ● In Progress
+                          </Typography>
+                        </Box>
+                      ) : !isUnlocked ? (
+                        <Box sx={{
+                          px: 1.5, py: 0.4, borderRadius: '50px',
+                          bgcolor: D.border, border: `2px solid ${D.border}`,
+                          boxShadow: `2px 2px 0 ${D.border}`,
+                          display: 'flex', alignItems: 'center', gap: 0.5,
+                        }}>
+                          <LockIcon sx={{ fontSize: 11, color: D.muted }} />
+                          <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: D.muted }}>
+                            Locked
+                          </Typography>
+                        </Box>
                       ) : (
                         <Box sx={{
-                          py: 1.6,
-                          borderRadius: 3,
-                          bgcolor: isDark ? '#1e293b' : '#f8fafc',
-                          color: isDark ? '#475569' : '#94a3b8',
-                          fontWeight: 600,
-                          fontSize: '0.9rem',
-                          textAlign: 'center',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 1,
-                          border: `1px solid ${border}`,
+                          px: 1.5, py: 0.4, borderRadius: '50px',
+                          bgcolor: `${phase.color}15`, border: `2px solid ${phase.color}`,
+                          boxShadow: `2px 2px 0 ${phase.color}`,
+                          display: 'flex', alignItems: 'center', gap: 0.5,
                         }}>
-                          <LockIcon sx={{ fontSize: 18 }} />
-                          Complete previous phase to unlock
+                          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: phase.color }}>
+                            ▶ Start
+                          </Typography>
                         </Box>
                       )}
                     </Box>
                   </Box>
-                )
-              })()}
+
+                  {/* Expandable panel */}
+                  <AnimatePresence initial={false}>
+                    {isExpanded && (
+                      <motion.div
+                        key="expand"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: 'easeInOut' }}
+                        style={{ overflow: 'hidden' }}
+                      >
+                        <Box sx={{
+                          borderTop: `2px solid ${D.border}`,
+                          px: 3, pt: 2, pb: 3,
+                        }}
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <Typography sx={{ color: D.body, fontSize: '0.88rem', lineHeight: 1.6, mb: 2 }}>
+                            {phase.description}
+                          </Typography>
+
+                          {/* Action button */}
+                          {isUnlocked ? (
+                            <motion.div whileTap={{ scale: 0.97 }}>
+                              <Box
+                                onClick={() => navigate(phase.path)}
+                                sx={{
+                                  width: '100%',
+                                  py: 1.5,
+                                  borderRadius: '14px',
+                                  background: phase.gradient,
+                                  color: 'white',
+                                  fontWeight: 700,
+                                  fontSize: '0.95rem',
+                                  textAlign: 'center',
+                                  cursor: 'pointer',
+                                  border: `2px solid ${phase.color}`,
+                                  boxShadow: `4px 4px 0 ${phase.color}`,
+                                  transition: 'box-shadow 0.15s, transform 0.15s',
+                                  '&:hover': { boxShadow: `6px 6px 0 ${phase.color}` },
+                                  '&:active': { boxShadow: `1px 1px 0 ${phase.color}`, transform: 'translate(3px, 3px)' },
+                                }}
+                              >
+                                {state.completed ? 'Review Phase' : state.inProgress ? 'Continue Phase' : 'Start Phase'}
+                              </Box>
+                            </motion.div>
+                          ) : (
+                            <Box sx={{
+                              width: '100%',
+                              py: 1.5,
+                              borderRadius: '14px',
+                              bgcolor: D.border,
+                              border: `2px solid ${D.border}`,
+                              color: D.muted,
+                              fontWeight: 600,
+                              fontSize: '0.9rem',
+                              textAlign: 'center',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 1,
+                            }}>
+                              <LockIcon sx={{ fontSize: 18 }} />
+                              Complete previous phase to unlock
+                            </Box>
+                          )}
+                        </Box>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </Box>
+              </motion.div>
+            )
+          })}
+        </Box>
+
+        {/* Completion footer */}
+        <Box sx={{ mt: 3, textAlign: 'center' }}>
+          {allDone ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <Box sx={{
+                bgcolor: D.yellow.bg,
+                border: `2px solid ${D.yellow.border}`,
+                boxShadow: `4px 4px 0 ${D.yellow.shadow}`,
+                borderRadius: '20px',
+                p: 3,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 1,
+              }}>
+                <EmojiEventsIcon sx={{ fontSize: 36, color: D.yellow.border }} />
+                <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: D.heading }}>
+                  Journey Complete! 🎉
+                </Typography>
+                <Typography sx={{ color: D.muted, fontSize: '0.85rem' }}>
+                  You've completed all phases of the learning journey.
+                </Typography>
+              </Box>
             </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+          ) : (
+            <Typography sx={{ color: D.muted, fontSize: '0.82rem' }}>
+              Complete all phases to finish your journey
+            </Typography>
+          )}
+        </Box>
+
+      </Box>
     </Box>
   )
 }

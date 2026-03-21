@@ -119,8 +119,12 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
     useEffect(() => {
         if (dialogueLines.length === 0) return
 
+        let cancelled = false
+
         const showInitialMessages = async () => {
+            setVisibleMessages([])
             for (let i = 0; i < dialogueLines.length; i++) {
+                if (cancelled) return
                 const line = dialogueLines[i]
                 const isUserInput = line.template && line.template.includes('___')
 
@@ -129,6 +133,7 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
                     // Show typing, then show the user input line
                     setIsTyping(true)
                     await new Promise(r => setTimeout(r, 800))
+                    if (cancelled) return
                     setIsTyping(false)
                     setVisibleMessages(prev => [...prev, { ...line, originalIndex: i }])
                     break
@@ -137,6 +142,7 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
                 // Show typing animation for incoming messages
                 setIsTyping(true)
                 await new Promise(r => setTimeout(r, 1000 + Math.random() * 500))
+                if (cancelled) return
                 setIsTyping(false)
 
                 // Then show the message
@@ -146,6 +152,7 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
         }
 
         showInitialMessages()
+        return () => { cancelled = true }
     }, [dialogueLines])
 
     // Check if a line is complete

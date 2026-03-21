@@ -58,8 +58,9 @@ function useApi() {
       await fetch('/auth/logout', { credentials: 'include' })
       setUser(null)
     },
-    async getGameState() {
-      const r = await fetch('/api/game/state', { credentials: 'include' })
+    async getGameState(step = null) {
+      const url = step !== null ? `/api/game/state?step=${step}` : '/api/game/state'
+      const r = await fetch(url, { credentials: 'include' })
       if (!r.ok) throw new Error('Failed to fetch game state')
       return r.json()
     },

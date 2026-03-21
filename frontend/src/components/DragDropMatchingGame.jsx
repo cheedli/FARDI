@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Paper, Typography, Grid, Stack, LinearProgress, Button } from '@mui/material'
+import { Box, Paper, Typography, Grid, Stack, LinearProgress, Button, useTheme } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import TimerIcon from '@mui/icons-material/Timer'
@@ -11,6 +11,8 @@ import TimerIcon from '@mui/icons-material/Timer'
  */
 
 const DragDropMatchingGame = ({ pairs = [], duration = 300, onComplete }) => {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
   const [timeLeft, setTimeLeft] = useState(duration)
   const [timerStarted, setTimerStarted] = useState(false)
   const [matches, setMatches] = useState({}) // { imageId: definitionId }
@@ -219,7 +221,7 @@ const DragDropMatchingGame = ({ pairs = [], duration = 300, onComplete }) => {
           <Typography variant="h6" gutterBottom sx={{ textAlign: 'center', mb: 2 }}>
             Drag these images to the matching definitions below
           </Typography>
-          <Grid container spacing={2}>
+          <Grid container spacing={{ xs: 1, sm: 2 }}>
             {shuffledImages.map((item) => {
               const placed = hasMatch(item.id)
               const correct = isMatched(item.id)
@@ -256,8 +258,8 @@ const DragDropMatchingGame = ({ pairs = [], duration = 300, onComplete }) => {
                         src={item.image}
                         alt={item.word}
                         sx={{
-                          width: 100,
-                          height: 100,
+                          width: { xs: 70, sm: 100 },
+                          height: { xs: 70, sm: 100 },
                           objectFit: 'cover',
                           borderRadius: 1,
                           border: '1px solid',
@@ -286,7 +288,7 @@ const DragDropMatchingGame = ({ pairs = [], duration = 300, onComplete }) => {
           <Typography variant="h6" gutterBottom sx={{ textAlign: 'center', mb: 2 }}>
             Drop images here to match with definitions
           </Typography>
-          <Grid container spacing={2}>
+          <Grid container spacing={{ xs: 1, sm: 2 }}>
             {shuffledDefinitions.map((item) => {
               const hasMatchHere = Object.values(matches).includes(item.id)
               const matchedImageId = Object.keys(matches).find(key => matches[key] === item.id)
@@ -328,15 +330,15 @@ const DragDropMatchingGame = ({ pairs = [], duration = 300, onComplete }) => {
                             src={matchedImage.image}
                             alt={matchedImage.word}
                             sx={{
-                              width: 80,
-                              height: 80,
+                              width: { xs: 56, sm: 80 },
+                              height: { xs: 56, sm: 80 },
                               objectFit: 'cover',
                               borderRadius: 1,
                               border: '2px solid',
                               borderColor: correct ? 'success.main' : incorrect ? 'error.main' : 'grey.400'
                             }}
                           />
-                          <Typography variant="body2" fontWeight="bold" sx={{ color: '#ffffff' }}>
+                          <Typography variant="body2" fontWeight="bold" sx={{ color: correct ? 'success.dark' : incorrect ? 'error.dark' : 'text.primary' }}>
                             {matchedImage.word}
                           </Typography>
                           {correct && (
@@ -352,9 +354,10 @@ const DragDropMatchingGame = ({ pairs = [], duration = 300, onComplete }) => {
                         variant="body2"
                         textAlign="center"
                         sx={{
-                          color: '#ffffff',
-                          fontWeight: 'medium',
-                          borderTop: hasMatchHere ? '1px solid rgba(255,255,255,0.3)' : 'none',
+                          color: 'text.primary',
+                          fontWeight: 500,
+                          borderTop: hasMatchHere ? '1px solid' : 'none',
+                          borderColor: hasMatchHere ? 'divider' : 'transparent',
                           pt: hasMatchHere ? 1.5 : 0,
                           fontSize: '0.875rem'
                         }}

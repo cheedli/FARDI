@@ -1,6 +1,6 @@
 import React from 'react'
 import { Outlet, Link as RouterLink } from 'react-router-dom'
-import { AppBar, Toolbar, Box, Button, Stack, Typography, IconButton, Tooltip, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider } from '@mui/material'
+import { Box, Stack, Typography, IconButton, Tooltip, Drawer } from '@mui/material'
 import LoginIcon from '@mui/icons-material/Login'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import DarkModeIcon from '@mui/icons-material/DarkMode'
@@ -8,163 +8,196 @@ import LightModeIcon from '@mui/icons-material/LightMode'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
+import DashboardIcon from '@mui/icons-material/Dashboard'
 import { useColorMode } from '../theme.jsx'
 import { useAuth } from '../lib/api.jsx'
+
+// ─── Clay tokens — light + dark ──────────────────────────────────────────────
+const TOKENS = {
+  light: {
+    pageBg: '#FFFDE7',
+    borderColor: '#F9A825',
+    heading: '#1A237E',
+    purple: { bg: '#E1BEE7', border: '#8E24AA', shadow: '#8E24AA' },
+    blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1976D2' },
+    yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F9A825' },
+    red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#C62828' },
+  },
+  dark: {
+    pageBg: '#0F0F1A',
+    borderColor: '#F9A825',
+    heading: '#E8EAFF',
+    purple: { bg: '#1E0A2E', border: '#CE93D8', shadow: '#7B1FA2' },
+    blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+    yellow: { bg: '#2A2200', border: '#F9A825', shadow: '#A06800' },
+    red:    { bg: '#1F0000', border: '#EF9A9A', shadow: '#B71C1C' },
+  },
+}
+
+const clayBtn = (c, small = false) => ({
+  display: 'inline-flex', alignItems: 'center', gap: 0.6,
+  px: small ? 2 : 2.5,
+  py: small ? 0.6 : 0.85,
+  borderRadius: '12px',
+  bgcolor: c.bg,
+  border: `2.5px solid ${c.border}`,
+  boxShadow: `3px 3px 0 ${c.shadow}`,
+  color: c.border,
+  fontWeight: 800,
+  fontSize: small ? '0.82rem' : '0.88rem',
+  textDecoration: 'none',
+  cursor: 'pointer',
+  userSelect: 'none',
+  whiteSpace: 'nowrap',
+  transition: 'transform 0.12s, box-shadow 0.12s',
+  '&:hover': {
+    bgcolor: c.bg,
+    transform: 'translate(-2px, -2px)',
+    boxShadow: `5px 5px 0 ${c.shadow}`,
+    color: c.border,
+  },
+  '&:active': { transform: 'translate(1px,1px)', boxShadow: `1px 1px 0 ${c.shadow}` },
+})
 
 export default function LandingLayout() {
   const { user, loading } = useAuth()
   const { mode, toggle } = useColorMode()
   const [drawerOpen, setDrawerOpen] = React.useState(false)
+  const T = TOKENS[mode]
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'white' }}>
-      {/* ── SaaS Top Bar ── */}
-      <AppBar
-        position="sticky"
-        elevation={0}
+    <Box sx={{ minHeight: '100vh', bgcolor: T.pageBg }}>
+
+      {/* ── Clay Navbar ────────────────────────────────────────────────────── */}
+      <Box
+        component="nav"
         sx={{
-          background: 'rgba(255, 255, 255, 0.92)',
-          backdropFilter: 'blur(16px) saturate(180%)',
-          borderBottom: '1px solid #f1f5f9',
-          zIndex: 1100,
+          position: 'sticky', top: 0, zIndex: 1100,
+          bgcolor: T.pageBg,
+          borderBottom: `2px solid ${T.borderColor}`,
+          boxShadow: `0 3px 0 ${T.borderColor}`,
         }}
       >
-        <Toolbar sx={{ minHeight: { xs: 56, md: 64 }, px: { xs: 2, md: 4 }, maxWidth: 1280, width: '100%', mx: 'auto' }}>
+        <Stack
+          direction="row" alignItems="center"
+          sx={{ maxWidth: 1280, mx: 'auto', px: { xs: 2, md: 4 }, height: { xs: 58, md: 66 } }}
+        >
           {/* Logo */}
-          <RouterLink to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8, marginRight: 'auto' }}>
+          <RouterLink to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10, marginRight: 'auto' }}>
             <Box sx={{
-              width: 32, height: 32, borderRadius: 2,
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              width: 36, height: 36, borderRadius: '11px',
+              bgcolor: T.purple.bg, border: `2px solid ${T.purple.border}`,
+              boxShadow: `3px 3px 0 ${T.purple.shadow}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
+              transition: 'transform 0.12s, box-shadow 0.12s',
+              '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${T.purple.shadow}` },
             }}>
-              <AutoAwesomeIcon sx={{ fontSize: 18, color: 'white' }} />
+              <AutoAwesomeIcon sx={{ fontSize: 19, color: T.purple.border }} />
             </Box>
-            <Typography sx={{
-              fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.02em',
-              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>
+            <Typography sx={{ fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', color: T.heading }}>
               FARDI
             </Typography>
           </RouterLink>
 
-          {/* Desktop right side */}
+          {/* Desktop actions */}
           <Stack direction="row" alignItems="center" spacing={1.5} sx={{ display: { xs: 'none', sm: 'flex' } }}>
             <Tooltip title={mode === 'light' ? 'Dark mode' : 'Light mode'}>
               <IconButton onClick={toggle} size="small" sx={{
-                width: 34, height: 34, borderRadius: 2.5,
-                color: '#94a3b8', border: '1px solid #f1f5f9',
-                '&:hover': { bgcolor: '#f8fafc', color: '#475569', borderColor: '#e2e8f0' },
+                width: 35, height: 35, borderRadius: '10px',
+                bgcolor: T.yellow.bg, border: `2px solid ${T.yellow.border}`,
+                boxShadow: `2px 2px 0 ${T.yellow.shadow}`, color: T.yellow.border,
+                transition: 'transform 0.12s, box-shadow 0.12s',
+                '&:hover': { bgcolor: T.yellow.bg, transform: 'translate(-2px,-2px)', boxShadow: `4px 4px 0 ${T.yellow.shadow}` },
               }}>
-                {mode === 'light' ? <DarkModeIcon sx={{ fontSize: 18 }} /> : <LightModeIcon sx={{ fontSize: 18 }} />}
+                {mode === 'light' ? <DarkModeIcon sx={{ fontSize: 17 }} /> : <LightModeIcon sx={{ fontSize: 17 }} />}
               </IconButton>
             </Tooltip>
 
             {!loading && !user && (
               <>
-                <Button
-                  component={RouterLink} to="/login" size="small"
-                  sx={{
-                    borderRadius: 2.5, px: 2.5, py: 0.6, fontWeight: 600,
-                    textTransform: 'none', fontSize: '0.85rem', height: 36,
-                    boxShadow: 'none', color: '#475569',
-                    '&:hover': { bgcolor: '#f8fafc', color: '#6366f1', boxShadow: 'none' },
-                  }}
-                >
-                  Sign In
-                </Button>
-                <Button
-                  component={RouterLink} to="/signup" size="small"
-                  sx={{
-                    borderRadius: 2.5, px: 3, py: 0.6, fontWeight: 600,
-                    textTransform: 'none', fontSize: '0.85rem', height: 36,
-                    background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                    color: 'white', boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
-                    '&:hover': { background: 'linear-gradient(135deg, #5856eb, #4338ca)', boxShadow: '0 4px 16px rgba(99,102,241,0.4)' },
-                  }}
-                >
-                  Sign Up
-                </Button>
+                <Box component={RouterLink} to="/login" sx={clayBtn(T.blue)}>
+                  <LoginIcon sx={{ fontSize: 15 }} /> Sign In
+                </Box>
+                <Box component={RouterLink} to="/signup" sx={clayBtn(T.purple)}>
+                  <PersonAddIcon sx={{ fontSize: 15 }} /> Sign Up
+                </Box>
               </>
             )}
-
             {!loading && user && (
-              <Button
-                component={RouterLink} to="/dashboard" size="small"
-                sx={{
-                  borderRadius: 2.5, px: 3, py: 0.6, fontWeight: 600,
-                  textTransform: 'none', fontSize: '0.85rem', height: 36,
-                  background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                  color: 'white', boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
-                  '&:hover': { background: 'linear-gradient(135deg, #5856eb, #4338ca)', boxShadow: '0 4px 16px rgba(99,102,241,0.4)' },
-                }}
-              >
-                Dashboard
-              </Button>
+              <Box component={RouterLink} to="/dashboard" sx={clayBtn(T.purple)}>
+                <DashboardIcon sx={{ fontSize: 15 }} /> Dashboard
+              </Box>
             )}
           </Stack>
 
           {/* Mobile hamburger */}
           <IconButton
             onClick={() => setDrawerOpen(true)}
-            sx={{ display: { xs: 'flex', sm: 'none' }, color: '#475569' }}
+            sx={{
+              display: { xs: 'flex', sm: 'none' }, width: 36, height: 36, borderRadius: '10px',
+              bgcolor: T.purple.bg, border: `2px solid ${T.purple.border}`,
+              boxShadow: `3px 3px 0 ${T.purple.shadow}`, color: T.purple.border,
+              '&:hover': { bgcolor: T.purple.bg },
+            }}
           >
-            <MenuIcon />
+            <MenuIcon sx={{ fontSize: 19 }} />
           </IconButton>
-        </Toolbar>
-      </AppBar>
+        </Stack>
+      </Box>
 
-      {/* Mobile drawer */}
+      {/* ── Mobile Drawer ───────────────────────────────────────────────────── */}
       <Drawer
-        anchor="right"
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}
         sx={{
           display: { xs: 'block', sm: 'none' },
-          '& .MuiDrawer-paper': { width: 280, bgcolor: 'white' },
+          '& .MuiDrawer-paper': {
+            width: 280, bgcolor: T.pageBg,
+            borderLeft: `2px solid ${T.borderColor}`,
+            boxShadow: `-5px 0 0 ${T.borderColor}`,
+            p: 2,
+          },
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1.5 }}>
-          <IconButton onClick={() => setDrawerOpen(false)} sx={{ color: '#94a3b8' }}>
-            <CloseIcon />
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+          <Typography sx={{ fontWeight: 900, fontSize: '1.1rem', color: T.heading }}>Menu</Typography>
+          <IconButton
+            onClick={() => setDrawerOpen(false)}
+            sx={{
+              width: 34, height: 34, borderRadius: '10px',
+              bgcolor: T.red.bg, border: `2px solid ${T.red.border}`,
+              boxShadow: `2px 2px 0 ${T.red.shadow}`, color: T.red.border,
+              '&:hover': { bgcolor: T.red.bg },
+            }}
+          >
+            <CloseIcon sx={{ fontSize: 17 }} />
           </IconButton>
-        </Box>
-        <List sx={{ px: 1 }}>
+        </Stack>
+
+        <Stack spacing={1.5}>
           {!loading && !user && (
             <>
-              <ListItem disablePadding sx={{ mb: 0.5 }}>
-                <ListItemButton component={RouterLink} to="/login" onClick={() => setDrawerOpen(false)} sx={{ borderRadius: 2.5, py: 1.2 }}>
-                  <ListItemIcon sx={{ color: '#64748b', minWidth: 40 }}><LoginIcon sx={{ fontSize: 20 }} /></ListItemIcon>
-                  <ListItemText primary={<Typography sx={{ fontWeight: 500, fontSize: '0.9rem', color: '#475569' }}>Sign In</Typography>} />
-                </ListItemButton>
-              </ListItem>
-              <ListItem disablePadding>
-                <ListItemButton component={RouterLink} to="/signup" onClick={() => setDrawerOpen(false)} sx={{ borderRadius: 2.5, py: 1.2 }}>
-                  <ListItemIcon sx={{ color: '#6366f1', minWidth: 40 }}><PersonAddIcon sx={{ fontSize: 20 }} /></ListItemIcon>
-                  <ListItemText primary={<Typography sx={{ fontWeight: 600, fontSize: '0.9rem', color: '#6366f1' }}>Sign Up</Typography>} />
-                </ListItemButton>
-              </ListItem>
+              <Box component={RouterLink} to="/login" onClick={() => setDrawerOpen(false)}
+                sx={{ ...clayBtn(T.blue), justifyContent: 'center', py: 1.25, fontSize: '0.95rem' }}>
+                <LoginIcon sx={{ fontSize: 17 }} /> Sign In
+              </Box>
+              <Box component={RouterLink} to="/signup" onClick={() => setDrawerOpen(false)}
+                sx={{ ...clayBtn(T.purple), justifyContent: 'center', py: 1.25, fontSize: '0.95rem' }}>
+                <PersonAddIcon sx={{ fontSize: 17 }} /> Sign Up
+              </Box>
             </>
           )}
           {!loading && user && (
-            <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to="/dashboard" onClick={() => setDrawerOpen(false)} sx={{ borderRadius: 2.5, py: 1.2 }}>
-                <ListItemIcon sx={{ color: '#6366f1', minWidth: 40 }}><AutoAwesomeIcon sx={{ fontSize: 20 }} /></ListItemIcon>
-                <ListItemText primary={<Typography sx={{ fontWeight: 600, fontSize: '0.9rem', color: '#6366f1' }}>Go to Dashboard</Typography>} />
-              </ListItemButton>
-            </ListItem>
+            <Box component={RouterLink} to="/dashboard" onClick={() => setDrawerOpen(false)}
+              sx={{ ...clayBtn(T.purple), justifyContent: 'center', py: 1.25, fontSize: '0.95rem' }}>
+              <DashboardIcon sx={{ fontSize: 17 }} /> Dashboard
+            </Box>
           )}
-          <Divider sx={{ my: 1.5, mx: 1 }} />
-          <ListItem disablePadding>
-            <ListItemButton onClick={() => { toggle(); setDrawerOpen(false) }} sx={{ borderRadius: 2.5, py: 1.2 }}>
-              <ListItemIcon sx={{ color: '#94a3b8', minWidth: 40 }}>
-                {mode === 'light' ? <DarkModeIcon sx={{ fontSize: 20 }} /> : <LightModeIcon sx={{ fontSize: 20 }} />}
-              </ListItemIcon>
-              <ListItemText primary={<Typography sx={{ fontWeight: 500, fontSize: '0.9rem', color: '#475569' }}>{mode === 'light' ? 'Dark Mode' : 'Light Mode'}</Typography>} />
-            </ListItemButton>
-          </ListItem>
-        </List>
+          <Box onClick={() => { toggle(); setDrawerOpen(false) }}
+            sx={{ ...clayBtn(T.yellow), justifyContent: 'center', py: 1.25, fontSize: '0.95rem', cursor: 'pointer' }}>
+            {mode === 'light' ? <DarkModeIcon sx={{ fontSize: 17 }} /> : <LightModeIcon sx={{ fontSize: 17 }} />}
+            {mode === 'light' ? 'Dark Mode' : 'Light Mode'}
+          </Box>
+        </Stack>
       </Drawer>
 
       {/* Page content */}
