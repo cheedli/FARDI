@@ -1,9 +1,28 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, Stack, Radio, RadioGroup, FormControlLabel, FormControl } from '@mui/material'
+import { Box, Container, Typography, Stack, Radio, RadioGroup, FormControlLabel, FormControl } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
+
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+  green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+  teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+  green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+  teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+}
 
 const QUESTIONS = [
   { id: 1, question: 'Problem means?', options: ['Something wrong', 'Stop event', 'Fix problem'], correct: 0 },
@@ -16,10 +35,20 @@ const QUESTIONS = [
 
 export default function Phase5Step2RemedialB1TaskC() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 2, interaction: 3, context: 'remedial_b1' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
+
+  const cardSx = (color) => ({
+    bgcolor: color.bg,
+    border: `2px solid ${color.border}`,
+    borderRadius: '20px',
+    boxShadow: `4px 4px 0 ${color.shadow}`,
+    p: 3,
+  })
 
   const handleAnswerChange = (questionId, value) => {
     setAnswers(prev => ({ ...prev, [questionId]: parseInt(value) }))
@@ -30,7 +59,6 @@ export default function Phase5Step2RemedialB1TaskC() {
     QUESTIONS.forEach(q => {
       if (answers[q.id] === q.correct) correctCount++
     })
-
     setScore(correctCount)
     setSubmitted(true)
     sessionStorage.setItem('phase5_step2_remedial_b1_taskC_score', correctCount.toString())
@@ -49,7 +77,6 @@ export default function Phase5Step2RemedialB1TaskC() {
     const maxScore = 3 + 6 + 6
     const threshold = Math.ceil(maxScore * 0.8)
     const passed = totalScore >= threshold
-
     try {
       await phase5API.calculateRemedialScore(2, 'B1', {
         task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore
@@ -57,7 +84,6 @@ export default function Phase5Step2RemedialB1TaskC() {
     } catch (error) {
       console.error('Failed to log final score:', error)
     }
-
     if (passed) {
       navigate('/dashboard')
     } else {
@@ -68,43 +94,99 @@ export default function Phase5Step2RemedialB1TaskC() {
   const allAnswered = QUESTIONS.every(q => answers[q.id] !== undefined)
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)', color: 'white' }}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">Phase 5: Execution & Problem-Solving</Typography>
-        <Typography variant="h5" gutterBottom>Step 2: Remedial Practice - Level B1</Typography>
-        <Typography variant="h6" gutterBottom>Task C: Wordshake Quiz</Typography>
-        <Typography variant="body1">Answer 6 questions on crisis terms</Typography>
-      </Paper>
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage speaker="Ms. Mabrouki" message="Welcome to Wordshake Quiz! Answer the multiple-choice questions about crisis vocabulary!" />
-      </Paper>
-      {!submitted ? (
-        <>
-          <Stack spacing={3} sx={{ mb: 3 }}>
-            {QUESTIONS.map((q) => (
-              <Paper key={q.id} elevation={2} sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>Question {q.id}: {q.question}</Typography>
-                <FormControl component="fieldset">
-                  <RadioGroup value={answers[q.id]?.toString() || ''} onChange={(e) => handleAnswerChange(q.id, e.target.value)}>
-                    {q.options.map((option, idx) => (
-                      <FormControlLabel key={idx} value={idx.toString()} control={<Radio />} label={option} />
-                    ))}
-                  </RadioGroup>
-                </FormControl>
-              </Paper>
-            ))}
-          </Stack>
-          <Button variant="contained" color="primary" onClick={handleSubmit} disabled={!allAnswered} size="large" fullWidth>Submit Answers</Button>
-        </>
-      ) : (
-        <>
-          <Paper elevation={3} sx={{ p: 4, mb: 3, backgroundColor: 'success.lighter', textAlign: 'center' }}>
-            <Typography variant="h5" color="success.dark" gutterBottom>✓ Task C Complete!</Typography>
-            <Typography variant="h6" sx={{ mt: 2 }}>Score: {score} / 6</Typography>
-          </Paper>
-          <Button variant="contained" color="success" onClick={handleContinue} size="large" fullWidth>Continue to Final Results →</Button>
-        </>
-      )}
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ ...cardSx(P.orange), mb: 3 }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.orange.border }}>
+              Phase 5: Execution &amp; Problem-Solving
+            </Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.orange.border }}>
+              Step 2: Remedial Practice - Level B1
+            </Typography>
+            <Typography variant="h6" gutterBottom sx={{ color: P.orange.border }}>Task C: Wordshake Quiz</Typography>
+            <Typography variant="body1" color="text.secondary">Answer 6 questions on crisis terms</Typography>
+          </Box>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Box sx={{ ...cardSx(P.teal), mb: 3 }}>
+            <CharacterMessage speaker="Ms. Mabrouki" message="Welcome to Wordshake Quiz! Answer the multiple-choice questions about crisis vocabulary!" />
+          </Box>
+        </motion.div>
+
+        {!submitted ? (
+          <>
+            <Stack spacing={3} sx={{ mb: 3 }}>
+              {QUESTIONS.map((q, qIdx) => (
+                <motion.div key={q.id} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + qIdx * 0.05 }}>
+                  <Box sx={{ ...cardSx(P.blue) }}>
+                    <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.blue.border }}>
+                      Question {q.id}: {q.question}
+                    </Typography>
+                    <FormControl component="fieldset">
+                      <RadioGroup value={answers[q.id]?.toString() || ''} onChange={(e) => handleAnswerChange(q.id, e.target.value)}>
+                        {q.options.map((option, idx) => (
+                          <FormControlLabel key={idx} value={idx.toString()} control={<Radio />} label={option} />
+                        ))}
+                      </RadioGroup>
+                    </FormControl>
+                  </Box>
+                </motion.div>
+              ))}
+            </Stack>
+            <Box
+              component="button"
+              onClick={handleSubmit}
+              disabled={!allAnswered}
+              sx={{
+                width: '100%',
+                bgcolor: P.orange.bg,
+                border: `2px solid ${P.orange.border}`,
+                borderRadius: '14px',
+                boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+                py: 1.5,
+                cursor: !allAnswered ? 'not-allowed' : 'pointer',
+                fontWeight: 'bold',
+                fontSize: '1rem',
+                color: P.orange.border,
+                opacity: !allAnswered ? 0.5 : 1,
+                '&:hover': allAnswered ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` } : {},
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Submit Answers
+            </Box>
+          </>
+        ) : (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...cardSx(P.green), mb: 3, textAlign: 'center' }}>
+              <Typography variant="h5" fontWeight="bold" sx={{ color: P.green.border }}>Task C Complete!</Typography>
+              <Typography variant="h6" sx={{ mt: 2 }} color="text.secondary">Score: {score} / 6</Typography>
+            </Box>
+            <Box
+              component="button"
+              onClick={handleContinue}
+              sx={{
+                width: '100%',
+                bgcolor: P.green.bg,
+                border: `2px solid ${P.green.border}`,
+                borderRadius: '14px',
+                boxShadow: `4px 4px 0 ${P.green.shadow}`,
+                py: 1.5,
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '1rem',
+                color: P.green.border,
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` },
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Continue to Final Results →
+            </Box>
+          </motion.div>
+        )}
+      </Container>
     </Box>
   )
 }

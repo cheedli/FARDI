@@ -7,6 +7,7 @@ import logging
 import uuid
 import json
 import re
+import sqlite3
 from datetime import datetime
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
@@ -1982,11 +1983,40 @@ async def get_dashboard_data(user: dict = Depends(get_current_user)):
         except Exception as e:
             logger.error(f"Error getting Phase 6 progress: {e}")
 
+        # Get Phase 3 & 4 progress from student_progress table
+        phase3_progress = None
+        phase4_progress = None
+        try:
+            conn34 = sqlite3.connect('fardi.db')
+            conn34.row_factory = sqlite3.Row
+            for ph in [3, 4]:
+                row = conn34.execute(
+                    'SELECT phase, subphase, step, interaction, item_index, context, is_complete FROM student_progress WHERE user_id = ? AND phase = ?',
+                    (user_id, ph)
+                ).fetchone()
+                if row:
+                    d = dict(row)
+                    # Count total responses for this phase
+                    count = conn34.execute(
+                        'SELECT COUNT(*) as cnt FROM student_responses WHERE user_id = ? AND phase = ?',
+                        (user_id, ph)
+                    ).fetchone()
+                    d['total_responses'] = count['cnt'] if count else 0
+                    if ph == 3:
+                        phase3_progress = d
+                    else:
+                        phase4_progress = d
+            conn34.close()
+        except Exception as e:
+            logger.error(f"Error getting Phase 3/4 progress: {e}")
+
         return {
             'user': user_data,
             'user_stats': user_stats,
             'recent_assessments': recent_assessments,
             'phase2_progress': phase2_progress,
+            'phase3_progress': phase3_progress,
+            'phase4_progress': phase4_progress,
             'phase5_progress': phase5_progress,
             'phase6_progress': phase6_progress,
         }

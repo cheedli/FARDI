@@ -1,112 +1,78 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, Stack, Alert } from '@mui/material'
+import { Box, Container, Typography } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import GapFillStory from '../../../components/GapFillStory.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
-/**
- * Phase 5 SubPhase 2 Step 2 - Remedial B2 - Task A: Role-Play Dialogue
- * Complete dialogue giving detailed volunteer instructions
- */
+const LIGHT = { pageBg: '#FFFDE7', orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' } }
+const DARK  = { pageBg: '#0F0F1A', orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' }, green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' } }
+const clay  = (c) => ({ bgcolor: c.bg, border: `2px solid ${c.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${c.shadow}`, p: 3 })
+const hoverLift = (c) => ({ '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${c.shadow}` } })
 
 const WORD_BANK_ORIGINAL = ['please', 'first', 'then', 'after', 'careful', 'help', 'guide', 'welcome']
-
-const SENTENCES = [
-  'Ms. Mabrouki: Entrance duty?',
-  'You: [First], [please] welcome guests.',
-  'SKANDER: Next?',
-  'You: [Then], check tickets and [guide] them.',
-  'You: [After] that, [help] with questions and be [careful].'
-]
-
-const CORRECT_ANSWERS = {
-  'g_1_0': 'First',
-  'g_1_1': 'please',
-  'g_3_0': 'Then',
-  'g_3_1': 'guide',
-  'g_4_0': 'After',
-  'g_4_1': 'help',
-  'g_4_2': 'careful'
-}
+const SENTENCES = ['Ms. Mabrouki: Entrance duty?', 'You: [First], [please] welcome guests.', 'SKANDER: Next?', 'You: [Then], check tickets and [guide] them.', 'You: [After] that, [help] with questions and be [careful].']
+const CORRECT_ANSWERS = { 'g_1_0': 'First', 'g_1_1': 'please', 'g_3_0': 'Then', 'g_3_1': 'guide', 'g_4_0': 'After', 'g_4_1': 'help', 'g_4_2': 'careful' }
 
 export default function Phase5SubPhase2Step2RemedialB2TaskA() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 2, interaction: 1, context: 'remedial_b2' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
-
-  const shuffledWordBank = useMemo(() => {
-    return [...WORD_BANK_ORIGINAL].sort(() => Math.random() - 0.5)
-  }, [])
-
-  const handleAnswerChange = (key, value) => {
-    setAnswers(prev => ({ ...prev, [key]: value }))
-  }
-
-  const calculateScore = () => {
-    let correctCount = 0
-    Object.entries(CORRECT_ANSWERS).forEach(([key, correct]) => {
-      if (answers[key]?.toLowerCase().trim() === correct.toLowerCase()) correctCount++
-    })
-    return correctCount
-  }
-
+  const shuffledWordBank = useMemo(() => [...WORD_BANK_ORIGINAL].sort(() => Math.random() - 0.5), [])
+  const handleAnswerChange = (key, value) => setAnswers(prev => ({ ...prev, [key]: value }))
+  const calculateScore = () => { let c = 0; Object.entries(CORRECT_ANSWERS).forEach(([k, v]) => { if (answers[k]?.toLowerCase().trim() === v.toLowerCase()) c++ }); return c }
   const handleSubmit = async () => {
-    const finalScore = calculateScore()
-    setScore(finalScore)
-    setSubmitted(true)
+    const finalScore = calculateScore(); setScore(finalScore); setSubmitted(true)
     sessionStorage.setItem('phase5_subphase2_step2_remedial_b2_taskA_score', finalScore.toString())
-    try {
-      await phase5API.logRemedialActivity(2, 'B2', 'A', finalScore, 7, 2) // step 2, subphase 2
-    } catch (error) {
-      console.error('Failed to log task completion:', error)
-    }
+    try { await phase5API.logRemedialActivity(2, 'B2', 'A', finalScore, 7, 2) } catch (e) { console.error(e) }
   }
-
-  const handleContinue = () => {
-    navigate('/phase5/subphase/2/step/2/remedial/b2/task/b')
-  }
-
+  const handleContinue = () => navigate('/phase5/subphase/2/step/2/remedial/b2/task/b')
   const allFilled = Object.keys(CORRECT_ANSWERS).every(key => answers[key])
-
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)', color: 'white' }}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">Phase 5: Execution & Problem-Solving</Typography>
-        <Typography variant="h5" gutterBottom>SubPhase 2 Step 2: Remedial Practice - Level B2</Typography>
-        <Typography variant="h6" gutterBottom>Task A: Role-Play Dialogue</Typography>
-        <Typography variant="body1">Complete dialogue giving detailed volunteer instructions. Use sequencing and polite language!</Typography>
-      </Paper>
-
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage speaker="Ms. Mabrouki" message="Welcome to Role-Play Dialogue! Complete the dialogue about giving volunteer instructions. Use sequencing words (first, then, after) and polite language (please)!" />
-      </Paper>
-
-      {!submitted && (
-        <Box>
-          <GapFillStory templates={SENTENCES} wordBank={shuffledWordBank} answers={answers} onChange={handleAnswerChange} />
-          <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 4 }}>
-            <Button variant="contained" color="primary" size="large" onClick={handleSubmit} disabled={!allFilled} sx={{ px: 6 }}>
-              Submit Answers
-            </Button>
-          </Stack>
-        </Box>
-      )}
-
-      {submitted && (
-        <>
-          <Paper elevation={3} sx={{ p: 4, mb: 3, backgroundColor: 'success.lighter', textAlign: 'center' }}>
-            <Typography variant="h5" color="success.dark" gutterBottom>✓ Task A Complete!</Typography>
-            <Typography variant="h6" sx={{ mt: 2 }}>Score: {score} / 7</Typography>
-          </Paper>
-          <Stack direction="row" spacing={2} justifyContent="flex-end">
-            <Button variant="contained" color="success" onClick={handleContinue} size="large">Next: Task B →</Button>
-          </Stack>
-        </>
-      )}
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ ...clay(P.orange), mb: 3 }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: P.orange.border, mb: 1 }}>Phase 5: Execution &amp; Problem-Solving</Typography>
+            <Typography variant="h5" sx={{ color: P.orange.border, mb: 1 }}>SubPhase 2 Step 2: Remedial Practice - Level B2</Typography>
+            <Typography variant="h6" sx={{ color: P.orange.border, mb: 1 }}>Task A: Role-Play Dialogue</Typography>
+            <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>Complete dialogue giving detailed volunteer instructions.</Typography>
+          </Box>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <Box sx={{ ...clay(P.orange), mb: 3 }}>
+            <CharacterMessage speaker="Ms. Mabrouki" message="Welcome to Role-Play Dialogue! Complete the dialogue using sequencing words (first, then, after) and polite language (please)!" />
+          </Box>
+        </motion.div>
+        {!submitted && (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <GapFillStory templates={SENTENCES} wordBank={shuffledWordBank} answers={answers} onChange={handleAnswerChange} />
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+              <Box component="button" onClick={handleSubmit} disabled={!allFilled}
+                sx={{ ...clay(P.orange), ...hoverLift(P.orange), cursor: 'pointer', px: 6, py: 1.5, fontWeight: 'bold', fontSize: '1rem', color: P.orange.border, transition: 'all 0.15s', opacity: !allFilled ? 0.5 : 1 }}>Submit Answers</Box>
+            </Box>
+          </motion.div>
+        )}
+        {submitted && (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...clay(P.green), mb: 3, textAlign: 'center' }}>
+              <Typography variant="h5" sx={{ color: P.green.border, mb: 2 }}>✓ Task A Complete!</Typography>
+              <Typography variant="h6">Score: {score} / 7</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Box component="button" onClick={handleContinue}
+                sx={{ ...clay(P.green), ...hoverLift(P.green), cursor: 'pointer', px: 4, py: 1.5, fontWeight: 'bold', fontSize: '1rem', color: P.green.border, transition: 'all 0.15s' }}>Next: Task B →</Box>
+            </Box>
+          </motion.div>
+        )}
+      </Container>
     </Box>
   )
 }

@@ -24,6 +24,41 @@ router = APIRouter(prefix="/api/phase4", tags=["phase4"])
 ai_service = AIService()
 
 
+def get_db_connection_p4():
+    conn = sqlite3.connect('fardi.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def save_phase4_progress(user_id, step, interaction=None, context='main', score=None, item_id=None, item_type=None, prompt=None, answer=None, is_correct=None):
+    """Save progress and optionally a response for Phase 4."""
+    conn = get_db_connection_p4()
+    try:
+        conn.execute(
+            """INSERT INTO student_progress (user_id, phase, step, interaction, context, is_complete)
+               VALUES (?, 4, ?, ?, ?, 0)
+               ON CONFLICT(user_id, phase) DO UPDATE SET
+                   step = excluded.step,
+                   interaction = excluded.interaction,
+                   context = excluded.context""",
+            (user_id, step, interaction or 0, context)
+        )
+        if answer is not None:
+            is_correct_int = None
+            if is_correct is not None:
+                is_correct_int = 1 if is_correct else 0
+            answer_val = answer if isinstance(answer, str) else json.dumps(answer)
+            conn.execute(
+                """INSERT INTO student_responses
+                    (user_id, phase, step, interaction, item_index, context, item_id, item_type, prompt, response, is_correct, score)
+                   VALUES (?, 4, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)""",
+                (user_id, step, interaction or 0, context, item_id, item_type, prompt, answer_val, is_correct_int, score)
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 @router.get("/step/{step_id}")
 async def get_step(step_id: int, user: dict = Depends(get_current_user)):
     """Get Phase 4 step data"""
@@ -55,8 +90,12 @@ async def submit_response(step_id: int, request: Request, user: dict = Depends(g
         user_id = user["user_id"]
         data = await request.json()
 
-        # TODO: Implement response submission logic
-        # For now, just return success
+        # Save to DB
+        save_phase4_progress(
+            user_id, step=step_id, context='main',
+            item_id=f'step{step_id}_submit', item_type='submit',
+            prompt=f'Phase 4 Step {step_id} Submission', answer=json.dumps(data),
+        )
 
         return {
             'success': True,
@@ -96,6 +135,15 @@ async def log_remedial_task(request: Request, user: dict = Depends(get_current_u
         print("="*60 + "\n")
 
         logger.info(f"Remedial {level} Task {task} - User {user_id}: Score={score}/{max_score}, Time={time_taken}s")
+
+        # Save to DB
+        save_phase4_progress(
+            user_id, step=0, context=f'remedial_{level.lower()}',
+            score=score, item_id=f'remedial_{level}_{task}', item_type='remedial',
+            prompt=f'Phase 4 Remedial {level} Task {task}',
+            answer=json.dumps({'score': score, 'max_score': max_score, 'time_taken': time_taken}),
+            is_correct=score >= (max_score * 0.6) if max_score > 0 else None
+        )
 
         return {
             'success': True,
@@ -201,6 +249,15 @@ async def calculate_step1_score(request: Request, user: dict = Depends(get_curre
         print("="*60 + "\n")
 
         logger.info(f"Phase 4 Step 1 scoring - User {user_id}: I1={interaction1_score}, I2={interaction2_score}, I3={interaction3_score}, Total={total_score}, Level={remedial_level}")
+
+        # Save to DB
+        save_phase4_progress(
+            user_id, step=1, context='main',
+            score=total_score, item_id='step1_score', item_type='score',
+            prompt='Phase 4 Step 1 Score',
+            answer=json.dumps({'i1': interaction1_score, 'i2': interaction2_score, 'i3': interaction3_score}),
+            is_correct=should_proceed
+        )
 
         return {
             'success': True,
@@ -2782,6 +2839,15 @@ async def log_phase4_2_interaction(request: Request, user: dict = Depends(get_cu
         print("="*60 + "\n")
 
         logger.info(f"Phase 4.2 Step {step} Interaction {interaction} - User {user_id}: {game_type} - Score={score}/{max_score}, Time={time_taken}s")
+
+        # Save to DB
+        save_phase4_progress(
+            user_id, step=step, interaction=interaction, context='main',
+            score=score, item_id=f'step{step}_i{interaction}_{game_type}', item_type=game_type,
+            prompt=f'Phase 4.2 Step {step} Interaction {interaction}',
+            answer=json.dumps({'score': score, 'max_score': max_score, 'time_taken': time_taken}),
+            is_correct=completed
+        )
 
         return {'success': True, 'message': 'Interaction logged successfully'}
 

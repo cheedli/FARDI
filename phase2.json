@@ -87,7 +87,7 @@
           {
             "id": "role_confirmation",
             "title": "Role Confirmation",
-            "instructor": "System/Team Avatar",
+            "instructor": "Ms. Mabrouki",
             "question": "Confirm the final roles for two team members.",
             "instruction": "Write one or two sentences to confirm the final roles for two team members (e.g., Emna and Ryan) in the action plan. Make sure your sentences are clear and fit the team’s vision.",
             "hint": "Mention who does what clearly.",
@@ -1806,29 +1806,29 @@
             "audio_script": "Let’s assign Malouf music to Emna and decorations with Tunisian tiles to Ryan. What’s your idea?",
             "instruction": "Complete a 10-line dialogue.",
             "guided_questions": [
-            "Why should Emna pick Malouf music?",
-            "Why should Ryan do decorations?",
-            "Who do you suggest for the poster and why?",
-            "Who can do food and why?",
-            "When is the meeting?",
-            "What will we discuss?",
-            "Why is the plan good?",
-            "What will the team make?"
-          ],
-          "example_of_answers": [
-            "1. I agree, Emna should pick Malouf music because it is traditional.",
-            "2. Ryan should do decorations because he is organized.",
-            "3. I suggest Lilia for poster because she likes art.",
-            "4. SKANDER can do food because he likes cooking.",
-            "5. The meeting is Friday at 3 PM.",
-            "6. We discuss music and decorations.",
-            "7. The plan is good for culture.",
-            "8. Our team will make event fun."
-          ],
-          "ai_evaluation": {
-            "cefr_level": "A2",
-            "prompt": "You are an AI writing evaluator for CEFR A2.\n\nTask instruction:\n{{TASK_INSTRUCTION}}\n\nGuided questions:\n{{GUIDED_QUESTIONS}}\n\nExample answers:\n{{EXAMPLE_ANSWERS}}\n\nLearner response:\n{{LEARNER_RESPONSE}}\n\nEvaluate the response as a whole. Do not match words literally.\n\nCheck:\n- Coverage of most guided questions (directly or indirectly)\n- Grammar and vocabulary roughly at level A2\n- Coherence and clarity\n- Relevance to the given context\n\nIgnore small grammar or spelling mistakes if the meaning is clear.\n\nReturn JSON only in this format:\n{\n  \"score\": 0-100,\n  \"level_alignment\": \"below\" | \"meets\" | \"above\",\n  \"strengths\": [\"...\"],\n  \"improvements\": [\"...\"],\n  \"feedback\": \"Short, neutral, level-appropriate feedback.\"\n}\n"
-          }
+              "Why should Emna pick Malouf music?",
+              "Why should Ryan do decorations?",
+              "Who do you suggest for the poster and why?",
+              "Who can do food and why?",
+              "When is the meeting?",
+              "What will we discuss?",
+              "Why is the plan good?",
+              "What will the team make?"
+            ],
+            "example_of_answers": [
+              "1. I agree, Emna should pick Malouf music because it is traditional.",
+              "2. Ryan should do decorations because he is organized.",
+              "3. I suggest Lilia for poster because she likes art.",
+              "4. SKANDER can do food because he likes cooking.",
+              "5. The meeting is Friday at 3 PM.",
+              "6. We discuss music and decorations.",
+              "7. The plan is good for culture.",
+              "8. Our team will make event fun."
+            ],
+            "ai_evaluation": {
+              "cefr_level": "A2",
+              "prompt": "You are an AI writing evaluator for CEFR A2.\n\nTask instruction:\n{{TASK_INSTRUCTION}}\n\nGuided questions:\n{{GUIDED_QUESTIONS}}\n\nExample answers:\n{{EXAMPLE_ANSWERS}}\n\nLearner response:\n{{LEARNER_RESPONSE}}\n\nEvaluate the response as a whole. Do not match words literally.\n\nCheck:\n- Coverage of most guided questions (directly or indirectly)\n- Grammar and vocabulary roughly at level A2\n- Coherence and clarity\n- Relevance to the given context\n\nIgnore small grammar or spelling mistakes if the meaning is clear.\n\nReturn JSON only in this format:\n{\n  \"score\": 0-100,\n  \"level_alignment\": \"below\" | \"meets\" | \"above\",\n  \"strengths\": [\"...\"],\n  \"improvements\": [\"...\"],\n  \"feedback\": \"Short, neutral, level-appropriate feedback.\"\n}\n"
+            }
           },
           {
             "task_id": "B",

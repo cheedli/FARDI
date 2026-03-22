@@ -5,8 +5,6 @@ import sqlite3
 import hashlib
 import secrets
 from datetime import datetime, timedelta
-from functools import wraps
-from flask import session, redirect, url_for, flash
 import logging
 
 logger = logging.getLogger(__name__)
@@ -47,6 +45,19 @@ class DatabaseManager:
                 )
             ''')
             
+            # Password reset tokens table
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    token TEXT UNIQUE NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    expires_at TIMESTAMP NOT NULL,
+                    used BOOLEAN DEFAULT 0,
+                    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+                )
+            ''')
+
             # User sessions table for enhanced session management
             conn.execute('''
                 CREATE TABLE IF NOT EXISTS user_sessions (
@@ -856,6 +867,60 @@ class User:
         finally:
             conn.close()
     
+    def create_password_reset_token(self, email):
+        """Create a password reset token for the user"""
+        conn = self.db.get_connection()
+        try:
+            user = conn.execute(
+                'SELECT id FROM users WHERE email = ? AND is_active = 1',
+                (email,)
+            ).fetchone()
+            if not user:
+                return None
+
+            # Invalidate existing tokens
+            conn.execute(
+                'UPDATE password_reset_tokens SET used = 1 WHERE user_id = ? AND used = 0',
+                (user['id'],)
+            )
+
+            token = secrets.token_urlsafe(32)
+            conn.execute('''
+                INSERT INTO password_reset_tokens (user_id, token, expires_at)
+                VALUES (?, ?, datetime('now', '+1 hour'))
+            ''', (user['id'], token))
+            conn.commit()
+            return token
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Error creating reset token: {str(e)}")
+            return None
+        finally:
+            conn.close()
+
+    def reset_password_with_token(self, token, new_password):
+        """Reset password using a valid token"""
+        conn = self.db.get_connection()
+        try:
+            row = conn.execute('''
+                SELECT user_id FROM password_reset_tokens
+                WHERE token = ? AND used = 0 AND expires_at > datetime('now')
+            ''', (token,)).fetchone()
+            if not row:
+                return False, "Invalid or expired reset link"
+
+            new_hash = self.hash_password(new_password)
+            conn.execute('UPDATE users SET password_hash = ? WHERE id = ?', (new_hash, row['user_id']))
+            conn.execute('UPDATE password_reset_tokens SET used = 1 WHERE token = ?', (token,))
+            conn.commit()
+            return True, "Password reset successfully"
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Error resetting password: {str(e)}")
+            return False, "An error occurred"
+        finally:
+            conn.close()
+
     def deactivate_user(self, user_id):
         """Deactivate user account"""
         conn = self.db.get_connection()
@@ -1525,64 +1590,3 @@ class AssessmentHistory:
         finally:
             conn.close()
 
-# Authentication decorators
-def login_required(f):
-    """Decorator to require login for routes"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        from flask import request, jsonify
-
-        if 'user_id' not in session:
-            # Check if this is an API request
-            if request.path.startswith('/api/') or request.headers.get('Content-Type') == 'application/json':
-                return jsonify({'success': False, 'error': 'Authentication required. Please log in.'}), 401
-            flash('Please log in to access this page.', 'warning')
-            return redirect(url_for('auth.login'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-def guest_only(f):
-    """Decorator to allow only guests (not logged in users)"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' in session:
-            return redirect('/app/dashboard')
-        return f(*args, **kwargs)
-    return decorated_function
-
-def admin_required(f):
-    """Decorator to require admin privileges"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        from flask import request, jsonify
-        
-        if 'user_id' not in session:
-            # Check if this is an API request
-            if request.path.startswith('/api/') or request.headers.get('Content-Type') == 'application/json':
-                return jsonify({'error': 'Authentication required'}), 401
-            flash('Please log in to access this page.', 'warning')
-            return redirect(url_for('auth.login'))
-        
-        # Check if user is admin
-        user_id = session.get('user_id')
-        is_admin = session.get('is_admin', False)
-        
-        if not is_admin:
-            # Double-check from database
-            db_manager = DatabaseManager()
-            user_manager_instance = User(db_manager)
-            user_data = user_manager_instance.get_user_by_id(user_id)
-            
-            if not user_data or not user_data.get('is_admin'):
-                # Check if this is an API request
-                if request.path.startswith('/api/') or request.headers.get('Content-Type') == 'application/json':
-                    return jsonify({'error': 'Admin privileges required'}), 403
-                flash('Access denied. Admin privileges required.', 'error')
-                return redirect('/dashboard')
-            
-            # Update session with admin status
-            session['is_admin'] = True
-            session['role'] = user_data.get('role', 'user')
-        
-        return f(*args, **kwargs)
-    return decorated_function

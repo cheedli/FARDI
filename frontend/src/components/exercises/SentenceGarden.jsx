@@ -1,21 +1,13 @@
 /**
  * SentenceGarden - Plant Growth Sentence Expansion Component
- * 
+ *
  * A gamified sentence expansion where:
  * - Plant starts as seed
  * - Grows based on word count of expansion
  * - Visual stages: seed → sprout → small plant → full plant → flower
  */
 import React, { useState, useEffect, useMemo } from 'react'
-import {
-    Box,
-    Typography,
-    Paper,
-    TextField,
-    Button,
-    LinearProgress,
-    Stack
-} from '@mui/material'
+import { Box, Typography, TextField, Button, Stack, useTheme } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 
 // Plant growth stages with emoji visuals
@@ -27,12 +19,34 @@ const GROWTH_STAGES = [
     { name: 'Flourishing', emoji: '🌺', minWords: 40, color: '#FF69B4' }
 ]
 
+const getColors = (dark) => dark ? {
+    pageBg: '#0F0F1A', cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', divider: '#2A2A4A',
+    blue: { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+    green: { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+    purple: { bg: '#1E0A2E', border: '#CE93D8', shadow: '#7B1FA2' },
+    yellow: { bg: '#2A2200', border: '#F9A825', shadow: '#A06800', text: '#FFD54F' },
+    teal: { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+    orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+} : {
+    pageBg: '#FFFDE7', cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', divider: '#E0E0E0',
+    blue: { bg: '#BBDEFB', border: '#1976D2', shadow: '#1976D2' },
+    green: { bg: '#C8E6C9', border: '#388E3C', shadow: '#388E3C' },
+    purple: { bg: '#E1BEE7', border: '#8E24AA', shadow: '#8E24AA' },
+    yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F9A825', text: '#5D4037' },
+    teal: { bg: '#B2EBF2', border: '#0097A7', shadow: '#0097A7' },
+    orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#F57C00' },
+}
+
 export default function SentenceGarden({ exercise, onComplete, onProgress }) {
     const [currentIndex, setCurrentIndex] = useState(0)
     const [currentInput, setCurrentInput] = useState('')
     const [answers, setAnswers] = useState({})
     const [showSuccess, setShowSuccess] = useState(false)
     const [totalWords, setTotalWords] = useState(0)
+
+    const theme = useTheme()
+    const dark = theme.palette.mode === 'dark'
+    const c = getColors(dark)
 
     const templates = exercise?.templates || []
     const guidedQuestions = exercise?.guided_questions || []
@@ -96,157 +110,180 @@ export default function SentenceGarden({ exercise, onComplete, onProgress }) {
     if (!templates || templates.length === 0) {
         return (
             <Box sx={{ p: 4, textAlign: 'center' }}>
-                <Typography>No templates available</Typography>
+                <Typography sx={{ color: c.body }}>No templates available</Typography>
             </Box>
         )
     }
+
+    const cardSx = (accent) => ({
+        bgcolor: accent.bg,
+        border: `2px solid ${accent.border}`,
+        borderRadius: '20px',
+        boxShadow: `4px 4px 0 ${accent.shadow}`,
+    })
+
+    const pillSx = (accent) => ({
+        px: 1.75, py: 0.4, borderRadius: '50px',
+        bgcolor: accent.bg, border: `2px solid ${accent.border}`,
+        boxShadow: `2px 2px 0 ${accent.shadow}`,
+        fontSize: '0.8rem', fontWeight: 800,
+        display: 'inline-flex', alignItems: 'center',
+    })
+
+    const clayBtnSx = (accent, disabled) => ({
+        borderRadius: '14px',
+        border: `2px solid ${disabled ? c.muted : accent.border}`,
+        boxShadow: disabled ? 'none' : `4px 4px 0 ${accent.shadow}`,
+        fontWeight: 800,
+        bgcolor: disabled ? (dark ? '#2A2A4A' : '#E0E0E0') : accent.bg,
+        color: disabled ? c.muted : (accent.text || accent.border),
+        minHeight: 48,
+        fontSize: { xs: '0.9rem', sm: '1rem' },
+        '&:hover': disabled ? {} : {
+            bgcolor: accent.bg,
+            transform: 'translate(-2px,-2px)',
+            boxShadow: `6px 6px 0 ${accent.shadow}`,
+        },
+        '&.Mui-disabled': {
+            bgcolor: dark ? '#2A2A4A' : '#E0E0E0',
+            color: c.muted,
+            border: `2px solid ${c.muted}`,
+        },
+        transition: 'all 0.15s ease',
+    })
 
     return (
         <Box sx={{
             width: '100%',
             maxWidth: 800,
             mx: 'auto',
-            py: 3,
-            px: 2
+            py: { xs: 2, sm: 3 },
+            px: { xs: 1.5, sm: 2 },
         }}>
             {/* Header */}
-            <Box sx={{ textAlign: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight="bold" gutterBottom>
-                    🌱 Sentence Garden
+            <Box sx={{ textAlign: 'center', mb: { xs: 2, sm: 3 } }}>
+                <Typography sx={{
+                    fontSize: { xs: '1.3rem', sm: '1.5rem' },
+                    fontWeight: 800, color: c.heading,
+                }}>
+                    Sentence Garden
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' }, color: c.muted, mt: 0.5 }}>
                     Expand the sentence to grow your plant!
                 </Typography>
             </Box>
 
             {/* Progress Bar */}
-            <Box sx={{ mb: 3 }}>
-                <LinearProgress
-                    variant="determinate"
-                    value={progress}
-                    sx={{
-                        height: 8,
-                        borderRadius: 4,
-                        bgcolor: 'rgba(144, 238, 144, 0.2)',
-                        '& .MuiLinearProgress-bar': {
-                            bgcolor: '#32CD32'
-                        }
-                    }}
-                />
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block', textAlign: 'center' }}>
+            <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+                <Box sx={{
+                    height: 10, borderRadius: '50px', overflow: 'hidden',
+                    bgcolor: c.green.bg, border: `2px solid ${c.green.border}`,
+                }}>
+                    <Box sx={{
+                        height: '100%', width: `${progress}%`,
+                        bgcolor: c.green.border, borderRadius: '50px',
+                        transition: 'width 0.4s ease',
+                    }} />
+                </Box>
+                <Typography sx={{
+                    mt: 0.5, textAlign: 'center',
+                    fontSize: '0.75rem', fontWeight: 700, color: c.muted,
+                }}>
                     {currentIndex + (showSuccess ? 1 : 0)} / {totalTemplates} sentences expanded
                 </Typography>
             </Box>
 
             {/* Success Animation */}
             {showSuccess && (
-                <Paper
-                    elevation={8}
-                    sx={{
-                        p: 4,
-                        mb: 3,
-                        textAlign: 'center',
-                        bgcolor: '#e8f5e9',
-                        border: '2px solid #4caf50',
-                        animation: 'fadeIn 0.5s ease-out',
-                        '@keyframes fadeIn': {
-                            from: { opacity: 0, transform: 'scale(0.9)' },
-                            to: { opacity: 1, transform: 'scale(1)' }
-                        }
-                    }}
-                >
+                <Box sx={{
+                    ...cardSx(c.green),
+                    p: { xs: 3, sm: 4 }, mb: 3, textAlign: 'center',
+                    animation: 'clayFadeIn 0.5s ease-out',
+                    '@keyframes clayFadeIn': {
+                        from: { opacity: 0, transform: 'scale(0.9) translateY(8px)' },
+                        to: { opacity: 1, transform: 'scale(1) translateY(0)' },
+                    },
+                }}>
                     <Typography sx={{ fontSize: '4rem', mb: 1 }}>
                         {currentStage.emoji}
                     </Typography>
-                    <CheckCircleIcon sx={{ fontSize: 48, color: '#4caf50', mb: 1 }} />
-                    <Typography variant="h6" color="success.dark" fontWeight="bold">
+                    <CheckCircleIcon sx={{ fontSize: 48, color: c.green.border, mb: 1 }} />
+                    <Typography sx={{ fontSize: '1.1rem', fontWeight: 800, color: c.green.border }}>
                         Beautiful! Your plant grew!
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Box sx={{ ...pillSx(c.green), mx: 'auto', mt: 1.5 }}>
                         +{wordCount} words added
-                    </Typography>
-                </Paper>
+                    </Box>
+                </Box>
             )}
 
             {/* Main Game Area */}
             {!showSuccess && (
-                <Paper
-                    elevation={4}
-                    sx={{
-                        p: 3,
-                        bgcolor: '#1a1a2e',
-                        border: '2px solid',
-                        borderColor: currentStage.color,
-                        borderRadius: 3
-                    }}
-                >
+                <Box sx={{
+                    ...cardSx(c.teal),
+                    p: { xs: 2, sm: 3 },
+                }}>
                     {/* Plant Display */}
                     <Box sx={{
                         textAlign: 'center',
-                        py: 3,
-                        mb: 3,
-                        bgcolor: 'rgba(255,255,255,0.05)',
-                        borderRadius: 2,
-                        position: 'relative'
+                        py: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 },
+                        bgcolor: dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                        borderRadius: '16px',
+                        border: `1px solid ${c.divider}`,
+                        position: 'relative',
                     }}>
                         {/* Soil */}
                         <Box sx={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: '50%',
+                            position: 'absolute', bottom: 0, left: '50%',
                             transform: 'translateX(-50%)',
-                            width: 120,
-                            height: 20,
-                            bgcolor: '#8B4513',
-                            borderRadius: '50%'
+                            width: { xs: 90, sm: 120 }, height: { xs: 16, sm: 20 },
+                            bgcolor: dark ? '#5D3A1A' : '#8B4513',
+                            borderRadius: '50%',
                         }} />
 
                         {/* Plant */}
                         <Typography sx={{
-                            fontSize: '5rem',
+                            fontSize: { xs: '3.5rem', sm: '5rem' },
                             transition: 'all 0.5s ease',
                             transform: `scale(${0.6 + (GROWTH_STAGES.indexOf(currentStage) * 0.15)})`,
-                            filter: `brightness(${0.7 + (GROWTH_STAGES.indexOf(currentStage) * 0.1)})`
+                            filter: `brightness(${0.7 + (GROWTH_STAGES.indexOf(currentStage) * 0.1)})`,
+                            lineHeight: 1.2,
                         }}>
                             {currentStage.emoji}
                         </Typography>
 
                         {/* Stage Label */}
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                color: currentStage.color,
-                                fontWeight: 600,
-                                mt: 1,
-                                display: 'block'
-                            }}
-                        >
-                            {currentStage.name}
-                        </Typography>
+                        <Box sx={{ ...pillSx(c.yellow), mx: 'auto', mt: 1 }}>
+                            <span style={{ color: c.yellow.text || c.yellow.border }}>
+                                {currentStage.name}
+                            </span>
+                        </Box>
                     </Box>
 
                     {/* Word Count Progress */}
-                    <Box sx={{ mb: 3 }}>
+                    <Box sx={{ mb: { xs: 2, sm: 3 } }}>
                         <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
-                            <Typography variant="caption" sx={{ color: 'grey.400' }}>
+                            <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: c.muted }}>
                                 Words: {wordCount}
                             </Typography>
-                            <Typography variant="caption" sx={{ color: canProceed ? '#4caf50' : 'grey.400' }}>
-                                {canProceed ? '✓ Ready!' : `Need ${minRequired - wordCount} more`}
+                            <Typography sx={{
+                                fontSize: '0.75rem', fontWeight: 700,
+                                color: canProceed ? c.green.border : c.muted,
+                            }}>
+                                {canProceed ? 'Ready!' : `Need ${minRequired - wordCount} more`}
                             </Typography>
                         </Stack>
                         <Box sx={{
-                            height: 8,
-                            bgcolor: 'rgba(255,255,255,0.1)',
-                            borderRadius: 4,
-                            overflow: 'hidden'
+                            height: 8, bgcolor: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                            borderRadius: '50px', overflow: 'hidden',
+                            border: `1px solid ${c.divider}`,
                         }}>
                             <Box sx={{
                                 height: '100%',
                                 width: `${Math.min((wordCount / 40) * 100, 100)}%`,
                                 bgcolor: currentStage.color,
-                                borderRadius: 4,
-                                transition: 'all 0.3s ease'
+                                borderRadius: '50px',
+                                transition: 'all 0.3s ease',
                             }} />
                         </Box>
 
@@ -256,9 +293,9 @@ export default function SentenceGarden({ exercise, onComplete, onProgress }) {
                                 <Typography
                                     key={idx}
                                     sx={{
-                                        fontSize: '0.7rem',
+                                        fontSize: { xs: '0.65rem', sm: '0.7rem' },
                                         opacity: wordCount >= stage.minWords ? 1 : 0.4,
-                                        transition: 'opacity 0.3s'
+                                        transition: 'opacity 0.3s',
                                     }}
                                 >
                                     {stage.emoji}
@@ -269,50 +306,49 @@ export default function SentenceGarden({ exercise, onComplete, onProgress }) {
 
                     {/* Original Phrase */}
                     <Box sx={{ mb: 2 }}>
-                        <Typography variant="caption" sx={{ color: 'grey.500', mb: 0.5, display: 'block' }}>
+                        <Typography sx={{
+                            fontSize: '0.75rem', fontWeight: 700, color: c.muted, mb: 0.5,
+                        }}>
                             Phrase {currentIndex + 1} of {totalTemplates}:
                         </Typography>
-                        <Paper sx={{
-                            p: 2,
-                            bgcolor: 'rgba(255,255,255,0.05)',
-                            border: '1px dashed rgba(255,255,255,0.2)'
+                        <Box sx={{
+                            ...cardSx(c.purple),
+                            p: { xs: 1.5, sm: 2 },
+                            borderRadius: '14px',
                         }}>
                             <Typography sx={{
-                                color: '#e0e0e0',
+                                color: c.purple.text || c.purple.border,
                                 fontStyle: 'italic',
-                                fontSize: '1.1rem'
+                                fontSize: { xs: '0.95rem', sm: '1.1rem' },
+                                fontWeight: 600,
                             }}>
                                 "{templates[currentIndex].replace(/_+/g, '________')}"
                             </Typography>
-                        </Paper>
+                        </Box>
                     </Box>
 
                     {/* Guided Questions */}
                     {guidedQuestions && guidedQuestions.length > 0 && (
                         <Box sx={{
-                            mb: 2,
-                            p: 1.5,
-                            bgcolor: 'rgba(76, 175, 80, 0.1)',
-                            borderRadius: 2,
-                            border: '1px solid rgba(76, 175, 80, 0.3)'
+                            ...cardSx(c.green),
+                            mb: 2, p: { xs: 1.5, sm: 2 },
+                            borderRadius: '14px',
                         }}>
                             <Typography sx={{
-                                color: '#4caf50',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                mb: 0.5,
-                                textTransform: 'uppercase'
+                                color: c.green.border,
+                                fontSize: '0.7rem', fontWeight: 800,
+                                mb: 0.5, textTransform: 'uppercase',
+                                letterSpacing: '0.05em',
                             }}>
-                                💡 Tip:
+                                Tip:
                             </Typography>
-                            <Typography
-                                sx={{
-                                    color: 'grey.400',
-                                    fontSize: '0.85rem',
-                                    pl: 1,
-                                    borderLeft: '2px solid rgba(76, 175, 80, 0.5)'
-                                }}
-                            >
+                            <Typography sx={{
+                                color: c.body,
+                                fontSize: { xs: '0.8rem', sm: '0.85rem' },
+                                pl: 1.5,
+                                borderLeft: `3px solid ${c.green.border}`,
+                                fontWeight: 600,
+                            }}>
                                 {guidedQuestions[currentIndex] || guidedQuestions[0]}
                             </Typography>
                         </Box>
@@ -331,12 +367,25 @@ export default function SentenceGarden({ exercise, onComplete, onProgress }) {
                         sx={{
                             mb: 2,
                             '& .MuiOutlinedInput-root': {
-                                color: 'white',
-                                bgcolor: 'rgba(255,255,255,0.05)',
-                                '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                                '&:hover fieldset': { borderColor: currentStage.color },
-                                '&.Mui-focused fieldset': { borderColor: currentStage.color }
-                            }
+                                color: c.body,
+                                bgcolor: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
+                                borderRadius: '14px',
+                                fontWeight: 600,
+                                fontSize: { xs: '0.9rem', sm: '1rem' },
+                                '& fieldset': {
+                                    border: `2px solid ${c.divider}`,
+                                    borderRadius: '14px',
+                                },
+                                '&:hover fieldset': { borderColor: c.teal.border },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: c.teal.border,
+                                    boxShadow: `2px 2px 0 ${c.teal.shadow}`,
+                                },
+                            },
+                            '& .MuiInputBase-input::placeholder': {
+                                color: c.muted,
+                                opacity: 1,
+                            },
                         }}
                     />
 
@@ -347,41 +396,38 @@ export default function SentenceGarden({ exercise, onComplete, onProgress }) {
                         size="large"
                         disabled={!canProceed}
                         onClick={handleNext}
+                        disableElevation
                         sx={{
+                            ...clayBtnSx(c.green, !canProceed),
                             py: 1.5,
-                            bgcolor: canProceed ? '#4caf50' : 'grey.700',
-                            '&:hover': { bgcolor: '#45a049' },
-                            fontSize: '1rem',
-                            fontWeight: 600
                         }}
                     >
-                        {currentIndex >= totalTemplates - 1 ? '🌸 Finish Garden' : '🌱 Plant & Grow Next'}
+                        {currentIndex >= totalTemplates - 1 ? 'Finish Garden' : 'Plant & Grow Next'}
                     </Button>
-                </Paper>
+                </Box>
             )}
 
             {/* Completion Celebration */}
             {isComplete && (
-                <Paper
-                    elevation={8}
-                    sx={{
-                        p: 4,
-                        mt: 3,
-                        textAlign: 'center',
-                        background: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)',
-                        border: '3px solid #4caf50'
-                    }}
-                >
-                    <Typography sx={{ fontSize: '4rem', mb: 1 }}>
+                <Box sx={{
+                    ...cardSx(c.green),
+                    p: { xs: 3, sm: 4 }, mt: 3, textAlign: 'center',
+                }}>
+                    <Typography sx={{ fontSize: '3rem', mb: 1 }}>
                         🌺🌻🌸🌷🌹
                     </Typography>
-                    <Typography variant="h5" fontWeight="bold" color="success.dark" gutterBottom>
-                        🎉 Garden Complete!
+                    <Typography sx={{
+                        fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                        fontWeight: 800, color: c.green.border, mb: 1,
+                    }}>
+                        Garden Complete!
                     </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        Total words written: {totalWords}
-                    </Typography>
-                </Paper>
+                    <Box sx={{ ...pillSx(c.yellow), mx: 'auto' }}>
+                        <span style={{ color: c.yellow.text || c.yellow.border }}>
+                            Total words written: {totalWords}
+                        </span>
+                    </Box>
+                </Box>
             )}
         </Box>
     )

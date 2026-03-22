@@ -2,15 +2,14 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
-  Paper,
+  Container,
   Typography,
-  Button,
   TextField,
-  Alert,
   CircularProgress,
-  Stack,
-  Chip
+  Stack
 } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
@@ -23,6 +22,25 @@ import { useProgressSave } from '../../hooks/useProgressSave'
  * Interaction 2: Festival Reflection Writing
  * Write 3-5 sentences about what went well and what was challenging
  */
+
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+  green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+  teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+  red: { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+  green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+  teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+  red: { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+}
 
 const TARGET_VOCABULARY = [
   'success', 'challenge', 'achievement', 'strength', 'weakness', 'positive', 'negative'
@@ -95,6 +113,8 @@ function fallbackEvaluate(text) {
 
 export default function Phase6SP1Step1Interaction2() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 1, interaction: 2, context: 'main' })
   const [reflection, setReflection] = useState('')
   const [evaluation, setEvaluation] = useState(null)
@@ -171,216 +191,292 @@ export default function Phase6SP1Step1Interaction2() {
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          mb: 3,
-          background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)',
-          color: 'white',
-          borderRadius: 2
-        }}
-      >
-        <Typography variant="h4" gutterBottom fontWeight="bold">
-          Phase 6: Reflection and Evaluation
-        </Typography>
-        <Typography variant="h5" gutterBottom>
-          Step 1: Engage - Interaction 2
-        </Typography>
-        <Typography variant="body1">
-          Share your festival reflection in writing
-        </Typography>
-      </Paper>
-
-      {/* Instructor Message */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <CharacterMessage
-          speaker="SKANDER"
-          message="After the game, think about the festival: What was your favorite moment? What was difficult? How did it make you feel?"
-        />
-      </Paper>
-
-      {/* Instructions */}
-      <Alert severity="info" icon={<InfoIcon />} sx={{ mb: 3 }}>
-        <Typography variant="body2" gutterBottom fontWeight="bold">
-          Instructions:
-        </Typography>
-        <Typography variant="body2">
-          Share 3–5 sentences about one success and one challenge from the festival. Use past tense.
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
-          <strong>Hint:</strong> Start with "My favorite moment was…" or "The most difficult part was… because…"
-        </Typography>
-      </Alert>
-
-      {/* Vocabulary Reference */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3, backgroundColor: '#f0faf4', borderRadius: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <LightbulbIcon sx={{ fontSize: 36, color: '#27ae60', mr: 2 }} />
-          <Typography variant="h6" sx={{ color: '#27ae60' }}>
-            Target Vocabulary
-          </Typography>
-        </Box>
-        <Stack direction="row" flexWrap="wrap" gap={1}>
-          {TARGET_VOCABULARY.map((term, idx) => (
-            <Chip
-              key={idx}
-              label={term}
-              sx={{
-                backgroundColor: vocabUsed.includes(term) ? '#27ae60' : 'transparent',
-                color: vocabUsed.includes(term) ? 'white' : '#27ae60',
-                border: '1px solid #27ae60',
-                fontWeight: 'bold'
-              }}
-            />
-          ))}
-        </Stack>
-        {vocabUsed.length > 0 && (
-          <Typography variant="body2" sx={{ mt: 1, color: '#27ae60' }}>
-            Using {vocabUsed.length} / {TARGET_VOCABULARY.length} target words
-          </Typography>
-        )}
-      </Paper>
-
-      {/* Writing Area */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <Typography variant="h6" gutterBottom color="primary">
-          Your Festival Reflection
-        </Typography>
-
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          <Typography variant="body2">
-            <strong>Assessment Focus:</strong> Past tense usage, evaluation vocabulary,
-            balanced reflection (success + challenge), sentence count (3-5 sentences)
-          </Typography>
-        </Alert>
-
-        <TextField
-          fullWidth
-          multiline
-          rows={6}
-          variant="outlined"
-          placeholder="My favorite moment was the traditional dances because they were beautiful. The most difficult part was the lighting problem, but we fixed it. I felt proud of what our team achieved..."
-          value={reflection}
-          onChange={(e) => setReflection(e.target.value)}
-          disabled={submitted}
-          sx={{ mb: 2 }}
-        />
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="caption" color="text.secondary">
-            Words: {wordCount} | Vocabulary used: {vocabUsed.length}/{TARGET_VOCABULARY.length}
-          </Typography>
-          <Typography
-            variant="caption"
-            color={wordCount >= 25 ? 'success.main' : 'text.secondary'}
-          >
-            {wordCount >= 25 ? 'Good length!' : `Aim for at least 25 words`}
-          </Typography>
-        </Box>
-
-        {!submitted && (
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={loading || !reflection.trim()}
-            fullWidth
-            size="large"
-            startIcon={loading ? <CircularProgress size={20} /> : <CheckCircleIcon />}
-            sx={{
-              background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)',
-              '&:hover': { background: 'linear-gradient(135deg, #1e8449 0%, #196f3d 100%)' }
-            }}
-          >
-            {loading ? 'Evaluating...' : 'Submit Reflection'}
-          </Button>
-        )}
-      </Paper>
-
-      {/* Evaluation Results */}
-      {evaluation && (
-        <Paper
-          elevation={3}
-          sx={{
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{
+            bgcolor: P.blue.bg,
+            border: `2px solid ${P.blue.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.blue.shadow}`,
             p: 3,
-            mb: 3,
-            backgroundColor: evaluation.success ? 'success.lighter' : 'warning.lighter',
-            border: '2px solid',
-            borderColor: evaluation.success ? 'success.main' : 'warning.main',
-            borderRadius: 2
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <CheckCircleIcon
-              sx={{
-                fontSize: 40,
-                color: evaluation.success ? 'success.main' : 'warning.main',
-                mr: 2
-              }}
+            mb: 3
+          }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
+              Phase 6: Reflection and Evaluation
+            </Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.blue.border }}>
+              Step 1: Engage - Interaction 2
+            </Typography>
+            <Typography variant="body1" sx={{ color: P.blue.shadow }}>
+              Share your festival reflection in writing
+            </Typography>
+          </Box>
+        </motion.div>
+
+        {/* Instructor Message */}
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+          <Box sx={{
+            bgcolor: P.teal.bg,
+            border: `2px solid ${P.teal.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+            p: 3,
+            mb: 3
+          }}>
+            <CharacterMessage
+              speaker="SKANDER"
+              message="After the game, think about the festival: What was your favorite moment? What was difficult? How did it make you feel?"
             />
+          </Box>
+        </motion.div>
+
+        {/* Instructions */}
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+          <Box sx={{
+            bgcolor: P.blue.bg,
+            border: `2px solid ${P.blue.border}`,
+            borderRadius: '16px',
+            boxShadow: `3px 3px 0 ${P.blue.shadow}`,
+            p: 2,
+            mb: 3,
+            display: 'flex',
+            gap: 1.5,
+            alignItems: 'flex-start'
+          }}>
+            <InfoIcon sx={{ color: P.blue.border, mt: 0.3, flexShrink: 0 }} />
             <Box>
-              <Typography variant="h6" color={evaluation.success ? 'success.dark' : 'warning.dark'}>
-                {evaluation.success ? 'Reflection Evaluated!' : 'Keep Trying'}
+              <Typography variant="body2" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
+                Instructions:
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Level: {evaluation.level} | Score: {evaluation.score}/4
+              <Typography variant="body2" sx={{ color: P.blue.shadow }}>
+                Share 3–5 sentences about one success and one challenge from the festival. Use past tense.
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic', color: P.blue.shadow }}>
+                <strong>Hint:</strong> Start with "My favorite moment was…" or "The most difficult part was… because…"
               </Typography>
             </Box>
           </Box>
+        </motion.div>
 
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            {evaluation.feedback}
-          </Typography>
-
-          {evaluation.strengths && evaluation.strengths.length > 0 && (
-            <Box sx={{ mt: 2, mb: 2 }}>
-              <Typography variant="subtitle2" gutterBottom color="success.dark" fontWeight="bold">
-                Strengths:
+        {/* Vocabulary Reference */}
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}>
+          <Box sx={{
+            bgcolor: P.teal.bg,
+            border: `2px solid ${P.teal.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+            p: 3,
+            mb: 3
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <LightbulbIcon sx={{ fontSize: 36, color: P.teal.border, mr: 2 }} />
+              <Typography variant="h6" sx={{ color: P.teal.shadow }}>
+                Target Vocabulary
               </Typography>
-              <ul style={{ margin: 0, paddingLeft: 20 }}>
-                {evaluation.strengths.map((strength, idx) => (
-                  <li key={idx}>
-                    <Typography variant="body2">{strength}</Typography>
-                  </li>
-                ))}
-              </ul>
             </Box>
-          )}
-
-          {evaluation.improvements && evaluation.improvements.length > 0 && (
-            <Box sx={{ mt: 2, mb: 2 }}>
-              <Typography variant="subtitle2" gutterBottom color="warning.dark" fontWeight="bold">
-                Suggestions for Improvement:
+            <Stack direction="row" flexWrap="wrap" gap={1}>
+              {TARGET_VOCABULARY.map((term, idx) => (
+                <Box
+                  key={idx}
+                  sx={{
+                    px: 1.5,
+                    py: 0.5,
+                    bgcolor: vocabUsed.includes(term) ? P.green.bg : 'transparent',
+                    border: `2px solid ${vocabUsed.includes(term) ? P.green.border : P.teal.border}`,
+                    borderRadius: '12px',
+                    boxShadow: `2px 2px 0 ${vocabUsed.includes(term) ? P.green.shadow : P.teal.shadow}`,
+                    fontWeight: 'bold',
+                    color: vocabUsed.includes(term) ? P.green.shadow : P.teal.shadow,
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  {term}
+                </Box>
+              ))}
+            </Stack>
+            {vocabUsed.length > 0 && (
+              <Typography variant="body2" sx={{ mt: 1, color: P.teal.shadow }}>
+                Using {vocabUsed.length} / {TARGET_VOCABULARY.length} target words
               </Typography>
-              <ul style={{ margin: 0, paddingLeft: 20 }}>
-                {evaluation.improvements.map((improvement, idx) => (
-                  <li key={idx}>
-                    <Typography variant="body2">{improvement}</Typography>
-                  </li>
-                ))}
-              </ul>
-            </Box>
-          )}
+            )}
+          </Box>
+        </motion.div>
 
-          {submitted && (
-            <Button
-              variant="contained"
-              onClick={handleContinue}
-              size="large"
+        {/* Writing Area */}
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <Box sx={{
+            bgcolor: P.orange.bg,
+            border: `2px solid ${P.orange.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+            p: 3,
+            mb: 3
+          }}>
+            <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow }}>
+              Your Festival Reflection
+            </Typography>
+
+            <Box sx={{
+              bgcolor: P.yellow.bg,
+              border: `2px solid ${P.yellow.border}`,
+              borderRadius: '12px',
+              p: 2,
+              mb: 2
+            }}>
+              <Typography variant="body2" sx={{ color: P.yellow.shadow }}>
+                <strong>Assessment Focus:</strong> Past tense usage, evaluation vocabulary,
+                balanced reflection (success + challenge), sentence count (3-5 sentences)
+              </Typography>
+            </Box>
+
+            <TextField
               fullWidth
-              sx={{
-                mt: 2,
-                background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)',
-                '&:hover': { background: 'linear-gradient(135deg, #1e8449 0%, #196f3d 100%)' }
-              }}
-            >
-              Continue to Interaction 3
-            </Button>
-          )}
-        </Paper>
-      )}
+              multiline
+              rows={6}
+              variant="outlined"
+              placeholder="My favorite moment was the traditional dances because they were beautiful. The most difficult part was the lighting problem, but we fixed it. I felt proud of what our team achieved..."
+              value={reflection}
+              onChange={(e) => setReflection(e.target.value)}
+              disabled={submitted}
+              sx={{ mb: 2 }}
+            />
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="caption" color="text.secondary">
+                Words: {wordCount} | Vocabulary used: {vocabUsed.length}/{TARGET_VOCABULARY.length}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ color: wordCount >= 25 ? P.green.shadow : 'text.secondary' }}
+              >
+                {wordCount >= 25 ? 'Good length!' : `Aim for at least 25 words`}
+              </Typography>
+            </Box>
+
+            {!submitted && (
+              <Box
+                component="button"
+                onClick={handleSubmit}
+                disabled={loading || !reflection.trim()}
+                sx={{
+                  cursor: loading || !reflection.trim() ? 'not-allowed' : 'pointer',
+                  opacity: loading || !reflection.trim() ? 0.6 : 1,
+                  width: '100%',
+                  py: 1.5,
+                  bgcolor: P.green.bg,
+                  border: `2px solid ${P.green.border}`,
+                  borderRadius: '16px',
+                  boxShadow: `4px 4px 0 ${P.green.shadow}`,
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  color: P.green.shadow,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1,
+                  '&:hover': { transform: loading || !reflection.trim() ? 'none' : 'translate(-2px,-2px)', boxShadow: loading || !reflection.trim() ? `4px 4px 0 ${P.green.shadow}` : `6px 6px 0 ${P.green.shadow}` },
+                  transition: 'all 0.15s'
+                }}
+              >
+                {loading ? <CircularProgress size={20} /> : <CheckCircleIcon />}
+                {loading ? 'Evaluating...' : 'Submit Reflection'}
+              </Box>
+            )}
+          </Box>
+        </motion.div>
+
+        {/* Evaluation Results */}
+        {evaluation && (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{
+              bgcolor: evaluation.success ? P.green.bg : P.orange.bg,
+              border: `2px solid ${evaluation.success ? P.green.border : P.orange.border}`,
+              borderRadius: '20px',
+              boxShadow: `4px 4px 0 ${evaluation.success ? P.green.shadow : P.orange.shadow}`,
+              p: 3,
+              mb: 3
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <CheckCircleIcon
+                  sx={{
+                    fontSize: 40,
+                    color: evaluation.success ? P.green.border : P.orange.border,
+                    mr: 2
+                  }}
+                />
+                <Box>
+                  <Typography variant="h6" sx={{ color: evaluation.success ? P.green.shadow : P.orange.shadow }}>
+                    {evaluation.success ? 'Reflection Evaluated!' : 'Keep Trying'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Level: {evaluation.level} | Score: {evaluation.score}/4
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {evaluation.feedback}
+              </Typography>
+
+              {evaluation.strengths && evaluation.strengths.length > 0 && (
+                <Box sx={{ mt: 2, mb: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom fontWeight="bold" sx={{ color: P.green.shadow }}>
+                    Strengths:
+                  </Typography>
+                  <ul style={{ margin: 0, paddingLeft: 20 }}>
+                    {evaluation.strengths.map((strength, idx) => (
+                      <li key={idx}>
+                        <Typography variant="body2">{strength}</Typography>
+                      </li>
+                    ))}
+                  </ul>
+                </Box>
+              )}
+
+              {evaluation.improvements && evaluation.improvements.length > 0 && (
+                <Box sx={{ mt: 2, mb: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow }}>
+                    Suggestions for Improvement:
+                  </Typography>
+                  <ul style={{ margin: 0, paddingLeft: 20 }}>
+                    {evaluation.improvements.map((improvement, idx) => (
+                      <li key={idx}>
+                        <Typography variant="body2">{improvement}</Typography>
+                      </li>
+                    ))}
+                  </ul>
+                </Box>
+              )}
+
+              {submitted && (
+                <Box
+                  component="button"
+                  onClick={handleContinue}
+                  sx={{
+                    cursor: 'pointer',
+                    width: '100%',
+                    py: 1.5,
+                    mt: 2,
+                    bgcolor: P.green.bg,
+                    border: `2px solid ${P.green.border}`,
+                    borderRadius: '16px',
+                    boxShadow: `4px 4px 0 ${P.green.shadow}`,
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    color: P.green.shadow,
+                    '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` },
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  Continue to Interaction 3
+                </Box>
+              )}
+            </Box>
+          </motion.div>
+        )}
+      </Container>
     </Box>
   )
 }

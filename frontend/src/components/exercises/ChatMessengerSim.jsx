@@ -2,11 +2,12 @@
  * Chat Messenger Sim Component
  * Digital Communication themed component for listening_story_writing, listening_research, listening_reflection
  * Features: Chat bubble interface, Typing indicators, Emoji reactions, Voice notes
+ * Clay/Bento theme with dark mode support
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-    Box, Paper, Typography, TextField, Button, IconButton, Avatar,
-    Chip, LinearProgress
+    Box, Typography, TextField, Button, IconButton, Avatar,
+    LinearProgress, useTheme
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -15,11 +16,8 @@ import MicIcon from '@mui/icons-material/Mic';
 import CheckIcon from '@mui/icons-material/Check';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import CelebrationIcon from '@mui/icons-material/Celebration';
 import StarIcon from '@mui/icons-material/Star';
-import './ChatMessengerSim.css';
 
 // Team avatars
 const TEAM_AVATARS = {
@@ -47,6 +45,31 @@ export default function ChatMessengerSim({ exercise, onComplete, onProgress }) {
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
 
+    const theme = useTheme();
+    const dark = theme.palette.mode === 'dark';
+
+    const c = dark
+        ? {
+            pageBg: '#0F0F1A', cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5',
+            muted: '#607D8B', divider: '#2A2A4A',
+            blue: { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+            green: { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+            purple: { bg: '#1A0A2E', border: '#CE93D8', shadow: '#6A1B9A' },
+            yellow: { bg: '#2A2200', border: '#F9A825', shadow: '#A06800', text: '#FFD54F' },
+            teal: { bg: '#001A1F', border: '#4DD0E1', shadow: '#00695C' },
+            orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+        }
+        : {
+            pageBg: '#FFFDE7', cardBg: '#ffffff', heading: '#1A237E', body: '#37474F',
+            muted: '#78909C', divider: '#E0E0E0',
+            blue: { bg: '#BBDEFB', border: '#1976D2', shadow: '#1976D2' },
+            green: { bg: '#C8E6C9', border: '#388E3C', shadow: '#388E3C' },
+            purple: { bg: '#E1BEE7', border: '#8E24AA', shadow: '#8E24AA' },
+            yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F9A825', text: '#5D4037' },
+            teal: { bg: '#B2EBF2', border: '#0097A7', shadow: '#0097A7' },
+            orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#F57C00' },
+        };
+
     const audioScript = exercise?.audio_script || '';
     const templates = exercise?.templates || [];
     const guidedQuestions = exercise?.guided_questions || [];
@@ -60,7 +83,6 @@ export default function ChatMessengerSim({ exercise, onComplete, onProgress }) {
     const handlePlayAudio = useCallback(() => {
         setAudioPlaying(true);
 
-        // Add voice note message
         setMessages(prev => [...prev, {
             id: Date.now(),
             type: 'voice',
@@ -76,14 +98,10 @@ export default function ChatMessengerSim({ exercise, onComplete, onProgress }) {
             utterance.onend = () => {
                 setAudioPlaying(false);
                 setAudioPlayed(true);
-                // Update message status
                 setMessages(prev => prev.map(msg =>
                     msg.type === 'voice' ? { ...msg, status: 'played' } : msg
                 ));
-                // Show first prompt after delay
-                setTimeout(() => {
-                    addPromptMessage();
-                }, 1000);
+                setTimeout(() => { addPromptMessage(); }, 1000);
             };
             speechSynthesis.speak(utterance);
         } else {
@@ -93,9 +111,7 @@ export default function ChatMessengerSim({ exercise, onComplete, onProgress }) {
                 setMessages(prev => prev.map(msg =>
                     msg.type === 'voice' ? { ...msg, status: 'played' } : msg
                 ));
-                setTimeout(() => {
-                    addPromptMessage();
-                }, 1000);
+                setTimeout(() => { addPromptMessage(); }, 1000);
             }, 3000);
         }
     }, [audioScript]);
@@ -104,7 +120,6 @@ export default function ChatMessengerSim({ exercise, onComplete, onProgress }) {
         const prompt = guidedQuestions[currentPromptIndex] || templates[currentPromptIndex];
         if (!prompt) return;
 
-        // Simulate typing indicator
         setIsTyping(true);
         setTimeout(() => {
             setIsTyping(false);
@@ -136,7 +151,6 @@ export default function ChatMessengerSim({ exercise, onComplete, onProgress }) {
         setMessages(prev => [...prev, userMessage]);
         setCurrentInput('');
 
-        // Calculate score based on response length and keywords
         const exampleAnswer = exercise?.example_of_answers?.[currentPromptIndex] || '';
         const keywords = exampleAnswer.toLowerCase().split(/\s+/).filter(w => w.length > 3);
         const matchedKeywords = keywords.filter(kw => currentInput.toLowerCase().includes(kw));
@@ -144,7 +158,6 @@ export default function ChatMessengerSim({ exercise, onComplete, onProgress }) {
 
         setScore(prev => prev + points);
 
-        // Update message status and add team reaction
         setTimeout(() => {
             setMessages(prev => prev.map(msg =>
                 msg.id === userMessage.id ? { ...msg, status: 'delivered' } : msg
@@ -155,14 +168,9 @@ export default function ChatMessengerSim({ exercise, onComplete, onProgress }) {
             setMessages(prev => prev.map(msg =>
                 msg.id === userMessage.id ? { ...msg, status: 'read' } : msg
             ));
-
-            // Add reaction from team
             if (points >= 10) {
                 setMessages(prev => prev.map(msg =>
-                    msg.id === userMessage.id ? {
-                        ...msg,
-                        reactions: ['👍', '🎉']
-                    } : msg
+                    msg.id === userMessage.id ? { ...msg, reactions: ['👍', '🎉'] } : msg
                 ));
             }
         }, 1000);
@@ -171,15 +179,11 @@ export default function ChatMessengerSim({ exercise, onComplete, onProgress }) {
             onProgress({ correct: points >= 10, points });
         }
 
-        // Move to next prompt or complete
         const nextIndex = currentPromptIndex + 1;
         if (nextIndex < Math.max(templates.length, guidedQuestions.length)) {
             setCurrentPromptIndex(nextIndex);
-            setTimeout(() => {
-                addPromptMessage();
-            }, 2000);
+            setTimeout(() => { addPromptMessage(); }, 2000);
         } else {
-            // Chat complete
             setTimeout(() => {
                 setMessages(prev => [...prev, {
                     id: Date.now(),
@@ -187,7 +191,6 @@ export default function ChatMessengerSim({ exercise, onComplete, onProgress }) {
                     content: 'Great conversation! All questions answered.',
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 }]);
-
                 if (onComplete) {
                     onComplete({
                         score,
@@ -223,199 +226,331 @@ export default function ChatMessengerSim({ exercise, onComplete, onProgress }) {
         }
     };
 
-    // Audio instruction screen
+    /* ─── shared clay card style ─── */
+    const cardSx = {
+        bgcolor: c.cardBg,
+        border: `2px solid ${c.purple.border}`,
+        borderRadius: '20px',
+        boxShadow: `4px 4px 0 ${c.purple.shadow}`,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        height: { xs: 'calc(100dvh - 32px)', sm: 600 },
+        maxHeight: { xs: 700, sm: 600 },
+    };
+
+    /* ─── clay header ─── */
+    const headerSx = {
+        display: 'flex', alignItems: 'center', gap: 1.5, px: 2, py: 1.5,
+        bgcolor: c.purple.bg,
+        borderBottom: `2px solid ${c.purple.border}`,
+    };
+
+    /* ─── pill ─── */
+    const pillSx = {
+        display: 'inline-flex', alignItems: 'center', gap: 0.5,
+        px: 1.75, py: 0.4, borderRadius: '50px',
+        bgcolor: c.yellow.bg, border: `2px solid ${c.yellow.border}`,
+        boxShadow: `2px 2px 0 ${c.yellow.shadow}`,
+        fontSize: '0.8rem', fontWeight: 800,
+        color: c.yellow.text || c.heading,
+    };
+
+    /* ─── keyframes (injected once) ─── */
+    const keyframes = `
+        @keyframes cm-msgIn { 0%{opacity:0;transform:translateY(10px)} 100%{opacity:1;transform:translateY(0)} }
+        @keyframes cm-wave { 0%{height:5px} 100%{height:28px} }
+        @keyframes cm-typeBounce { 0%,80%,100%{transform:scale(.6);opacity:.5} 40%{transform:scale(1);opacity:1} }
+        @keyframes cm-reactPop { 0%{transform:scale(0)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
+        @keyframes cm-pickerIn { 0%{opacity:0;transform:scale(.8) translateY(10px)} 100%{opacity:1;transform:scale(1) translateY(0)} }
+    `;
+
+    /* ─── bubble colours ─── */
+    const incomingBubble = {
+        bgcolor: c.blue.bg,
+        border: `2px solid ${c.blue.border}`,
+        borderRadius: '18px',
+        borderTopLeftRadius: '4px',
+        boxShadow: `3px 3px 0 ${c.blue.shadow}`,
+        color: c.body,
+    };
+    const outgoingBubble = {
+        bgcolor: c.teal.bg,
+        border: `2px solid ${c.teal.border}`,
+        borderRadius: '18px',
+        borderTopRightRadius: '4px',
+        boxShadow: `3px 3px 0 ${c.teal.shadow}`,
+        color: c.body,
+    };
+
+    // ─── Audio instruction screen ───
     if (!audioPlayed) {
         return (
-            <Box className="chat-messenger">
-                <Paper className="chat-container voice-intro" elevation={4}>
-                    <Box className="chat-header">
-                        <Avatar sx={{ bgcolor: TEAM_AVATARS['Team'].color }}>
+            <Box sx={{ maxWidth: 500, mx: 'auto', p: { xs: 1, sm: 2.5 } }}>
+                <style>{keyframes}</style>
+                <Box sx={{ ...cardSx, justifyContent: 'center' }}>
+                    <Box sx={headerSx}>
+                        <Avatar sx={{ bgcolor: TEAM_AVATARS['Team'].color, width: 36, height: 36, fontWeight: 800, fontSize: '0.8rem' }}>
                             {TEAM_AVATARS['Team'].initials}
                         </Avatar>
-                        <Box className="header-info">
-                            <Typography variant="subtitle1">Team Chat</Typography>
-                            <Typography variant="caption" className="online-status">
+                        <Box sx={{ flex: 1 }}>
+                            <Typography sx={{ fontWeight: 800, color: c.heading, fontSize: '0.95rem' }}>Team Chat</Typography>
+                            <Typography sx={{ fontSize: '0.75rem', color: c.muted }}>
                                 {audioPlaying ? 'Recording...' : 'Voice message received'}
                             </Typography>
                         </Box>
                     </Box>
 
-                    <Box className="voice-intro-content">
-                        <Box className="voice-note-card">
-                            <MicIcon className="mic-icon" />
-                            <Box className="voice-waveform">
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: { xs: 3, sm: 4 } }}>
+                        <Box sx={{
+                            display: 'flex', alignItems: 'center', gap: 2,
+                            px: 4, py: 2.5,
+                            bgcolor: c.orange.bg,
+                            border: `2px solid ${c.orange.border}`,
+                            borderRadius: '20px',
+                            boxShadow: `4px 4px 0 ${c.orange.shadow}`,
+                        }}>
+                            <MicIcon sx={{ color: c.purple.border, fontSize: 32 }} />
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '3px', height: 40 }}>
                                 {[...Array(20)].map((_, i) => (
                                     <Box
                                         key={i}
-                                        className={`wave-bar ${audioPlaying ? 'playing' : ''}`}
-                                        style={{ animationDelay: `${i * 0.05}s` }}
+                                        sx={{
+                                            width: 4, borderRadius: 1,
+                                            bgcolor: c.purple.border, height: 10,
+                                            transition: 'height 0.1s ease',
+                                            ...(audioPlaying && {
+                                                animation: 'cm-wave 0.5s ease-in-out infinite alternate',
+                                                animationDelay: `${i * 0.05}s`,
+                                            }),
+                                        }}
                                     />
                                 ))}
                             </Box>
                             <IconButton
                                 onClick={handlePlayAudio}
                                 disabled={audioPlaying}
-                                className="play-btn"
+                                sx={{
+                                    bgcolor: c.green.bg, border: `2px solid ${c.green.border}`,
+                                    boxShadow: `3px 3px 0 ${c.green.shadow}`,
+                                    borderRadius: '14px', color: c.green.border,
+                                    minWidth: 44, minHeight: 44,
+                                    '&:hover': { bgcolor: c.green.bg, transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${c.green.shadow}` },
+                                }}
                             >
                                 {audioPlaying ? <PauseIcon /> : <PlayArrowIcon />}
                             </IconButton>
                         </Box>
 
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                        <Typography sx={{ mt: 2, color: c.muted, fontSize: '0.85rem', fontWeight: 600 }}>
                             {audioPlaying ? 'Playing voice message...' : 'Tap to play voice message'}
                         </Typography>
-
-                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+                        <Typography sx={{ mt: 1, color: c.muted, fontSize: '0.75rem', textAlign: 'center' }}>
                             {exercise?.instruction || 'Listen and respond to the team message'}
                         </Typography>
                     </Box>
-                </Paper>
+                </Box>
             </Box>
         );
     }
 
+    // ─── Main chat view ───
     return (
-        <Box className="chat-messenger">
-            <Paper className="chat-container" elevation={4}>
-                {/* Chat Header */}
-                <Box className="chat-header">
-                    <Avatar sx={{ bgcolor: TEAM_AVATARS['Team'].color }}>
+        <Box sx={{ maxWidth: 500, mx: 'auto', p: { xs: 1, sm: 2.5 } }}>
+            <style>{keyframes}</style>
+            <Box sx={cardSx}>
+                {/* Header */}
+                <Box sx={headerSx}>
+                    <Avatar sx={{ bgcolor: TEAM_AVATARS['Team'].color, width: 36, height: 36, fontWeight: 800, fontSize: '0.8rem' }}>
                         {TEAM_AVATARS['Team'].initials}
                     </Avatar>
-                    <Box className="header-info">
-                        <Typography variant="subtitle1">Team Chat</Typography>
-                        <Typography variant="caption" className="online-status">
+                    <Box sx={{ flex: 1 }}>
+                        <Typography sx={{ fontWeight: 800, color: c.heading, fontSize: '0.95rem' }}>Team Chat</Typography>
+                        <Typography sx={{ fontSize: '0.75rem', color: isTyping ? c.green.border : c.muted, fontWeight: isTyping ? 700 : 400 }}>
                             {isTyping ? 'typing...' : 'Online'}
                         </Typography>
                     </Box>
-                    <Box className="header-right">
-                        <Chip
-                            icon={<StarIcon />}
-                            label={score}
-                            size="small"
-                            color="primary"
-                        />
+                    <Box sx={pillSx}>
+                        <StarIcon sx={{ fontSize: 16 }} />
+                        {score}
                     </Box>
                 </Box>
 
-                {/* Messages Area */}
-                <Box className="messages-area">
-                    {messages.map((message) => (
-                        <Box
-                            key={message.id}
-                            className={`message ${message.type} ${message.sender === 'You' ? 'outgoing' : 'incoming'}`}
-                        >
-                            {message.sender !== 'You' && message.type !== 'system' && (
-                                <Avatar
-                                    className="message-avatar"
-                                    sx={{
+                {/* Messages */}
+                <Box sx={{
+                    flex: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column', gap: 1.5,
+                    '&::-webkit-scrollbar': { width: 6 },
+                    '&::-webkit-scrollbar-thumb': { bgcolor: c.divider, borderRadius: 3 },
+                }}>
+                    {messages.map((message) => {
+                        const isOutgoing = message.sender === 'You';
+                        return (
+                            <Box
+                                key={message.id}
+                                sx={{
+                                    display: 'flex', gap: 1,
+                                    maxWidth: { xs: '92%', sm: '85%' },
+                                    alignSelf: isOutgoing ? 'flex-end' : 'flex-start',
+                                    flexDirection: isOutgoing ? 'row-reverse' : 'row',
+                                    animation: 'cm-msgIn 0.3s ease',
+                                }}
+                            >
+                                {!isOutgoing && message.type !== 'system' && (
+                                    <Avatar sx={{
                                         bgcolor: TEAM_AVATARS[message.sender]?.color || '#667eea',
-                                        width: 32,
-                                        height: 32
-                                    }}
-                                >
-                                    {TEAM_AVATARS[message.sender]?.initials || message.sender[0]}
-                                </Avatar>
-                            )}
+                                        width: 32, height: 32, fontSize: '0.7rem', fontWeight: 800, flexShrink: 0,
+                                    }}>
+                                        {TEAM_AVATARS[message.sender]?.initials || message.sender[0]}
+                                    </Avatar>
+                                )}
 
-                            <Box className="message-content">
-                                {message.type === 'voice' && (
-                                    <Box className="voice-message">
-                                        <MicIcon className="mic-icon small" />
-                                        <Box className="voice-waves small">
-                                            {[...Array(10)].map((_, i) => (
-                                                <Box
-                                                    key={i}
-                                                    className={`wave-bar ${message.status === 'playing' ? 'playing' : ''}`}
-                                                />
+                                <Box sx={{
+                                    position: 'relative',
+                                    p: '12px 16px',
+                                    ...(message.type === 'system' ? {} : isOutgoing ? outgoingBubble : incomingBubble),
+                                    '&:hover .cm-react-btn': { opacity: 1 },
+                                }}>
+                                    {/* Voice message */}
+                                    {message.type === 'voice' && (
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 180 }}>
+                                            <MicIcon sx={{ color: c.purple.border, fontSize: 20 }} />
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '3px', height: 20 }}>
+                                                {[...Array(10)].map((_, i) => (
+                                                    <Box key={i} sx={{
+                                                        width: 3, borderRadius: 1, bgcolor: c.purple.border, height: 8,
+                                                        ...(message.status === 'playing' && {
+                                                            animation: 'cm-wave 0.5s ease-in-out infinite alternate',
+                                                            animationDelay: `${i * 0.05}s`,
+                                                        }),
+                                                    }} />
+                                                ))}
+                                            </Box>
+                                            <Typography sx={{ fontSize: '0.75rem', color: c.muted }}>
+                                                {message.status === 'playing' ? 'Playing...' : 'Voice message'}
+                                            </Typography>
+                                        </Box>
+                                    )}
+
+                                    {/* System message */}
+                                    {message.type === 'system' && (
+                                        <Box sx={{
+                                            display: 'flex', alignItems: 'center', gap: 1,
+                                            bgcolor: c.green.bg, border: `2px solid ${c.green.border}`,
+                                            borderRadius: '14px', boxShadow: `3px 3px 0 ${c.green.shadow}`,
+                                            px: 2, py: 1.5, mx: 'auto',
+                                        }}>
+                                            <CelebrationIcon sx={{ color: c.green.border }} />
+                                            <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: c.green.border }}>
+                                                {message.content}
+                                            </Typography>
+                                        </Box>
+                                    )}
+
+                                    {/* Text messages */}
+                                    {(message.type === 'prompt' || message.type === 'user') && (
+                                        <>
+                                            <Typography sx={{ fontSize: '0.9rem', color: c.body, lineHeight: 1.5 }}>
+                                                {message.content}
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5, justifyContent: 'flex-end' }}>
+                                                <Typography sx={{ fontSize: '0.65rem', color: c.muted }}>{message.time}</Typography>
+                                                {isOutgoing && (
+                                                    <Box component="span" sx={{ display: 'inline-flex' }}>
+                                                        {message.status === 'read' ? (
+                                                            <DoneAllIcon sx={{ fontSize: 14, color: c.blue.border }} />
+                                                        ) : message.status === 'delivered' ? (
+                                                            <DoneAllIcon sx={{ fontSize: 14, color: c.muted }} />
+                                                        ) : (
+                                                            <CheckIcon sx={{ fontSize: 14, color: c.muted }} />
+                                                        )}
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        </>
+                                    )}
+
+                                    {/* Reactions */}
+                                    {message.reactions?.length > 0 && (
+                                        <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+                                            {message.reactions.map((emoji, i) => (
+                                                <Box component="span" key={i} sx={{
+                                                    fontSize: 14, bgcolor: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+                                                    borderRadius: '10px', px: 0.75, py: 0.25,
+                                                    animation: 'cm-reactPop 0.3s ease',
+                                                }}>
+                                                    {emoji}
+                                                </Box>
                                             ))}
                                         </Box>
-                                        <Typography variant="caption">
-                                            {message.status === 'playing' ? 'Playing...' : 'Voice message'}
-                                        </Typography>
-                                    </Box>
-                                )}
+                                    )}
 
-                                {message.type === 'system' && (
-                                    <Box className="system-message">
-                                        <CelebrationIcon />
-                                        <Typography variant="body2">{message.content}</Typography>
-                                    </Box>
-                                )}
+                                    {/* Emoji trigger */}
+                                    {message.type !== 'system' && message.type !== 'voice' && (
+                                        <IconButton
+                                            className="cm-react-btn"
+                                            size="small"
+                                            onClick={() => setShowEmojiPicker(showEmojiPicker === message.id ? null : message.id)}
+                                            sx={{
+                                                position: 'absolute', right: -8, bottom: -8, opacity: 0,
+                                                transition: 'opacity 0.2s',
+                                                bgcolor: c.cardBg, border: `1px solid ${c.divider}`,
+                                                boxShadow: `2px 2px 0 ${c.divider}`,
+                                                minWidth: 28, minHeight: 28,
+                                                '&:hover': { bgcolor: c.cardBg },
+                                            }}
+                                        >
+                                            <EmojiEmotionsIcon sx={{ fontSize: 16 }} />
+                                        </IconButton>
+                                    )}
 
-                                {(message.type === 'prompt' || message.type === 'user') && (
-                                    <>
-                                        <Typography variant="body2">{message.content}</Typography>
-                                        <Box className="message-meta">
-                                            <Typography variant="caption">{message.time}</Typography>
-                                            {message.sender === 'You' && (
-                                                <span className="status-icon">
-                                                    {message.status === 'read' ? (
-                                                        <DoneAllIcon className="read" />
-                                                    ) : message.status === 'delivered' ? (
-                                                        <DoneAllIcon />
-                                                    ) : (
-                                                        <CheckIcon />
-                                                    )}
-                                                </span>
-                                            )}
+                                    {/* Emoji picker */}
+                                    {showEmojiPicker === message.id && (
+                                        <Box sx={{
+                                            position: 'absolute', bottom: '100%', right: 0, display: 'flex', gap: 0.5,
+                                            bgcolor: c.cardBg, border: `2px solid ${c.orange.border}`,
+                                            borderRadius: '16px', boxShadow: `3px 3px 0 ${c.orange.shadow}`,
+                                            p: 1, animation: 'cm-pickerIn 0.2s ease', zIndex: 10,
+                                        }}>
+                                            {EMOJI_REACTIONS.map(emoji => (
+                                                <Box
+                                                    component="span"
+                                                    key={emoji}
+                                                    onClick={() => handleReaction(message.id, emoji)}
+                                                    sx={{
+                                                        cursor: 'pointer', fontSize: 20, p: 0.5,
+                                                        borderRadius: '50%', transition: 'all 0.2s',
+                                                        minWidth: 36, minHeight: 36,
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        '&:hover': { transform: 'scale(1.3)', bgcolor: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' },
+                                                    }}
+                                                >
+                                                    {emoji}
+                                                </Box>
+                                            ))}
                                         </Box>
-                                    </>
-                                )}
-
-                                {/* Reactions */}
-                                {message.reactions?.length > 0 && (
-                                    <Box className="reactions">
-                                        {message.reactions.map((emoji, i) => (
-                                            <span key={i} className="reaction">{emoji}</span>
-                                        ))}
-                                    </Box>
-                                )}
-
-                                {/* Emoji picker trigger */}
-                                {message.type !== 'system' && message.type !== 'voice' && (
-                                    <IconButton
-                                        className="reaction-btn"
-                                        size="small"
-                                        onClick={() => setShowEmojiPicker(
-                                            showEmojiPicker === message.id ? null : message.id
-                                        )}
-                                    >
-                                        <EmojiEmotionsIcon fontSize="small" />
-                                    </IconButton>
-                                )}
-
-                                {/* Emoji picker */}
-                                {showEmojiPicker === message.id && (
-                                    <Box className="emoji-picker">
-                                        {EMOJI_REACTIONS.map(emoji => (
-                                            <span
-                                                key={emoji}
-                                                className="emoji-option"
-                                                onClick={() => handleReaction(message.id, emoji)}
-                                            >
-                                                {emoji}
-                                            </span>
-                                        ))}
-                                    </Box>
-                                )}
+                                    )}
+                                </Box>
                             </Box>
-                        </Box>
-                    ))}
+                        );
+                    })}
 
                     {/* Typing indicator */}
                     {isTyping && (
-                        <Box className="message incoming typing">
-                            <Avatar
-                                className="message-avatar"
-                                sx={{ bgcolor: TEAM_AVATARS['Team'].color, width: 32, height: 32 }}
-                            >
+                        <Box sx={{ display: 'flex', gap: 1, alignSelf: 'flex-start', animation: 'cm-msgIn 0.3s ease' }}>
+                            <Avatar sx={{ bgcolor: TEAM_AVATARS['Team'].color, width: 32, height: 32, fontSize: '0.7rem', fontWeight: 800 }}>
                                 TM
                             </Avatar>
-                            <Box className="typing-indicator">
-                                <span></span>
-                                <span></span>
-                                <span></span>
+                            <Box sx={{
+                                display: 'flex', gap: 0.5, p: '12px 16px',
+                                ...incomingBubble,
+                            }}>
+                                {[0, 1, 2].map(i => (
+                                    <Box key={i} component="span" sx={{
+                                        width: 8, height: 8, bgcolor: c.muted, borderRadius: '50%',
+                                        animation: 'cm-typeBounce 1.4s infinite ease-in-out both',
+                                        animationDelay: `${-0.32 + i * 0.16}s`,
+                                    }} />
+                                ))}
                             </Box>
                         </Box>
                     )}
@@ -423,8 +558,11 @@ export default function ChatMessengerSim({ exercise, onComplete, onProgress }) {
                     <div ref={messagesEndRef} />
                 </Box>
 
-                {/* Input Area */}
-                <Box className="input-area">
+                {/* Input */}
+                <Box sx={{
+                    display: 'flex', alignItems: 'flex-end', gap: 1, px: 2, py: 1.5,
+                    bgcolor: c.cardBg, borderTop: `2px solid ${c.divider}`,
+                }}>
                     <TextField
                         inputRef={inputRef}
                         fullWidth
@@ -436,25 +574,46 @@ export default function ChatMessengerSim({ exercise, onComplete, onProgress }) {
                         onKeyPress={handleKeyPress}
                         variant="outlined"
                         size="small"
-                        className="message-input"
+                        sx={{
+                            flex: 1,
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: '14px',
+                                bgcolor: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                                fontWeight: 600, fontSize: '0.9rem',
+                                minHeight: 44,
+                                '& fieldset': { border: `2px solid ${c.divider}` },
+                                '&:hover fieldset': { borderColor: c.purple.border },
+                                '&.Mui-focused fieldset': { borderColor: c.purple.border },
+                            },
+                        }}
                     />
                     <IconButton
                         onClick={handleSendMessage}
                         disabled={!currentInput.trim()}
-                        className="send-btn"
-                        color="primary"
+                        sx={{
+                            bgcolor: c.purple.bg, border: `2px solid ${c.purple.border}`,
+                            borderRadius: '14px', boxShadow: `3px 3px 0 ${c.purple.shadow}`,
+                            color: c.purple.border, minWidth: 44, minHeight: 44,
+                            fontWeight: 800,
+                            '&:hover': { bgcolor: c.purple.bg, transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${c.purple.shadow}` },
+                            '&.Mui-disabled': { bgcolor: dark ? 'rgba(255,255,255,0.05)' : '#f5f5f5', border: `2px solid ${c.divider}`, boxShadow: 'none', color: c.muted },
+                        }}
                     >
                         <SendIcon />
                     </IconButton>
                 </Box>
 
-                {/* Progress indicator */}
+                {/* Progress */}
                 <LinearProgress
                     variant="determinate"
                     value={(currentPromptIndex / Math.max(templates.length, guidedQuestions.length, 1)) * 100}
-                    className="chat-progress"
+                    sx={{
+                        height: 4,
+                        bgcolor: c.divider,
+                        '& .MuiLinearProgress-bar': { bgcolor: c.green.border },
+                    }}
                 />
-            </Paper>
+            </Box>
         </Box>
     );
 }

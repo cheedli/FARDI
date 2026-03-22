@@ -1,16 +1,30 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Box, Paper, Typography, Button, TextField, Alert, Stack, Chip
-} from '@mui/material'
+import { Box, Container, Typography, TextField, Stack } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
-/**
- * Phase 6 SubPhase 1 Step 4 — Level C1 — Task D
- * Critique Kahoot: identify the weakness and suggest a C1-level fix for 5 flawed report extracts
- */
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+  green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+  teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+  red: { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+  green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
+  teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+  red: { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+  yellow: { bg: '#422006', border: '#FACC15', shadow: '#854D0E' },
+}
 
 const WEAKNESSES = [
   {
@@ -52,6 +66,8 @@ const WEAKNESSES = [
 
 export default function Phase6SP1Step4RemC1TaskD() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 4, interaction: 4, context: 'remedial_c1' })
   const [critiques, setCritiques] = useState(Array(WEAKNESSES.length).fill(''))
   const [revealed, setRevealed] = useState(Array(WEAKNESSES.length).fill(false))
@@ -59,9 +75,7 @@ export default function Phase6SP1Step4RemC1TaskD() {
   const [score, setScore] = useState(0)
 
   const handleReveal = (idx) => {
-    const updated = [...revealed]
-    updated[idx] = true
-    setRevealed(updated)
+    const updated = [...revealed]; updated[idx] = true; setRevealed(updated)
   }
 
   const handleSubmit = async () => {
@@ -74,114 +88,158 @@ export default function Phase6SP1Step4RemC1TaskD() {
 
   const allFilled = critiques.every(c => c.trim().length > 0)
 
+  const cardSx = (color) => ({
+    bgcolor: color.bg,
+    border: `2px solid ${color.border}`,
+    borderRadius: '20px',
+    boxShadow: `4px 4px 0 ${color.shadow}`,
+    p: 3,
+  })
+
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper
-        elevation={0}
-        sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)', color: 'white', borderRadius: 2 }}
-      >
-        <Typography variant="h4" gutterBottom fontWeight="bold">Phase 6: Reflection &amp; Evaluation</Typography>
-        <Typography variant="h5" gutterBottom>Step 4: Remedial Practice — Level C1</Typography>
-        <Typography variant="h6">Task D: Critique Kahoot</Typography>
-        <Typography variant="body1">Identify weaknesses and suggest C1-level fixes for flawed report extracts</Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ ...cardSx(P.orange), mb: 3 }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.orange.border }}>
+              Phase 6: Reflection &amp; Evaluation
+            </Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.orange.border }}>Step 4: Remedial Practice — Level C1</Typography>
+            <Typography variant="h6" sx={{ color: P.orange.border }}>Task D: Critique Kahoot</Typography>
+            <Typography variant="body1" color="text.secondary">Identify weaknesses and suggest C1-level fixes for flawed report extracts</Typography>
+          </Box>
+        </motion.div>
 
-      <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>
-        Read each flawed report extract. Write your own critique (at least 5 words explaining what is wrong), then reveal the expert feedback and model fix to compare.
-      </Alert>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <Box sx={{ ...cardSx(P.teal), mb: 3 }}>
+            <Typography variant="body2">
+              Read each flawed report extract. Write your own critique (at least 5 words explaining what is wrong), then reveal the expert feedback and model fix to compare.
+            </Typography>
+          </Box>
+        </motion.div>
 
-      <Stack spacing={3} sx={{ mb: 3 }}>
-        {WEAKNESSES.map((w, idx) => (
-          <Paper key={idx} elevation={1} sx={{ p: 3, borderRadius: 2, borderLeft: '4px solid #27ae60' }}>
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>Extract {idx + 1}</Typography>
+        <Stack spacing={3} sx={{ mb: 3 }}>
+          {WEAKNESSES.map((w, idx) => (
+            <motion.div key={idx} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + idx * 0.05 }}>
+              <Box sx={{ ...cardSx(P.orange) }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>Extract {idx + 1}</Typography>
 
-            {/* Flawed extract */}
-            <Paper sx={{ p: 1.5, mb: 1.5, backgroundColor: '#fff3e0', borderRadius: 1 }}>
-              <Typography variant="body1" sx={{ fontStyle: 'italic', color: '#c0392b' }}>
-                {w.extract}
-              </Typography>
-            </Paper>
+                {/* Flawed extract */}
+                <Box sx={{ p: 1.5, mb: 1.5, bgcolor: P.yellow.bg, border: `1px solid ${P.yellow.border}`, borderRadius: '12px' }}>
+                  <Typography variant="body1" sx={{ fontStyle: 'italic', color: P.red.border }}>{w.extract}</Typography>
+                </Box>
 
-            {/* Weakness chips hint */}
-            <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
-              <Chip label={`Problem type: ${w.critiqueChip}`} size="small" sx={{ backgroundColor: '#e74c3c', color: 'white' }} />
-              <Chip label={`Fix strategy: ${w.fixChip}`} size="small" sx={{ backgroundColor: '#27ae60', color: 'white' }} />
-            </Stack>
+                {/* Hints */}
+                <Stack direction="row" spacing={1} sx={{ mb: 1.5, flexWrap: 'wrap' }}>
+                  <Box sx={{ px: 1.5, py: 0.5, bgcolor: P.red.border, borderRadius: '10px' }}>
+                    <Typography variant="caption" sx={{ color: 'white', fontWeight: 'bold' }}>Problem: {w.critiqueChip}</Typography>
+                  </Box>
+                  <Box sx={{ px: 1.5, py: 0.5, bgcolor: P.green.border, borderRadius: '10px' }}>
+                    <Typography variant="caption" sx={{ color: 'white', fontWeight: 'bold' }}>Fix: {w.fixChip}</Typography>
+                  </Box>
+                </Stack>
 
-            {/* Student critique input */}
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>Your critique:</Typography>
-            <TextField
-              fullWidth
-              multiline
-              rows={2}
-              value={critiques[idx]}
-              onChange={(e) => {
-                const updated = [...critiques]
-                updated[idx] = e.target.value
-                setCritiques(updated)
-              }}
-              disabled={submitted}
-              placeholder="Explain what is wrong with this extract..."
-              sx={{ mb: 1.5 }}
-            />
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>Your critique:</Typography>
+                <TextField
+                  fullWidth multiline rows={2}
+                  value={critiques[idx]}
+                  onChange={(e) => {
+                    const updated = [...critiques]; updated[idx] = e.target.value; setCritiques(updated)
+                  }}
+                  disabled={submitted}
+                  placeholder="Explain what is wrong with this extract..."
+                  sx={{ mb: 1.5 }}
+                />
 
-            {/* Reveal button */}
-            {!revealed[idx] ? (
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => handleReveal(idx)}
-                sx={{ color: '#27ae60', borderColor: '#27ae60' }}
-              >
-                Reveal Expert Feedback
-              </Button>
-            ) : (
-              <Stack spacing={1}>
-                <Paper sx={{ p: 1.5, backgroundColor: '#fff5f5', borderRadius: 1, border: '1px solid #e74c3c' }}>
-                  <Typography variant="body2" color="error" fontWeight="bold">Weakness: {w.weakness}</Typography>
-                </Paper>
-                <Paper sx={{ p: 1.5, backgroundColor: '#f0faf4', borderRadius: 1, border: '1px solid #27ae60' }}>
-                  <Typography variant="body2" sx={{ color: '#1e8449', fontWeight: 'bold' }}>
-                    ✓ Model fix: {w.fix}
-                  </Typography>
-                </Paper>
-              </Stack>
-            )}
-          </Paper>
-        ))}
-      </Stack>
+                {!revealed[idx] ? (
+                  <Box
+                    component="button"
+                    onClick={() => handleReveal(idx)}
+                    sx={{
+                      px: 3, py: 0.75,
+                      bgcolor: P.teal.bg,
+                      border: `2px solid ${P.teal.border}`,
+                      borderRadius: '12px',
+                      boxShadow: `2px 2px 0 ${P.teal.shadow}`,
+                      cursor: 'pointer',
+                      fontWeight: 'bold', fontSize: '0.85rem',
+                      color: P.teal.border,
+                      '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `4px 4px 0 ${P.teal.shadow}` },
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    Reveal Expert Feedback
+                  </Box>
+                ) : (
+                  <Stack spacing={1}>
+                    <Box sx={{ p: 1.5, bgcolor: P.red.bg, borderRadius: '12px', border: `1px solid ${P.red.border}` }}>
+                      <Typography variant="body2" sx={{ color: P.red.border, fontWeight: 'bold' }}>Weakness: {w.weakness}</Typography>
+                    </Box>
+                    <Box sx={{ p: 1.5, bgcolor: P.green.bg, borderRadius: '12px', border: `1px solid ${P.green.border}` }}>
+                      <Typography variant="body2" sx={{ color: P.green.border, fontWeight: 'bold' }}>
+                        Model fix: {w.fix}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                )}
+              </Box>
+            </motion.div>
+          ))}
+        </Stack>
 
-      {!submitted ? (
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={!allFilled}
-          fullWidth
-          size="large"
-          sx={{ backgroundColor: '#27ae60', '&:hover': { backgroundColor: '#1e8449' } }}
-        >
-          Submit Critiques
-        </Button>
-      ) : (
-        <Paper elevation={3} sx={{ p: 3, textAlign: 'center', backgroundColor: '#f0faf4', border: '2px solid #27ae60', borderRadius: 2 }}>
-          <CheckCircleIcon sx={{ fontSize: 50, color: '#27ae60', mb: 1 }} />
-          <Typography variant="h5" color="success.dark" gutterBottom>
-            Task D Complete! Score: {score}/{WEAKNESSES.length}
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            {score >= 4 ? 'Excellent critical analysis at C1 level!' : 'Good effort! Review the expert feedback and model fixes above.'}
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={() => navigate('/phase6/subphase/1/step/5')}
-            size="large"
-            sx={{ backgroundColor: '#27ae60', '&:hover': { backgroundColor: '#1e8449' } }}
+        {!submitted ? (
+          <Box
+            component="button"
+            onClick={handleSubmit}
+            disabled={!allFilled}
+            sx={{
+              width: '100%', py: 1.5,
+              bgcolor: P.orange.bg,
+              border: `2px solid ${P.orange.border}`,
+              borderRadius: '16px',
+              boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+              cursor: !allFilled ? 'not-allowed' : 'pointer',
+              opacity: !allFilled ? 0.5 : 1,
+              fontWeight: 'bold', fontSize: '1rem',
+              color: P.orange.border,
+              '&:hover': allFilled ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` } : {},
+              transition: 'all 0.15s ease',
+            }}
           >
-            Continue to Step 5 →
-          </Button>
-        </Paper>
-      )}
+            Submit Critiques
+          </Box>
+        ) : (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...cardSx(P.green), textAlign: 'center' }}>
+              <CheckCircleIcon sx={{ fontSize: 50, color: P.green.border, mb: 1 }} />
+              <Typography variant="h5" sx={{ color: P.green.border }} gutterBottom>
+                Task D Complete! Score: {score}/{WEAKNESSES.length}
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {score >= 4 ? 'Excellent critical analysis at C1 level!' : 'Good effort! Review the expert feedback and model fixes above.'}
+              </Typography>
+              <Box
+                component="button"
+                onClick={() => navigate('/phase6/subphase/1/step/5')}
+                sx={{
+                  px: 6, py: 1.5,
+                  bgcolor: P.green.bg,
+                  border: `2px solid ${P.green.border}`,
+                  borderRadius: '16px',
+                  boxShadow: `4px 4px 0 ${P.green.shadow}`,
+                  cursor: 'pointer',
+                  fontWeight: 'bold', fontSize: '1rem',
+                  color: P.green.border,
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` },
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                Continue to Step 5 →
+              </Box>
+            </Box>
+          </motion.div>
+        )}
+      </Container>
     </Box>
   )
 }

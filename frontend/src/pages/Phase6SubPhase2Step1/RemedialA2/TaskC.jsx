@@ -1,9 +1,24 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, RadioGroup, FormControlLabel, Radio, Alert } from '@mui/material'
+import { Box, Container, Typography, RadioGroup, FormControlLabel, Radio, Alert } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
+
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+  green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+  green: { bg: '#052E16', border: '#4ADE80', shadow: '#166534' },
+  blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+}
 
 const QUESTIONS = [
   { question: 'Which sentence about giving feedback is correct?', options: ['Feedback is good.', 'Feedback bad!', 'No feedback.'], correct: 0 },
@@ -11,15 +26,25 @@ const QUESTIONS = [
   { question: 'Which sentence about a suggestion is correct?', options: ['Suggestion add.', 'Suggestion bad.', 'No suggestion.'], correct: 0 },
   { question: 'Which sentence about strength is correct?', options: ['No good strength.', 'Strength bad.', 'Strength good.'], correct: 2 },
   { question: 'Which sentence about weakness is correct?', options: ['Weakness bad.', 'Weakness great!', 'Weakness fun.'], correct: 0 },
-  { question: 'Which sentence about improving is correct?', options: ['Improve bad.', 'Improve never.', 'Improve better.'], correct: 2 }
+  { question: 'Which sentence about improving is correct?', options: ['Improve bad.', 'Improve never.', 'Improve better.'], correct: 2 },
 ]
 
 export default function Phase6SP2Step1RemA2TaskC() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 1, interaction: 3, context: 'remedial_a2' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
+
+  const cardSx = (color) => ({
+    bgcolor: color.bg,
+    border: `2px solid ${color.border}`,
+    borderRadius: '20px',
+    boxShadow: `4px 4px 0 ${color.shadow}`,
+    p: 3,
+  })
 
   const handleSubmit = async () => {
     let correct = 0
@@ -31,36 +56,98 @@ export default function Phase6SP2Step1RemA2TaskC() {
   }
 
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto', p: 3 }}>
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #8e44ad 0%, #6c3483 100%)', color: 'white', borderRadius: 2 }}>
-        <Typography variant="h5" gutterBottom fontWeight="bold">Step 1: Remedial A2 - Task C</Typography>
-        <Typography variant="body1">Sentence Builder: Choose the Correct Feedback Sentence</Typography>
-      </Paper>
-      <Alert severity="info" sx={{ mb: 3 }}>Choose the correct simple sentence about peer feedback.</Alert>
-      {QUESTIONS.map((q, idx) => (
-        <Paper key={idx} elevation={1} sx={{ p: 3, mb: 2, borderRadius: 2, border: submitted ? '2px solid' : '1px solid #e0e0e0', borderColor: submitted ? (parseInt(answers[idx]) === q.correct ? 'success.main' : 'error.main') : '#e0e0e0' }}>
-          <Typography variant="body1" fontWeight="bold" sx={{ mb: 1 }}>{idx + 1}. {q.question}</Typography>
-          <RadioGroup value={answers[idx] ?? ''} onChange={(e) => setAnswers({ ...answers, [idx]: e.target.value })}>
-            {q.options.map((opt, oi) => (
-              <FormControlLabel key={oi} value={oi.toString()} control={<Radio disabled={submitted} />} label={opt} />
-            ))}
-          </RadioGroup>
-          {submitted && parseInt(answers[idx]) !== q.correct && (
-            <Typography variant="body2" color="error" sx={{ mt: 1 }}>Correct: <strong>{q.options[q.correct]}</strong></Typography>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+          <Box sx={{ ...cardSx(P.orange), mb: 3 }}>
+            <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ color: P.orange.border }}>
+              Step 1: Remedial A2 — Task C
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+              Sentence Builder: Choose the Correct Feedback Sentence
+            </Typography>
+          </Box>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }}>
+          <Alert severity="info" sx={{ mb: 3, borderRadius: '12px' }}>
+            Choose the correct simple sentence about peer feedback.
+          </Alert>
+
+          {QUESTIONS.map((q, idx) => (
+            <Box
+              key={idx}
+              sx={{
+                ...cardSx(submitted ? (parseInt(answers[idx]) === q.correct ? P.green : { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' }) : P.blue),
+                mb: 2,
+              }}
+            >
+              <Typography variant="body1" fontWeight="bold" sx={{ mb: 1 }}>{idx + 1}. {q.question}</Typography>
+              <RadioGroup value={answers[idx] ?? ''} onChange={(e) => setAnswers({ ...answers, [idx]: e.target.value })}>
+                {q.options.map((opt, oi) => (
+                  <FormControlLabel key={oi} value={oi.toString()} control={<Radio disabled={submitted} />} label={opt} />
+                ))}
+              </RadioGroup>
+              {submitted && parseInt(answers[idx]) !== q.correct && (
+                <Typography variant="body2" color="error" sx={{ mt: 1 }}>Correct: <strong>{q.options[q.correct]}</strong></Typography>
+              )}
+            </Box>
+          ))}
+
+          {!submitted ? (
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
+              <Box
+                component="button"
+                onClick={handleSubmit}
+                disabled={Object.keys(answers).length < QUESTIONS.length}
+                sx={{
+                  px: 5, py: 1.5,
+                  borderRadius: '16px',
+                  border: `2px solid ${P.orange.border}`,
+                  bgcolor: P.orange.bg,
+                  boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+                  fontWeight: 'bold',
+                  fontSize: '1rem',
+                  fontFamily: 'inherit',
+                  width: '100%',
+                  cursor: Object.keys(answers).length < QUESTIONS.length ? 'not-allowed' : 'pointer',
+                  opacity: Object.keys(answers).length < QUESTIONS.length ? 0.5 : 1,
+                  '&:hover:not(:disabled)': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` },
+                  transition: 'all 0.15s',
+                }}
+              >
+                Submit Answers
+              </Box>
+            </Box>
+          ) : (
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+              <Box sx={{ ...cardSx(P.green), textAlign: 'center', mt: 2 }}>
+                <CheckCircleIcon sx={{ fontSize: 50, color: P.green.border, mb: 1 }} />
+                <Typography variant="h5" fontWeight="bold" sx={{ color: P.green.shadow }}>Score: {score}/{QUESTIONS.length}</Typography>
+                <Box
+                  component="button"
+                  onClick={() => navigate('/phase6/subphase/2/step/2')}
+                  sx={{
+                    mt: 2, px: 5, py: 1.5,
+                    borderRadius: '16px',
+                    border: `2px solid ${P.green.border}`,
+                    bgcolor: P.green.bg,
+                    boxShadow: `4px 4px 0 ${P.green.shadow}`,
+                    fontWeight: 'bold',
+                    fontSize: '1rem',
+                    fontFamily: 'inherit',
+                    cursor: 'pointer',
+                    '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` },
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  Continue to Step 2
+                </Box>
+              </Box>
+            </motion.div>
           )}
-        </Paper>
-      ))}
-      {!submitted ? (
-        <Button variant="contained" onClick={handleSubmit} disabled={Object.keys(answers).length < QUESTIONS.length} fullWidth size="large"
-          sx={{ background: 'linear-gradient(135deg, #8e44ad 0%, #6c3483 100%)', '&:hover': { opacity: 0.9 } }}>Submit Answers</Button>
-      ) : (
-        <Paper elevation={3} sx={{ p: 3, textAlign: 'center', backgroundColor: '#e8f8f0', borderRadius: 2 }}>
-          <CheckCircleIcon sx={{ fontSize: 50, color: '#27ae60', mb: 1 }} />
-          <Typography variant="h5" color="success.dark">Score: {score}/{QUESTIONS.length}</Typography>
-          <Button variant="contained" onClick={() => navigate('/phase6/subphase/2/step/2')} size="large"
-            sx={{ mt: 2, background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)', '&:hover': { opacity: 0.9 } }}>Continue to Step 2</Button>
-        </Paper>
-      )}
+        </motion.div>
+      </Container>
     </Box>
   )
 }

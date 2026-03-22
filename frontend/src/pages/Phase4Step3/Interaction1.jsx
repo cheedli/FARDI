@@ -2,19 +2,17 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
-  Paper,
   Typography,
-  Button,
   TextField,
-  Card,
-  CardContent,
-  Alert,
   CircularProgress,
-  Chip,
-  Stack
+  Stack,
+  Container
 } from '@mui/material'
+import { useTheme } from '@mui/material'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
@@ -29,6 +27,30 @@ const KEY_TERMS = [
 
 export default function Phase4Step3Interaction1() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const LIGHT = {
+    pageBg: '#FFFDE7',
+    blue:   { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+    green:  { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+    yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+    purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+    teal:   { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+    orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+    red:    { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+  }
+  const DARK = {
+    pageBg: '#0F0F1A',
+    blue:   { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+    green:  { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+    yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+    purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
+    teal:   { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+    orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+    red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+  }
+  const P = isDark ? DARK : LIGHT
+
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 1, context: 'main' })
   const [answer, setAnswer] = useState('')
   const [evaluation, setEvaluation] = useState(null)
@@ -159,159 +181,201 @@ export default function Phase4Step3Interaction1() {
   }
 
   const handleContinue = () => {
-    // TODO: Navigate to next interaction when created
     navigate('/phase4/step/3/interaction/2')
   }
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, backgroundColor: 'success.light', color: 'white' }}>
-        <Typography variant="h4" gutterBottom>
-          Phase 4: Marketing & Promotion
-        </Typography>
-        <Typography variant="h5" gutterBottom>
-          Step 3: Explain - Interaction 1
-        </Typography>
-        <Typography variant="body1">
-          Watch the video and define "persuasive" for posters
-        </Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
 
-      {/* Instructor Message */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage
-          speaker="Ms. Mabrouki"
-          message="Watch this video on 10 advertising characteristics (4:30). Listen for 'promotional', 'persuasive', 'targeted', 'original', 'creative', 'consistent', 'personalized', 'ethical'. After, answer: What is 'persuasive' for posters?"
-        />
-      </Paper>
-
-      {/* Key Terms to Listen For */}
-      <Paper elevation={1} sx={{ p: 3, mb: 3, backgroundColor: 'info.lighter' }}>
-        <Typography variant="subtitle1" gutterBottom fontWeight="bold" color="primary">
-          Key Terms to Listen For:
-        </Typography>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {KEY_TERMS.map((term, index) => (
-            <Chip key={index} label={term} color="primary" variant="outlined" />
-          ))}
-        </Stack>
-      </Paper>
-
-      {/* Video Card */}
-      <Card elevation={3} sx={{ mb: 4 }}>
-        <Box sx={{ position: 'relative', paddingTop: '56.25%', backgroundColor: '#000' }}>
-          <iframe
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              border: 0
-            }}
-            src="https://www.youtube.com/embed/5Bu6qE9E7oo"
-            title="10 Advertising Characteristics"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </Box>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            10 Advertising Characteristics (4:30)
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Watch this video to learn about the key characteristics of effective advertising, including persuasive techniques.
-          </Typography>
-        </CardContent>
-      </Card>
-
-      {/* Question Section */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom color="primary">
-          Question: What is "persuasive" for posters?
-        </Typography>
-
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <Typography variant="body2">
-            <strong>Hint:</strong> Use "It is to convince..." and mention ethos/pathos/logos from the video.
-          </Typography>
-        </Alert>
-
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          variant="outlined"
-          placeholder="Write your definition of 'persuasive' for posters here. Reference what you learned from the video..."
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          disabled={submitted}
-          sx={{ mb: 2 }}
-        />
-
-        {!submitted && (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            disabled={loading || !answer.trim()}
-            fullWidth
-            size="large"
-          >
-            {loading ? <CircularProgress size={24} /> : 'Submit Answer'}
-          </Button>
-        )}
-      </Paper>
-
-      {/* Evaluation Results */}
-      {evaluation && (
-        <Paper
-          elevation={3}
-          sx={{
-            p: 3,
-            mb: 3,
-            backgroundColor: evaluation.success ? 'success.lighter' : 'warning.lighter',
-            border: '2px solid',
-            borderColor: evaluation.success ? 'success.main' : 'warning.main'
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <CheckCircleIcon
-              sx={{
-                fontSize: 40,
-                color: evaluation.success ? 'success.main' : 'warning.main',
-                mr: 2
-              }}
-            />
-            <Box>
-              <Typography variant="h6" color={evaluation.success ? 'success.dark' : 'warning.dark'}>
-                {evaluation.success ? 'Answer Submitted!' : 'Try Again'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Level: {evaluation.level} | Score: {evaluation.score}/5
-              </Typography>
-            </Box>
+          {/* Header */}
+          <Box sx={{
+            bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
+              Phase 4: Marketing & Promotion
+            </Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.blue.shadow }}>
+              Step 3: Explain - Interaction 1
+            </Typography>
+            <Typography variant="body1" sx={{ color: P.blue.shadow }}>
+              Watch the video and define "persuasive" for posters
+            </Typography>
           </Box>
 
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            {evaluation.feedback}
-          </Typography>
+          {/* Instructor Message */}
+          <Box sx={{
+            bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <CharacterMessage
+              speaker="Ms. Mabrouki"
+              message="Watch this video on 10 advertising characteristics (4:30). Listen for 'promotional', 'persuasive', 'targeted', 'original', 'creative', 'consistent', 'personalized', 'ethical'. After, answer: What is 'persuasive' for posters?"
+            />
+          </Box>
 
-          {submitted && (
-            <Button
-              variant="contained"
-              color="success"
-              onClick={handleContinue}
-              size="large"
+          {/* Key Terms */}
+          <Box sx={{
+            bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.purple.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="subtitle1" gutterBottom fontWeight="bold" sx={{ color: P.purple.shadow }}>
+              Key Terms to Listen For:
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              {KEY_TERMS.map((term, index) => (
+                <Box key={index} component="span" sx={{
+                  bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`,
+                  borderRadius: '999px', px: 2, py: 0.5,
+                  fontSize: '0.85rem', fontWeight: 700, color: P.purple.shadow,
+                  display: 'inline-block'
+                }}>{term}</Box>
+              ))}
+            </Stack>
+          </Box>
+
+          {/* Video Card */}
+          <Box sx={{
+            bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+            p: 3, mb: 4, overflow: 'hidden',
+          }}>
+            <Box sx={{ position: 'relative', paddingTop: '56.25%', backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden', mb: 2 }}>
+              <iframe
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  border: 0
+                }}
+                src="https://www.youtube.com/embed/5Bu6qE9E7oo"
+                title="10 Advertising Characteristics"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </Box>
+            <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow }}>
+              10 Advertising Characteristics (4:30)
+            </Typography>
+            <Typography variant="body2" sx={{ color: P.orange.shadow, opacity: 0.8 }}>
+              Watch this video to learn about the key characteristics of effective advertising, including persuasive techniques.
+            </Typography>
+          </Box>
+
+          {/* Question Section */}
+          <Box sx={{
+            bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow }}>
+              Question: What is "persuasive" for posters?
+            </Typography>
+
+            <Box sx={{
+              bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+              borderRadius: '12px', p: 2, mb: 3,
+            }}>
+              <Typography variant="body2" sx={{ color: P.blue.shadow }}>
+                <strong>Hint:</strong> Use "It is to convince..." and mention ethos/pathos/logos from the video.
+              </Typography>
+            </Box>
+
+            <TextField
               fullWidth
-            >
-              Continue to Next Activity
-            </Button>
-          )}
-        </Paper>
-      )}
+              multiline
+              rows={4}
+              variant="outlined"
+              placeholder="Write your definition of 'persuasive' for posters here. Reference what you learned from the video..."
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              disabled={submitted}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  '& fieldset': { borderColor: P.orange.border },
+                  '&:hover fieldset': { borderColor: P.orange.shadow },
+                  '&.Mui-focused fieldset': { borderColor: P.orange.shadow },
+                }
+              }}
+            />
 
+            {!submitted && (
+              <Box component="button" onClick={handleSubmit} disabled={loading || !answer.trim()} sx={{
+                width: '100%',
+                bgcolor: (loading || !answer.trim()) ? 'grey.200' : P.blue.bg,
+                border: `2px solid ${(loading || !answer.trim()) ? '#ccc' : P.blue.border}`,
+                borderRadius: '12px',
+                boxShadow: (loading || !answer.trim()) ? 'none' : `3px 3px 0 ${P.blue.shadow}`,
+                px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                cursor: (loading || !answer.trim()) ? 'not-allowed' : 'pointer',
+                color: (loading || !answer.trim()) ? 'grey.500' : P.blue.shadow,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                '&:hover': (loading || !answer.trim()) ? {} : { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.blue.shadow}` },
+                '&:active': (loading || !answer.trim()) ? {} : { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.blue.shadow}` },
+              }}>
+                {loading ? <CircularProgress size={20} /> : 'Submit Answer'}
+              </Box>
+            )}
+          </Box>
+
+          {/* Evaluation Results */}
+          {evaluation && (
+            <Box sx={{
+              bgcolor: evaluation.success ? P.green.bg : P.red.bg,
+              border: `2px solid ${evaluation.success ? P.green.border : P.red.border}`,
+              borderRadius: '20px',
+              boxShadow: `4px 4px 0 ${evaluation.success ? P.green.shadow : P.red.shadow}`,
+              p: 3, mb: 3,
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <CheckCircleIcon sx={{
+                  fontSize: 40,
+                  color: evaluation.success ? P.green.shadow : P.red.shadow,
+                  mr: 2
+                }} />
+                <Box>
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: evaluation.success ? P.green.shadow : P.red.shadow }}>
+                    {evaluation.success ? 'Answer Submitted!' : 'Try Again'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: evaluation.success ? P.green.shadow : P.red.shadow, opacity: 0.8 }}>
+                    Level: {evaluation.level} | Score: {evaluation.score}/5
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Typography variant="body1" sx={{ color: evaluation.success ? P.green.shadow : P.red.shadow, mb: 2 }}>
+                {evaluation.feedback}
+              </Typography>
+
+              {submitted && (
+                <Box component="button" onClick={handleContinue} sx={{
+                  width: '100%',
+                  bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                  borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
+                  px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                  cursor: 'pointer', color: P.green.shadow,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
+                  '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` },
+                }}>
+                  <PlayArrowIcon fontSize="small" />
+                  Continue to Next Activity
+                </Box>
+              )}
+            </Box>
+          )}
+
+        </motion.div>
+      </Container>
     </Box>
   )
 }

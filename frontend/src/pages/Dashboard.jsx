@@ -118,7 +118,7 @@ export default function Dashboard() {
   if (!data) return null
 
   // ── Data extraction ────────────────────────────────────────────────────────
-  const { user, user_stats, recent_assessments, phase2_progress, phase5_progress, phase6_progress } = data
+  const { user, user_stats, recent_assessments, phase2_progress, phase3_progress, phase4_progress, phase5_progress, phase6_progress } = data
   const name = user?.first_name || user?.username || 'User'
   const totalAssessments = user_stats?.total_assessments || 0
   const bestLevel = user_stats?.best_level || 'A1'
@@ -137,6 +137,8 @@ export default function Dashboard() {
   const p5TotalSteps = Object.keys(phase5_progress?.subphase1 || {}).length + Object.keys(phase5_progress?.subphase2 || {}).length
   const p6TotalSteps = Object.keys(phase6_progress?.subphase1 || {}).length + Object.keys(phase6_progress?.subphase2 || {}).length
   const hasPhase2Progress = phase2_progress?.responses?.length > 0 || phase2_progress?.steps?.length > 0 || phase2_progress?.remedial_activities?.length > 0
+  const hasPhase3Progress = phase3_progress != null && (phase3_progress.total_responses > 0 || phase3_progress.step > 0)
+  const hasPhase4Progress = phase4_progress != null && (phase4_progress.total_responses > 0 || phase4_progress.step > 0)
 
   const getCurrentPhase2Step = () => {
     if (phase2_progress?.remedial_activities?.length > 0) {
@@ -155,7 +157,8 @@ export default function Dashboard() {
     switch (id) {
       case 1: return { unlocked: true, completed: hasCompletedPhase1, inProgress: currentProgress != null }
       case 2: return { unlocked: hasCompletedPhase1, completed: hasCompletedPhase2, inProgress: hasPhase2Progress && !hasCompletedPhase2 }
-      case 4: return { unlocked: hasCompletedPhase2, completed: hasCompletedPhase4, inProgress: hasCompletedPhase2 && !hasCompletedPhase4 }
+      case 3: return { unlocked: hasCompletedPhase2, completed: hasCompletedPhase3, inProgress: hasPhase3Progress && !hasCompletedPhase3 }
+      case 4: return { unlocked: hasCompletedPhase3, completed: hasCompletedPhase4, inProgress: hasPhase4Progress && !hasCompletedPhase4 }
       case 5: return { unlocked: hasCompletedPhase4, completed: hasCompletedPhase5, inProgress: p5TotalSteps > 0 && !hasCompletedPhase5 }
       case 6: return { unlocked: hasCompletedPhase5, completed: hasCompletedPhase6, inProgress: p6TotalSteps > 0 && !hasCompletedPhase6 }
       default: return { unlocked: false, completed: false, inProgress: false }
@@ -169,6 +172,7 @@ export default function Dashboard() {
         return currentPhase2Step.type === 'remedial' ? currentPhase2Step.url : `/phase2/step/${currentPhase2Step.stepId}`
       return '/phase2'
     }
+    if (phase.id === 3) return '/phase3/step/1'
     if (phase.id === 6) return '/phase6/subphase/1/step/1'
     return phase.path
   }
@@ -177,6 +181,8 @@ export default function Dashboard() {
     switch (id) {
       case 1: return currentProgress ? ((currentProgress.current_step + 1) / currentProgress.total_steps) * 100 : (hasCompletedPhase1 ? 100 : 0)
       case 2: return (p2Completed / 9) * 100
+      case 3: return phase3_progress ? ((phase3_progress.step || 1) / 4) * 100 : 0
+      case 4: return phase4_progress ? ((phase4_progress.step || 1) / 5) * 100 : 0
       case 5: return (p5TotalSteps / 10) * 100
       case 6: return (p6TotalSteps / 10) * 100
       default: return getPhaseState(id).completed ? 100 : 0
@@ -186,6 +192,7 @@ export default function Dashboard() {
   const getPhaseStartUrl = (id) => {
     if (id === 1) return '/game'
     if (id === 2) return '/phase2'
+    if (id === 3) return '/phase3/step/1'
     if (id === 4) return '/phase4/step/1/interaction/1'
     if (id === 5) return '/phase5/subphase/1/step/1/interaction/1'
     if (id === 6) return '/phase6/subphase/1/step/1/interaction/1'
@@ -374,13 +381,13 @@ export default function Dashboard() {
                 <Box sx={{
                   height: '100%',
                   display: 'flex',
-                  flexDirection: isWide ? 'row' : 'column',
-                  gap: isWide ? 3 : 0,
+                  flexDirection: isWide ? { xs: 'column', sm: 'row' } : 'column',
+                  gap: isWide ? { xs: 2, sm: 3 } : 0,
                   bgcolor: state.unlocked ? c.bg : (isDark ? '#16162A' : '#F5F5F5'),
                   border: `2px solid ${state.unlocked ? c.border : D.divider}`,
                   borderRadius: '20px',
                   boxShadow: state.unlocked ? `4px 4px 0 ${c.shadow}` : `3px 3px 0 ${D.divider}`,
-                  p: isWide ? 3 : 2.5,
+                  p: { xs: 2.5, sm: isWide ? 3 : 2.5 },
                   opacity: state.unlocked ? 1 : 0.55,
                   transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                   ...(state.unlocked ? { '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${c.shadow}` } } : {}),
@@ -391,7 +398,7 @@ export default function Dashboard() {
                     {/* Icon + label row */}
                     <Stack direction="row" spacing={1.5} alignItems="center">
                       <Box sx={{
-                        width: isWide ? 52 : 44, height: isWide ? 52 : 44,
+                        width: { xs: 40, sm: isWide ? 52 : 44 }, height: { xs: 40, sm: isWide ? 52 : 44 },
                         borderRadius: '14px', flexShrink: 0,
                         bgcolor: D.cardBg,
                         border: `2px solid ${state.unlocked ? c.border : D.divider}`,
@@ -471,7 +478,7 @@ export default function Dashboard() {
 
                   {/* Right section — only for wide cards: big action button */}
                   {isWide && (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 180, gap: 2 }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'row-reverse', sm: 'column' }, justifyContent: 'space-between', minWidth: { xs: 'auto', sm: 180 }, gap: 2 }}>
                       {/* Status pill */}
                       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                         {state.completed && <Box sx={pill(D.green)}>✓ Done</Box>}
@@ -529,26 +536,26 @@ export default function Dashboard() {
               {recent_assessments.slice(0, 3).map((a, idx) => (
                 <motion.div key={idx} variants={fadeUp} initial="hidden" animate="visible" custom={10 + idx}>
                   <Box sx={{ ...card(D.blue), p: 3 }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Stack direction="row" spacing={2} alignItems="center">
+                    <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2}>
+                      <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0 }}>
                         <Box sx={{
-                          width: 44, height: 44, borderRadius: '13px',
+                          width: { xs: 38, sm: 44 }, height: { xs: 38, sm: 44 }, borderRadius: '13px',
                           bgcolor: D.cardBg, border: `2px solid ${D.purple.border}`,
                           boxShadow: `3px 3px 0 ${D.purple.shadow}`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                         }}>
-                          <SchoolIcon sx={{ fontSize: 22, color: D.purple.border }} />
+                          <SchoolIcon sx={{ fontSize: { xs: 18, sm: 22 }, color: D.purple.border }} />
                         </Box>
-                        <Box>
-                          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.3 }}>
-                            <Typography sx={{ fontWeight: 800, fontSize: '0.92rem', color: D.heading }}>Phase 1 Assessment</Typography>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.3, flexWrap: 'wrap', gap: 0.5 }}>
+                            <Typography sx={{ fontWeight: 800, fontSize: { xs: '0.82rem', sm: '0.92rem' }, color: D.heading }}>Phase 1 Assessment</Typography>
                             <Box sx={pill(D.purple)}>{a.cefr_level}</Box>
                           </Stack>
-                          <Stack direction="row" spacing={1.5} alignItems="center">
+                          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flexWrap: 'wrap' }}>
                             <Typography sx={{ color: D.muted, fontSize: '0.78rem', fontWeight: 600 }}>
                               {a.completed_at ? new Date(a.completed_at).toLocaleDateString() : 'In Progress'}
                             </Typography>
-                            <Box sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: D.divider }} />
+                            <Box sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: D.divider, display: { xs: 'none', sm: 'block' } }} />
                             <Box sx={{ ...pill(D.yellow), px: 1.5, py: 0.3, fontSize: '0.72rem' }}>
                               ✦ {a.total_xp} XP
                             </Box>
@@ -562,6 +569,8 @@ export default function Dashboard() {
                           display: 'inline-flex', alignItems: 'center', gap: 0.5,
                           textDecoration: 'none', ...pill(D.purple),
                           px: 2, py: 0.75, fontSize: '0.8rem',
+                          width: { xs: '100%', sm: 'auto' },
+                          justifyContent: 'center',
                         }}
                       >
                         {a.completed_at ? 'View' : 'Continue'} <ArrowForwardIcon sx={{ fontSize: 13 }} />

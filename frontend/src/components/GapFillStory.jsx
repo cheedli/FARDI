@@ -1,9 +1,35 @@
 import React, { useState } from 'react'
-import { Box, Typography, Paper, Button, Chip, Stack } from '@mui/material'
+import { Box, Typography, useTheme } from '@mui/material'
 import { CheckCircle, Cancel } from '@mui/icons-material'
 
 const GapFillStory = ({ templates, wordBank, answers, onChange }) => {
   const [selectedWord, setSelectedWord] = useState(null)
+  const theme = useTheme()
+  const dark = theme.palette.mode === 'dark'
+
+  const colors = {
+    pageBg: dark ? '#0F0F1A' : '#FFFDE7',
+    cardBg: dark ? '#1A1A2E' : '#ffffff',
+    heading: dark ? '#E8EAFF' : '#1A237E',
+    body: dark ? '#B0BEC5' : '#37474F',
+    muted: dark ? '#607D8B' : '#78909C',
+    divider: dark ? '#2A2A4A' : '#E0E0E0',
+    blue: dark
+      ? { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' }
+      : { bg: '#BBDEFB', border: '#1976D2', shadow: '#1976D2' },
+    green: dark
+      ? { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' }
+      : { bg: '#C8E6C9', border: '#388E3C', shadow: '#388E3C' },
+    purple: dark
+      ? { bg: '#1E0A2E', border: '#CE93D8', shadow: '#7B1FA2' }
+      : { bg: '#E1BEE7', border: '#8E24AA', shadow: '#8E24AA' },
+    yellow: dark
+      ? { bg: '#2A2200', border: '#F9A825', shadow: '#A06800', text: '#FFD54F' }
+      : { bg: '#FFF9C4', border: '#F9A825', shadow: '#F9A825', text: '#5D4037' },
+    teal: dark
+      ? { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' }
+      : { bg: '#B2EBF2', border: '#0097A7', shadow: '#0097A7' },
+  }
 
   if (!templates || templates.length === 0 || !wordBank) return null
 
@@ -13,12 +39,9 @@ const GapFillStory = ({ templates, wordBank, answers, onChange }) => {
 
   const handleBlankClick = (templateIndex, blankIndex) => {
     if (!selectedWord) return
-
     const key = `g_${templateIndex}_${blankIndex}`
     onChange(key, selectedWord)
     setSelectedWord(null)
-
-    // Vibration feedback
     if (navigator.vibrate) navigator.vibrate(50)
   }
 
@@ -27,69 +50,135 @@ const GapFillStory = ({ templates, wordBank, answers, onChange }) => {
     onChange(key, '')
   }
 
-  // Count how many words have been used
   const usedWords = Object.values(answers).filter(v => v).length
   const totalBlanks = templates.reduce((sum, template) => {
     return sum + (template.match(/_{3,}/g) || []).length
   }, 0)
 
+  const c = colors
+
   return (
-    <Box sx={{ width: '100%', maxWidth: 1000, mx: 'auto', py: 4 }}>
-      {/* Word Bank - Always Visible */}
-      <Paper sx={{ p: 3, mb: 4, bgcolor: 'primary.light' }}>
-        <Typography variant="h6" gutterBottom sx={{ color: 'primary.dark', fontWeight: 'bold' }}>
-          Word Bank - Click a word, then click a blank
+    <Box sx={{ width: '100%', maxWidth: 1000, mx: 'auto', py: { xs: 2, sm: 4 } }}>
+      {/* Word Bank */}
+      <Box
+        sx={{
+          p: { xs: 2, sm: 3 },
+          mb: { xs: 2, sm: 4 },
+          bgcolor: c.blue.bg,
+          border: `2px solid ${c.blue.border}`,
+          borderRadius: '20px',
+          boxShadow: `4px 4px 0 ${c.blue.shadow}`,
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: { xs: '0.95rem', sm: '1.1rem' },
+            fontWeight: 800,
+            color: c.heading,
+            mb: 1.5,
+          }}
+        >
+          Word Bank — Click a word, then click a blank
         </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
-          {wordBank.map((word, wi) => (
-            <Chip
-              key={wi}
-              label={word}
-              onClick={() => handleWordClick(word)}
-              sx={{
-                fontSize: '1.1rem',
-                py: 2.5,
-                px: 2,
-                cursor: 'pointer',
-                bgcolor: selectedWord === word ? 'primary.main' : 'background.paper',
-                color: selectedWord === word ? 'white' : 'text.primary',
-                border: '2px solid',
-                borderColor: selectedWord === word ? 'primary.dark' : 'divider',
-                transform: selectedWord === word ? 'scale(1.1)' : 'scale(1)',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  transform: 'scale(1.05)',
-                  bgcolor: selectedWord === word ? 'primary.dark' : 'grey.100'
-                }
-              }}
-            />
-          ))}
+
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 1, sm: 1.5 } }}>
+          {wordBank.map((word, wi) => {
+            const isSelected = selectedWord === word
+            const isUsed = Object.values(answers).includes(word)
+            return (
+              <Box
+                key={wi}
+                onClick={() => handleWordClick(word)}
+                sx={{
+                  px: 1.75,
+                  py: 0.4,
+                  minHeight: '44px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  borderRadius: '50px',
+                  bgcolor: isSelected ? c.purple.bg : (isUsed ? c.green.bg : c.cardBg),
+                  border: `2px solid ${isSelected ? c.purple.border : (isUsed ? c.green.border : c.divider)}`,
+                  boxShadow: isSelected
+                    ? `3px 3px 0 ${c.purple.shadow}`
+                    : `2px 2px 0 ${isUsed ? c.green.shadow : c.divider}`,
+                  fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                  fontWeight: 800,
+                  color: isSelected ? c.purple.border : (isUsed ? c.green.border : c.body),
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  transform: isSelected ? 'translate(-2px,-2px)' : 'none',
+                  opacity: isUsed && !isSelected ? 0.6 : 1,
+                  '&:hover': {
+                    transform: 'translate(-2px,-2px)',
+                    boxShadow: isSelected
+                      ? `5px 5px 0 ${c.purple.shadow}`
+                      : `4px 4px 0 ${isUsed ? c.green.shadow : c.divider}`,
+                  },
+                }}
+              >
+                {word}
+              </Box>
+            )
+          })}
         </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-          <Typography variant="caption" color="text.secondary">
-            {selectedWord ? `Selected: "${selectedWord}" - Now click a blank to fill it` : 'Select a word from above'}
+
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', mt: 1.5, gap: 1 }}>
+          <Typography sx={{ fontSize: '0.8rem', color: c.muted, fontWeight: 600 }}>
+            {selectedWord ? `Selected: "${selectedWord}" — Now click a blank` : 'Select a word from above'}
           </Typography>
-          <Chip
-            label={`${usedWords} / ${totalBlanks} Filled`}
-            color={usedWords === totalBlanks ? 'success' : 'default'}
-            size="small"
-          />
+          <Box
+            sx={{
+              px: 1.75,
+              py: 0.4,
+              borderRadius: '50px',
+              bgcolor: usedWords === totalBlanks ? c.green.bg : c.yellow.bg,
+              border: `2px solid ${usedWords === totalBlanks ? c.green.border : c.yellow.border}`,
+              boxShadow: `2px 2px 0 ${usedWords === totalBlanks ? c.green.shadow : c.yellow.shadow}`,
+              fontSize: '0.8rem',
+              fontWeight: 800,
+              color: usedWords === totalBlanks ? c.green.border : (c.yellow.text || c.body),
+            }}
+          >
+            {usedWords} / {totalBlanks} Filled
+          </Box>
         </Box>
-      </Paper>
+      </Box>
 
       {/* Story with Blanks */}
-      <Stack spacing={3}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1.5, sm: 3 } }}>
         {templates.map((template, ti) => {
-          // Split by blanks
           const parts = template.split(/_{3,}/)
-          const blankCount = (template.match(/_{3,}/g) || []).length
 
           return (
-            <Paper key={ti} sx={{ p: 3 }} variant="outlined">
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.5, fontSize: '1.1rem' }}>
+            <Box
+              key={ti}
+              sx={{
+                p: { xs: 2, sm: 3 },
+                bgcolor: c.cardBg,
+                border: `2px solid ${c.divider}`,
+                borderRadius: '20px',
+                boxShadow: `4px 4px 0 ${c.divider}`,
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  gap: { xs: 0.75, sm: 1.5 },
+                  lineHeight: 2.2,
+                }}
+              >
                 {parts.map((part, pi) => (
                   <React.Fragment key={pi}>
-                    <Typography component="span" sx={{ fontSize: '1.1rem', lineHeight: 2 }}>
+                    <Typography
+                      component="span"
+                      sx={{
+                        fontSize: { xs: '0.95rem', sm: '1.1rem' },
+                        lineHeight: 2.2,
+                        color: c.body,
+                      }}
+                    >
                       {part}
                     </Typography>
                     {pi < parts.length - 1 && (() => {
@@ -108,32 +197,46 @@ const GapFillStory = ({ templates, wordBank, answers, onChange }) => {
                           sx={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            minWidth: '120px',
-                            height: '40px',
-                            px: 2,
-                            border: '2px dashed',
-                            borderColor: filledWord ? 'success.main' : (selectedWord ? 'primary.main' : 'grey.400'),
-                            borderRadius: 1,
-                            bgcolor: filledWord ? 'success.light' : (selectedWord ? 'primary.light' : 'grey.50'),
+                            minWidth: { xs: '100px', sm: '120px' },
+                            minHeight: '44px',
+                            px: 1.5,
+                            border: `2px ${filledWord ? 'solid' : 'dashed'}`,
+                            borderColor: filledWord
+                              ? c.green.border
+                              : (selectedWord ? c.purple.border : c.muted),
+                            borderRadius: '14px',
+                            bgcolor: filledWord
+                              ? c.green.bg
+                              : (selectedWord ? c.purple.bg : 'transparent'),
+                            boxShadow: filledWord
+                              ? `3px 3px 0 ${c.green.shadow}`
+                              : (selectedWord ? `2px 2px 0 ${c.purple.shadow}` : 'none'),
                             cursor: filledWord ? 'pointer' : (selectedWord ? 'pointer' : 'default'),
-                            transition: 'all 0.2s',
-                            position: 'relative',
-                            '&:hover': {
-                              transform: 'scale(1.05)',
-                              borderStyle: 'solid',
-                              borderColor: filledWord ? 'error.main' : 'primary.dark'
-                            }
+                            transition: 'all 0.15s',
+                            '&:hover': filledWord || selectedWord ? {
+                              transform: 'translate(-2px,-2px)',
+                              boxShadow: filledWord
+                                ? `5px 5px 0 ${c.green.shadow}`
+                                : `4px 4px 0 ${c.purple.shadow}`,
+                            } : {},
                           }}
                         >
                           {filledWord ? (
                             <>
-                              <Typography sx={{ fontSize: '1rem', fontWeight: 'bold', color: 'success.dark', flex: 1 }}>
+                              <Typography
+                                sx={{
+                                  fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                                  fontWeight: 800,
+                                  color: c.green.border,
+                                  flex: 1,
+                                }}
+                              >
                                 {filledWord}
                               </Typography>
-                              <Cancel sx={{ fontSize: '1rem', color: 'error.main', ml: 0.5 }} />
+                              <Cancel sx={{ fontSize: '1rem', color: c.muted, ml: 0.5 }} />
                             </>
                           ) : (
-                            <Typography sx={{ fontSize: '0.9rem', color: 'grey.500', fontStyle: 'italic' }}>
+                            <Typography sx={{ fontSize: '0.8rem', color: c.muted, fontStyle: 'italic', fontWeight: 600 }}>
                               {selectedWord ? 'Click here' : '...'}
                             </Typography>
                           )}
@@ -143,22 +246,32 @@ const GapFillStory = ({ templates, wordBank, answers, onChange }) => {
                   </React.Fragment>
                 ))}
               </Box>
-            </Paper>
+            </Box>
           )
         })}
-      </Stack>
+      </Box>
 
       {/* Completion Message */}
-      {usedWords === totalBlanks && (
-        <Paper sx={{ p: 3, mt: 4, textAlign: 'center', bgcolor: 'success.light' }}>
-          <CheckCircle sx={{ fontSize: 60, color: 'success.main', mb: 1 }} />
-          <Typography variant="h6" fontWeight="bold" color="success.dark">
+      {usedWords === totalBlanks && totalBlanks > 0 && (
+        <Box
+          sx={{
+            p: { xs: 2, sm: 3 },
+            mt: { xs: 2, sm: 4 },
+            textAlign: 'center',
+            bgcolor: c.green.bg,
+            border: `2px solid ${c.green.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${c.green.shadow}`,
+          }}
+        >
+          <CheckCircle sx={{ fontSize: { xs: 44, sm: 60 }, color: c.green.border, mb: 1 }} />
+          <Typography sx={{ fontSize: { xs: '1rem', sm: '1.15rem' }, fontWeight: 800, color: c.green.border }}>
             All Blanks Filled!
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography sx={{ fontSize: '0.85rem', color: c.muted, mt: 0.5 }}>
             Click Submit below to continue.
           </Typography>
-        </Paper>
+        </Box>
       )}
     </Box>
   )

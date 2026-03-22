@@ -1,9 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, Stack, TextField, Alert, LinearProgress } from '@mui/material'
+import { Box, Container, Typography, TextField, Stack, LinearProgress, useTheme } from '@mui/material'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
+
+const LIGHT = { pageBg: '#FFFDE7', orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' }, teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' }, blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' } }
+const DARK = { pageBg: '#0F0F1A', orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' }, green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' }, teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' }, blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' } }
 
 const ELEMENTS = [
   { id: 1, element: 'Contingency', exampleCritique: 'Essential if tested.' },
@@ -17,110 +21,102 @@ const ELEMENTS = [
 export default function Phase5Step4RemedialC1TaskD() {
   const navigate = useNavigate()
   const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 4, interaction: 4, context: 'remedial_c1' })
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const [currentIndex, setCurrentIndex] = useState(0)
   const [critiques, setCritiques] = useState(Array(6).fill(''))
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
 
-  const handleCritiqueChange = (value) => {
-    const newCritiques = [...critiques]
-    newCritiques[currentIndex] = value
-    setCritiques(newCritiques)
-  }
-
+  const clay = (color) => ({ bgcolor: color.bg, border: `2px solid ${color.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${color.shadow}`, p: 3 })
+  const handleCritiqueChange = (value) => { const c = [...critiques]; c[currentIndex] = value; setCritiques(c) }
   const handleNext = () => { if (currentIndex < 5) setCurrentIndex(currentIndex + 1) }
   const handlePrevious = () => { if (currentIndex > 0) setCurrentIndex(currentIndex - 1) }
 
   const handleSubmit = async () => {
     let correctCount = 0
-    critiques.forEach(critique => {
-      const words = critique.trim().split(/\s+/).filter(w => w.length > 0)
-      if (words.length >= 8) correctCount++
-    })
-
-    setScore(correctCount)
-    setSubmitted(true)
+    critiques.forEach(critique => { const words = critique.trim().split(/\s+/).filter(w => w.length > 0); if (words.length >= 8) correctCount++ })
+    setScore(correctCount); setSubmitted(true)
     sessionStorage.setItem('phase5_step4_remedial_c1_taskD_score', correctCount.toString())
-    try {
-      await phase5API.logRemedialActivity(4, 'C1', 'D', correctCount, 6, 0)
-    } catch (error) {
-      console.error('Failed to log task completion:', error)
-    }
+    try { await phase5API.logRemedialActivity(4, 'C1', 'D', correctCount, 6, 0) } catch (e) { console.error(e) }
   }
 
   const handleContinue = async () => {
-    const taskAScore = parseInt(sessionStorage.getItem('phase5_step4_remedial_c1_taskA_score') || '0')
-    const taskBScore = parseInt(sessionStorage.getItem('phase5_step4_remedial_c1_taskB_score') || '0')
-    const taskCScore = parseInt(sessionStorage.getItem('phase5_step4_remedial_c1_taskC_score') || '0')
-    const taskDScore = parseInt(sessionStorage.getItem('phase5_step4_remedial_c1_taskD_score') || '0')
-    const totalScore = taskAScore + taskBScore + taskCScore + taskDScore
-    const maxScore = 5 + 8 + 6 + 6
-    const threshold = Math.ceil(maxScore * 0.8)
-    const passed = totalScore >= threshold
-
-    try {
-      await phase5API.calculateRemedialScore(4, 'C1', {
-        task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore, task_d_score: taskDScore
-      })
-    } catch (error) {
-      console.error('Failed to log final score:', error)
-    }
-
-    if (passed) {
-      navigate('/dashboard')
-    } else {
-      navigate('/phase5/subphase/1/step/4/remedial/c1/task/a')
-    }
+    const a = parseInt(sessionStorage.getItem('phase5_step4_remedial_c1_taskA_score') || '0')
+    const b = parseInt(sessionStorage.getItem('phase5_step4_remedial_c1_taskB_score') || '0')
+    const c = parseInt(sessionStorage.getItem('phase5_step4_remedial_c1_taskC_score') || '0')
+    const d = parseInt(sessionStorage.getItem('phase5_step4_remedial_c1_taskD_score') || '0')
+    const total = a + b + c + d; const passed = total >= Math.ceil(25 * 0.8)
+    try { await phase5API.calculateRemedialScore(4, 'C1', { task_a_score: a, task_b_score: b, task_c_score: c, task_d_score: d }) } catch (e) { console.error(e) }
+    if (passed) navigate('/dashboard'); else navigate('/phase5/subphase/1/step/4/remedial/c1/task/a')
   }
 
   const progress = ((currentIndex + 1) / 6) * 100
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', color: 'white' }}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">Phase 5: Execution & Problem-Solving</Typography>
-        <Typography variant="h5" gutterBottom>Step 4: Remedial Practice - Level C1</Typography>
-        <Typography variant="h6" gutterBottom>Task D: Critique Game</Typography>
-        <Typography variant="body1">Critique 6 crisis elements with nuanced analysis</Typography>
-      </Paper>
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage speaker="Ms. Mabrouki" message="Welcome to Critique Game! Provide nuanced critiques for each crisis element. Show both strengths and limitations!" />
-      </Paper>
-      {!submitted ? (
-        <>
-          <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2">Element {currentIndex + 1} of 6</Typography>
-              <Typography variant="body2" color="primary" fontWeight="bold">{Math.round(progress)}% Complete</Typography>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ ...clay(P.orange), mb: 3 }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.orange.border }}>Phase 5: Execution & Problem-Solving</Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.orange.border }}>Step 4: Remedial Practice - Level C1</Typography>
+            <Typography variant="h6" gutterBottom sx={{ color: P.orange.border }}>Task D: Critique Game</Typography>
+            <Typography variant="body1">Critique 6 crisis elements with nuanced analysis</Typography>
+          </Box>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Box sx={{ ...clay(P.teal), mb: 3 }}>
+            <CharacterMessage speaker="Ms. Mabrouki" message="Welcome to Critique Game! Provide nuanced critiques for each crisis element. Show both strengths and limitations!" />
+          </Box>
+        </motion.div>
+        {!submitted ? (
+          <>
+            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+              <Box sx={{ ...clay(P.blue), mb: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2">Element {currentIndex + 1} of 6</Typography>
+                  <Typography variant="body2" fontWeight="bold" sx={{ color: P.blue.border }}>{Math.round(progress)}% Complete</Typography>
+                </Box>
+                <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 1 }} />
+              </Box>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <Box sx={{ ...clay(P.blue), mb: 3 }}>
+                <Typography variant="h6" gutterBottom sx={{ color: P.blue.border }}>Element: {ELEMENTS[currentIndex].element}</Typography>
+                <Box sx={{ bgcolor: P.blue.bg, border: `1px solid ${P.blue.border}`, borderRadius: '12px', p: 2, mb: 2 }}>
+                  <Typography variant="body2"><strong>Example critique:</strong> {ELEMENTS[currentIndex].exampleCritique}</Typography>
+                </Box>
+                <TextField fullWidth multiline rows={3} variant="outlined" placeholder="Write your nuanced critique here (8+ words)..." value={critiques[currentIndex]} onChange={(e) => handleCritiqueChange(e.target.value)} sx={{ mb: 2 }} />
+                <Stack direction="row" spacing={2} justifyContent="space-between">
+                  <Box component="button" onClick={handlePrevious} disabled={currentIndex === 0} sx={{ ...clay(P.blue), cursor: 'pointer', opacity: currentIndex === 0 ? 0.5 : 1, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.blue.shadow}` }, transition: 'all 0.15s' }}>
+                    <Typography variant="button" sx={{ color: P.blue.border }}>← Previous</Typography>
+                  </Box>
+                  {currentIndex === 5 ? (
+                    <Box component="button" onClick={handleSubmit} disabled={!critiques[currentIndex].trim()} sx={{ ...clay(P.orange), cursor: 'pointer', opacity: !critiques[currentIndex].trim() ? 0.6 : 1, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` }, transition: 'all 0.15s' }}>
+                      <Typography variant="button" fontWeight="bold" sx={{ color: P.orange.border }}>Submit All</Typography>
+                    </Box>
+                  ) : (
+                    <Box component="button" onClick={handleNext} disabled={!critiques[currentIndex].trim()} sx={{ ...clay(P.orange), cursor: 'pointer', opacity: !critiques[currentIndex].trim() ? 0.6 : 1, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` }, transition: 'all 0.15s' }}>
+                      <Typography variant="button" fontWeight="bold" sx={{ color: P.orange.border }}>Next →</Typography>
+                    </Box>
+                  )}
+                </Stack>
+              </Box>
+            </motion.div>
+          </>
+        ) : (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...clay(P.green), mb: 3, textAlign: 'center' }}>
+              <Typography variant="h5" sx={{ color: P.green.border }} gutterBottom>✓ Task D Complete!</Typography>
+              <Typography variant="h6" sx={{ mt: 2 }}>Score: {score} / 6</Typography>
+              <Typography variant="body1" sx={{ mt: 2 }}>All C1 remedial tasks completed! Calculating final score...</Typography>
             </Box>
-            <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 1 }} />
-          </Paper>
-          <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom color="primary">Element: {ELEMENTS[currentIndex].element}</Typography>
-            <Alert severity="info" sx={{ mb: 2 }}>
-              <Typography variant="body2"><strong>Example critique:</strong> {ELEMENTS[currentIndex].exampleCritique}</Typography>
-            </Alert>
-            <TextField fullWidth multiline rows={3} variant="outlined" placeholder="Write your nuanced critique here (8+ words)..." value={critiques[currentIndex]} onChange={(e) => handleCritiqueChange(e.target.value)} sx={{ mb: 2 }} />
-            <Stack direction="row" spacing={2} justifyContent="space-between">
-              <Button variant="outlined" onClick={handlePrevious} disabled={currentIndex === 0}>← Previous</Button>
-              {currentIndex === 5 ? (
-                <Button variant="contained" color="primary" onClick={handleSubmit} disabled={!critiques[currentIndex].trim()}>Submit All</Button>
-              ) : (
-                <Button variant="contained" color="primary" onClick={handleNext} disabled={!critiques[currentIndex].trim()}>Next →</Button>
-              )}
-            </Stack>
-          </Paper>
-        </>
-      ) : (
-        <>
-          <Paper elevation={3} sx={{ p: 4, mb: 3, backgroundColor: 'success.lighter', textAlign: 'center' }}>
-            <Typography variant="h5" color="success.dark" gutterBottom>✓ Task D Complete!</Typography>
-            <Typography variant="h6" sx={{ mt: 2 }}>Score: {score} / 6</Typography>
-            <Typography variant="body1" sx={{ mt: 2 }}>All C1 remedial tasks completed! Calculating final score...</Typography>
-          </Paper>
-          <Button variant="contained" color="success" onClick={handleContinue} size="large" fullWidth>Continue to Final Results →</Button>
-        </>
-      )}
+            <Box component="button" onClick={handleContinue} sx={{ ...clay(P.green), cursor: 'pointer', width: '100%', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }, transition: 'all 0.15s' }}>
+              <Typography variant="button" fontWeight="bold" sx={{ color: P.green.border }}>Continue to Final Results →</Typography>
+            </Box>
+          </motion.div>
+        )}
+      </Container>
     </Box>
   )
 }

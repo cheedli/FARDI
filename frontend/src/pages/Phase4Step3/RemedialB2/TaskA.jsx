@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, Avatar, IconButton, Chip, LinearProgress } from '@mui/material'
+import { Box, Typography, Container, LinearProgress } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import SendIcon from '@mui/icons-material/Send'
 import CheckIcon from '@mui/icons-material/Check'
@@ -8,11 +10,29 @@ import DoneAllIcon from '@mui/icons-material/DoneAll'
 import VolumeUpIcon from '@mui/icons-material/VolumeUp'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  blue:   { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+  green:  { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+  red:    { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+  teal:   { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  blue:   { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+  green:  { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+  red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+  yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+  teal:   { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+}
+
 /**
  * Phase 4 Step 3 - Remedial B2 - Task A: Role-Play Saga
  * WhatsApp/Messenger-style chat interface
- * Complete dialogue on video terms
- * Score: +1 for each correct answer (10 total)
+ * Score: 10 pts
  */
 
 const WORD_BANK_ORIGINAL = [
@@ -36,6 +56,8 @@ const DIALOGUE_MESSAGES = [
 
 export default function RemedialB2TaskA() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 1, context: 'remedial_b2' })
   const [wordBank] = useState(() => [...WORD_BANK_ORIGINAL].sort(() => Math.random() - 0.5))
   const [selectedWord, setSelectedWord] = useState(null)
@@ -45,6 +67,14 @@ export default function RemedialB2TaskA() {
   const [score, setScore] = useState(0)
   const [completed, setCompleted] = useState(false)
   const messagesEndRef = useRef(null)
+
+  const cardSx = (color) => ({
+    bgcolor: P[color].bg,
+    border: `2px solid ${P[color].border}`,
+    borderRadius: '20px',
+    boxShadow: `4px 4px 0 ${P[color].shadow}`,
+    p: 3,
+  })
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -64,7 +94,6 @@ export default function RemedialB2TaskA() {
       }])
       setCurrentMessageIndex(prev => prev + 1)
 
-      // If this was a question, immediately show the next message (user's response)
       if (message.type === 'question' && currentMessageIndex + 1 < DIALOGUE_MESSAGES.length) {
         const nextMessage = DIALOGUE_MESSAGES[currentMessageIndex + 1]
         if (nextMessage.type === 'response') {
@@ -82,8 +111,6 @@ export default function RemedialB2TaskA() {
 
   const handleWordClick = (word) => {
     setSelectedWord(word)
-
-    // Auto-fill first empty blank
     const currentUserMessage = displayedMessages.find(msg => msg.sender === 'YOU' && msg.type === 'response' && !msg.sent)
     if (currentUserMessage) {
       const firstEmptyBlankIndex = currentUserMessage.blanks.findIndex((_, idx) => !answers[`msg${currentUserMessage.id}_blank${idx}`])
@@ -97,19 +124,11 @@ export default function RemedialB2TaskA() {
 
   const handleBlankClick = (messageId, blankIndex) => {
     const key = `msg${messageId}_blank${blankIndex}`
-
-    // Double-click to remove (check if already filled)
     if (answers[key]) {
-      setAnswers(prev => {
-        const newAnswers = { ...prev }
-        delete newAnswers[key]
-        return newAnswers
-      })
+      setAnswers(prev => { const n = { ...prev }; delete n[key]; return n })
       if (navigator.vibrate) navigator.vibrate(50)
       return
     }
-
-    // Single click with selected word to fill
     if (selectedWord) {
       setAnswers(prev => ({ ...prev, [key]: selectedWord }))
       setSelectedWord(null)
@@ -120,7 +139,6 @@ export default function RemedialB2TaskA() {
   const handleSendMessage = (messageId) => {
     const message = DIALOGUE_MESSAGES.find(m => m.id === messageId)
     if (!message || !message.blanks) return
-
     const allFilled = message.blanks.every((_, idx) => answers[`msg${messageId}_blank${idx}`])
     if (!allFilled) return
 
@@ -163,9 +181,14 @@ export default function RemedialB2TaskA() {
   const renderMessageContent = (message) => {
     if (message.type === 'question') {
       return (
-        <Box>
-          <Typography variant="body1" sx={{ color: '#2c3e50', fontWeight: 500 }}>{message.text}</Typography>
-          {message.audio && <IconButton size="small" onClick={() => playAudio(message.text)} sx={{ ml: 1, p: 0.5 }}><VolumeUpIcon fontSize="small" /></IconButton>}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="body1" sx={{ fontWeight: 500 }}>{message.text}</Typography>
+          {message.audio && (
+            <Box component="button" onClick={() => playAudio(message.text)}
+              sx={{ bgcolor: 'transparent', border: 'none', cursor: 'pointer', p: 0.5, display: 'flex', alignItems: 'center', color: P.blue.border }}>
+              <VolumeUpIcon fontSize="small" />
+            </Box>
+          )}
         </Box>
       )
     }
@@ -173,9 +196,16 @@ export default function RemedialB2TaskA() {
     if (message.type === 'response') {
       if (message.sent) {
         const parts = message.template.split(/_{3,}/)
-        return <Typography variant="body1" sx={{ color: '#2c3e50', fontWeight: 500 }}>{parts.map((part, idx) => (
-          <React.Fragment key={idx}>{part}{idx < parts.length - 1 && <strong style={{ color: '#1976d2' }}>{answers[`msg${message.id}_blank${idx}`]}</strong>}</React.Fragment>
-        ))}</Typography>
+        return (
+          <Typography variant="body1" sx={{ fontWeight: 500 }}>
+            {parts.map((part, idx) => (
+              <React.Fragment key={idx}>
+                {part}
+                {idx < parts.length - 1 && <strong style={{ color: P.blue.border }}>{answers[`msg${message.id}_blank${idx}`]}</strong>}
+              </React.Fragment>
+            ))}
+          </Typography>
+        )
       }
 
       const parts = message.template.split(/_{3,}/)
@@ -183,20 +213,41 @@ export default function RemedialB2TaskA() {
 
       return (
         <Box>
-          <Typography variant="caption" sx={{ display: 'block', mb: 1, color: '#1a252f', fontWeight: 600, fontSize: '0.75rem' }}>Tap words to complete your message:</Typography>
+          <Typography variant="caption" sx={{ display: 'block', mb: 1, fontWeight: 700, fontSize: '0.75rem', color: P.orange.border }}>
+            Tap words to complete your message:
+          </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5 }}>
             {parts.map((part, idx) => (
               <React.Fragment key={idx}>
-                <Typography component="span" variant="body2" sx={{ color: '#2c3e50', fontWeight: 500 }}>{part}</Typography>
+                <Typography component="span" variant="body2" sx={{ fontWeight: 500 }}>{part}</Typography>
                 {idx < parts.length - 1 && (
-                  <Chip label={answers[`msg${message.id}_blank${idx}`] || 'tap here'} onClick={() => handleBlankClick(message.id, idx)} size="small"
-                    sx={{ bgcolor: answers[`msg${message.id}_blank${idx}`] ? '#1976d2' : '#fff', color: answers[`msg${message.id}_blank${idx}`] ? '#fff' : '#666', fontWeight: 'bold', cursor: selectedWord ? 'pointer' : 'default', minWidth: 80, fontSize: '0.8rem', height: 28, border: '2px dashed', borderColor: answers[`msg${message.id}_blank${idx}`] ? '#1976d2' : '#999', '&:hover': { bgcolor: selectedWord ? '#1565c0' : '#f0f0f0', borderColor: selectedWord ? '#1565c0' : '#666' } }}
-                  />
+                  <Box component="button" onClick={() => handleBlankClick(message.id, idx)}
+                    sx={{
+                      bgcolor: answers[`msg${message.id}_blank${idx}`] ? P.blue.border : P.yellow.bg,
+                      color: answers[`msg${message.id}_blank${idx}`] ? 'white' : P.yellow.shadow,
+                      border: `2px dashed ${answers[`msg${message.id}_blank${idx}`] ? P.blue.border : P.yellow.border}`,
+                      borderRadius: '10px', fontWeight: 'bold', cursor: selectedWord ? 'pointer' : 'default',
+                      minWidth: 80, fontSize: '0.8rem', px: 1.5, py: 0.5,
+                      '&:hover': { transform: selectedWord ? 'translate(-1px,-1px)' : 'none' }
+                    }}
+                  >
+                    {answers[`msg${message.id}_blank${idx}`] || 'tap here'}
+                  </Box>
                 )}
               </React.Fragment>
             ))}
           </Box>
-          {allFilled && <Button size="small" variant="contained" endIcon={<SendIcon />} onClick={() => handleSendMessage(message.id)} sx={{ mt: 1.5, bgcolor: '#25D366', color: '#fff', textTransform: 'none', fontSize: '0.85rem', py: 0.5, '&:hover': { bgcolor: '#20BD5A' } }}>Send</Button>}
+          {allFilled && (
+            <Box component="button" onClick={() => handleSendMessage(message.id)}
+              sx={{
+                ...cardSx('green'), mt: 1.5, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1,
+                px: 3, py: 1, fontSize: '0.85rem', fontWeight: 'bold', color: P.green.border, transition: 'all 0.2s',
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }
+              }}
+            >
+              <SendIcon fontSize="small" /> Send
+            </Box>
+          )}
         </Box>
       )
     }
@@ -204,83 +255,153 @@ export default function RemedialB2TaskA() {
 
   if (completed) {
     return (
-      <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-        <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', color: 'white' }}>
-          <Typography variant="h4" gutterBottom fontWeight="bold">Phase 4 - Step 3: Remedial Activities</Typography>
-          <Typography variant="h5">Level B2 - Task A: Role-Play Saga Complete! 🎉</Typography>
-        </Paper>
-        <Paper elevation={6} sx={{ p: 4, textAlign: 'center', mb: 3 }}>
-          <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: '#e74c3c' }}>{score} / 10</Typography>
-          <Typography variant="h6" color="text.secondary">Points Earned</Typography>
-          <Typography variant="body1" sx={{ mt: 2 }}>Saga Progress: {((score / 10) * 100).toFixed(0)}% Unfolded</Typography>
-        </Paper>
-        <Box sx={{ textAlign: 'center' }}>
-          <Button variant="contained" size="large" onClick={() => navigate('/phase4/step3/remedial/b2/taskB')} sx={{ py: 2, px: 6, fontSize: '1.1rem', fontWeight: 'bold', background: 'linear-gradient(135deg, #27ae60 0%, #229954 100%)', '&:hover': { background: 'linear-gradient(135deg, #229954 0%, #1e8449 100%)' } }}>
-            Continue to Task B: Explain Expedition →
-          </Button>
-        </Box>
+      <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+        <Container maxWidth="md">
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...cardSx('orange'), mb: 3 }}>
+              <Typography variant="h4" gutterBottom fontWeight="bold">Phase 4 - Step 3: Remedial Activities</Typography>
+              <Typography variant="h5">Level B2 - Task A: Role-Play Saga Complete! 🎉</Typography>
+            </Box>
+            <Box sx={{ ...cardSx('green'), mb: 3, textAlign: 'center', p: 5 }}>
+              <Typography variant="h3" gutterBottom fontWeight="bold">{score} / 10</Typography>
+              <Typography variant="h6" color="text.secondary">Points Earned</Typography>
+              <Typography variant="body1" sx={{ mt: 2 }}>Saga Progress: {((score / 10) * 100).toFixed(0)}% Unfolded</Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center' }}>
+              <Box component="button" onClick={() => navigate('/phase4/step3/remedial/b2/taskB')}
+                sx={{
+                  ...cardSx('green'), cursor: 'pointer', px: 6, py: 2,
+                  fontSize: '1.1rem', fontWeight: 'bold', color: P.green.border, transition: 'all 0.2s',
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }
+                }}
+              >
+                Continue to Task B: Explain Expedition →
+              </Box>
+            </Box>
+          </motion.div>
+        </Container>
       </Box>
     )
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', color: 'white' }}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">Phase 4 - Step 3: Remedial Activities</Typography>
-        <Typography variant="h5" gutterBottom>Level B2 - Task A: Role-Play Saga 💬</Typography>
-        <Typography variant="body1">Complete the dialogue about advertising concepts!</Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
 
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage character="MS. MABROUKI" message="Welcome to the Role-Play Saga! 💬 This is a group chat conversation. Read the messages and complete your responses by tapping words from the word bank, then tapping the blanks in your message. Send each complete message to continue the saga!" />
-      </Paper>
-
-      <Paper elevation={4} sx={{ maxWidth: 600, mx: 'auto', bgcolor: '#E5DDD5', backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,.03) 10px, rgba(0,0,0,.03) 20px)', borderRadius: 2, overflow: 'hidden' }}>
-        <Box sx={{ bgcolor: '#075E54', color: 'white', p: 1.5, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar sx={{ bgcolor: '#25D366', width: 36, height: 36 }}><Typography variant="caption" fontWeight="bold">B2</Typography></Avatar>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="subtitle2" fontWeight="bold">Advertising Team Chat</Typography>
-            <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>Ms. Mabrouki, Lilia, You</Typography>
+          <Box sx={{ ...cardSx('orange'), mb: 3 }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold">Phase 4 - Step 3: Remedial Activities</Typography>
+            <Typography variant="h5" gutterBottom>Level B2 - Task A: Role-Play Saga 💬</Typography>
+            <Typography variant="body1">Complete the dialogue about advertising concepts!</Typography>
           </Box>
-          <Chip label={`${score}/10`} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 'bold', height: 24 }} />
-        </Box>
 
-        <Box sx={{ p: 2, minHeight: 400, maxHeight: 500, overflowY: 'auto' }}>
-          {displayedMessages.map((message, index) => (
-            <Box key={index} sx={{ display: 'flex', justifyContent: message.sender === 'YOU' ? 'flex-end' : 'flex-start', mb: 1.5, alignItems: 'flex-end' }}>
-              {message.sender !== 'YOU' && <Avatar sx={{ bgcolor: AVATARS[message.sender]?.color || '#666', width: 28, height: 28, mr: 0.5, fontSize: '0.7rem' }}>{AVATARS[message.sender]?.initials}</Avatar>}
-              <Paper elevation={1} sx={{ maxWidth: '70%', p: 1.5, bgcolor: message.sender === 'YOU' ? '#DCF8C6' : 'white', borderRadius: message.sender === 'YOU' ? '8px 8px 0 8px' : '8px 8px 8px 0' }}>
-                {message.sender !== 'YOU' && <Typography variant="caption" fontWeight="bold" sx={{ color: AVATARS[message.sender]?.color, display: 'block', mb: 0.5, fontSize: '0.7rem' }}>{message.sender}</Typography>}
-                {renderMessageContent(message)}
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                  <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'rgba(0,0,0,0.45)' }}>{message.timestamp}</Typography>
-                  {message.sender === 'YOU' && message.status && (
-                    <Box sx={{ color: message.status === 'read' ? '#4FC3F7' : 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center' }}>
-                      {message.status === 'sent' && <CheckIcon sx={{ fontSize: 16 }} />}
-                      {(message.status === 'delivered' || message.status === 'read') && <DoneAllIcon sx={{ fontSize: 16 }} />}
+          <Box sx={{ ...cardSx('blue'), mb: 3 }}>
+            <CharacterMessage character="MS. MABROUKI" message="Welcome to the Role-Play Saga! 💬 This is a group chat conversation. Read the messages and complete your responses by tapping words from the word bank, then tapping the blanks in your message. Send each complete message to continue the saga!" />
+          </Box>
+
+          {/* Chat window */}
+          <Box sx={{
+            maxWidth: 600, mx: 'auto',
+            bgcolor: theme.palette.mode === 'dark' ? '#1A2332' : '#E5DDD5',
+            borderRadius: '20px', overflow: 'hidden',
+            border: `2px solid ${P.teal.border}`,
+            boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+          }}>
+            {/* Chat header */}
+            <Box sx={{ bgcolor: theme.palette.mode === 'dark' ? P.teal.bg : '#075E54', color: 'white', p: 1.5, display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ bgcolor: P.teal.border, width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Typography variant="caption" fontWeight="bold" sx={{ color: 'white' }}>B2</Typography>
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: 'white' }}>Advertising Team Chat</Typography>
+                <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.8)' }}>Ms. Mabrouki, Lilia, You</Typography>
+              </Box>
+              <Box sx={{
+                bgcolor: 'rgba(255,255,255,0.2)', borderRadius: '12px', px: 1.5, py: 0.5,
+                border: '1px solid rgba(255,255,255,0.4)'
+              }}>
+                <Typography variant="caption" fontWeight="bold" sx={{ color: 'white' }}>{score}/10</Typography>
+              </Box>
+            </Box>
+
+            {/* Messages */}
+            <Box sx={{ p: 2, minHeight: 400, maxHeight: 500, overflowY: 'auto' }}>
+              {displayedMessages.map((message, index) => (
+                <Box key={index} sx={{ display: 'flex', justifyContent: message.sender === 'YOU' ? 'flex-end' : 'flex-start', mb: 1.5, alignItems: 'flex-end' }}>
+                  {message.sender !== 'YOU' && (
+                    <Box sx={{ bgcolor: AVATARS[message.sender]?.color || '#666', width: 28, height: 28, borderRadius: '50%', mr: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Typography variant="caption" sx={{ color: 'white', fontSize: '0.65rem', fontWeight: 'bold' }}>{AVATARS[message.sender]?.initials}</Typography>
                     </Box>
                   )}
+                  <Box sx={{
+                    maxWidth: '70%', p: 1.5,
+                    bgcolor: message.sender === 'YOU'
+                      ? (theme.palette.mode === 'dark' ? '#1B5E20' : '#DCF8C6')
+                      : (theme.palette.mode === 'dark' ? '#1E3A5F' : 'white'),
+                    borderRadius: message.sender === 'YOU' ? '12px 12px 0 12px' : '12px 12px 12px 0',
+                    border: `1px solid ${message.sender === 'YOU' ? P.green.border : P.blue.border}`,
+                  }}>
+                    {message.sender !== 'YOU' && (
+                      <Typography variant="caption" fontWeight="bold" sx={{ color: AVATARS[message.sender]?.color, display: 'block', mb: 0.5, fontSize: '0.7rem' }}>
+                        {message.sender}
+                      </Typography>
+                    )}
+                    {renderMessageContent(message)}
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                      <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'text.secondary' }}>{message.timestamp}</Typography>
+                      {message.sender === 'YOU' && message.status && (
+                        <Box sx={{ color: message.status === 'read' ? P.blue.border : 'text.secondary', display: 'flex', alignItems: 'center' }}>
+                          {message.status === 'sent' && <CheckIcon sx={{ fontSize: 16 }} />}
+                          {(message.status === 'delivered' || message.status === 'read') && <DoneAllIcon sx={{ fontSize: 16 }} />}
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
                 </Box>
-              </Paper>
+              ))}
+              <div ref={messagesEndRef} />
             </Box>
-          ))}
-          <div ref={messagesEndRef} />
-        </Box>
 
-        <Box sx={{ bgcolor: '#F0F0F0', p: 2, borderTop: '1px solid #D1D1D1' }}>
-          <Typography variant="caption" sx={{ display: 'block', mb: 1, color: '#1a252f', fontWeight: 700, fontSize: '0.85rem' }}>Tap words to auto-fill blanks (tap filled blank to remove):</Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {wordBank.map((word, idx) => (
-              <Chip key={idx} label={word} onClick={() => handleWordClick(word)} size="small"
-                sx={{ bgcolor: selectedWord === word ? '#25D366' : 'white', color: selectedWord === word ? 'white' : '#2c3e50', fontWeight: selectedWord === word ? 'bold' : '600', cursor: 'pointer', fontSize: '0.85rem', height: 32, border: '1px solid', borderColor: selectedWord === word ? '#25D366' : '#D1D1D1', '&:hover': { bgcolor: selectedWord === word ? '#20BD5A' : '#E8E8E8' } }}
-              />
-            ))}
+            {/* Word bank */}
+            <Box sx={{ bgcolor: theme.palette.mode === 'dark' ? P.yellow.bg : '#F0F0F0', p: 2, borderTop: `1px solid ${P.yellow.border}` }}>
+              <Typography variant="caption" sx={{ display: 'block', mb: 1, fontWeight: 700, fontSize: '0.85rem', color: P.orange.border }}>
+                Tap words to auto-fill blanks (tap filled blank to remove):
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {wordBank.map((word, idx) => (
+                  <Box key={idx} component="button" onClick={() => handleWordClick(word)}
+                    sx={{
+                      bgcolor: selectedWord === word ? P.green.border : P.blue.bg,
+                      color: selectedWord === word ? 'white' : P.blue.border,
+                      fontWeight: selectedWord === word ? 'bold' : '600',
+                      cursor: 'pointer', fontSize: '0.85rem',
+                      border: `2px solid ${selectedWord === word ? P.green.border : P.blue.border}`,
+                      borderRadius: '12px', px: 1.5, py: 0.5, transition: 'all 0.15s',
+                      '&:hover': { transform: 'translate(-1px,-1px)', bgcolor: selectedWord === word ? P.green.shadow : P.blue.border, color: 'white' }
+                    }}
+                  >
+                    {word}
+                  </Box>
+                ))}
+              </Box>
+              {selectedWord && (
+                <Box sx={{ ...cardSx('yellow'), mt: 1.5, p: 1 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, fontSize: '0.9rem' }}>
+                    Filling next blank with: "{selectedWord}"
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+
+            <LinearProgress
+              variant="determinate"
+              value={(currentMessageIndex / DIALOGUE_MESSAGES.length) * 100}
+              sx={{ height: 4, bgcolor: 'rgba(0,0,0,0.1)', '& .MuiLinearProgress-bar': { bgcolor: P.green.border } }}
+            />
           </Box>
-          {selectedWord && <Typography variant="caption" sx={{ display: 'block', mt: 1.5, color: '#1a252f', fontWeight: 700, fontSize: '0.9rem', bgcolor: '#fff3cd', p: 1, borderRadius: 1, border: '2px solid #ffc107' }}>Filling next blank with: "{selectedWord}"</Typography>}
-        </Box>
 
-        <LinearProgress variant="determinate" value={(currentMessageIndex / DIALOGUE_MESSAGES.length) * 100} sx={{ height: 3, bgcolor: 'rgba(0,0,0,0.1)', '& .MuiLinearProgress-bar': { bgcolor: '#25D366' } }} />
-      </Paper>
+        </motion.div>
+      </Container>
     </Box>
   )
 }

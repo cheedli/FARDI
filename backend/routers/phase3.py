@@ -6,11 +6,49 @@ Preserves exact response shapes expected by the frontend.
 import json
 import re
 import logging
+import sqlite3
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
 from auth_utils import get_current_user
 from services.ai_service import AIService
+
+
+def get_db_connection():
+    conn = sqlite3.connect('fardi.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def save_phase3_progress(user_id, step, interaction=None, context='main', score=None, item_id=None, item_type=None, prompt=None, answer=None, is_correct=None):
+    """Save progress and optionally a response for Phase 3."""
+    conn = get_db_connection()
+    try:
+        # Upsert resume pointer
+        conn.execute(
+            """INSERT INTO student_progress (user_id, phase, step, interaction, context, is_complete)
+               VALUES (?, 3, ?, ?, ?, 0)
+               ON CONFLICT(user_id, phase) DO UPDATE SET
+                   step = excluded.step,
+                   interaction = excluded.interaction,
+                   context = excluded.context""",
+            (user_id, step, interaction or 0, context)
+        )
+        # Insert response if answer provided
+        if answer is not None:
+            is_correct_int = None
+            if is_correct is not None:
+                is_correct_int = 1 if is_correct else 0
+            answer_val = answer if isinstance(answer, str) else json.dumps(answer)
+            conn.execute(
+                """INSERT INTO student_responses
+                    (user_id, phase, step, interaction, item_index, context, item_id, item_type, prompt, response, is_correct, score)
+                   VALUES (?, 3, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)""",
+                (user_id, step, interaction or 0, context, item_id, item_type, prompt, answer_val, is_correct_int, score)
+            )
+        conn.commit()
+    finally:
+        conn.close()
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +149,14 @@ async def calculate_step_score(step_id: int, request: Request, user: dict = Depe
 
         logger.info(f"Phase 3 Step {step_id} - User {user_id}: I1={interaction1_score}, I2={interaction2_score}, I3={interaction3_score}, Total={total_score}, Level={remedial_level}, Proceed={should_proceed}")
 
+        # Save to DB
+        save_phase3_progress(
+            user_id, step=step_id, interaction=None, context='main',
+            score=total_score, item_id=f'step{step_id}_score', item_type='score',
+            prompt=f'Phase 3 Step {step_id} Score', answer=json.dumps({'i1': interaction1_score, 'i2': interaction2_score, 'i3': interaction3_score}),
+            is_correct=should_proceed
+        )
+
         # Max scores depend on step
         if step_id <= 3:
             i1_max, i2_max, i3_max, total_max = 8, 8, 5, 21
@@ -168,6 +214,15 @@ async def log_remedial_task(request: Request, user: dict = Depends(get_current_u
 
         logger.info(f"Phase 3 Remedial {level} Task {task} - User {user_id}: Score={score}/{max_score}, Time={time_taken}s")
 
+        # Save to DB
+        save_phase3_progress(
+            user_id, step=0, interaction=None, context=f'remedial_{level.lower()}',
+            score=score, item_id=f'remedial_{level}_{task}', item_type='remedial',
+            prompt=f'Phase 3 Remedial {level} Task {task}',
+            answer=json.dumps({'score': score, 'max_score': max_score, 'time_taken': time_taken}),
+            is_correct=score >= (max_score * 0.6) if max_score > 0 else None
+        )
+
         return {
             'success': True,
             'message': 'Remedial task logged successfully'
@@ -210,6 +265,15 @@ async def log_interaction(request: Request, user: dict = Depends(get_current_use
 
         logger.info(f"Phase 3 Step {step} Interaction {interaction} - User {user_id}: Score={score}/{max_score}, Time={time_taken}s")
 
+        # Save to DB
+        save_phase3_progress(
+            user_id, step=step, interaction=interaction, context='main',
+            score=score, item_id=f'step{step}_i{interaction}', item_type='interaction',
+            prompt=f'Phase 3 Step {step} Interaction {interaction}',
+            answer=json.dumps({'score': score, 'max_score': max_score, 'time_taken': time_taken}),
+            is_correct=completed
+        )
+
         return {
             'success': True,
             'message': 'Interaction logged successfully'
@@ -240,13 +304,22 @@ async def submit_interaction(interaction_id: int, request: Request, user: dict =
         # TODO: Implement AI assessment using services/ai_service.py
         # For now, return mock assessment
 
+        assessment = {
+            'score': 3,  # Mock B1 level
+            'level': 'B1',
+            'feedback': 'Good use of financial vocabulary!'
+        }
+
+        # Save to DB
+        save_phase3_progress(
+            user_id, step=0, interaction=interaction_id, context='main',
+            score=assessment['score'], item_id=f'interaction_{interaction_id}', item_type=interaction_type,
+            prompt=f'Phase 3 Interaction {interaction_id}', answer=user_response,
+        )
+
         return {
             'success': True,
-            'assessment': {
-                'score': 3,  # Mock B1 level
-                'level': 'B1',
-                'feedback': 'Good use of financial vocabulary!'
-            }
+            'assessment': assessment
         }
 
     except Exception as e:
@@ -367,6 +440,15 @@ Respond ONLY with a JSON object in this exact format:
             print(f"  Feedback: {eval_result['feedback']}")
         print("="*60 + "\n")
 
+        # Save evaluations to DB
+        save_phase3_progress(
+            user_id, step=0, interaction=None, context=f'remedial_{level.lower()}',
+            score=total_score, item_id=f'remedial_eval_{level}_{task}', item_type='remedial_eval',
+            prompt=f'Phase 3 Remedial {level} Task {task} Evaluation',
+            answer=json.dumps({'evaluations': evaluations, 'total_score': total_score, 'max_score': len(answers)}),
+            is_correct=total_score >= (len(answers) * 0.6) if len(answers) > 0 else None
+        )
+
         return {
             'success': True,
             'evaluations': evaluations,
@@ -403,6 +485,13 @@ async def evaluate_budget(request: Request, user: dict = Depends(get_current_use
 
         level_map = {1: 'A1', 2: 'A2', 3: 'B1', 4: 'B2', 5: 'C1'}
         level = level_map.get(score, 'A1')
+
+        # Save to DB
+        save_phase3_progress(
+            user_id, step=4, interaction=1, context='main',
+            score=score, item_id='step4_budget', item_type='budget',
+            prompt='Budget Creation', answer=json.dumps({'cost_items': cost_items, 'funding_sources': funding_sources}),
+        )
 
         return {
             'success': True,
@@ -446,6 +535,13 @@ async def evaluate_pitch(request: Request, user: dict = Depends(get_current_user
 
         level_map = {1: 'A1', 2: 'A2', 3: 'B1', 4: 'B2', 5: 'C1'}
         level = level_map.get(score, 'A1')
+
+        # Save to DB
+        save_phase3_progress(
+            user_id, step=4, interaction=2, context='main',
+            score=score, item_id='step4_pitch', item_type='pitch',
+            prompt=f'Sponsor Pitch - {sponsor}', answer=pitch,
+        )
 
         return {
             'success': True,

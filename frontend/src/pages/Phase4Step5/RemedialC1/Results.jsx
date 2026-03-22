@@ -1,197 +1,163 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Container, Typography, Box, Button, Paper, LinearProgress } from '@mui/material'
-import Avatar from '../../../components/Avatar'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import CancelIcon from '@mui/icons-material/Cancel'
+import { Box, Typography, Stack, Container, useTheme, LinearProgress } from '@mui/material'
+import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { motion } from 'framer-motion'
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5010/'
+/**
+ * Phase 4 Step 5 - Remedial C1 - Results Page
+ * Total: 42 points (4+8+6+6+6+6+6)
+ * Pass threshold: 34/42 (80%)
+ */
 
-const Results = () => {
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  blue:   { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+  green:  { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+  purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+  teal:   { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+  red:    { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  blue:   { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+  green:  { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+  purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
+  teal:   { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+  red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+}
+
+const TASKS = [
+  { key: 'taskA', label: 'Task A - Debate Dominion', icon: '💬', max: 4 },
+  { key: 'taskB', label: 'Task B - Analysis Odyssey', icon: '📝', max: 8 },
+  { key: 'taskC', label: 'Task C - Quizlet Live', icon: '🎯', max: 6 },
+  { key: 'taskD', label: 'Task D - Tense Odyssey', icon: '⏰', max: 6 },
+  { key: 'taskE', label: 'Task E - Clause Conquest', icon: '🏆', max: 6 },
+  { key: 'taskF', label: 'Task F - Debate Duel Advanced', icon: '🎭', max: 6 },
+  { key: 'taskG', label: 'Task G - Correction Crusade', icon: '⚔️', max: 6 },
+]
+const MAX_TOTAL = 42
+const PASS_THRESHOLD = 34
+
+export default function Phase4Step5RemedialC1Results() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
+  const [loading, setLoading] = useState(true)
+  const [scores, setScores] = useState(null)
   const [countdown, setCountdown] = useState(10)
 
-  // Retrieve scores from session storage
-  const taskAScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_c1_taskA_score')) || 0
-  const taskBScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_c1_taskB_score')) || 0
-  const taskCScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_c1_taskC_score')) || 0
-  const taskDScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_c1_taskD_score')) || 0
-  const taskEScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_c1_taskE_score')) || 0
-  const taskFScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_c1_taskF_score')) || 0
-  const taskGScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_c1_taskG_score')) || 0
-
-  const totalScore = taskAScore + taskBScore + taskCScore + taskDScore + taskEScore + taskFScore + taskGScore
-  const maxScore = 42 // 4 + 8 + 6 + 6 + 6 + 6 + 6
-  const passingScore = 34 // 80% of 42
-  const passed = totalScore >= passingScore
+  useEffect(() => { calculateFinalScore() }, [])
 
   useEffect(() => {
-    // Log final results
-    fetch(`${BASE_URL}api/phase4/step5/remedial/log`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        level: 'C1',
-        task: 'Results',
-        score: totalScore,
-        maxScore: maxScore,
-        passed: passed
+    if (!loading) {
+      if (countdown > 0) {
+        const timer = setTimeout(() => setCountdown(c => c - 1), 1000)
+        return () => clearTimeout(timer)
+      } else { handleRedirect() }
+    }
+  }, [countdown, loading])
+
+  const calculateFinalScore = async () => {
+    const taskScores = {}
+    let total = 0
+    TASKS.forEach(t => {
+      const s = parseInt(sessionStorage.getItem(`phase4_step5_remedial_c1_${t.key}_score`) || '0')
+      taskScores[t.key] = s; total += s
+    })
+    const passed = total >= PASS_THRESHOLD
+    try {
+      await fetch('/api/phase4/step5/remedial/log', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ level: 'C1', task: 'Results', score: total, maxScore: MAX_TOTAL, passed })
       })
-    }).catch(console.error)
+    } catch (e) { console.error(e) }
+    setScores({ ...taskScores, total, passed }); setLoading(false)
+  }
 
-    // Countdown timer
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          if (passed) {
-            navigate('/phase4/complete')
-          } else {
-            // Restart from Task A
-            sessionStorage.removeItem('phase4_step5_remedial_c1_taskA_score')
-            sessionStorage.removeItem('phase4_step5_remedial_c1_taskB_score')
-            sessionStorage.removeItem('phase4_step5_remedial_c1_taskC_score')
-            sessionStorage.removeItem('phase4_step5_remedial_c1_taskD_score')
-            sessionStorage.removeItem('phase4_step5_remedial_c1_taskE_score')
-            sessionStorage.removeItem('phase4_step5_remedial_c1_taskF_score')
-            sessionStorage.removeItem('phase4_step5_remedial_c1_taskG_score')
-            navigate('/phase4/step/5/remedial/c1/taskA')
-          }
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [passed, navigate])
-
-  const handleContinue = () => {
-    if (passed) {
+  const handleRedirect = () => {
+    if (!scores) return
+    if (scores.passed) {
       navigate('/phase4/complete')
     } else {
-      sessionStorage.removeItem('phase4_step5_remedial_c1_taskA_score')
-      sessionStorage.removeItem('phase4_step5_remedial_c1_taskB_score')
-      sessionStorage.removeItem('phase4_step5_remedial_c1_taskC_score')
-      sessionStorage.removeItem('phase4_step5_remedial_c1_taskD_score')
-      sessionStorage.removeItem('phase4_step5_remedial_c1_taskE_score')
-      sessionStorage.removeItem('phase4_step5_remedial_c1_taskF_score')
-      sessionStorage.removeItem('phase4_step5_remedial_c1_taskG_score')
+      TASKS.forEach(t => sessionStorage.removeItem(`phase4_step5_remedial_c1_${t.key}_score`))
       navigate('/phase4/step/5/remedial/c1/taskA')
     }
   }
 
+  if (loading) {
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: LIGHT.pageBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ textAlign: 'center' }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>Calculating your final score...</Typography>
+          <LinearProgress sx={{ width: 300, borderRadius: 1 }} />
+        </Box>
+      </Box>
+    )
+  }
+
+  const passed = scores.passed
+  const percentage = Math.round((scores.total / MAX_TOTAL) * 100)
+
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Paper
-        elevation={3}
-        sx={{
-          p: 4,
-          background: passed
-            ? 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)'
-            : 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)',
-          color: 'white',
-          minHeight: '70vh',
-          textAlign: 'center'
-        }}
-      >
-        <Box sx={{ mb: 3 }}>
-          {passed ? (
-            <CheckCircleIcon sx={{ fontSize: 80, color: 'white' }} />
-          ) : (
-            <CancelIcon sx={{ fontSize: 80, color: 'white' }} />
-          )}
-        </Box>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
 
-        <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold' }}>
-          {passed ? 'Congratulations!' : 'Keep Trying!'}
-        </Typography>
+          <Box sx={{ bgcolor: passed ? P.green.bg : P.orange.bg, border: `2px solid ${passed ? P.green.border : P.orange.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${passed ? P.green.shadow : P.orange.shadow}`, p: 5, textAlign: 'center', mb: 3 }}>
+            <Typography variant="h3" fontWeight="bold" sx={{ color: passed ? P.green.shadow : P.orange.shadow }}>
+              {passed ? '🎉 Congratulations! 🎉' : '💪 Keep Practicing! 💪'}
+            </Typography>
+            <Typography variant="h5" sx={{ color: passed ? P.green.border : P.orange.border, mt: 2 }}>Phase 4 Step 5 - Remedial C1</Typography>
 
-        <Typography variant="h5" sx={{ mb: 4 }}>
-          C1 Remedial Activities Complete
-        </Typography>
+            <Box sx={{ bgcolor: 'rgba(255,255,255,0.5)', borderRadius: '12px', p: 3, my: 3 }}>
+              <Stack spacing={1.5}>
+                {TASKS.map((task) => {
+                  const s = scores[task.key]
+                  return (
+                    <Box key={task.key}>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+                        <Typography variant="body2" fontWeight="bold" sx={{ color: passed ? P.green.shadow : P.orange.shadow }}>{task.icon} {task.label}:</Typography>
+                        <Typography variant="body2" fontWeight="bold" sx={{ color: passed ? P.green.shadow : P.orange.shadow }}>{s} / {task.max}</Typography>
+                      </Stack>
+                      <LinearProgress variant="determinate" value={(s / task.max) * 100} sx={{ height: 6, borderRadius: 3, bgcolor: 'rgba(0,0,0,0.1)', '& .MuiLinearProgress-bar': { bgcolor: passed ? P.green.border : P.orange.border } }} />
+                    </Box>
+                  )
+                })}
+              </Stack>
+            </Box>
 
-        <Paper sx={{ p: 3, mb: 3, bgcolor: 'rgba(255,255,255,0.2)' }}>
-          <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 2 }}>
-            Final Score: {totalScore}/{maxScore}
-          </Typography>
-          <LinearProgress
-            variant="determinate"
-            value={(totalScore / maxScore) * 100}
-            sx={{
-              height: 12,
-              borderRadius: 6,
-              bgcolor: 'rgba(255,255,255,0.3)',
-              '& .MuiLinearProgress-bar': {
-                bgcolor: passed ? '#f1c40f' : 'white'
-              }
-            }}
-          />
-          <Typography variant="body1" sx={{ mt: 2 }}>
-            Passing Score: {passingScore}/{maxScore} (80%)
-          </Typography>
-        </Paper>
+            <Box sx={{ bgcolor: 'rgba(255,255,255,0.3)', borderRadius: '12px', p: 3, mb: 3 }}>
+              <Typography variant="h4" fontWeight="bold" sx={{ color: passed ? P.green.shadow : P.orange.shadow }}>Total Score</Typography>
+              <Typography variant="h2" fontWeight="bold" sx={{ color: passed ? P.green.shadow : P.orange.shadow }}>{scores.total} / {MAX_TOTAL}</Typography>
+              <Typography variant="h5" sx={{ color: passed ? P.green.border : P.orange.border }}>({percentage}%)</Typography>
+              <Typography variant="body1" sx={{ mt: 1, color: passed ? P.green.shadow : P.orange.shadow }}>Pass Threshold: {PASS_THRESHOLD} / {MAX_TOTAL} (80%)</Typography>
+            </Box>
 
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Task Breakdown:
-          </Typography>
-          <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.1)', mb: 1 }}>
-            <Typography>Task A: Debate Dominion - {taskAScore}/4</Typography>
-          </Paper>
-          <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.1)', mb: 1 }}>
-            <Typography>Task B: Analysis Odyssey - {taskBScore}/8</Typography>
-          </Paper>
-          <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.1)', mb: 1 }}>
-            <Typography>Task C: Quizlet Live - {taskCScore}/6</Typography>
-          </Paper>
-          <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.1)', mb: 1 }}>
-            <Typography>Task D: Tense Odyssey - {taskDScore}/6</Typography>
-          </Paper>
-          <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.1)', mb: 1 }}>
-            <Typography>Task E: Clause Conquest - {taskEScore}/6</Typography>
-          </Paper>
-          <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.1)', mb: 1 }}>
-            <Typography>Task F: Debate Duel Advanced - {taskFScore}/6</Typography>
-          </Paper>
-          <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.1)', mb: 1 }}>
-            <Typography>Task G: Correction Crusade - {taskGScore}/6</Typography>
-          </Paper>
-        </Box>
+            <Typography variant="h6" sx={{ color: passed ? P.green.shadow : P.orange.shadow }}>
+              {passed ? '✅ You have passed Step 5 Remedial C1!' : '❌ Score below passing threshold'}
+            </Typography>
 
-        <Avatar
-          message={
-            passed
-              ? 'Outstanding! You have mastered C1-level skills. Ready for the dashboard!'
-              : 'You need more practice. Let\'s try again from the beginning!'
-          }
-          type={passed ? 'success' : 'error'}
-        />
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h6" sx={{ color: passed ? P.green.shadow : P.orange.shadow }}>Redirecting in {countdown} second{countdown !== 1 ? 's' : ''}...</Typography>
+              <LinearProgress variant="determinate" value={(countdown / 10) * 100} sx={{ mt: 1, height: 8, borderRadius: 4, bgcolor: 'rgba(0,0,0,0.1)', '& .MuiLinearProgress-bar': { bgcolor: passed ? P.green.border : P.orange.border } }} />
+            </Box>
+          </Box>
 
-        <Box sx={{ mt: 4 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Redirecting in {countdown} seconds...
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={handleContinue}
-            sx={{
-              bgcolor: 'rgba(255,255,255,0.9)',
-              color: passed ? '#27ae60' : '#c0392b',
-              '&:hover': { bgcolor: 'white' },
-              px: 4,
-              py: 1.5,
-              fontSize: '1.1rem',
-              fontWeight: 'bold'
-            }}
-          >
-            {passed ? 'Go to Dashboard' : 'Retry from Task A'}
-          </Button>
-        </Box>
-      </Paper>
-    </Container>
+          <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
+            <CharacterMessage character="LILIA" message={passed ? 'Outstanding! 🌟 You have mastered C1-level skills. Your sophisticated grammar, complex sentence structures, and advanced vocabulary are excellent. Ready for the dashboard!' : "You need more practice. 💪 Let's try again from the beginning! Focus on subjunctives, modals, complex conditionals, and sophisticated vocabulary."} />
+          </Box>
+
+          <Box component="button" onClick={handleRedirect} sx={{ display: 'block', width: '100%', bgcolor: passed ? P.green.bg : P.orange.bg, border: `2px solid ${passed ? P.green.border : P.orange.border}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${passed ? P.green.shadow : P.orange.shadow}`, p: 2, cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold', color: passed ? P.green.shadow : P.orange.shadow, textAlign: 'center', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${passed ? P.green.shadow : P.orange.shadow}` } }}>
+            {passed ? '🏆 Go to Dashboard Now' : '🔄 Restart Now'}
+          </Box>
+
+        </motion.div>
+      </Container>
+    </Box>
   )
 }
-
-export default Results

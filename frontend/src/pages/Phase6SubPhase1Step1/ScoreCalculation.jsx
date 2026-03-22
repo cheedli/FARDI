@@ -2,16 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
-  Paper,
+  Container,
   Typography,
-  Button,
   CircularProgress,
-  Alert,
   LinearProgress,
-  Stack,
-  Card,
-  CardContent
+  Stack
 } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../lib/phase6_api.jsx'
 
@@ -20,8 +18,27 @@ import { phase6API } from '../../lib/phase6_api.jsx'
  * Reads scores from sessionStorage, calculates total, and routes to remedial level
  */
 
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+  green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+  teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+  green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+  teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+}
+
 export default function Phase6SP1Step1ScoreCalculation() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const [loading, setLoading] = useState(true)
   const [calculating, setCalculating] = useState(false)
   const [scores, setScores] = useState({
@@ -142,165 +159,172 @@ export default function Phase6SP1Step1ScoreCalculation() {
 
   if (loading || calculating) {
     return (
-      <Box sx={{ maxWidth: 800, mx: 'auto', p: 3, textAlign: 'center', mt: 8 }}>
-        <CircularProgress size={60} sx={{ mb: 3, color: '#27ae60' }} />
-        <Typography variant="h6">Calculating your score...</Typography>
+      <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ textAlign: 'center' }}>
+          <CircularProgress size={60} sx={{ mb: 3, color: P.green.border }} />
+          <Typography variant="h6">Calculating your score...</Typography>
+        </Box>
       </Box>
     )
   }
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          mb: 3,
-          background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)',
-          color: 'white',
-          borderRadius: 2
-        }}
-      >
-        <Typography variant="h4" gutterBottom fontWeight="bold">
-          Phase 6: Reflection and Evaluation
-        </Typography>
-        <Typography variant="h5" gutterBottom>
-          Step 1: Score Summary
-        </Typography>
-        <Typography variant="body1">
-          See how you performed across all three interactions
-        </Typography>
-      </Paper>
-
-      {/* Score Breakdown */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
-          Your Performance Summary
-        </Typography>
-
-        <Stack spacing={2} sx={{ mt: 2 }}>
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="body1" gutterBottom>
-                <strong>Interaction 1 (Wordshake):</strong> {scores.interaction1} / 1 point
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={(scores.interaction1 / 1) * 100}
-                sx={{ mt: 1, height: 8, borderRadius: 1, '& .MuiLinearProgress-bar': { backgroundColor: '#27ae60' } }}
-              />
-            </CardContent>
-          </Card>
-
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="body1" gutterBottom>
-                <strong>Interaction 2 (Festival Reflection):</strong> {scores.interaction2} / 4 points
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={(scores.interaction2 / 4) * 100}
-                sx={{ mt: 1, height: 8, borderRadius: 1, '& .MuiLinearProgress-bar': { backgroundColor: '#27ae60' } }}
-              />
-            </CardContent>
-          </Card>
-
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="body1" gutterBottom>
-                <strong>Interaction 3 (Sushi Spell):</strong> {scores.interaction3} / 1 point
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={(scores.interaction3 / 1) * 100}
-                sx={{ mt: 1, height: 8, borderRadius: 1, '& .MuiLinearProgress-bar': { backgroundColor: '#27ae60' } }}
-              />
-            </CardContent>
-          </Card>
-
-          <Card
-            variant="outlined"
-            sx={{
-              border: '3px solid #27ae60',
-              backgroundColor: '#f0faf4'
-            }}
-          >
-            <CardContent>
-              <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ color: '#27ae60' }}>
-                Total Score: {scores.total} / 6 points
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={(scores.total / 6) * 100}
-                sx={{
-                  mt: 1,
-                  height: 12,
-                  borderRadius: 1,
-                  '& .MuiLinearProgress-bar': { backgroundColor: '#27ae60' }
-                }}
-              />
-            </CardContent>
-          </Card>
-        </Stack>
-      </Paper>
-
-      {/* Routing Decision */}
-      {routing && (
-        <Paper
-          elevation={3}
-          sx={{
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{
+            bgcolor: P.blue.bg,
+            border: `2px solid ${P.blue.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.blue.shadow}`,
             p: 3,
-            mb: 3,
-            backgroundColor: 'info.lighter',
-            border: '2px solid',
-            borderColor: 'info.main',
-            borderRadius: 2
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <CheckCircleIcon
-              sx={{ fontSize: 50, color: 'info.main', mr: 2 }}
-            />
-            <Box>
-              <Typography variant="h5" color="info.dark">
-                Practice Activities Ready
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Assigned Level: <strong>{routing.remedialLevel}</strong>
-              </Typography>
-            </Box>
-          </Box>
-
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            Based on your reflection writing (Interaction 2), you have been assigned to{' '}
-            <strong>{routing.remedialLevel}</strong> level remedial activities. These exercises will
-            strengthen your post-event report writing skills before moving to Step 2.
-          </Typography>
-
-          <Alert severity="info" sx={{ mt: 2 }}>
-            <Typography variant="body2">
-              <strong>Next Steps:</strong> You will complete remedial activities designed for{' '}
-              {routing.remedialLevel} level. These activities will help you practise reflection and
-              evaluation language for writing post-event reports.
+            mb: 3
+          }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
+              Phase 6: Reflection and Evaluation
             </Typography>
-          </Alert>
+            <Typography variant="h5" gutterBottom sx={{ color: P.blue.border }}>
+              Step 1: Score Summary
+            </Typography>
+            <Typography variant="body1" sx={{ color: P.blue.shadow }}>
+              See how you performed across all three interactions
+            </Typography>
+          </Box>
+        </motion.div>
 
-          <Button
-            variant="contained"
-            onClick={handleContinue}
-            size="large"
-            fullWidth
-            sx={{
-              mt: 3,
-              background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)',
-              '&:hover': { background: 'linear-gradient(135deg, #1e8449 0%, #196f3d 100%)' }
-            }}
-          >
-            {routing.shouldProceed ? 'Continue to Step 2' : `Continue to ${routing.remedialLevel} Remedial Activities`}
-          </Button>
-        </Paper>
-      )}
+        {/* Score Breakdown */}
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+          <Box sx={{
+            bgcolor: P.yellow.bg,
+            border: `2px solid ${P.yellow.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.yellow.shadow}`,
+            p: 3,
+            mb: 3
+          }}>
+            <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.yellow.shadow }}>
+              Your Performance Summary
+            </Typography>
+
+            <Stack spacing={2} sx={{ mt: 2 }}>
+              {[
+                { label: 'Interaction 1 (Wordshake)', score: scores.interaction1, max: 1 },
+                { label: 'Interaction 2 (Festival Reflection)', score: scores.interaction2, max: 4 },
+                { label: 'Interaction 3 (Sushi Spell)', score: scores.interaction3, max: 1 },
+              ].map((item, idx) => (
+                <Box key={idx} sx={{
+                  bgcolor: P.blue.bg,
+                  border: `2px solid ${P.blue.border}`,
+                  borderRadius: '14px',
+                  boxShadow: `2px 2px 0 ${P.blue.shadow}`,
+                  p: 2
+                }}>
+                  <Typography variant="body1" gutterBottom sx={{ color: P.blue.shadow }}>
+                    <strong>{item.label}:</strong> {item.score} / {item.max} point{item.max !== 1 ? 's' : ''}
+                  </Typography>
+                  <LinearProgress
+                    variant="determinate"
+                    value={(item.score / item.max) * 100}
+                    sx={{ mt: 1, height: 8, borderRadius: 1, '& .MuiLinearProgress-bar': { backgroundColor: P.green.border } }}
+                  />
+                </Box>
+              ))}
+
+              {/* Total */}
+              <Box sx={{
+                bgcolor: P.green.bg,
+                border: `3px solid ${P.green.border}`,
+                borderRadius: '16px',
+                boxShadow: `3px 3px 0 ${P.green.shadow}`,
+                p: 2
+              }}>
+                <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ color: P.green.shadow }}>
+                  Total Score: {scores.total} / 6 points
+                </Typography>
+                <LinearProgress
+                  variant="determinate"
+                  value={(scores.total / 6) * 100}
+                  sx={{
+                    mt: 1,
+                    height: 12,
+                    borderRadius: 1,
+                    '& .MuiLinearProgress-bar': { backgroundColor: P.green.border }
+                  }}
+                />
+              </Box>
+            </Stack>
+          </Box>
+        </motion.div>
+
+        {/* Routing Decision */}
+        {routing && (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}>
+            <Box sx={{
+              bgcolor: P.teal.bg,
+              border: `2px solid ${P.teal.border}`,
+              borderRadius: '20px',
+              boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+              p: 3,
+              mb: 3
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <CheckCircleIcon sx={{ fontSize: 50, color: P.teal.border, mr: 2 }} />
+                <Box>
+                  <Typography variant="h5" sx={{ color: P.teal.shadow }}>
+                    Practice Activities Ready
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Assigned Level: <strong>{routing.remedialLevel}</strong>
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Based on your reflection writing (Interaction 2), you have been assigned to{' '}
+                <strong>{routing.remedialLevel}</strong> level remedial activities. These exercises will
+                strengthen your post-event report writing skills before moving to Step 2.
+              </Typography>
+
+              <Box sx={{
+                bgcolor: P.blue.bg,
+                border: `2px solid ${P.blue.border}`,
+                borderRadius: '12px',
+                p: 2,
+                mt: 2,
+                mb: 3
+              }}>
+                <Typography variant="body2" sx={{ color: P.blue.shadow }}>
+                  <strong>Next Steps:</strong> You will complete remedial activities designed for{' '}
+                  {routing.remedialLevel} level. These activities will help you practise reflection and
+                  evaluation language for writing post-event reports.
+                </Typography>
+              </Box>
+
+              <Box
+                component="button"
+                onClick={handleContinue}
+                sx={{
+                  cursor: 'pointer',
+                  width: '100%',
+                  py: 1.5,
+                  bgcolor: P.green.bg,
+                  border: `2px solid ${P.green.border}`,
+                  borderRadius: '16px',
+                  boxShadow: `4px 4px 0 ${P.green.shadow}`,
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  color: P.green.shadow,
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` },
+                  transition: 'all 0.15s'
+                }}
+              >
+                {routing.shouldProceed ? 'Continue to Step 2' : `Continue to ${routing.remedialLevel} Remedial Activities`}
+              </Box>
+            </Box>
+          </motion.div>
+        )}
+      </Container>
     </Box>
   )
 }

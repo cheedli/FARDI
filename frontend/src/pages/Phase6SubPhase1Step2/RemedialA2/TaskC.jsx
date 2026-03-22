@@ -1,23 +1,15 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  Stack,
-  TextField,
-  Alert
-} from '@mui/material'
+import { Box, Container, Typography, Stack, TextField } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
-/**
- * Phase 6 SubPhase 1 Step 2 - Level A2 - Task C
- * Sentence Builder: Write 6 simple sentences for a report summary
- */
+const LIGHT = { pageBg: '#FFFDE7', blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' }, yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' }, orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' }, teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' } }
+const DARK = { pageBg: '#0F0F1A', blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' }, green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' }, yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' }, orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' }, teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' } }
 
 const PROMPTS = [
   { label: 'Sentence 1', hint: 'Festival good.' },
@@ -30,116 +22,80 @@ const PROMPTS = [
 
 export default function Phase6SP1Step2RemedialA2TaskC() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 2, interaction: 3, context: 'remedial_a2' })
   const [sentences, setSentences] = useState(Array(PROMPTS.length).fill(''))
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
 
-  const handleChange = (idx, val) => {
-    const updated = [...sentences]
-    updated[idx] = val
-    setSentences(updated)
-  }
+  const cardSx = (color) => ({ bgcolor: color.bg, border: `2px solid ${color.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${color.shadow}`, p: 3 })
+
+  const handleChange = (idx, val) => { const updated = [...sentences]; updated[idx] = val; setSentences(updated) }
 
   const handleSubmit = async () => {
     const filled = sentences.filter(s => s.trim().length > 0).length
-    const correct = filled
-    setScore(correct)
+    setScore(filled)
     setSubmitted(true)
-    sessionStorage.setItem('phase6_sp1_step2_remedial_a2_taskc_score', correct.toString())
-    try {
-      await phase6API.logRemedialActivity(2, 'A2', 'C', correct, PROMPTS.length, 0, 1)
-    } catch (e) {
-      console.error('Failed to log task:', e)
-    }
+    sessionStorage.setItem('phase6_sp1_step2_remedial_a2_taskc_score', filled.toString())
+    try { await phase6API.logRemedialActivity(2, 'A2', 'C', filled, PROMPTS.length, 0, 1) } catch (e) { console.error(e) }
   }
 
   const allFilled = sentences.every(s => s.trim().length > 0)
 
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          mb: 3,
-          background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)',
-          color: 'white',
-          borderRadius: 2
-        }}
-      >
-        <Typography variant="h4" gutterBottom fontWeight="bold">Phase 6: Reflection &amp; Evaluation</Typography>
-        <Typography variant="h5" gutterBottom>Step 2: Remedial Practice - Level A2</Typography>
-        <Typography variant="h6">Task C: Sentence Builder</Typography>
-        <Typography variant="body1">Write 6 simple sentences for a report summary</Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ ...cardSx(P.orange), mb: 3 }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.orange.border }}>Phase 6: Reflection &amp; Evaluation</Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.orange.border }}>Step 2: Remedial Practice - Level A2</Typography>
+            <Typography variant="h6" sx={{ color: P.orange.border }}>Task C: Sentence Builder</Typography>
+            <Typography variant="body1" color="text.secondary">Write 6 simple sentences for a report summary</Typography>
+          </Box>
+        </motion.div>
 
-      <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <CharacterMessage
-          speaker="Ms. Mabrouki"
-          message="Sentence Builder! Write one simple sentence for each prompt. Use the example as a guide. Short sentences are fine for A2 level!"
-        />
-      </Paper>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <Box sx={{ ...cardSx(P.teal), mb: 3 }}>
+            <CharacterMessage speaker="Ms. Mabrouki" message="Sentence Builder! Write one simple sentence for each prompt. Use the example as a guide. Short sentences are fine for A2 level!" />
+          </Box>
+        </motion.div>
 
-      <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>
-        <Typography variant="body2">
-          Write a simple sentence for each number. Use the hint as an example to follow.
-        </Typography>
-      </Alert>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Box sx={{ ...cardSx(P.blue), mb: 3, p: 2 }}>
+            <Typography variant="body2">Write a simple sentence for each number. Use the hint as an example to follow.</Typography>
+          </Box>
+        </motion.div>
 
-      <Stack spacing={2} sx={{ mb: 3 }}>
-        {PROMPTS.map((prompt, idx) => (
-          <Paper key={idx} elevation={1} sx={{ p: 2.5, borderRadius: 2 }}>
-            <Typography variant="body1" fontWeight="bold" sx={{ mb: 0.5, color: '#27ae60' }}>
-              {prompt.label}:
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Example: <em>{prompt.hint}</em>
-            </Typography>
-            <TextField
-              fullWidth
-              size="small"
-              value={sentences[idx]}
-              onChange={(e) => handleChange(idx, e.target.value)}
-              disabled={submitted}
-              placeholder="Write your sentence here..."
-              sx={{ backgroundColor: submitted ? '#f5f5f5' : 'white' }}
-            />
-          </Paper>
-        ))}
-      </Stack>
+        <Stack spacing={2} sx={{ mb: 3 }}>
+          {PROMPTS.map((prompt, idx) => (
+            <motion.div key={idx} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + idx * 0.03 }}>
+              <Box sx={{ ...cardSx(P.blue), p: 2.5 }}>
+                <Typography variant="body1" fontWeight="bold" sx={{ mb: 0.5, color: P.blue.border }}>{prompt.label}:</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Example: <em>{prompt.hint}</em></Typography>
+                <TextField fullWidth size="small" value={sentences[idx]} onChange={(e) => handleChange(idx, e.target.value)} disabled={submitted} placeholder="Write your sentence here..." />
+              </Box>
+            </motion.div>
+          ))}
+        </Stack>
 
-      {!submitted ? (
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={!allFilled}
-          fullWidth
-          size="large"
-          sx={{ backgroundColor: '#27ae60', '&:hover': { backgroundColor: '#1e8449' } }}
-        >
-          Submit My Sentences
-        </Button>
-      ) : (
-        <Paper elevation={3} sx={{ p: 3, textAlign: 'center', backgroundColor: '#f0faf4', border: '2px solid #27ae60', borderRadius: 2 }}>
-          <CheckCircleIcon sx={{ fontSize: 50, color: '#27ae60', mb: 1 }} />
-          <Typography variant="h5" color="success.dark" gutterBottom>
-            Task C Complete! Score: {score}/{PROMPTS.length}
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            Great work building your sentences! You have completed all A2 remedial tasks.
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={() => navigate('/phase6/subphase/2/step/1')}
-            size="large"
-            sx={{ backgroundColor: '#27ae60', '&:hover': { backgroundColor: '#1e8449' } }}
-          >
-            Continue to Next Phase →
-          </Button>
-        </Paper>
-      )}
+        {!submitted ? (
+          <Box component="button" onClick={handleSubmit} disabled={!allFilled} sx={{ width: '100%', ...cardSx(P.orange), p: 1.5, cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem', color: P.orange.border, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` }, '&:disabled': { opacity: 0.5, cursor: 'not-allowed' }, transition: 'all 0.15s ease' }}>
+            Submit My Sentences
+          </Box>
+        ) : (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...cardSx(P.green), textAlign: 'center' }}>
+              <CheckCircleIcon sx={{ fontSize: 50, color: P.green.border, mb: 1 }} />
+              <Typography variant="h5" gutterBottom sx={{ color: P.green.border }}>Task C Complete! Score: {score}/{PROMPTS.length}</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>Great work building your sentences! You have completed all A2 remedial tasks.</Typography>
+              <Box component="button" onClick={() => navigate('/phase6/subphase/2/step/1')} sx={{ ...cardSx(P.orange), p: 1.5, cursor: 'pointer', fontWeight: 'bold', color: P.orange.border, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` }, transition: 'all 0.15s ease' }}>
+                Continue to Next Phase →
+              </Box>
+            </Box>
+          </motion.div>
+        )}
+      </Container>
     </Box>
   )
 }

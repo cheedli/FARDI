@@ -2,18 +2,18 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
-  Paper,
   Typography,
-  Button,
   TextField,
-  Alert,
   CircularProgress,
-  Chip,
-  Stack
+  Stack,
+  Container
 } from '@mui/material'
+import { useTheme } from '@mui/material'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import SushiSpellGame from '../../components/SushiSpellGame.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
@@ -29,6 +29,30 @@ const VOCABULARY_WORDS = [
 
 export default function Phase4Step3Interaction3() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const LIGHT = {
+    pageBg: '#FFFDE7',
+    blue:   { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+    green:  { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+    yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+    purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+    teal:   { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+    orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+    red:    { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+  }
+  const DARK = {
+    pageBg: '#0F0F1A',
+    blue:   { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+    green:  { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+    yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+    purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
+    teal:   { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+    orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+    red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+  }
+  const P = isDark ? DARK : LIGHT
+
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 3, context: 'main' })
   const [answer, setAnswer] = useState('')
   const [evaluation, setEvaluation] = useState(null)
@@ -157,7 +181,6 @@ export default function Phase4Step3Interaction3() {
     }
 
     // Route to remedial phase based on total score
-    // A1: <=3, A2: <=6, B1: <=9, B2: <=12, C1: <=15
     let remedialPath = ''
 
     if (totalScore <= 3) {
@@ -169,7 +192,6 @@ export default function Phase4Step3Interaction3() {
     } else if (totalScore <= 12) {
       remedialPath = '/phase4/step/3/remedial/b2/task/a'
     } else {
-      // totalScore <= 15 (C1 level)
       remedialPath = '/phase4/step/3/remedial/c1/task/a'
     }
 
@@ -179,180 +201,225 @@ export default function Phase4Step3Interaction3() {
   }
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, backgroundColor: 'success.light', color: 'white' }}>
-        <Typography variant="h4" gutterBottom>
-          Phase 4: Marketing & Promotion
-        </Typography>
-        <Typography variant="h5" gutterBottom>
-          Step 3: Explain - Interaction 3
-        </Typography>
-        <Typography variant="body1">
-          Use Sushi Spell game to practice advertising vocabulary
-        </Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
 
-      {/* Instructor Message */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage
-          speaker="Ryan"
-          message="Use a game to explain more terms from the videos."
-        />
-      </Paper>
-
-      {/* Vocabulary Words */}
-      <Paper elevation={1} sx={{ p: 3, mb: 3, backgroundColor: 'info.lighter' }}>
-        <Typography variant="subtitle1" gutterBottom fontWeight="bold" color="primary">
-          Vocabulary Words to Practice:
-        </Typography>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {VOCABULARY_WORDS.map((word, index) => (
-            <Chip key={index} label={word} color="secondary" />
-          ))}
-        </Stack>
-      </Paper>
-
-      {/* Sushi Spell Game */}
-      <Box sx={{ mb: 4 }}>
-        <SushiSpellGame onComplete={handleGameComplete} />
-      </Box>
-
-      {/* Question Section - Only show after game is completed */}
-      {gameResult && (
-        <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom color="primary">
-            Question: How would you use Sushi Spell to practice one vocabulary word from the videos?
-          </Typography>
-
-          {gameResult.foundWords.length > 0 && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              <Typography variant="body2">
-                <strong>You spelled these words:</strong> {gameResult.foundWords.join(', ')}
-              </Typography>
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                Pick one of these words and explain how practicing it in Sushi Spell helps you remember it from the videos!
-              </Typography>
-            </Alert>
-          )}
-
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            variant="outlined"
-            placeholder="Example: Use Sushi Spell to practice spelling 'targeted' because it's timed and the first video mentioned specific audiences..."
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            disabled={submitted}
-            sx={{ mb: 2 }}
-          />
-
-          {!submitted && (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSubmit}
-              disabled={loading || !answer.trim()}
-              fullWidth
-              size="large"
-            >
-              {loading ? <CircularProgress size={24} /> : 'Submit Answer'}
-            </Button>
-          )}
-        </Paper>
-      )}
-
-      {/* Evaluation Results */}
-      {evaluation && (
-        <Paper
-          elevation={3}
-          sx={{
-            p: 3,
-            mb: 3,
-            backgroundColor: evaluation.success ? 'success.lighter' : 'warning.lighter',
-            border: '2px solid',
-            borderColor: evaluation.success ? 'success.main' : 'warning.main'
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <CheckCircleIcon
-              sx={{
-                fontSize: 40,
-                color: evaluation.success ? 'success.main' : 'warning.main',
-                mr: 2
-              }}
-            />
-            <Box>
-              <Typography variant="h6" color={evaluation.success ? 'success.dark' : 'warning.dark'}>
-                {evaluation.success ? 'Answer Submitted!' : 'Try Again'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Level: {evaluation.level} | Score: {evaluation.score}/5
-              </Typography>
-            </Box>
+          {/* Header */}
+          <Box sx={{
+            bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
+              Phase 4: Marketing & Promotion
+            </Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.blue.shadow }}>
+              Step 3: Explain - Interaction 3
+            </Typography>
+            <Typography variant="body1" sx={{ color: P.blue.shadow }}>
+              Use Sushi Spell game to practice advertising vocabulary
+            </Typography>
           </Box>
 
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            {evaluation.feedback}
-          </Typography>
+          {/* Instructor Message */}
+          <Box sx={{
+            bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <CharacterMessage
+              speaker="Ryan"
+              message="Use a game to explain more terms from the videos."
+            />
+          </Box>
 
-          {submitted && (() => {
-            const score1 = parseInt(sessionStorage.getItem('phase4_step3_interaction1_score') || '0')
-            const score2 = parseInt(sessionStorage.getItem('phase4_step3_interaction2_score') || '0')
-            const score3 = parseInt(sessionStorage.getItem('phase4_step3_interaction3_score') || '0')
-            const totalScore = score1 + score2 + score3
+          {/* Vocabulary Words */}
+          <Box sx={{
+            bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.purple.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="subtitle1" gutterBottom fontWeight="bold" sx={{ color: P.purple.shadow }}>
+              Vocabulary Words to Practice:
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              {VOCABULARY_WORDS.map((word, index) => (
+                <Box key={index} component="span" sx={{
+                  bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`,
+                  borderRadius: '999px', px: 2, py: 0.5,
+                  fontSize: '0.85rem', fontWeight: 700, color: P.purple.shadow,
+                  display: 'inline-block'
+                }}>{word}</Box>
+              ))}
+            </Stack>
+          </Box>
 
-            let assignedLevel = ''
-            if (totalScore <= 3) assignedLevel = 'A1'
-            else if (totalScore <= 6) assignedLevel = 'A2'
-            else if (totalScore <= 9) assignedLevel = 'B1'
-            else if (totalScore <= 12) assignedLevel = 'B2'
-            else assignedLevel = 'C1'
+          {/* Sushi Spell Game */}
+          <Box sx={{ mb: 4 }}>
+            <SushiSpellGame onComplete={handleGameComplete} />
+          </Box>
 
-            return (
-              <>
-                <Paper elevation={2} sx={{ p: 2, mb: 2, backgroundColor: 'info.lighter' }}>
-                  <Typography variant="h6" gutterBottom color="primary">
-                    Overall Performance Summary
+          {/* Question Section - Only show after game is completed */}
+          {gameResult && (
+            <Box sx={{
+              bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+              borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+              p: 3, mb: 3,
+            }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow }}>
+                Question: How would you use Sushi Spell to practice one vocabulary word from the videos?
+              </Typography>
+
+              {gameResult.foundWords.length > 0 && (
+                <Box sx={{
+                  bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                  borderRadius: '12px', p: 2, mb: 2,
+                }}>
+                  <Typography variant="body2" sx={{ color: P.green.shadow }}>
+                    <strong>You spelled these words:</strong> {gameResult.foundWords.join(', ')}
                   </Typography>
-                  <Stack spacing={1}>
-                    <Typography variant="body2">
-                      <strong>Interaction 1 (Persuasive):</strong> {score1}/5 points
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Interaction 2 (Dramatisation):</strong> {score2}/5 points
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Interaction 3 (Game Connection):</strong> {score3}/5 points
-                    </Typography>
-                    <Typography variant="h6" sx={{ mt: 1, color: 'primary.main' }}>
-                      <strong>Total Score: {totalScore}/15</strong>
-                    </Typography>
-                    <Typography variant="body1" sx={{ mt: 1 }}>
-                      <strong>Assigned Level: {assignedLevel}</strong>
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      {score3 >= 3
-                        ? 'Great job! You will proceed to the next step.'
-                        : `You will now proceed to ${assignedLevel}-level activities.`}
-                    </Typography>
-                  </Stack>
-                </Paper>
-                <Button
-                  variant="contained"
-                  color="success"
-                  onClick={handleContinue}
-                  size="large"
-                  fullWidth
-                >
-                  {score3 >= 3 ? 'Continue to Step 4' : `Continue to ${assignedLevel} Activities`}
-                </Button>
-              </>
-            )
-          })()}
-        </Paper>
-      )}
+                  <Typography variant="body2" sx={{ color: P.green.shadow, mt: 1 }}>
+                    Pick one of these words and explain how practicing it in Sushi Spell helps you remember it from the videos!
+                  </Typography>
+                </Box>
+              )}
+
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                variant="outlined"
+                placeholder="Example: Use Sushi Spell to practice spelling 'targeted' because it's timed and the first video mentioned specific audiences..."
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                disabled={submitted}
+                sx={{
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '& fieldset': { borderColor: P.orange.border },
+                    '&:hover fieldset': { borderColor: P.orange.shadow },
+                    '&.Mui-focused fieldset': { borderColor: P.orange.shadow },
+                  }
+                }}
+              />
+
+              {!submitted && (
+                <Box component="button" onClick={handleSubmit} disabled={loading || !answer.trim()} sx={{
+                  width: '100%',
+                  bgcolor: (loading || !answer.trim()) ? 'grey.200' : P.blue.bg,
+                  border: `2px solid ${(loading || !answer.trim()) ? '#ccc' : P.blue.border}`,
+                  borderRadius: '12px',
+                  boxShadow: (loading || !answer.trim()) ? 'none' : `3px 3px 0 ${P.blue.shadow}`,
+                  px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                  cursor: (loading || !answer.trim()) ? 'not-allowed' : 'pointer',
+                  color: (loading || !answer.trim()) ? 'grey.500' : P.blue.shadow,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                  '&:hover': (loading || !answer.trim()) ? {} : { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.blue.shadow}` },
+                  '&:active': (loading || !answer.trim()) ? {} : { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.blue.shadow}` },
+                }}>
+                  {loading ? <CircularProgress size={20} /> : 'Submit Answer'}
+                </Box>
+              )}
+            </Box>
+          )}
+
+          {/* Evaluation Results */}
+          {evaluation && (
+            <Box sx={{
+              bgcolor: evaluation.success ? P.green.bg : P.red.bg,
+              border: `2px solid ${evaluation.success ? P.green.border : P.red.border}`,
+              borderRadius: '20px',
+              boxShadow: `4px 4px 0 ${evaluation.success ? P.green.shadow : P.red.shadow}`,
+              p: 3, mb: 3,
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <CheckCircleIcon sx={{
+                  fontSize: 40,
+                  color: evaluation.success ? P.green.shadow : P.red.shadow,
+                  mr: 2
+                }} />
+                <Box>
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: evaluation.success ? P.green.shadow : P.red.shadow }}>
+                    {evaluation.success ? 'Answer Submitted!' : 'Try Again'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: evaluation.success ? P.green.shadow : P.red.shadow, opacity: 0.8 }}>
+                    Level: {evaluation.level} | Score: {evaluation.score}/5
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Typography variant="body1" sx={{ color: evaluation.success ? P.green.shadow : P.red.shadow, mb: 2 }}>
+                {evaluation.feedback}
+              </Typography>
+
+              {submitted && (() => {
+                const score1 = parseInt(sessionStorage.getItem('phase4_step3_interaction1_score') || '0')
+                const score2 = parseInt(sessionStorage.getItem('phase4_step3_interaction2_score') || '0')
+                const score3 = parseInt(sessionStorage.getItem('phase4_step3_interaction3_score') || '0')
+                const totalScore = score1 + score2 + score3
+
+                let assignedLevel = ''
+                if (totalScore <= 3) assignedLevel = 'A1'
+                else if (totalScore <= 6) assignedLevel = 'A2'
+                else if (totalScore <= 9) assignedLevel = 'B1'
+                else if (totalScore <= 12) assignedLevel = 'B2'
+                else assignedLevel = 'C1'
+
+                return (
+                  <>
+                    <Box sx={{
+                      bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+                      borderRadius: '12px', p: 2, mb: 2,
+                    }}>
+                      <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
+                        Overall Performance Summary
+                      </Typography>
+                      <Stack spacing={1}>
+                        <Typography variant="body2" sx={{ color: P.blue.shadow }}>
+                          <strong>Interaction 1 (Persuasive):</strong> {score1}/5 points
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: P.blue.shadow }}>
+                          <strong>Interaction 2 (Dramatisation):</strong> {score2}/5 points
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: P.blue.shadow }}>
+                          <strong>Interaction 3 (Game Connection):</strong> {score3}/5 points
+                        </Typography>
+                        <Typography variant="h6" sx={{ mt: 1, color: P.blue.shadow }}>
+                          <strong>Total Score: {totalScore}/15</strong>
+                        </Typography>
+                        <Typography variant="body1" sx={{ mt: 1, color: P.blue.shadow }}>
+                          <strong>Assigned Level: {assignedLevel}</strong>
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 1, color: P.blue.shadow, opacity: 0.8 }}>
+                          {score3 >= 3
+                            ? 'Great job! You will proceed to the next step.'
+                            : `You will now proceed to ${assignedLevel}-level activities.`}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                    <Box component="button" onClick={handleContinue} sx={{
+                      width: '100%',
+                      bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                      borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
+                      px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                      cursor: 'pointer', color: P.green.shadow,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                      '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
+                      '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` },
+                    }}>
+                      <PlayArrowIcon fontSize="small" />
+                      {score3 >= 3 ? 'Continue to Step 4' : `Continue to ${assignedLevel} Activities`}
+                    </Box>
+                  </>
+                )
+              })()}
+            </Box>
+          )}
+
+        </motion.div>
+      </Container>
     </Box>
   )
 }

@@ -1,9 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, Stack, TextField, Alert } from '@mui/material'
+import { Box, Container, Typography, TextField, Stack, useTheme } from '@mui/material'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
+
+const LIGHT = { pageBg: '#FFFDE7', orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' }, teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' }, blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' } }
+const DARK = { pageBg: '#0F0F1A', orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' }, green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' }, teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' }, blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' } }
 
 const TERMS = [
   { term: 'emergency', explanation: 'Urgent problem' },
@@ -17,24 +21,18 @@ const TERMS = [
 export default function Phase5Step4RemedialB2TaskD() {
   const navigate = useNavigate()
   const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 4, interaction: 4, context: 'remedial_b2' })
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const [currentIndex, setCurrentIndex] = useState(0)
   const [spellings, setSpellings] = useState(Array(6).fill(''))
   const [explanations, setExplanations] = useState(Array(6).fill(''))
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
 
-  const handleSpellingChange = (value) => {
-    const newSpellings = [...spellings]
-    newSpellings[currentIndex] = value
-    setSpellings(newSpellings)
-  }
+  const clay = (color) => ({ bgcolor: color.bg, border: `2px solid ${color.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${color.shadow}`, p: 3 })
 
-  const handleExplanationChange = (value) => {
-    const newExplanations = [...explanations]
-    newExplanations[currentIndex] = value
-    setExplanations(newExplanations)
-  }
-
+  const handleSpellingChange = (value) => { const s = [...spellings]; s[currentIndex] = value; setSpellings(s) }
+  const handleExplanationChange = (value) => { const e = [...explanations]; e[currentIndex] = value; setExplanations(e) }
   const handleNext = () => { if (currentIndex < 5) setCurrentIndex(currentIndex + 1) }
   const handlePrevious = () => { if (currentIndex > 0) setCurrentIndex(currentIndex - 1) }
 
@@ -45,81 +43,76 @@ export default function Phase5Step4RemedialB2TaskD() {
       const explanationCorrect = explanations[idx].toLowerCase().includes(term.explanation.toLowerCase().split(' ')[0])
       if (spellingCorrect && explanationCorrect) correctCount++
     })
-
-    setScore(correctCount)
-    setSubmitted(true)
+    setScore(correctCount); setSubmitted(true)
     sessionStorage.setItem('phase5_step4_remedial_b2_taskD_score', correctCount.toString())
-    try {
-      await phase5API.logRemedialActivity(4, 'B2', 'D', correctCount, 6, 0)
-    } catch (error) {
-      console.error('Failed to log task completion:', error)
-    }
+    try { await phase5API.logRemedialActivity(4, 'B2', 'D', correctCount, 6, 0) } catch (e) { console.error(e) }
   }
 
   const handleContinue = async () => {
-    const taskAScore = parseInt(sessionStorage.getItem('phase5_step4_remedial_b2_taskA_score') || '0')
-    const taskBScore = parseInt(sessionStorage.getItem('phase5_step4_remedial_b2_taskB_score') || '0')
-    const taskCScore = parseInt(sessionStorage.getItem('phase5_step4_remedial_b2_taskC_score') || '0')
-    const taskDScore = parseInt(sessionStorage.getItem('phase5_step4_remedial_b2_taskD_score') || '0')
-    const totalScore = taskAScore + taskBScore + taskCScore + taskDScore
-    const maxScore = 5 + 8 + 8 + 6
-    const threshold = Math.ceil(maxScore * 0.8)
-    const passed = totalScore >= threshold
-
-    try {
-      await phase5API.calculateRemedialScore(4, 'B2', {
-        task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore, task_d_score: taskDScore
-      })
-    } catch (error) {
-      console.error('Failed to log final score:', error)
-    }
-
-    if (passed) {
-      navigate('/dashboard')
-    } else {
-      navigate('/phase5/subphase/1/step/4/remedial/b2/task/a')
-    }
+    const a = parseInt(sessionStorage.getItem('phase5_step4_remedial_b2_taskA_score') || '0')
+    const b = parseInt(sessionStorage.getItem('phase5_step4_remedial_b2_taskB_score') || '0')
+    const c = parseInt(sessionStorage.getItem('phase5_step4_remedial_b2_taskC_score') || '0')
+    const d = parseInt(sessionStorage.getItem('phase5_step4_remedial_b2_taskD_score') || '0')
+    const total = a + b + c + d; const passed = total >= Math.ceil(27 * 0.8)
+    try { await phase5API.calculateRemedialScore(4, 'B2', { task_a_score: a, task_b_score: b, task_c_score: c, task_d_score: d }) } catch (e) { console.error(e) }
+    if (passed) navigate('/dashboard'); else navigate('/phase5/subphase/1/step/4/remedial/b2/task/a')
   }
 
+  const canGoNext = spellings[currentIndex].trim() && explanations[currentIndex].trim()
+
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', color: 'white' }}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">Phase 5: Execution & Problem-Solving</Typography>
-        <Typography variant="h5" gutterBottom>Step 4: Remedial Practice - Level B2</Typography>
-        <Typography variant="h6" gutterBottom>Task D: Spell Quest</Typography>
-        <Typography variant="body1">Spell and explain 6 terms</Typography>
-      </Paper>
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage speaker="Ms. Mabrouki" message="Welcome to Spell Quest! Spell each term correctly and explain what it means!" />
-      </Paper>
-      {!submitted ? (
-        <>
-          <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom color="primary">Term {currentIndex + 1} of 6</Typography>
-            <Alert severity="info" sx={{ mb: 2 }}>
-              <Typography variant="body2"><strong>Expected explanation:</strong> {TERMS[currentIndex].explanation}</Typography>
-            </Alert>
-            <TextField fullWidth label="Spell the term" variant="outlined" value={spellings[currentIndex]} onChange={(e) => handleSpellingChange(e.target.value)} sx={{ mb: 2 }} />
-            <TextField fullWidth multiline rows={2} label="Explain the term" variant="outlined" value={explanations[currentIndex]} onChange={(e) => handleExplanationChange(e.target.value)} sx={{ mb: 2 }} />
-            <Stack direction="row" spacing={2} justifyContent="space-between">
-              <Button variant="outlined" onClick={handlePrevious} disabled={currentIndex === 0}>← Previous</Button>
-              {currentIndex === 5 ? (
-                <Button variant="contained" color="primary" onClick={handleSubmit} disabled={!spellings[currentIndex].trim() || !explanations[currentIndex].trim()}>Submit All</Button>
-              ) : (
-                <Button variant="contained" color="primary" onClick={handleNext} disabled={!spellings[currentIndex].trim() || !explanations[currentIndex].trim()}>Next →</Button>
-              )}
-            </Stack>
-          </Paper>
-        </>
-      ) : (
-        <>
-          <Paper elevation={3} sx={{ p: 4, mb: 3, backgroundColor: 'success.lighter', textAlign: 'center' }}>
-            <Typography variant="h5" color="success.dark" gutterBottom>✓ Task D Complete!</Typography>
-            <Typography variant="h6" sx={{ mt: 2 }}>Score: {score} / 6</Typography>
-          </Paper>
-          <Button variant="contained" color="success" onClick={handleContinue} size="large" fullWidth>Continue to Final Results →</Button>
-        </>
-      )}
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ ...clay(P.orange), mb: 3 }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.orange.border }}>Phase 5: Execution & Problem-Solving</Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.orange.border }}>Step 4: Remedial Practice - Level B2</Typography>
+            <Typography variant="h6" gutterBottom sx={{ color: P.orange.border }}>Task D: Spell Quest</Typography>
+            <Typography variant="body1">Spell and explain 6 terms</Typography>
+          </Box>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Box sx={{ ...clay(P.teal), mb: 3 }}>
+            <CharacterMessage speaker="Ms. Mabrouki" message="Welcome to Spell Quest! Spell each term correctly and explain what it means!" />
+          </Box>
+        </motion.div>
+        {!submitted ? (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <Box sx={{ ...clay(P.blue), mb: 3 }}>
+              <Typography variant="h6" gutterBottom sx={{ color: P.blue.border }}>Term {currentIndex + 1} of 6</Typography>
+              <Box sx={{ bgcolor: P.blue.bg, border: `1px solid ${P.blue.border}`, borderRadius: '12px', p: 2, mb: 2 }}>
+                <Typography variant="body2"><strong>Expected explanation:</strong> {TERMS[currentIndex].explanation}</Typography>
+              </Box>
+              <TextField fullWidth label="Spell the term" variant="outlined" value={spellings[currentIndex]} onChange={(e) => handleSpellingChange(e.target.value)} sx={{ mb: 2 }} />
+              <TextField fullWidth multiline rows={2} label="Explain the term" variant="outlined" value={explanations[currentIndex]} onChange={(e) => handleExplanationChange(e.target.value)} sx={{ mb: 2 }} />
+              <Stack direction="row" spacing={2} justifyContent="space-between">
+                <Box component="button" onClick={handlePrevious} disabled={currentIndex === 0} sx={{ ...clay(P.blue), cursor: 'pointer', opacity: currentIndex === 0 ? 0.5 : 1, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.blue.shadow}` }, transition: 'all 0.15s' }}>
+                  <Typography variant="button" sx={{ color: P.blue.border }}>← Previous</Typography>
+                </Box>
+                {currentIndex === 5 ? (
+                  <Box component="button" onClick={handleSubmit} disabled={!canGoNext} sx={{ ...clay(P.orange), cursor: 'pointer', opacity: !canGoNext ? 0.6 : 1, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` }, transition: 'all 0.15s' }}>
+                    <Typography variant="button" fontWeight="bold" sx={{ color: P.orange.border }}>Submit All</Typography>
+                  </Box>
+                ) : (
+                  <Box component="button" onClick={handleNext} disabled={!canGoNext} sx={{ ...clay(P.orange), cursor: 'pointer', opacity: !canGoNext ? 0.6 : 1, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` }, transition: 'all 0.15s' }}>
+                    <Typography variant="button" fontWeight="bold" sx={{ color: P.orange.border }}>Next →</Typography>
+                  </Box>
+                )}
+              </Stack>
+            </Box>
+          </motion.div>
+        ) : (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...clay(P.green), mb: 3, textAlign: 'center' }}>
+              <Typography variant="h5" sx={{ color: P.green.border }} gutterBottom>✓ Task D Complete!</Typography>
+              <Typography variant="h6" sx={{ mt: 2 }}>Score: {score} / 6</Typography>
+            </Box>
+            <Box component="button" onClick={handleContinue} sx={{ ...clay(P.green), cursor: 'pointer', width: '100%', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }, transition: 'all 0.15s' }}>
+              <Typography variant="button" fontWeight="bold" sx={{ color: P.green.border }}>Continue to Final Results →</Typography>
+            </Box>
+          </motion.div>
+        )}
+      </Container>
     </Box>
   )
 }

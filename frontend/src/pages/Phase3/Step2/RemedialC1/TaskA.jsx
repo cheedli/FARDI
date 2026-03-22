@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, TextField, Alert, Card, CardContent } from '@mui/material'
+import { Box, Container, Typography, TextField, Grid, useTheme } from '@mui/material'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import BuildIcon from '@mui/icons-material/Build'
 import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 /**
@@ -33,6 +35,41 @@ const WEAK_BUDGET = {
   ]
 }
 
+const LIGHT = {
+  pageBg: '#FFFDE7', cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', divider: '#E0E0E0',
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#388E3C' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1976D2' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F9A825', text: '#5D4037' },
+  teal:   { bg: '#B2EBF2', border: '#0097A7', shadow: '#0097A7' },
+  orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#F57C00' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#C62828' },
+  purple: { bg: '#E1BEE7', border: '#8E24AA', shadow: '#8E24AA' },
+}
+const DARK = {
+  pageBg: '#0F0F1A', cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', divider: '#2A2A4A',
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  yellow: { bg: '#2A2200', border: '#F9A825', shadow: '#A06800', text: '#FFD54F' },
+  teal:   { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+  orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+  red:    { bg: '#1F0000', border: '#EF9A9A', shadow: '#B71C1C' },
+  purple: { bg: '#1E0A2E', border: '#CE93D8', shadow: '#7B1FA2' },
+}
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.07, duration: 0.4, ease: 'easeOut' } }),
+}
+
+function clay(c) {
+  return {
+    bgcolor: c.bg,
+    border: `2px solid ${c.border}`,
+    borderRadius: '20px',
+    boxShadow: `4px 4px 0 ${c.shadow}`,
+  }
+}
+
 export default function Phase3Step2RemedialC1TaskA() {
   const navigate = useNavigate()
   const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 2, interaction: 1, context: 'remedial_c1' })
@@ -40,6 +77,9 @@ export default function Phase3Step2RemedialC1TaskA() {
   const [showResults, setShowResults] = useState(false)
   const [wordCount, setWordCount] = useState(0)
   const [sentenceCount, setSentenceCount] = useState(0)
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const D = isDark ? DARK : LIGHT
 
   const handleTextChange = (e) => {
     const text = e.target.value
@@ -62,14 +102,7 @@ export default function Phase3Step2RemedialC1TaskA() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          level: 'C1',
-          task: 'A',
-          score: score,
-          max_score: maxScore,
-          time_taken: 0,
-          step: 2
-        })
+        body: JSON.stringify({ level: 'C1', task: 'A', score, max_score: maxScore, time_taken: 0, step: 2 })
       })
     } catch (error) {
       console.error('Failed to log task:', error)
@@ -83,170 +116,219 @@ export default function Phase3Step2RemedialC1TaskA() {
   const isComplete = wordCount >= 150 && sentenceCount >= 8
 
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, backgroundColor: 'warning.light', color: 'warning.contrastText' }}>
-        <Typography variant="h5" gutterBottom>
-          Phase 3 Step 2 - Remedial Practice
-        </Typography>
-        <Typography variant="h6">
-          Level C1 - Task A: Budget Evaluation
-        </Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: D.pageBg }}>
+      <Container maxWidth="md" sx={{ pt: { xs: 3, md: 4 }, pb: 6 }}>
 
-      {/* Instructor Message */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage
-          speaker="Ms. Mabrouki"
-          message="This is an advanced critical task! Review the budget below and write a comprehensive critique. Identify problems, analyze their implications, and suggest specific improvements using precise financial terminology."
-        />
-      </Paper>
-
-      {/* Instructions */}
-      <Paper elevation={1} sx={{ p: 2, mb: 3, backgroundColor: 'info.lighter' }}>
-        <Typography variant="body1" gutterBottom>
-          <strong>Instructions:</strong> Critique the weak budget below and suggest improvements (8-10 sentences).
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          <strong>What to analyze:</strong>
-        </Typography>
-        <Box component="ul" sx={{ mt: 1, pl: 3 }}>
-          <Typography component="li" variant="body2">
-            Identify specific weaknesses and problems
-          </Typography>
-          <Typography component="li" variant="body2">
-            Analyze the implications of these problems
-          </Typography>
-          <Typography component="li" variant="body2">
-            Suggest concrete improvements
-          </Typography>
-          <Typography component="li" variant="body2">
-            Use precise financial terminology
-          </Typography>
-          <Typography component="li" variant="body2">
-            Consider sustainability and risk management
-          </Typography>
-        </Box>
-      </Paper>
-
-      {/* Weak Budget Display */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: 'error.lighter' }}>
-        <Typography variant="h6" gutterBottom color="error.main">
-          Budget to Evaluate (Contains Problems!)
-        </Typography>
-
-        <Card elevation={2} sx={{ mb: 2 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              {WEAK_BUDGET.title}
-            </Typography>
-
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle1" color="error.main" gutterBottom>
-                Expenses:
-              </Typography>
-              {WEAK_BUDGET.expenses.map((expense, index) => (
-                <Typography key={index} variant="body2" sx={{ ml: 2 }}>
-                  • {expense.item}: {expense.amount}
-                </Typography>
-              ))}
-              <Typography variant="body2" fontWeight="bold" sx={{ ml: 2, mt: 1 }}>
-                Total: {WEAK_BUDGET.totalExpenses}
-              </Typography>
-            </Box>
-
+        {/* Header */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
+          <Box sx={{ ...clay(D.orange), p: 3, mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <BuildIcon sx={{ fontSize: 40, color: D.orange.border }} />
             <Box>
-              <Typography variant="subtitle1" color="success.main" gutterBottom>
-                Income:
+              <Typography variant="h5" fontWeight={800} sx={{ color: D.heading, lineHeight: 1.2 }}>
+                Phase 3 Step 2 — Remedial Practice
               </Typography>
-              {WEAK_BUDGET.income.map((income, index) => (
-                <Typography key={index} variant="body2" sx={{ ml: 2 }}>
-                  • {income.source}: {income.amount}
-                </Typography>
-              ))}
-              <Typography variant="body2" fontWeight="bold" sx={{ ml: 2, mt: 1 }}>
-                Total: {WEAK_BUDGET.totalIncome}
+              <Typography variant="body2" sx={{ color: D.body, mt: 0.5 }}>
+                Level C1 — Task A: Budget Evaluation
               </Typography>
             </Box>
+          </Box>
+        </motion.div>
 
-            <Alert severity="error" sx={{ mt: 2 }}>
-              <Typography variant="body2" fontWeight="bold">
-                DEFICIT: $1,000 (Expenses exceed income!)
-              </Typography>
-            </Alert>
-          </CardContent>
-        </Card>
+        {/* Character Message */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={1}>
+          <Box sx={{ ...clay(D.blue), p: 3, mb: 3 }}>
+            <CharacterMessage
+              speaker="Ms. Mabrouki"
+              message="This is an advanced critical task! Review the budget below and write a comprehensive critique. Identify problems, analyze their implications, and suggest specific improvements using precise financial terminology."
+            />
+          </Box>
+        </motion.div>
 
-        <Typography variant="caption" color="text.secondary">
-          Hint: Look for problems with realism, specificity, risk management, and financial balance.
-        </Typography>
-      </Paper>
-
-      {/* Writing Area */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Your Budget Critique & Improvements
-        </Typography>
-        <TextField
-          fullWidth
-          multiline
-          rows={15}
-          value={critique}
-          onChange={handleTextChange}
-          placeholder="Write your critique here... Analyze the budget's weaknesses, explain the implications of these problems, and suggest specific improvements. Use precise financial terminology."
-          variant="outlined"
-          disabled={showResults}
-          sx={{ mb: 2 }}
-        />
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="caption" color="text.secondary">
-            Words: {wordCount} | Sentences: {sentenceCount} | Target: 8-10 sentences (approx. 150-200 words)
-          </Typography>
-          {isComplete && !showResults && (
-            <Typography variant="caption" color="success.main" sx={{ fontWeight: 'bold' }}>
-              ✓ Ready to submit!
+        {/* Instructions */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={2}>
+          <Box sx={{ ...clay(D.teal), p: 2.5, mb: 3 }}>
+            <Typography variant="body1" fontWeight={800} sx={{ color: D.heading, mb: 1 }}>
+              Instructions: Critique the weak budget below and suggest improvements (8-10 sentences).
             </Typography>
+            <Typography variant="body2" fontWeight={700} sx={{ color: D.body, mb: 0.75 }}>What to analyze:</Typography>
+            {[
+              'Identify specific weaknesses and problems',
+              'Analyze the implications of these problems',
+              'Suggest concrete improvements',
+              'Use precise financial terminology',
+              'Consider sustainability and risk management',
+            ].map((t, i) => (
+              <Typography key={i} variant="body2" sx={{ color: D.body, mb: 0.5 }}>• {t}</Typography>
+            ))}
+          </Box>
+        </motion.div>
+
+        {/* Weak Budget Display */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={3}>
+          <Box sx={{ ...clay(D.red), p: 3, mb: 3 }}>
+            <Typography variant="h6" fontWeight={800} sx={{ color: D.red.border, mb: 2 }}>
+              Budget to Evaluate (Contains Problems!)
+            </Typography>
+
+            <Box sx={{ ...clay({ bg: D.cardBg, border: D.divider, shadow: D.divider }), p: 2.5, mb: 2 }}>
+              <Typography variant="h6" fontWeight={800} sx={{ color: D.heading, mb: 2 }}>
+                {WEAK_BUDGET.title}
+              </Typography>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2" fontWeight={800} sx={{ color: D.red.border, mb: 1 }}>
+                    Expenses:
+                  </Typography>
+                  {WEAK_BUDGET.expenses.map((expense, i) => (
+                    <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                      <Typography variant="body2" sx={{ color: D.body }}>• {expense.item}</Typography>
+                      <Typography variant="body2" fontWeight={700} sx={{ color: D.body }}>{expense.amount}</Typography>
+                    </Box>
+                  ))}
+                  <Box sx={{ borderTop: `1px solid ${D.red.border}`, mt: 1, pt: 1 }}>
+                    <Typography variant="body2" fontWeight={800} sx={{ color: D.red.border }}>
+                      Total: {WEAK_BUDGET.totalExpenses}
+                    </Typography>
+                  </Box>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2" fontWeight={800} sx={{ color: D.green.border, mb: 1 }}>
+                    Income:
+                  </Typography>
+                  {WEAK_BUDGET.income.map((income, i) => (
+                    <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                      <Typography variant="body2" sx={{ color: D.body }}>• {income.source}</Typography>
+                      <Typography variant="body2" fontWeight={700} sx={{ color: D.body }}>{income.amount}</Typography>
+                    </Box>
+                  ))}
+                  <Box sx={{ borderTop: `1px solid ${D.green.border}`, mt: 1, pt: 1 }}>
+                    <Typography variant="body2" fontWeight={800} sx={{ color: D.green.border }}>
+                      Total: {WEAK_BUDGET.totalIncome}
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              <Box sx={{
+                mt: 2, p: 1.5,
+                bgcolor: D.red.bg, border: `2px solid ${D.red.border}`, borderRadius: '12px',
+              }}>
+                <Typography variant="body2" fontWeight={800} sx={{ color: D.red.border }}>
+                  DEFICIT: $1,000 (Expenses exceed income!)
+                </Typography>
+              </Box>
+            </Box>
+
+            <Typography variant="caption" sx={{ color: D.muted }}>
+              Hint: Look for problems with realism, specificity, risk management, and financial balance.
+            </Typography>
+          </Box>
+        </motion.div>
+
+        {/* Writing Area */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={4}>
+          <Box sx={{ ...clay({ bg: D.cardBg, border: D.divider, shadow: D.divider }), p: 3, mb: 3 }}>
+            <Typography variant="h6" fontWeight={800} sx={{ color: D.heading, mb: 2 }}>
+              Your Budget Critique &amp; Improvements
+            </Typography>
+            <TextField
+              fullWidth
+              multiline
+              rows={15}
+              value={critique}
+              onChange={handleTextChange}
+              placeholder="Write your critique here... Analyze the budget's weaknesses, explain the implications of these problems, and suggest specific improvements. Use precise financial terminology."
+              variant="outlined"
+              disabled={showResults}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  bgcolor: D.pageBg,
+                  '& fieldset': { borderColor: D.divider },
+                  '&:hover fieldset': { borderColor: D.blue.border },
+                  '&.Mui-focused fieldset': { borderColor: D.blue.border },
+                },
+                '& .MuiInputBase-input': { color: D.body },
+                '& .MuiInputBase-input::placeholder': { color: D.muted, opacity: 1 },
+              }}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="caption" sx={{ color: D.muted }}>
+                Words: {wordCount} | Sentences: {sentenceCount} | Target: 8-10 sentences (approx. 150-200 words)
+              </Typography>
+              {isComplete && !showResults && (
+                <Box component="span" sx={{
+                  px: 1.25, py: 0.25, borderRadius: '50px', fontSize: '0.75rem', fontWeight: 800,
+                  bgcolor: D.green.bg, color: D.green.border, border: `2px solid ${D.green.border}`,
+                }}>
+                  ✓ Ready to submit!
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </motion.div>
+
+        {/* Results */}
+        {showResults && (
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
+            <Box sx={{ ...clay(D.green), p: 3, mb: 3 }}>
+              <Typography variant="h6" fontWeight={800} sx={{ color: D.heading, mb: 1 }}>
+                Outstanding Critical Analysis!
+              </Typography>
+              <Typography variant="body2" sx={{ color: D.body }}>
+                You wrote {sentenceCount} sentences with {wordCount} words. Your critique demonstrates advanced analytical skills, sophisticated use of financial terminology, and strategic thinking about budget management.
+              </Typography>
+            </Box>
+          </motion.div>
+        )}
+
+        {/* Action Buttons */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 4 }}>
+          {!showResults && (
+            <Box
+              component="button"
+              onClick={handleSubmit}
+              disabled={!isComplete}
+              sx={{
+                bgcolor: isComplete ? D.blue.bg : D.divider,
+                color: isComplete ? D.blue.border : D.muted,
+                border: `2px solid ${isComplete ? D.blue.border : D.divider}`,
+                borderRadius: '14px',
+                boxShadow: isComplete ? `4px 4px 0 ${D.blue.shadow}` : 'none',
+                fontWeight: 800, fontSize: '1rem',
+                px: 4, py: 1.5, cursor: isComplete ? 'pointer' : 'not-allowed',
+                transition: 'all 0.15s',
+                '&:hover': isComplete ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.blue.shadow}` } : {},
+              }}
+            >
+              Submit Critique
+            </Box>
+          )}
+          {showResults && (
+            <Box
+              component="button"
+              onClick={handleNext}
+              sx={{
+                display: 'flex', alignItems: 'center', gap: 1,
+                bgcolor: D.green.bg, color: D.green.border,
+                border: `2px solid ${D.green.border}`,
+                borderRadius: '14px',
+                boxShadow: `4px 4px 0 ${D.green.shadow}`,
+                fontWeight: 800, fontSize: '1rem',
+                px: 4, py: 1.5, cursor: 'pointer',
+                transition: 'all 0.15s',
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` },
+              }}
+            >
+              Complete C1 Task <ArrowForwardIcon />
+            </Box>
           )}
         </Box>
-      </Paper>
 
-      {/* Results */}
-      {showResults && (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Outstanding Critical Analysis!
-          </Typography>
-          <Typography>
-            You wrote {sentenceCount} sentences with {wordCount} words. Your critique demonstrates advanced analytical skills, sophisticated use of financial terminology, and strategic thinking about budget management.
-          </Typography>
-        </Alert>
-      )}
-
-      {/* Action Buttons */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 4 }}>
-        {!showResults && (
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            onClick={handleSubmit}
-            disabled={!isComplete}
-          >
-            Submit Critique
-          </Button>
-        )}
-        {showResults && (
-          <Button
-            variant="contained"
-            color="success"
-            size="large"
-            onClick={handleNext}
-            endIcon={<ArrowForwardIcon />}
-          >
-            Complete C1 Task
-          </Button>
-        )}
-      </Box>
+      </Container>
     </Box>
   )
 }

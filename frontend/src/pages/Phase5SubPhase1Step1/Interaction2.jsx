@@ -2,21 +2,41 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
-  Paper,
   Typography,
-  Button,
   TextField,
-  Alert,
   CircularProgress,
   Stack,
-  Chip
+  Container
 } from '@mui/material'
+import { useTheme } from '@mui/material'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
 import { phase5API } from '../../lib/phase5_api.jsx'
 import { useProgressSave } from '../../hooks/useProgressSave'
+
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  blue:   { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+  green:  { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+  purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+  teal:   { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+  red:    { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  blue:   { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+  green:  { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+  purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
+  teal:   { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+  red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+}
 
 /**
  * Phase 5 Step 1: Engage
@@ -37,6 +57,9 @@ const EXPECTED_EXAMPLES = {
 
 export default function Phase5Step1Interaction2() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const P = isDark ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 1, interaction: 2, context: 'main' })
   const [solution, setSolution] = useState('')
   const [evaluation, setEvaluation] = useState(null)
@@ -88,22 +111,22 @@ export default function Phase5Step1Interaction2() {
 
       // Fallback evaluation based on keywords
       const solutionLower = solution.toLowerCase()
-      const hasSolution = solutionLower.includes('solution') || 
-                         solutionLower.includes('find') || 
+      const hasSolution = solutionLower.includes('solution') ||
+                         solutionLower.includes('find') ||
                          solutionLower.includes('alternative') ||
                          solutionLower.includes('fix')
-      const hasAlternative = solutionLower.includes('alternative') || 
-                            solutionLower.includes('backup') || 
+      const hasAlternative = solutionLower.includes('alternative') ||
+                            solutionLower.includes('backup') ||
                             solutionLower.includes('substitute')
-      const hasUrgent = solutionLower.includes('urgent') || 
-                       solutionLower.includes('quick') || 
+      const hasUrgent = solutionLower.includes('urgent') ||
+                       solutionLower.includes('quick') ||
                        solutionLower.includes('immediately')
-      const hasReasoning = solutionLower.includes('because') || 
-                         solutionLower.includes('since') || 
+      const hasReasoning = solutionLower.includes('because') ||
+                         solutionLower.includes('since') ||
                          solutionLower.includes('so that')
-      
+
       const wordCount = solution.split(/\s+/).length
-      const vocabularyCount = TARGET_VOCABULARY.filter(term => 
+      const vocabularyCount = TARGET_VOCABULARY.filter(term =>
         solutionLower.includes(term)
       ).length
 
@@ -113,7 +136,7 @@ export default function Phase5Step1Interaction2() {
 
       // C1: 5 points - Sophisticated solution
       if (wordCount >= 20 && vocabularyCount >= 3 && hasAlternative && hasReasoning &&
-          (solutionLower.includes('feasible') || solutionLower.includes('secure') || 
+          (solutionLower.includes('feasible') || solutionLower.includes('secure') ||
            solutionLower.includes('mitigate') || solutionLower.includes('preserve'))) {
         score = 5
         level = 'C1'
@@ -171,227 +194,295 @@ export default function Phase5Step1Interaction2() {
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', color: 'white' }}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">
-          Phase 5: Execution & Problem-Solving
-        </Typography>
-        <Typography variant="h5" gutterBottom>
-          Step 1: Engage - Interaction 2
-        </Typography>
-        <Typography variant="body1">
-          Suggest a solution to the last-minute problem
-        </Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
 
-      {/* Instructor Message */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage
-          speaker="SKANDER"
-          message="The singer canceled! How can we solve this last-minute problem for the festival?"
-        />
-      </Paper>
+          {/* Header */}
+          <Box sx={{
+            bgcolor: P.blue.bg,
+            border: `2px solid ${P.blue.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.blue.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h4" gutterBottom fontWeight={700} color={P.blue.border}>
+              Phase 5: Execution &amp; Problem-Solving
+            </Typography>
+            <Typography variant="h5" gutterBottom color={P.blue.shadow}>
+              Step 1: Engage - Interaction 2
+            </Typography>
+            <Typography variant="body1" color={isDark ? 'rgba(255,255,255,0.7)' : 'text.secondary'}>
+              Suggest a solution to the last-minute problem
+            </Typography>
+          </Box>
 
-      {/* Instructions */}
-      <Alert severity="info" icon={<InfoIcon />} sx={{ mb: 3 }}>
-        <Typography variant="body2" gutterBottom fontWeight="bold">
-          Instructions:
-        </Typography>
-        <Typography variant="body2">
-          Suggest one solution (e.g., find alternative performer, change schedule) and explain why it works.
-          Use vocabulary terms like: <strong>{TARGET_VOCABULARY.join(', ')}</strong>
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
-          <strong>Hint:</strong> Start with "We can..." or "I suggest..." and use "because" to explain your reasoning.
-        </Typography>
-      </Alert>
-
-      {/* Vocabulary Reference */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3, backgroundColor: 'info.lighter' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <LightbulbIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
-          <Typography variant="h6" color="primary">
-            Problem-Solving Vocabulary
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {TARGET_VOCABULARY.map((term, idx) => (
-            <Chip
-              key={idx}
-              label={term}
-              color="primary"
-              variant="outlined"
-              sx={{ fontWeight: 'bold' }}
+          {/* Instructor Message */}
+          <Box sx={{
+            bgcolor: P.teal.bg,
+            border: `2px solid ${P.teal.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <CharacterMessage
+              speaker="SKANDER"
+              message="The singer canceled! How can we solve this last-minute problem for the festival?"
             />
-          ))}
-        </Box>
-      </Paper>
+          </Box>
 
-      {/* Expected Response Examples */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3, backgroundColor: 'warning.lighter' }}>
-        <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-          Expected Response Examples (by level):
-        </Typography>
-        <Stack spacing={1}>
-          {Object.entries(EXPECTED_EXAMPLES).map(([level, example]) => (
-            <Box key={level}>
-              <Typography variant="body2" fontWeight="bold" color="primary">
-                {level}:
-              </Typography>
-              <Typography variant="body2" sx={{ fontStyle: 'italic', ml: 2 }}>
-                "{example}"
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
-      </Paper>
-
-      {/* Writing Area */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom color="primary">
-          Your Solution Suggestion
-        </Typography>
-
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          <Typography variant="body2">
-            <strong>Assessment Focus:</strong> Grammar (connectors like "because"), 
-            Problem-solving language, Logical reasoning, Vocabulary usage
-          </Typography>
-        </Alert>
-
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          variant="outlined"
-          placeholder="Example: We can find another singer as an alternative because it is urgent and keeps the program running..."
-          value={solution}
-          onChange={(e) => setSolution(e.target.value)}
-          disabled={submitted}
-          sx={{ mb: 2 }}
-        />
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="caption" color="text.secondary">
-            Words: {solution.split(/\s+/).filter(w => w.length > 0).length} |
-            Vocabulary used: {TARGET_VOCABULARY.filter(term => 
-              solution.toLowerCase().includes(term)
-            ).length}/{TARGET_VOCABULARY.length}
-          </Typography>
-        </Box>
-
-        {!submitted && (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            disabled={loading || !solution.trim()}
-            fullWidth
-            size="large"
-            startIcon={loading ? <CircularProgress size={20} /> : <LightbulbIcon />}
-          >
-            {loading ? 'Evaluating...' : 'Submit Solution'}
-          </Button>
-        )}
-      </Paper>
-
-      {/* Evaluation Results */}
-      {evaluation && (
-        <Paper
-          elevation={3}
-          sx={{
-            p: 3,
-            mb: 3,
-            backgroundColor: evaluation.success ? 'success.lighter' : 'warning.lighter',
-            border: '2px solid',
-            borderColor: evaluation.success ? 'success.main' : 'warning.main'
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <CheckCircleIcon
-              sx={{
-                fontSize: 40,
-                color: evaluation.success ? 'success.main' : 'warning.main',
-                mr: 2
-              }}
-            />
+          {/* Instructions */}
+          <Box sx={{
+            bgcolor: P.blue.bg,
+            border: `2px solid ${P.blue.border}`,
+            borderRadius: '16px',
+            p: 2.5, mb: 3,
+            display: 'flex', alignItems: 'flex-start', gap: 1.5,
+          }}>
+            <InfoIcon sx={{ color: P.blue.border, mt: 0.25 }} />
             <Box>
-              <Typography variant="h6" color={evaluation.success ? 'success.dark' : 'warning.dark'}>
-                {evaluation.success ? 'Solution Evaluated!' : 'Try Again'}
+              <Typography variant="body2" gutterBottom fontWeight={700} color={P.blue.shadow}>
+                Instructions:
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Level: {evaluation.level} | Score: +{evaluation.score} point{evaluation.score !== 1 ? 's' : ''}
+              <Typography variant="body2" color={isDark ? 'rgba(255,255,255,0.8)' : 'text.primary'}>
+                Suggest one solution (e.g., find alternative performer, change schedule) and explain why it works.
+                Use vocabulary terms like: <strong>{TARGET_VOCABULARY.join(', ')}</strong>
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic', color: isDark ? 'rgba(255,255,255,0.7)' : 'text.secondary' }}>
+                <strong>Hint:</strong> Start with "We can..." or "I suggest..." and use "because" to explain your reasoning.
               </Typography>
             </Box>
           </Box>
 
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            {evaluation.feedback}
-          </Typography>
-
-          {evaluation.vocabulary_used && evaluation.vocabulary_used.length > 0 && (
-            <Box sx={{ mt: 2, mb: 2 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Vocabulary Terms Used:
+          {/* Vocabulary Reference */}
+          <Box sx={{
+            bgcolor: P.teal.bg,
+            border: `2px solid ${P.teal.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <LightbulbIcon sx={{ fontSize: 36, color: P.yellow.shadow, mr: 1.5 }} />
+              <Typography variant="h6" fontWeight={700} color={P.teal.shadow}>
+                Problem-Solving Vocabulary
               </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {evaluation.vocabulary_used.map((term, idx) => (
-                  <Chip
-                    key={idx}
-                    label={term}
-                    color="success"
-                    size="small"
-                  />
-                ))}
-              </Box>
             </Box>
-          )}
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {TARGET_VOCABULARY.map((term, idx) => (
+                <Box key={idx} sx={{
+                  bgcolor: P.blue.bg,
+                  border: `2px solid ${P.blue.border}`,
+                  borderRadius: '999px',
+                  px: 2, py: 0.5,
+                  fontWeight: 700, fontSize: '0.85rem',
+                  color: P.blue.shadow,
+                }}>
+                  {term}
+                </Box>
+              ))}
+            </Box>
+          </Box>
 
-          {evaluation.strengths && evaluation.strengths.length > 0 && (
-            <Box sx={{ mt: 2, mb: 2 }}>
-              <Typography variant="subtitle2" gutterBottom color="success.dark">
-                Strengths:
+          {/* Expected Response Examples */}
+          <Box sx={{
+            bgcolor: P.yellow.bg,
+            border: `2px solid ${P.yellow.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.yellow.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="subtitle1" fontWeight={700} gutterBottom color={P.yellow.shadow}>
+              Expected Response Examples (by level):
+            </Typography>
+            <Stack spacing={1}>
+              {Object.entries(EXPECTED_EXAMPLES).map(([level, example]) => (
+                <Box key={level}>
+                  <Typography variant="body2" fontWeight={700} color={P.yellow.shadow}>
+                    {level}:
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontStyle: 'italic', ml: 2, color: isDark ? 'rgba(255,255,255,0.8)' : 'text.primary' }}>
+                    "{example}"
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+
+          {/* Writing Area */}
+          <Box sx={{
+            bgcolor: P.orange.bg,
+            border: `2px solid ${P.orange.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h6" gutterBottom fontWeight={700} color={P.orange.shadow}>
+              Your Solution Suggestion
+            </Typography>
+
+            <Box sx={{
+              bgcolor: P.yellow.bg,
+              border: `2px solid ${P.yellow.border}`,
+              borderRadius: '12px',
+              p: 2, mb: 2,
+            }}>
+              <Typography variant="body2" color={P.yellow.shadow} fontWeight={600}>
+                <strong>Assessment Focus:</strong> Grammar (connectors like "because"),
+                Problem-solving language, Logical reasoning, Vocabulary usage
               </Typography>
-              <ul style={{ margin: 0, paddingLeft: 20 }}>
-                {evaluation.strengths.map((strength, idx) => (
-                  <li key={idx}>
-                    <Typography variant="body2">{strength}</Typography>
-                  </li>
-                ))}
-              </ul>
             </Box>
-          )}
 
-          {evaluation.improvements && evaluation.improvements.length > 0 && (
-            <Box sx={{ mt: 2, mb: 2 }}>
-              <Typography variant="subtitle2" gutterBottom color="warning.dark">
-                Suggestions for Improvement:
-              </Typography>
-              <ul style={{ margin: 0, paddingLeft: 20 }}>
-                {evaluation.improvements.map((improvement, idx) => (
-                  <li key={idx}>
-                    <Typography variant="body2">{improvement}</Typography>
-                  </li>
-                ))}
-              </ul>
-            </Box>
-          )}
-
-          {submitted && (
-            <Button
-              variant="contained"
-              color="success"
-              onClick={handleContinue}
-              size="large"
+            <TextField
               fullWidth
-              sx={{ mt: 2 }}
-            >
-              Continue to Interaction 3
-            </Button>
+              multiline
+              rows={4}
+              variant="outlined"
+              placeholder="Example: We can find another singer as an alternative because it is urgent and keeps the program running..."
+              value={solution}
+              onChange={(e) => setSolution(e.target.value)}
+              disabled={submitted}
+              sx={{ mb: 2 }}
+            />
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="caption" color={isDark ? 'rgba(255,255,255,0.5)' : 'text.secondary'}>
+                Words: {solution.split(/\s+/).filter(w => w.length > 0).length} |
+                Vocabulary used: {TARGET_VOCABULARY.filter(term =>
+                  solution.toLowerCase().includes(term)
+                ).length}/{TARGET_VOCABULARY.length}
+              </Typography>
+            </Box>
+
+            {!submitted && (
+              <Box
+                component="button"
+                onClick={handleSubmit}
+                disabled={loading || !solution.trim()}
+                sx={{
+                  width: '100%',
+                  bgcolor: P.blue.bg,
+                  border: `2px solid ${P.blue.border}`,
+                  borderRadius: '12px',
+                  boxShadow: `3px 3px 0 ${P.blue.shadow}`,
+                  py: 1.5,
+                  fontWeight: 700, fontSize: '1rem',
+                  cursor: loading || !solution.trim() ? 'not-allowed' : 'pointer',
+                  color: P.blue.shadow,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                  opacity: loading || !solution.trim() ? 0.6 : 1,
+                  transition: 'transform 0.15s, box-shadow 0.15s',
+                  '&:hover': !loading && solution.trim() ? { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.blue.shadow}` } : {},
+                }}
+              >
+                {loading ? <CircularProgress size={20} /> : <LightbulbIcon />}
+                {loading ? 'Evaluating...' : 'Submit Solution'}
+              </Box>
+            )}
+          </Box>
+
+          {/* Evaluation Results */}
+          {evaluation && (
+            <Box sx={{
+              bgcolor: evaluation.success ? P.green.bg : P.orange.bg,
+              border: `2px solid ${evaluation.success ? P.green.border : P.orange.border}`,
+              borderRadius: '20px',
+              boxShadow: `4px 4px 0 ${evaluation.success ? P.green.shadow : P.orange.shadow}`,
+              p: 3, mb: 3,
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <CheckCircleIcon sx={{ fontSize: 40, color: evaluation.success ? P.green.border : P.orange.border, mr: 2 }} />
+                <Box>
+                  <Typography variant="h6" fontWeight={700} color={evaluation.success ? P.green.shadow : P.orange.shadow}>
+                    {evaluation.success ? 'Solution Evaluated!' : 'Try Again'}
+                  </Typography>
+                  <Typography variant="body2" color={isDark ? 'rgba(255,255,255,0.6)' : 'text.secondary'}>
+                    Level: {evaluation.level} | Score: +{evaluation.score} point{evaluation.score !== 1 ? 's' : ''}
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Typography variant="body1" sx={{ mb: 2, color: isDark ? 'rgba(255,255,255,0.85)' : 'text.primary' }}>
+                {evaluation.feedback}
+              </Typography>
+
+              {evaluation.vocabulary_used && evaluation.vocabulary_used.length > 0 && (
+                <Box sx={{ mt: 2, mb: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom fontWeight={600} color={evaluation.success ? P.green.shadow : P.orange.shadow}>
+                    Vocabulary Terms Used:
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {evaluation.vocabulary_used.map((term, idx) => (
+                      <Box key={idx} sx={{
+                        bgcolor: P.green.bg,
+                        border: `2px solid ${P.green.border}`,
+                        borderRadius: '999px', px: 2, py: 0.5,
+                        fontSize: '0.8rem', fontWeight: 700,
+                        color: P.green.shadow,
+                      }}>
+                        {term}
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {evaluation.strengths && evaluation.strengths.length > 0 && (
+                <Box sx={{ mt: 2, mb: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom fontWeight={600} color={P.green.shadow}>
+                    Strengths:
+                  </Typography>
+                  <ul style={{ margin: 0, paddingLeft: 20 }}>
+                    {evaluation.strengths.map((strength, idx) => (
+                      <li key={idx}>
+                        <Typography variant="body2">{strength}</Typography>
+                      </li>
+                    ))}
+                  </ul>
+                </Box>
+              )}
+
+              {evaluation.improvements && evaluation.improvements.length > 0 && (
+                <Box sx={{ mt: 2, mb: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom fontWeight={600} color={P.orange.shadow}>
+                    Suggestions for Improvement:
+                  </Typography>
+                  <ul style={{ margin: 0, paddingLeft: 20 }}>
+                    {evaluation.improvements.map((improvement, idx) => (
+                      <li key={idx}>
+                        <Typography variant="body2">{improvement}</Typography>
+                      </li>
+                    ))}
+                  </ul>
+                </Box>
+              )}
+
+              {submitted && (
+                <Box
+                  component="button"
+                  onClick={handleContinue}
+                  sx={{
+                    width: '100%',
+                    bgcolor: P.green.bg,
+                    border: `2px solid ${P.green.border}`,
+                    borderRadius: '12px',
+                    boxShadow: `3px 3px 0 ${P.green.shadow}`,
+                    py: 1.5, mt: 2,
+                    fontWeight: 700, fontSize: '1rem',
+                    cursor: 'pointer',
+                    color: P.green.shadow,
+                    transition: 'transform 0.15s, box-shadow 0.15s',
+                    '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
+                  }}
+                >
+                  Continue to Interaction 3
+                </Box>
+              )}
+            </Box>
           )}
-        </Paper>
-      )}
+
+        </motion.div>
+      </Container>
     </Box>
   )
 }

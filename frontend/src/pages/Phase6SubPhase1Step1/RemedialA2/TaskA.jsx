@@ -2,14 +2,13 @@ import React, { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
-  Paper,
+  Container,
   Typography,
-  Button,
   Stack,
-  Grid,
-  Chip,
-  Alert
+  Grid
 } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
@@ -20,6 +19,27 @@ import { useProgressSave } from '../../../hooks/useProgressSave'
  * Phase 6 SubPhase 1 Step 1 - Level A2 - Task A
  * Vocabulary Matching: Match words to their definitions
  */
+
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+  green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+  purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+  teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+  red: { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+  green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+  purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
+  teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+  red: { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+}
 
 const MATCHING_PAIRS = [
   { word: 'success', definition: 'Good result' },
@@ -41,10 +61,12 @@ function shuffle(arr) {
 
 export default function Phase6SP1Step1RemedialA2TaskA() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 1, interaction: 1, context: 'remedial_a2' })
   const shuffledDefinitions = useMemo(() => shuffle(MATCHING_PAIRS.map((p, i) => ({ ...p, idx: i }))), [])
-  const [selectedWord, setSelectedWord] = useState(null) // index in MATCHING_PAIRS
-  const [matches, setMatches] = useState({}) // { wordIndex: definitionIndex }
+  const [selectedWord, setSelectedWord] = useState(null)
+  const [matches, setMatches] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
   const [correctSet, setCorrectSet] = useState(new Set())
@@ -55,7 +77,6 @@ export default function Phase6SP1Step1RemedialA2TaskA() {
   const handleWordClick = (idx) => {
     if (submitted) return
     if (matchedWordIndices.has(idx)) {
-      // Remove existing match
       const newMatches = { ...matches }
       delete newMatches[idx]
       setMatches(newMatches)
@@ -67,17 +88,11 @@ export default function Phase6SP1Step1RemedialA2TaskA() {
   const handleDefClick = (defIdx) => {
     if (submitted) return
     if (selectedWord === null) return
-
-    // Find the original index for this definition
-    const originalIdx = shuffledDefinitions[defIdx].idx
-
-    // Remove if definition already matched
     const newMatches = { ...matches }
     const existingWordForDef = Object.keys(newMatches).find(k => newMatches[k] === defIdx)
     if (existingWordForDef !== undefined) {
       delete newMatches[existingWordForDef]
     }
-
     newMatches[selectedWord] = defIdx
     setMatches(newMatches)
     setSelectedWord(null)
@@ -86,7 +101,6 @@ export default function Phase6SP1Step1RemedialA2TaskA() {
   const handleSubmit = async () => {
     let correctCount = 0
     const correct = new Set()
-
     Object.entries(matches).forEach(([wordIdx, defIdx]) => {
       const wordItem = MATCHING_PAIRS[parseInt(wordIdx)]
       const defItem = shuffledDefinitions[parseInt(defIdx)]
@@ -95,13 +109,10 @@ export default function Phase6SP1Step1RemedialA2TaskA() {
         correct.add(parseInt(wordIdx))
       }
     })
-
     setScore(correctCount)
     setCorrectSet(correct)
     setSubmitted(true)
-
     sessionStorage.setItem('phase6_sp1_step1_remedial_a2_taskA_score', correctCount.toString())
-
     try {
       await phase6API.logRemedialActivity(1, 'A2', 'A', correctCount, 6, 0, 1)
     } catch (error) {
@@ -116,237 +127,310 @@ export default function Phase6SP1Step1RemedialA2TaskA() {
   const allMatched = matchedWordIndices.size === MATCHING_PAIRS.length
 
   return (
-    <Box sx={{ maxWidth: 1100, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          mb: 3,
-          background: 'linear-gradient(135deg, #8e44ad 0%, #6c3483 100%)',
-          color: 'white',
-          borderRadius: 2
-        }}
-      >
-        <Typography variant="h4" gutterBottom fontWeight="bold">
-          Phase 6: Reflection and Evaluation
-        </Typography>
-        <Typography variant="h5" gutterBottom>
-          Step 1: Remedial Practice - Level A2
-        </Typography>
-        <Typography variant="h6" gutterBottom>
-          Task A: Vocabulary Matching
-        </Typography>
-        <Typography variant="body1">
-          Match each word to its correct definition
-        </Typography>
-      </Paper>
-
-      {/* Instructor Message */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <CharacterMessage
-          speaker="Ms. Mabrouki"
-          message="Match Race! Match 6 reflection/report words to their simple definitions. Click a word on the left, then click the matching definition on the right. Match all six words!"
-        />
-      </Paper>
-
-      <Alert severity="info" sx={{ mb: 3 }}>
-        <Typography variant="body2">
-          <strong>How to play:</strong> Click a word on the left to select it (it will highlight),
-          then click its matching definition on the right. Click a matched word to remove the match.
-        </Typography>
-      </Alert>
-
-      {!submitted && (
-        <Grid container spacing={3}>
-          {/* Words Column */}
-          <Grid item xs={12} md={5}>
-            <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
-              <Typography variant="h6" gutterBottom color="primary" textAlign="center">
-                Words
-              </Typography>
-              <Stack spacing={1.5}>
-                {MATCHING_PAIRS.map((pair, idx) => {
-                  const isMatched = matchedWordIndices.has(idx)
-                  const isSelected = selectedWord === idx
-                  return (
-                    <Box
-                      key={idx}
-                      onClick={() => handleWordClick(idx)}
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 1,
-                        border: '2px solid',
-                        borderColor: isSelected ? '#8e44ad' : isMatched ? '#27ae60' : '#e0e0e0',
-                        backgroundColor: isSelected ? '#f3e5f5' : isMatched ? '#e8f8f0' : 'white',
-                        cursor: 'pointer',
-                        textAlign: 'center',
-                        fontWeight: 'bold',
-                        fontSize: '1rem',
-                        transition: 'all 0.2s',
-                        '&:hover': { borderColor: '#8e44ad', backgroundColor: '#fdf0ff' }
-                      }}
-                    >
-                      <Typography variant="body1" fontWeight="bold">
-                        {pair.word}
-                      </Typography>
-                      {isMatched && (
-                        <Typography variant="caption" color="success.main">
-                          (matched)
-                        </Typography>
-                      )}
-                    </Box>
-                  )
-                })}
-              </Stack>
-            </Paper>
-          </Grid>
-
-          {/* Arrow Column */}
-          <Grid item xs={12} md={2} sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', justifyContent: 'center' }}>
-            <Typography variant="h4" color="text.secondary">→</Typography>
-          </Grid>
-
-          {/* Definitions Column */}
-          <Grid item xs={12} md={5}>
-            <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
-              <Typography variant="h6" gutterBottom color="primary" textAlign="center">
-                Definitions
-              </Typography>
-              <Stack spacing={1.5}>
-                {shuffledDefinitions.map((item, defIdx) => {
-                  const isMatched = matchedDefIndices.has(defIdx)
-                  const matchedWordIdx = Object.keys(matches).find(k => matches[k] === defIdx)
-                  const matchedWord = matchedWordIdx !== undefined ? MATCHING_PAIRS[parseInt(matchedWordIdx)].word : null
-                  return (
-                    <Box
-                      key={defIdx}
-                      onClick={() => handleDefClick(defIdx)}
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 1,
-                        border: '2px solid',
-                        borderColor: isMatched ? '#27ae60' : selectedWord !== null ? '#8e44ad' : '#e0e0e0',
-                        backgroundColor: isMatched ? '#e8f8f0' : selectedWord !== null ? '#fdf0ff' : '#fafafa',
-                        cursor: selectedWord !== null ? 'pointer' : 'default',
-                        transition: 'all 0.2s',
-                        '&:hover': selectedWord !== null ? { borderColor: '#6c3483', backgroundColor: '#f3e5f5' } : {}
-                      }}
-                    >
-                      <Typography variant="body2">
-                        {item.definition}
-                      </Typography>
-                      {matchedWord && (
-                        <Chip
-                          label={matchedWord}
-                          size="small"
-                          sx={{ mt: 0.5, backgroundColor: '#27ae60', color: 'white' }}
-                        />
-                      )}
-                    </Box>
-                  )
-                })}
-              </Stack>
-            </Paper>
-          </Grid>
-        </Grid>
-      )}
-
-      {/* Submit Button */}
-      {!submitted && (
-        <Box sx={{ mt: 3, textAlign: 'center' }}>
-          <Button
-            variant="contained"
-            size="large"
-            onClick={handleSubmit}
-            disabled={!allMatched}
-            sx={{
-              px: 6,
-              background: 'linear-gradient(135deg, #8e44ad 0%, #6c3483 100%)',
-              '&:hover': { background: 'linear-gradient(135deg, #6c3483 0%, #5b2c6f 100%)' }
-            }}
-          >
-            Submit Answers
-          </Button>
-          {!allMatched && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Match all {MATCHING_PAIRS.length} pairs before submitting ({matchedWordIndices.size}/{MATCHING_PAIRS.length} matched)
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{
+            bgcolor: P.orange.bg,
+            border: `2px solid ${P.orange.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+            p: 3,
+            mb: 3
+          }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow }}>
+              Phase 6: Reflection and Evaluation
             </Typography>
-          )}
+            <Typography variant="h5" gutterBottom sx={{ color: P.orange.border }}>
+              Step 1: Remedial Practice - Level A2
+            </Typography>
+            <Typography variant="h6" gutterBottom sx={{ color: P.orange.shadow }}>
+              Task A: Vocabulary Matching
+            </Typography>
+            <Typography variant="body1" sx={{ color: P.orange.shadow }}>
+              Match each word to its correct definition
+            </Typography>
+          </Box>
+        </motion.div>
+
+        {/* Instructor Message */}
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+          <Box sx={{
+            bgcolor: P.teal.bg,
+            border: `2px solid ${P.teal.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+            p: 3,
+            mb: 3
+          }}>
+            <CharacterMessage
+              speaker="Ms. Mabrouki"
+              message="Match Race! Match 6 reflection/report words to their simple definitions. Click a word on the left, then click the matching definition on the right. Match all six words!"
+            />
+          </Box>
+        </motion.div>
+
+        {/* Info */}
+        <Box sx={{
+          bgcolor: P.blue.bg,
+          border: `2px solid ${P.blue.border}`,
+          borderRadius: '14px',
+          boxShadow: `2px 2px 0 ${P.blue.shadow}`,
+          p: 2,
+          mb: 3
+        }}>
+          <Typography variant="body2" sx={{ color: P.blue.shadow }}>
+            <strong>How to play:</strong> Click a word on the left to select it (it will highlight),
+            then click its matching definition on the right. Click a matched word to remove the match.
+          </Typography>
         </Box>
-      )}
 
-      {/* Results */}
-      {submitted && (
-        <>
-          <Paper elevation={3} sx={{ p: 4, mb: 3, backgroundColor: '#e8f8f0', textAlign: 'center', borderRadius: 2 }}>
-            <CheckCircleIcon sx={{ fontSize: 60, color: '#27ae60', mb: 1 }} />
-            <Typography variant="h5" color="success.dark" gutterBottom fontWeight="bold">
-              Task A Complete!
-            </Typography>
-            <Typography variant="h6" sx={{ mt: 1 }}>
-              Score: {score} / {MATCHING_PAIRS.length}
-            </Typography>
-            <Typography variant="body1" sx={{ mt: 1 }}>
-              {score === MATCHING_PAIRS.length
-                ? 'Perfect! You matched all words correctly!'
-                : score >= 4
-                ? 'Well done! You matched most words correctly.'
-                : 'Good effort! Review the definitions and try to remember them.'}
-            </Typography>
-          </Paper>
+        {!submitted && (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+            <Grid container spacing={3}>
+              {/* Words Column */}
+              <Grid item xs={12} md={5}>
+                <Box sx={{
+                  bgcolor: P.purple.bg,
+                  border: `2px solid ${P.purple.border}`,
+                  borderRadius: '16px',
+                  boxShadow: `3px 3px 0 ${P.purple.shadow}`,
+                  p: 2
+                }}>
+                  <Typography variant="h6" gutterBottom fontWeight="bold" textAlign="center" sx={{ color: P.purple.shadow }}>
+                    Words
+                  </Typography>
+                  <Stack spacing={1.5}>
+                    {MATCHING_PAIRS.map((pair, idx) => {
+                      const isMatched = matchedWordIndices.has(idx)
+                      const isSelected = selectedWord === idx
+                      return (
+                        <Box
+                          key={idx}
+                          onClick={() => handleWordClick(idx)}
+                          sx={{
+                            p: 1.5,
+                            borderRadius: '12px',
+                            border: '2px solid',
+                            borderColor: isSelected ? P.purple.border : isMatched ? P.green.border : P.yellow.border,
+                            bgcolor: isSelected ? P.purple.bg : isMatched ? P.green.bg : P.yellow.bg,
+                            boxShadow: `2px 2px 0 ${isSelected ? P.purple.shadow : isMatched ? P.green.shadow : P.yellow.shadow}`,
+                            cursor: 'pointer',
+                            textAlign: 'center',
+                            transition: 'all 0.15s',
+                            '&:hover': { transform: 'translate(-1px,-1px)', boxShadow: `3px 3px 0 ${P.purple.shadow}` }
+                          }}
+                        >
+                          <Typography variant="body1" fontWeight="bold" sx={{ color: isMatched ? P.green.shadow : P.purple.shadow }}>
+                            {pair.word}
+                          </Typography>
+                          {isMatched && (
+                            <Typography variant="caption" sx={{ color: P.green.shadow }}>
+                              (matched)
+                            </Typography>
+                          )}
+                        </Box>
+                      )
+                    })}
+                  </Stack>
+                </Box>
+              </Grid>
 
-          {/* Show correct answers */}
-          <Paper elevation={1} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-            <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
-              Correct Matches
-            </Typography>
-            <Grid container spacing={2}>
-              {MATCHING_PAIRS.map((pair, idx) => {
-                const isCorrect = correctSet.has(idx)
-                return (
-                  <Grid item xs={12} sm={6} key={idx}>
-                    <Box
-                      sx={{
+              {/* Arrow Column */}
+              <Grid item xs={12} md={2} sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', justifyContent: 'center' }}>
+                <Typography variant="h4" color="text.secondary">→</Typography>
+              </Grid>
+
+              {/* Definitions Column */}
+              <Grid item xs={12} md={5}>
+                <Box sx={{
+                  bgcolor: P.teal.bg,
+                  border: `2px solid ${P.teal.border}`,
+                  borderRadius: '16px',
+                  boxShadow: `3px 3px 0 ${P.teal.shadow}`,
+                  p: 2
+                }}>
+                  <Typography variant="h6" gutterBottom fontWeight="bold" textAlign="center" sx={{ color: P.teal.shadow }}>
+                    Definitions
+                  </Typography>
+                  <Stack spacing={1.5}>
+                    {shuffledDefinitions.map((item, defIdx) => {
+                      const isMatched = matchedDefIndices.has(defIdx)
+                      const matchedWordIdx = Object.keys(matches).find(k => matches[k] === defIdx)
+                      const matchedWord = matchedWordIdx !== undefined ? MATCHING_PAIRS[parseInt(matchedWordIdx)].word : null
+                      return (
+                        <Box
+                          key={defIdx}
+                          onClick={() => handleDefClick(defIdx)}
+                          sx={{
+                            p: 1.5,
+                            borderRadius: '12px',
+                            border: '2px solid',
+                            borderColor: isMatched ? P.green.border : selectedWord !== null ? P.purple.border : P.teal.border,
+                            bgcolor: isMatched ? P.green.bg : selectedWord !== null ? P.purple.bg : P.teal.bg,
+                            boxShadow: `2px 2px 0 ${isMatched ? P.green.shadow : P.teal.shadow}`,
+                            cursor: selectedWord !== null ? 'pointer' : 'default',
+                            transition: 'all 0.15s',
+                            '&:hover': selectedWord !== null ? { transform: 'translate(-1px,-1px)', boxShadow: `3px 3px 0 ${P.purple.shadow}` } : {}
+                          }}
+                        >
+                          <Typography variant="body2" sx={{ color: isMatched ? P.green.shadow : P.teal.shadow }}>
+                            {item.definition}
+                          </Typography>
+                          {matchedWord && (
+                            <Box sx={{
+                              display: 'inline-block',
+                              mt: 0.5,
+                              px: 1,
+                              py: 0.25,
+                              bgcolor: P.green.bg,
+                              border: `1px solid ${P.green.border}`,
+                              borderRadius: '8px',
+                              fontSize: '0.75rem',
+                              fontWeight: 'bold',
+                              color: P.green.shadow
+                            }}>
+                              {matchedWord}
+                            </Box>
+                          )}
+                        </Box>
+                      )
+                    })}
+                  </Stack>
+                </Box>
+              </Grid>
+            </Grid>
+          </motion.div>
+        )}
+
+        {/* Submit Button */}
+        {!submitted && (
+          <Box sx={{ mt: 3, textAlign: 'center' }}>
+            <Box
+              component="button"
+              onClick={handleSubmit}
+              disabled={!allMatched}
+              sx={{
+                cursor: allMatched ? 'pointer' : 'not-allowed',
+                opacity: allMatched ? 1 : 0.6,
+                px: 6,
+                py: 1.5,
+                bgcolor: P.orange.bg,
+                border: `2px solid ${P.orange.border}`,
+                borderRadius: '16px',
+                boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                color: P.orange.shadow,
+                '&:hover': { transform: allMatched ? 'translate(-2px,-2px)' : 'none', boxShadow: allMatched ? `6px 6px 0 ${P.orange.shadow}` : `4px 4px 0 ${P.orange.shadow}` },
+                transition: 'all 0.15s'
+              }}
+            >
+              Submit Answers
+            </Box>
+            {!allMatched && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Match all {MATCHING_PAIRS.length} pairs before submitting ({matchedWordIndices.size}/{MATCHING_PAIRS.length} matched)
+              </Typography>
+            )}
+          </Box>
+        )}
+
+        {/* Results */}
+        {submitted && (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{
+              bgcolor: P.green.bg,
+              border: `2px solid ${P.green.border}`,
+              borderRadius: '20px',
+              boxShadow: `4px 4px 0 ${P.green.shadow}`,
+              p: 4,
+              mb: 3,
+              textAlign: 'center'
+            }}>
+              <CheckCircleIcon sx={{ fontSize: 60, color: P.green.border, mb: 1 }} />
+              <Typography variant="h5" fontWeight="bold" sx={{ color: P.green.shadow }}>
+                Task A Complete!
+              </Typography>
+              <Typography variant="h6" sx={{ mt: 1, color: P.green.shadow }}>
+                Score: {score} / {MATCHING_PAIRS.length}
+              </Typography>
+              <Typography variant="body1" sx={{ mt: 1 }}>
+                {score === MATCHING_PAIRS.length
+                  ? 'Perfect! You matched all words correctly!'
+                  : score >= 4
+                  ? 'Well done! You matched most words correctly.'
+                  : 'Good effort! Review the definitions and try to remember them.'}
+              </Typography>
+            </Box>
+
+            {/* Correct answers */}
+            <Box sx={{
+              bgcolor: P.blue.bg,
+              border: `2px solid ${P.blue.border}`,
+              borderRadius: '16px',
+              boxShadow: `3px 3px 0 ${P.blue.shadow}`,
+              p: 3,
+              mb: 3
+            }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
+                Correct Matches
+              </Typography>
+              <Grid container spacing={2}>
+                {MATCHING_PAIRS.map((pair, idx) => {
+                  const isCorrect = correctSet.has(idx)
+                  return (
+                    <Grid item xs={12} sm={6} key={idx}>
+                      <Box sx={{
                         p: 1.5,
-                        borderRadius: 1,
-                        border: '2px solid',
-                        borderColor: isCorrect ? 'success.main' : 'error.main',
-                        backgroundColor: isCorrect ? 'success.lighter' : 'error.lighter',
+                        borderRadius: '12px',
+                        border: `2px solid ${isCorrect ? P.green.border : P.red.border}`,
+                        bgcolor: isCorrect ? P.green.bg : P.red.bg,
+                        boxShadow: `2px 2px 0 ${isCorrect ? P.green.shadow : P.red.shadow}`,
                         display: 'flex',
                         alignItems: 'center',
                         gap: 1
-                      }}
-                    >
-                      {isCorrect
-                        ? <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
-                        : <CancelIcon sx={{ color: 'error.main', fontSize: 20 }} />}
-                      <Box>
-                        <Typography variant="body2" fontWeight="bold">{pair.word}</Typography>
-                        <Typography variant="caption" color="text.secondary">{pair.definition}</Typography>
+                      }}>
+                        {isCorrect
+                          ? <CheckCircleIcon sx={{ color: P.green.border, fontSize: 20 }} />
+                          : <CancelIcon sx={{ color: P.red.border, fontSize: 20 }} />}
+                        <Box>
+                          <Typography variant="body2" fontWeight="bold" sx={{ color: isCorrect ? P.green.shadow : P.red.shadow }}>{pair.word}</Typography>
+                          <Typography variant="caption" color="text.secondary">{pair.definition}</Typography>
+                        </Box>
                       </Box>
-                    </Box>
-                  </Grid>
-                )
-              })}
-            </Grid>
-          </Paper>
+                    </Grid>
+                  )
+                })}
+              </Grid>
+            </Box>
 
-          <Stack direction="row" justifyContent="flex-end">
-            <Button
-              variant="contained"
-              onClick={handleContinue}
-              size="large"
-              sx={{
-                background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)',
-                '&:hover': { background: 'linear-gradient(135deg, #1e8449 0%, #196f3d 100%)' }
-              }}
-            >
-              Next: Task B →
-            </Button>
-          </Stack>
-        </>
-      )}
+            <Stack direction="row" justifyContent="flex-end">
+              <Box
+                component="button"
+                onClick={handleContinue}
+                sx={{
+                  cursor: 'pointer',
+                  px: 4,
+                  py: 1.5,
+                  bgcolor: P.green.bg,
+                  border: `2px solid ${P.green.border}`,
+                  borderRadius: '16px',
+                  boxShadow: `4px 4px 0 ${P.green.shadow}`,
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  color: P.green.shadow,
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` },
+                  transition: 'all 0.15s'
+                }}
+              >
+                Next: Task B →
+              </Box>
+            </Stack>
+          </motion.div>
+        )}
+      </Container>
     </Box>
   )
 }

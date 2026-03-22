@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, Stack, LinearProgress, Alert } from '@mui/material'
+import { Box, Typography, Stack, Container, LinearProgress } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
@@ -8,62 +10,45 @@ import TimerIcon from '@mui/icons-material/Timer'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  blue:   { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+  green:  { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+  red:    { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+  purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  blue:   { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+  green:  { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+  red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+  purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
+  yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+}
+
 /**
  * Phase 4 Step 3 - Remedial B1 - Task F: Grammar Kahoot
- * Multiple choice grammar quiz inspired by Kahoot
- * 6 questions about subject-verb agreement
  * Bonus task worth 6 points
  */
 
 const QUESTIONS = [
-  {
-    id: 1,
-    question: "Promotional ads ___ to sell?",
-    options: ['is', 'are'],
-    correctAnswer: 'are',
-    explanation: "Use 'are' because 'ads' is plural"
-  },
-  {
-    id: 2,
-    question: "Persuasive ___ logos?",
-    options: ['use', 'uses'],
-    correctAnswer: 'uses',
-    explanation: "Use 'uses' because 'persuasive' (advertising) is singular"
-  },
-  {
-    id: 3,
-    question: "Targeted group ___ specific?",
-    options: ['is', 'are'],
-    correctAnswer: 'is',
-    explanation: "Use 'is' because 'group' is singular"
-  },
-  {
-    id: 4,
-    question: "Original idea ___ new?",
-    options: ['is', 'are'],
-    correctAnswer: 'is',
-    explanation: "Use 'is' because 'idea' is singular"
-  },
-  {
-    id: 5,
-    question: "Creative ads ___ memorable?",
-    options: ['make', 'makes'],
-    correctAnswer: 'make',
-    explanation: "Use 'make' because 'ads' is plural"
-  },
-  {
-    id: 6,
-    question: "Ethical advertising ___ fair?",
-    options: ['is', 'are'],
-    correctAnswer: 'is',
-    explanation: "Use 'is' because 'advertising' is singular (uncountable noun)"
-  }
+  { id: 1, question: "Promotional ads ___ to sell?", options: ['is', 'are'], correctAnswer: 'are', explanation: "Use 'are' because 'ads' is plural" },
+  { id: 2, question: "Persuasive ___ logos?", options: ['use', 'uses'], correctAnswer: 'uses', explanation: "Use 'uses' because 'persuasive' (advertising) is singular" },
+  { id: 3, question: "Targeted group ___ specific?", options: ['is', 'are'], correctAnswer: 'is', explanation: "Use 'is' because 'group' is singular" },
+  { id: 4, question: "Original idea ___ new?", options: ['is', 'are'], correctAnswer: 'is', explanation: "Use 'is' because 'idea' is singular" },
+  { id: 5, question: "Creative ads ___ memorable?", options: ['make', 'makes'], correctAnswer: 'make', explanation: "Use 'make' because 'ads' is plural" },
+  { id: 6, question: "Ethical advertising ___ fair?", options: ['is', 'are'], correctAnswer: 'is', explanation: "Use 'is' because 'advertising' is singular (uncountable noun)" }
 ]
 
-const TIME_PER_QUESTION = 15 // seconds
+const TIME_PER_QUESTION = 15
 
 export default function RemedialB1TaskF() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 6, context: 'remedial_b1' })
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [score, setScore] = useState(0)
@@ -74,15 +59,20 @@ export default function RemedialB1TaskF() {
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
 
-  // Timer
+  const cardSx = (color) => ({
+    bgcolor: P[color].bg,
+    border: `2px solid ${P[color].border}`,
+    borderRadius: '20px',
+    boxShadow: `4px 4px 0 ${P[color].shadow}`,
+    p: 3,
+  })
+
   useEffect(() => {
     if (!gameStarted || gameFinished || showFeedback) return
-
     if (timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
       return () => clearTimeout(timer)
     } else {
-      // Time's up! Auto-submit
       handleTimeUp()
     }
   }, [timeLeft, gameStarted, gameFinished, showFeedback])
@@ -91,46 +81,18 @@ export default function RemedialB1TaskF() {
     if (selectedAnswer) {
       handleAnswerSubmit(selectedAnswer)
     } else {
-      // No answer selected - mark as incorrect
-      const isCorrect = false
-      setAnswers([...answers, {
-        questionId: QUESTIONS[currentQuestion].id,
-        question: QUESTIONS[currentQuestion].question,
-        selectedAnswer: null,
-        correctAnswer: QUESTIONS[currentQuestion].correctAnswer,
-        isCorrect: false,
-        timedOut: true
-      }])
+      setAnswers([...answers, { questionId: QUESTIONS[currentQuestion].id, question: QUESTIONS[currentQuestion].question, selectedAnswer: null, correctAnswer: QUESTIONS[currentQuestion].correctAnswer, isCorrect: false, timedOut: true }])
       setShowFeedback(true)
-
-      setTimeout(() => {
-        moveToNextQuestion()
-      }, 3000)
+      setTimeout(() => moveToNextQuestion(), 3000)
     }
   }
 
   const handleAnswerSubmit = (answer) => {
     const isCorrect = answer === QUESTIONS[currentQuestion].correctAnswer
-
-    if (isCorrect) {
-      setScore(score + 1)
-    }
-
-    setAnswers([...answers, {
-      questionId: QUESTIONS[currentQuestion].id,
-      question: QUESTIONS[currentQuestion].question,
-      selectedAnswer: answer,
-      correctAnswer: QUESTIONS[currentQuestion].correctAnswer,
-      isCorrect: isCorrect,
-      timedOut: false
-    }])
-
+    if (isCorrect) setScore(score + 1)
+    setAnswers([...answers, { questionId: QUESTIONS[currentQuestion].id, question: QUESTIONS[currentQuestion].question, selectedAnswer: answer, correctAnswer: QUESTIONS[currentQuestion].correctAnswer, isCorrect, timedOut: false }])
     setShowFeedback(true)
-
-    // Move to next question after 3 seconds
-    setTimeout(() => {
-      moveToNextQuestion()
-    }, 3000)
+    setTimeout(() => moveToNextQuestion(), 3000)
   }
 
   const moveToNextQuestion = () => {
@@ -140,18 +102,14 @@ export default function RemedialB1TaskF() {
       setShowFeedback(false)
       setTimeLeft(TIME_PER_QUESTION)
     } else {
-      // Game finished
       finishGame()
     }
   }
 
   const finishGame = () => {
     setGameFinished(true)
-
-    // Save score
     const finalScore = answers.filter(a => a.isCorrect).length + (selectedAnswer === QUESTIONS[currentQuestion].correctAnswer ? 1 : 0)
     sessionStorage.setItem('remedial_step3_b1_taskF_score', finalScore)
-
     logTaskCompletion(finalScore)
   }
 
@@ -159,35 +117,14 @@ export default function RemedialB1TaskF() {
     saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskF', is_correct: true, score: finalScore })
     try {
       await fetch('/api/phase4/remedial/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          level: 'B1',
-          task: 'F',
-          step: 2,
-          score: finalScore,
-          max_score: 6,
-          completed: true
-        })
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ level: 'B1', task: 'F', step: 2, score: finalScore, max_score: 6, completed: true })
       })
-    } catch (error) {
-      console.error('Failed to log task completion:', error)
-    }
-  }
-
-  const handleStartGame = () => {
-    setGameStarted(true)
-  }
-
-  const handleContinue = () => {
-    // Navigate to results page or next task
-    navigate('/phase4/step3/remedial/b1/results')
+    } catch (error) { console.error('Failed to log task completion:', error) }
   }
 
   const handleAnswerClick = (answer) => {
-    if (showFeedback) return // Don't allow changes after submission
-
+    if (showFeedback) return
     setSelectedAnswer(answer)
     handleAnswerSubmit(answer)
   }
@@ -197,55 +134,40 @@ export default function RemedialB1TaskF() {
 
   if (!gameStarted) {
     return (
-      <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-        <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)', color: 'white' }}>
-          <Typography variant="h4" gutterBottom>
-            Phase 4 - Step 3: Remedial Activities
-          </Typography>
-          <Typography variant="h5" gutterBottom>
-            Level B1 - Task F: Grammar Kahoot 🎯 (BONUS)
-          </Typography>
-          <Typography variant="body1">
-            Timed quiz rounds - compete for the leaderboard!
-          </Typography>
-          <Alert severity="warning" sx={{ mt: 2, backgroundColor: 'rgba(255, 152, 0, 0.9)' }}>
-            <strong>Bonus Task:</strong> This is an optional task worth 6 bonus points. Complete it to boost your total score!
-          </Alert>
-        </Paper>
-
-        <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-          <CharacterMessage
-            character="MS. MABROUKI"
-            message="Welcome to Grammar Kahoot! 🎉 Test your subject-verb agreement skills with 6 timed questions. You have 15 seconds per question. Choose the correct grammar form to score points. All correct answers = 6 bonus points! Ready? Let's go! 🚀"
-          />
-        </Paper>
-
-        <Paper elevation={6} sx={{ p: 4, textAlign: 'center', background: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)' }}>
-          <EmojiEventsIcon sx={{ fontSize: 100, color: 'white', mb: 2 }} />
-          <Typography variant="h4" gutterBottom sx={{ color: 'white' }} fontWeight="bold">
-            Grammar Kahoot Challenge
-          </Typography>
-          <Typography variant="h6" sx={{ color: 'white', mb: 4 }}>
-            6 Questions • 15 Seconds Each • Subject-Verb Agreement
-          </Typography>
-
-          <Button
-            variant="contained"
-            size="large"
-            onClick={handleStartGame}
-            sx={{
-              py: 2,
-              px: 8,
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              backgroundColor: '#f39c12',
-              color: 'white',
-              '&:hover': { backgroundColor: '#e67e22' }
-            }}
-          >
-            START GAME! 🎮
-          </Button>
-        </Paper>
+      <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+        <Container maxWidth="md">
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...cardSx('orange'), mb: 3 }}>
+              <Typography variant="h4" gutterBottom fontWeight="bold">Phase 4 - Step 3: Remedial Activities</Typography>
+              <Typography variant="h5" gutterBottom>Level B1 - Task F: Grammar Kahoot 🎯 (BONUS)</Typography>
+              <Typography variant="body1">Timed quiz rounds - compete for the leaderboard!</Typography>
+              <Box sx={{ ...cardSx('yellow'), mt: 2 }}>
+                <Typography variant="body2" fontWeight="bold">
+                  ⭐ Bonus Task: This is an optional task worth 6 bonus points. Complete it to boost your total score!
+                </Typography>
+              </Box>
+            </Box>
+            <Box sx={{ ...cardSx('blue'), mb: 3 }}>
+              <CharacterMessage character="MS. MABROUKI" message="Welcome to Grammar Kahoot! 🎉 Test your subject-verb agreement skills with 6 timed questions. You have 15 seconds per question. Choose the correct grammar form to score points. All correct answers = 6 bonus points! Ready? Let's go! 🚀" />
+            </Box>
+            <Box sx={{ ...cardSx('purple'), textAlign: 'center', p: 5 }}>
+              <EmojiEventsIcon sx={{ fontSize: 80, mb: 2, color: P.purple.border }} />
+              <Typography variant="h4" gutterBottom fontWeight="bold">Grammar Kahoot Challenge</Typography>
+              <Typography variant="h6" sx={{ mb: 4 }}>6 Questions • 15 Seconds Each • Subject-Verb Agreement</Typography>
+              <Box
+                component="button"
+                onClick={() => setGameStarted(true)}
+                sx={{
+                  ...cardSx('orange'), cursor: 'pointer', px: 8, py: 2,
+                  fontSize: '1.4rem', fontWeight: 'bold', color: P.orange.border, transition: 'all 0.2s',
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` }
+                }}
+              >
+                START GAME! 🎮
+              </Box>
+            </Box>
+          </motion.div>
+        </Container>
       </Box>
     )
   }
@@ -253,264 +175,178 @@ export default function RemedialB1TaskF() {
   if (gameFinished) {
     const finalScore = answers.filter(a => a.isCorrect).length
     const passedAll = finalScore === 6
-
     return (
-      <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-        <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)', color: 'white' }}>
-          <Typography variant="h4" gutterBottom>
-            Phase 4 - Step 3: Remedial Activities
-          </Typography>
-          <Typography variant="h5" gutterBottom>
-            Level B1 - Task F: Grammar Kahoot - Results 🏆
-          </Typography>
-        </Paper>
+      <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+        <Container maxWidth="md">
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...cardSx('orange'), mb: 3 }}>
+              <Typography variant="h4" gutterBottom fontWeight="bold">Phase 4 - Step 3: Remedial Activities</Typography>
+              <Typography variant="h5">Level B1 - Task F: Grammar Kahoot - Results 🏆</Typography>
+            </Box>
+            <Box sx={{ ...cardSx('purple'), textAlign: 'center', p: 5, mb: 3 }}>
+              <EmojiEventsIcon sx={{ fontSize: 72, mb: 2, color: P.purple.border }} />
+              <Typography variant="h3" gutterBottom fontWeight="bold">{passedAll ? 'Perfect Score! 🎉' : 'Game Complete! 🎊'}</Typography>
+              <Box sx={{ ...cardSx('yellow'), maxWidth: 280, mx: 'auto', my: 3 }}>
+                <Typography variant="h2" fontWeight="bold" sx={{ color: P.purple.border }}>{finalScore} / 6</Typography>
+                <Typography variant="h6" color="text.secondary">Bonus Points Earned</Typography>
+              </Box>
+              {passedAll && (
+                <Box sx={{ ...cardSx('green'), mt: 2 }}>
+                  <Typography fontWeight="bold">Amazing! You got all questions correct! You're a grammar master! 🌟</Typography>
+                </Box>
+              )}
+            </Box>
 
-        {/* Results Summary */}
-        <Paper elevation={6} sx={{ p: 4, mb: 3, background: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)' }}>
-          <Box sx={{ color: 'white', textAlign: 'center' }}>
-            <EmojiEventsIcon sx={{ fontSize: 80, mb: 2 }} />
-            <Typography variant="h3" gutterBottom fontWeight="bold">
-              {passedAll ? 'Perfect Score! 🎉' : 'Game Complete! 🎊'}
-            </Typography>
-            <Paper elevation={4} sx={{ p: 4, backgroundColor: 'white', maxWidth: 300, mx: 'auto', my: 3 }}>
-              <Typography variant="h2" fontWeight="bold" sx={{ color: '#9b59b6' }}>
-                {finalScore} / 6
-              </Typography>
-              <Typography variant="h6" color="text.secondary">
-                Bonus Points Earned
-              </Typography>
-            </Paper>
-            {passedAll && (
-              <Alert severity="success" sx={{ mt: 2, backgroundColor: 'rgba(46, 204, 113, 0.9)' }}>
-                <strong>Amazing!</strong> You got all questions correct! You're a grammar master! 🌟
-              </Alert>
-            )}
-          </Box>
-        </Paper>
+            <Box sx={{ ...cardSx('blue'), mb: 3 }}>
+              <Typography variant="h5" gutterBottom fontWeight="bold">Question Review</Typography>
+              <Stack spacing={2} sx={{ mt: 2 }}>
+                {answers.map((answer, index) => (
+                  <Box
+                    key={answer.questionId}
+                    sx={{
+                      bgcolor: answer.isCorrect ? P.green.bg : P.red.bg,
+                      border: `2px solid ${answer.isCorrect ? P.green.border : P.red.border}`,
+                      borderRadius: '16px', p: 3,
+                      boxShadow: `3px 3px 0 ${answer.isCorrect ? P.green.shadow : P.red.shadow}`,
+                    }}
+                  >
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                      <Typography variant="subtitle1" fontWeight="bold">Question {index + 1}</Typography>
+                      {answer.isCorrect ? <CheckCircleIcon sx={{ color: P.green.border }} /> : <CancelIcon sx={{ color: P.red.border }} />}
+                    </Stack>
+                    <Typography variant="h6" sx={{ mb: 2 }}>{answer.question}</Typography>
+                    {answer.timedOut ? (
+                      <Box sx={{ ...cardSx('yellow'), p: 2 }}>
+                        <Typography variant="body2">⏰ <strong>Time's up!</strong> No answer selected.</Typography>
+                      </Box>
+                    ) : (
+                      <Typography variant="body1">
+                        Your answer: <strong style={{ color: answer.isCorrect ? P.green.border : P.red.border }}>{answer.selectedAnswer}</strong>
+                      </Typography>
+                    )}
+                    {!answer.isCorrect && (
+                      <Box sx={{ ...cardSx('red'), mt: 2, p: 2 }}>
+                        <Typography variant="body2"><strong>Correct Answer:</strong> {answer.correctAnswer}<br />{QUESTIONS[index].explanation}</Typography>
+                      </Box>
+                    )}
+                    {answer.isCorrect && (
+                      <Box sx={{ ...cardSx('green'), mt: 2, p: 2 }}>
+                        <Typography variant="body2"><strong>Correct!</strong> {QUESTIONS[index].explanation}</Typography>
+                      </Box>
+                    )}
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
 
-        {/* Detailed Feedback */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: '#ecf0f1' }}>
-          <Typography variant="h5" gutterBottom sx={{ color: '#9b59b6' }} fontWeight="bold">
-            Question Review
-          </Typography>
-
-          <Stack spacing={2} sx={{ mt: 2 }}>
-            {answers.map((answer, index) => (
-              <Paper
-                key={answer.questionId}
-                elevation={2}
+            <Box sx={{ textAlign: 'center' }}>
+              <Box
+                component="button"
+                onClick={() => navigate('/phase4/step3/remedial/b1/results')}
                 sx={{
-                  p: 3,
-                  borderLeft: '4px solid',
-                  borderColor: answer.isCorrect ? '#27ae60' : '#e74c3c',
-                  backgroundColor: answer.isCorrect ? '#d5f4e6' : '#fadbd8'
+                  ...cardSx('green'), cursor: 'pointer', px: 6, py: 2,
+                  fontWeight: 'bold', fontSize: '1.1rem', color: P.green.border, transition: 'all 0.2s',
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }
                 }}
               >
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#2c3e50' }}>
-                    Question {index + 1}
-                  </Typography>
-                  {answer.isCorrect ? (
-                    <CheckCircleIcon sx={{ color: '#27ae60' }} />
-                  ) : (
-                    <CancelIcon sx={{ color: '#e74c3c' }} />
-                  )}
-                </Stack>
-
-                <Typography variant="h6" sx={{ mb: 2, color: '#1a252f' }}>
-                  {answer.question}
-                </Typography>
-
-                {answer.timedOut ? (
-                  <Alert severity="warning" sx={{ mb: 2 }}>
-                    ⏰ <strong>Time's up!</strong> No answer selected.
-                  </Alert>
-                ) : (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body1" sx={{ color: '#1a252f' }}>
-                      Your answer: <strong style={{ color: answer.isCorrect ? '#27ae60' : '#e74c3c' }}>
-                        {answer.selectedAnswer}
-                      </strong>
-                    </Typography>
-                  </Box>
-                )}
-
-                {!answer.isCorrect && (
-                  <Alert severity="error" sx={{ backgroundColor: '#f8d7da', '& .MuiAlert-message': { color: '#1a252f' } }}>
-                    <strong>Correct Answer:</strong> {answer.correctAnswer}
-                    <br />
-                    <Typography variant="caption" sx={{ color: '#2c3e50' }}>
-                      {QUESTIONS[index].explanation}
-                    </Typography>
-                  </Alert>
-                )}
-
-                {answer.isCorrect && (
-                  <Alert severity="success" sx={{ backgroundColor: '#d4edda', '& .MuiAlert-message': { color: '#1a252f' } }}>
-                    <strong>Correct!</strong> {QUESTIONS[index].explanation}
-                  </Alert>
-                )}
-              </Paper>
-            ))}
-          </Stack>
-        </Paper>
-
-        {/* Continue Button */}
-        <Box sx={{ textAlign: 'center' }}>
-          <Button
-            variant="contained"
-            size="large"
-            onClick={handleContinue}
-            sx={{
-              py: 2,
-              px: 6,
-              fontSize: '1.2rem',
-              fontWeight: 'bold',
-              background: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)',
-              '&:hover': { background: 'linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%)' }
-            }}
-          >
-            View Final Results →
-          </Button>
-        </Box>
+                View Final Results →
+              </Box>
+            </Box>
+          </motion.div>
+        </Container>
       </Box>
     )
   }
 
   // Game in progress
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper elevation={0} sx={{ p: 2, mb: 2, background: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)', color: 'white' }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="h5" fontWeight="bold">
-            Question {currentQuestion + 1} / {QUESTIONS.length}
-          </Typography>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <EmojiEventsIcon />
-              <Typography variant="h6">
-                Score: {score}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <TimerIcon />
-              <Typography variant="h6" sx={{
-                color: timeLeft <= 5 ? '#e74c3c' : 'white',
-                fontWeight: timeLeft <= 5 ? 'bold' : 'normal'
-              }}>
-                {timeLeft}s
-              </Typography>
-            </Box>
-          </Stack>
-        </Stack>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
 
-        {/* Progress Bar */}
-        <LinearProgress
-          variant="determinate"
-          value={progressPercent}
-          sx={{
-            mt: 2,
-            height: 8,
-            borderRadius: 1,
-            backgroundColor: 'rgba(255,255,255,0.3)',
-            '& .MuiLinearProgress-bar': {
-              backgroundColor: '#f39c12'
-            }
-          }}
-        />
-      </Paper>
+          <Box sx={{ ...cardSx('purple'), mb: 3 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Typography variant="h5" fontWeight="bold">Question {currentQuestion + 1} / {QUESTIONS.length}</Typography>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <EmojiEventsIcon />
+                  <Typography variant="h6">Score: {score}</Typography>
+                </Stack>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <TimerIcon />
+                  <Typography variant="h6" sx={{ color: timeLeft <= 5 ? P.red.border : 'inherit', fontWeight: timeLeft <= 5 ? 'bold' : 'normal' }}>
+                    {timeLeft}s
+                  </Typography>
+                </Stack>
+              </Stack>
+            </Stack>
+            <LinearProgress
+              variant="determinate"
+              value={progressPercent}
+              sx={{ mt: 2, height: 8, borderRadius: 4, bgcolor: 'rgba(0,0,0,0.1)', '& .MuiLinearProgress-bar': { bgcolor: P.orange.border } }}
+            />
+          </Box>
 
-      {/* Question Card */}
-      <Paper
-        elevation={6}
-        sx={{
-          p: 5,
-          mb: 3,
-          minHeight: 400,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          background: showFeedback
-            ? (selectedAnswer === currentQ.correctAnswer ? 'linear-gradient(135deg, #27ae60 0%, #229954 100%)' : 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)')
-            : 'linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%)'
-        }}
-      >
-        <Typography
-          variant="h3"
-          align="center"
-          gutterBottom
-          sx={{
-            color: showFeedback ? 'white' : '#1a252f',
-            fontWeight: 'bold',
-            mb: 5
-          }}
-        >
-          {currentQ.question}
-        </Typography>
+          {/* Question Card */}
+          <Box
+            sx={{
+              ...cardSx(showFeedback ? (selectedAnswer === currentQ.correctAnswer ? 'green' : 'red') : 'blue'),
+              mb: 3, minHeight: 350, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', p: 5
+            }}
+          >
+            <Typography variant="h3" align="center" gutterBottom fontWeight="bold" sx={{ mb: 5 }}>
+              {currentQ.question}
+            </Typography>
 
-        {!showFeedback ? (
-          <Stack spacing={3}>
-            {currentQ.options.map((option, index) => (
-              <Button
-                key={index}
-                variant="contained"
-                size="large"
-                onClick={() => handleAnswerClick(option)}
-                disabled={showFeedback}
-                sx={{
-                  py: 3,
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  backgroundColor: selectedAnswer === option ? '#3498db' : '#34495e',
-                  color: 'white',
-                  '&:hover': {
-                    backgroundColor: '#2c3e50',
-                    transform: 'scale(1.02)'
-                  },
-                  transition: 'all 0.2s'
-                }}
-              >
-                {option}
-              </Button>
-            ))}
-          </Stack>
-        ) : (
-          <Box sx={{ textAlign: 'center', color: 'white' }}>
-            {selectedAnswer === currentQ.correctAnswer ? (
-              <>
-                <CheckCircleIcon sx={{ fontSize: 100, mb: 2 }} />
-                <Typography variant="h4" gutterBottom fontWeight="bold">
-                  Correct! 🎉
-                </Typography>
-                <Typography variant="h6">
-                  {currentQ.explanation}
-                </Typography>
-              </>
+            {!showFeedback ? (
+              <Stack spacing={3} sx={{ width: '100%' }}>
+                {currentQ.options.map((option, index) => (
+                  <Box
+                    key={index}
+                    component="button"
+                    onClick={() => handleAnswerClick(option)}
+                    disabled={showFeedback}
+                    sx={{
+                      bgcolor: selectedAnswer === option ? P.blue.border : P.blue.bg,
+                      border: `2px solid ${P.blue.border}`, borderRadius: '16px',
+                      boxShadow: `4px 4px 0 ${P.blue.shadow}`,
+                      py: 2.5, fontWeight: 'bold', fontSize: '1.4rem', cursor: 'pointer',
+                      color: selectedAnswer === option ? 'white' : 'inherit', transition: 'all 0.2s',
+                      '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.blue.shadow}` }
+                    }}
+                  >
+                    {option}
+                  </Box>
+                ))}
+              </Stack>
             ) : (
-              <>
-                <CancelIcon sx={{ fontSize: 100, mb: 2 }} />
-                <Typography variant="h4" gutterBottom fontWeight="bold">
-                  {selectedAnswer ? 'Not quite!' : "Time's up!"}
-                </Typography>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Correct answer: <strong>{currentQ.correctAnswer}</strong>
-                </Typography>
-                <Typography variant="body1">
-                  {currentQ.explanation}
-                </Typography>
-              </>
+              <Box sx={{ textAlign: 'center' }}>
+                {selectedAnswer === currentQ.correctAnswer ? (
+                  <>
+                    <CheckCircleIcon sx={{ fontSize: 80, mb: 2, color: P.green.border }} />
+                    <Typography variant="h4" gutterBottom fontWeight="bold">Correct! 🎉</Typography>
+                    <Typography variant="h6">{currentQ.explanation}</Typography>
+                  </>
+                ) : (
+                  <>
+                    <CancelIcon sx={{ fontSize: 80, mb: 2, color: P.red.border }} />
+                    <Typography variant="h4" gutterBottom fontWeight="bold">{selectedAnswer ? 'Not quite!' : "Time's up!"}</Typography>
+                    <Typography variant="h6" sx={{ mb: 2 }}>Correct answer: <strong>{currentQ.correctAnswer}</strong></Typography>
+                    <Typography variant="body1">{currentQ.explanation}</Typography>
+                  </>
+                )}
+              </Box>
             )}
           </Box>
-        )}
-      </Paper>
 
-      {/* Timer Warning */}
-      {timeLeft <= 5 && !showFeedback && (
-        <Alert severity="warning" sx={{ backgroundColor: '#f39c12', color: 'white' }}>
-          <strong>Hurry!</strong> Only {timeLeft} seconds left!
-        </Alert>
-      )}
+          {timeLeft <= 5 && !showFeedback && (
+            <Box sx={{ ...cardSx('orange') }}>
+              <Typography fontWeight="bold">⚡ Hurry! Only {timeLeft} seconds left!</Typography>
+            </Box>
+          )}
+
+        </motion.div>
+      </Container>
     </Box>
   )
 }

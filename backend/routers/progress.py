@@ -72,7 +72,7 @@ async def save_progress(body: SaveProgressRequest, user: dict = Depends(get_curr
                     """
                     INSERT INTO student_responses
                         (user_id, phase, subphase, step, interaction, item_index,
-                         context, session_id, item_id, item_type, prompt, answer,
+                         context, session_id, item_id, item_type, prompt, response,
                          is_correct, score, ai_feedback)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,

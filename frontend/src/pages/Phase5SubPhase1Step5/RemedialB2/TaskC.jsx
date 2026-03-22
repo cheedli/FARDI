@@ -1,10 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, Stack } from '@mui/material'
+import { Box, Container, Typography, Stack, useTheme } from '@mui/material'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import DragDropMatchingGame from '../../../components/DragDropMatchingGame.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
+
+const LIGHT = { pageBg: '#FFFDE7', orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' }, teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' } }
+const DARK = { pageBg: '#0F0F1A', orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' }, green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' }, teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' } }
 
 const ERROR_PAIRS = [
   { word: 'Emergancy', definition: 'Spelling: emergency' },
@@ -20,65 +24,59 @@ const ERROR_PAIRS = [
 export default function Phase5Step5RemedialB2TaskC() {
   const navigate = useNavigate()
   const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 5, interaction: 3, context: 'remedial_b2' })
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
 
+  const clay = (color) => ({ bgcolor: color.bg, border: `2px solid ${color.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${color.shadow}`, p: 3 })
+
   const handleGameComplete = async (result) => {
     saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: result })
-    setGameCompleted(true)
-    setGameResult(result)
+    setGameCompleted(true); setGameResult(result)
     const score = result.score || 0
     sessionStorage.setItem('phase5_step5_remedial_b2_taskC_score', score.toString())
-    try {
-      await phase5API.logRemedialActivity(5, 'B2', 'C', score, 8, result.timeTaken || 0)
-    } catch (error) {
-      console.error('Failed to log task completion:', error)
-    }
+    try { await phase5API.logRemedialActivity(5, 'B2', 'C', score, 8, result.timeTaken || 0) } catch (e) { console.error(e) }
   }
 
   const handleContinue = async () => {
-    const taskAScore = parseInt(sessionStorage.getItem('phase5_step5_remedial_b2_taskA_score') || '0')
-    const taskBScore = parseInt(sessionStorage.getItem('phase5_step5_remedial_b2_taskB_score') || '0')
-    const taskCScore = parseInt(sessionStorage.getItem('phase5_step5_remedial_b2_taskC_score') || '0')
-    const totalScore = taskAScore + taskBScore + taskCScore
-    const maxScore = 2 + 5 + 8
-    const threshold = Math.ceil(maxScore * 0.8)
-    const passed = totalScore >= threshold
-
-    try {
-      await phase5API.calculateRemedialScore(5, 'B2', {
-        task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore
-      })
-    } catch (error) {
-      console.error('Failed to log final score:', error)
-    }
-
-    if (passed) {
-      navigate('/dashboard')
-    } else {
-      navigate('/phase5/subphase/1/step/5/remedial/b2/task/a')
-    }
+    const a = parseInt(sessionStorage.getItem('phase5_step5_remedial_b2_taskA_score') || '0')
+    const b = parseInt(sessionStorage.getItem('phase5_step5_remedial_b2_taskB_score') || '0')
+    const c = parseInt(sessionStorage.getItem('phase5_step5_remedial_b2_taskC_score') || '0')
+    const total = a + b + c; const passed = total >= Math.ceil(15 * 0.8)
+    try { await phase5API.calculateRemedialScore(5, 'B2', { task_a_score: a, task_b_score: b, task_c_score: c }) } catch (e) { console.error(e) }
+    if (passed) navigate('/dashboard'); else navigate('/phase5/subphase/1/step/5/remedial/b2/task/a')
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', color: 'white' }}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">Phase 5: Execution & Problem-Solving</Typography>
-        <Typography variant="h5" gutterBottom>Step 5: Remedial Practice - Level B2</Typography>
-        <Typography variant="h6" gutterBottom>Task C: Matching Game</Typography>
-        <Typography variant="body1">Match 8 error types to corrections</Typography>
-      </Paper>
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage speaker="Ms. Mabrouki" message="Welcome to Matching Game! Match each error to its correction type and fix!" />
-      </Paper>
-      <Box>
-        <DragDropMatchingGame pairs={ERROR_PAIRS} duration={120} onComplete={handleGameComplete} />
-        {gameCompleted && (
-          <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 4 }}>
-            <Button variant="contained" color="success" onClick={handleContinue} size="large">Continue to Final Results →</Button>
-          </Stack>
-        )}
-      </Box>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ ...clay(P.orange), mb: 3 }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.orange.border }}>Phase 5: Execution & Problem-Solving</Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.orange.border }}>Step 5: Remedial Practice - Level B2</Typography>
+            <Typography variant="h6" gutterBottom sx={{ color: P.orange.border }}>Task C: Matching Game</Typography>
+            <Typography variant="body1">Match 8 error types to corrections</Typography>
+          </Box>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Box sx={{ ...clay(P.teal), mb: 3 }}>
+            <CharacterMessage speaker="Ms. Mabrouki" message="Welcome to Matching Game! Match each error to its correction type and fix!" />
+          </Box>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <Box>
+            <DragDropMatchingGame pairs={ERROR_PAIRS} duration={120} onComplete={handleGameComplete} />
+            {gameCompleted && (
+              <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 4 }}>
+                <Box component="button" onClick={handleContinue} sx={{ ...clay(P.green), cursor: 'pointer', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }, transition: 'all 0.15s' }}>
+                  <Typography variant="button" fontWeight="bold" sx={{ color: P.green.border }}>Continue to Final Results →</Typography>
+                </Box>
+              </Stack>
+            )}
+          </Box>
+        </motion.div>
+      </Container>
     </Box>
   )
 }

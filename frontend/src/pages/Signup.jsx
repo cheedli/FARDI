@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom'
 import { useApiContext } from '../lib/api.jsx'
-import { Box, Typography, TextField, Stack, Grid, InputAdornment, IconButton, CircularProgress } from '@mui/material'
+import { Box, Typography, TextField, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material'
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import Visibility from '@mui/icons-material/Visibility'
@@ -173,14 +173,10 @@ export default function Signup() {
 
           <Box component="form" onSubmit={onSubmit}>
             <Stack spacing={2.5}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField label="First name" value={form.first_name} onChange={onChange('first_name')} fullWidth sx={clayField(D)} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField label="Last name" value={form.last_name} onChange={onChange('last_name')} fullWidth sx={clayField(D)} />
-                </Grid>
-              </Grid>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <TextField label="First name" value={form.first_name} onChange={onChange('first_name')} fullWidth sx={clayField(D)} />
+                <TextField label="Last name" value={form.last_name} onChange={onChange('last_name')} fullWidth sx={clayField(D)} />
+              </Stack>
 
               <TextField
                 label="Username" value={form.username} onChange={onChange('username')}
@@ -237,29 +233,27 @@ export default function Signup() {
                 <Typography sx={{ fontWeight: 800, fontSize: '0.82rem', color: D.body, mb: 1.5 }}>
                   Password Requirements
                 </Typography>
-                <Grid container spacing={1}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1 }}>
                   {[
                     { key: 'len', text: 'At least 8 characters' },
                     { key: 'up',  text: 'Uppercase letter'      },
                     { key: 'low', text: 'Lowercase letter'      },
                     { key: 'num', text: 'Number'                },
                   ].map(rule => (
-                    <Grid item xs={12} sm={6} key={rule.key}>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        {pwRules[rule.key]
-                          ? <CheckCircleOutlineIcon sx={{ color: D.green.border, fontSize: 17 }} />
-                          : <ErrorOutlineIcon sx={{ color: D.border, fontSize: 17 }} />
-                        }
-                        <Typography sx={{
-                          fontSize: '0.8rem', fontWeight: 700,
-                          color: pwRules[rule.key] ? D.green.border : D.muted,
-                        }}>
-                          {rule.text}
-                        </Typography>
-                      </Stack>
-                    </Grid>
+                    <Stack direction="row" spacing={1} alignItems="center" key={rule.key}>
+                      {pwRules[rule.key]
+                        ? <CheckCircleOutlineIcon sx={{ color: D.green.border, fontSize: 17 }} />
+                        : <ErrorOutlineIcon sx={{ color: D.border, fontSize: 17 }} />
+                      }
+                      <Typography sx={{
+                        fontSize: '0.8rem', fontWeight: 700,
+                        color: pwRules[rule.key] ? D.green.border : D.muted,
+                      }}>
+                        {rule.text}
+                      </Typography>
+                    </Stack>
                   ))}
-                </Grid>
+                </Box>
               </Box>
 
               {/* Submit */}

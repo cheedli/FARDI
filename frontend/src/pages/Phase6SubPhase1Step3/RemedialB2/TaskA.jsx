@@ -1,59 +1,37 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  Stack,
-  Select,
-  MenuItem,
-  FormControl,
-  Alert
-} from '@mui/material'
+import { Box, Container, Typography, Stack, Select, MenuItem, FormControl } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
-/**
- * Phase 6 SubPhase 1 Step 3 - Level B2 - Task A
- * Role-Play Dialogue: Complete dialogue explaining report terms
- * Word Bank: success, challenge, feedback, improve, strength, weakness, recommend
- * Ms. Mabrouki: "Why write report?" → You: "To show [success] and [challenge]."
- * Lilia: "Balance?" → You: "Yes, show [strength] and [weakness] [because] honest."
- */
+const LIGHT = { pageBg: '#FFFDE7', blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' }, yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' }, orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' }, teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' }, red: { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' } }
+const DARK = { pageBg: '#0F0F1A', blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' }, green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' }, yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' }, orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' }, teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' }, red: { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' } }
 
 const WORD_BANK = ['success', 'challenge', 'feedback', 'improve', 'strength', 'weakness', 'recommend', 'because']
-
-const CORRECT_ANSWERS = {
-  0: 'success',
-  1: 'challenge',
-  2: 'strength',
-  3: 'weakness',
-  4: 'because'
-}
+const CORRECT_ANSWERS = { 0: 'success', 1: 'challenge', 2: 'strength', 3: 'weakness', 4: 'because' }
 
 export default function Phase6SP1Step3RemedialB2TaskA() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 3, interaction: 1, context: 'remedial_b2' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
 
+  const cardSx = (color) => ({ bgcolor: color.bg, border: `2px solid ${color.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${color.shadow}`, p: 3 })
+
   const handleSubmit = async () => {
     let correct = 0
-    Object.entries(CORRECT_ANSWERS).forEach(([key, val]) => {
-      if (answers[parseInt(key)] === val) correct++
-    })
+    Object.entries(CORRECT_ANSWERS).forEach(([key, val]) => { if (answers[parseInt(key)] === val) correct++ })
     setScore(correct)
     setSubmitted(true)
     sessionStorage.setItem('phase6_sp1_step3_remedial_b2_taska_score', correct.toString())
-    try {
-      await phase6API.logRemedialActivity(3, 'B2', 'A', correct, Object.keys(CORRECT_ANSWERS).length, 0, 1)
-    } catch (e) {
-      console.error('Failed to log task:', e)
-    }
+    try { await phase6API.logRemedialActivity(3, 'B2', 'A', correct, Object.keys(CORRECT_ANSWERS).length, 0, 1) } catch (e) { console.error(e) }
   }
 
   const allAnswered = Object.keys(CORRECT_ANSWERS).every(k => answers[parseInt(k)])
@@ -63,13 +41,7 @@ export default function Phase6SP1Step3RemedialB2TaskA() {
     const isCorrect = submitted && answers[gapIdx] === correct
     return (
       <FormControl size="small" sx={{ minWidth: 120 }}>
-        <Select
-          value={answers[gapIdx] || ''}
-          onChange={(e) => !submitted && setAnswers({ ...answers, [gapIdx]: e.target.value })}
-          disabled={submitted}
-          displayEmpty
-          sx={{ backgroundColor: submitted ? (isCorrect ? '#f0faf4' : '#fff5f5') : 'white' }}
-        >
+        <Select value={answers[gapIdx] || ''} onChange={(e) => !submitted && setAnswers({ ...answers, [gapIdx]: e.target.value })} disabled={submitted} displayEmpty sx={{ bgcolor: submitted ? (isCorrect ? P.green.bg : P.red.bg) : 'white' }}>
           <MenuItem value=""><em>choose...</em></MenuItem>
           {WORD_BANK.map(w => <MenuItem key={w} value={w}>{w}</MenuItem>)}
         </Select>
@@ -78,111 +50,110 @@ export default function Phase6SP1Step3RemedialB2TaskA() {
   }
 
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto', p: 3 }}>
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)', color: 'white', borderRadius: 2 }}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">Phase 6: Reflection &amp; Evaluation</Typography>
-        <Typography variant="h5" gutterBottom>Step 3: Remedial Practice - Level B2</Typography>
-        <Typography variant="h6">Task A: Role-Play Dialogue</Typography>
-        <Typography variant="body1">Complete the dialogue explaining why we write a post-event report</Typography>
-      </Paper>
-
-      <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <CharacterMessage speaker="Ms. Mabrouki" message="Complete the dialogue by choosing the correct terms. Think about why we write reports and why balance (showing both good and bad) is important." />
-      </Paper>
-
-      <Paper elevation={1} sx={{ p: 2, mb: 3, borderRadius: 2, backgroundColor: '#f0faf4' }}>
-        <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ color: '#27ae60' }}>Word Bank:</Typography>
-        <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-          {WORD_BANK.map(w => (
-            <Paper key={w} elevation={1} sx={{ px: 2, py: 0.5, backgroundColor: '#27ae60', color: 'white', borderRadius: 1 }}>
-              <Typography variant="body2" fontWeight="bold">{w}</Typography>
-            </Paper>
-          ))}
-        </Stack>
-      </Paper>
-
-      <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <Stack spacing={2}>
-          {/* Ms. Mabrouki */}
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-            <Box sx={{ width: 50, height: 50, borderRadius: '50%', backgroundColor: '#1565c0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Typography variant="body2" color="white" fontWeight="bold">MM</Typography>
-            </Box>
-            <Paper elevation={1} sx={{ p: 2, flex: 1, borderRadius: 2, backgroundColor: '#e3f2fd' }}>
-              <Typography variant="caption" color="text.secondary">Ms. Mabrouki</Typography>
-              <Typography variant="body1" sx={{ mt: 0.5 }}>Why write report?</Typography>
-            </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ ...cardSx(P.orange), mb: 3 }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.orange.border }}>Phase 6: Reflection &amp; Evaluation</Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.orange.border }}>Step 3: Remedial Practice - Level B2</Typography>
+            <Typography variant="h6" sx={{ color: P.orange.border }}>Task A: Role-Play Dialogue</Typography>
+            <Typography variant="body1" color="text.secondary">Complete the dialogue explaining why we write a post-event report</Typography>
           </Box>
-
-          {/* You - gaps 0, 1 */}
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexDirection: 'row-reverse' }}>
-            <Box sx={{ width: 50, height: 50, borderRadius: '50%', backgroundColor: '#27ae60', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Typography variant="body2" color="white" fontWeight="bold">You</Typography>
-            </Box>
-            <Paper elevation={1} sx={{ p: 2, flex: 1, borderRadius: 2, backgroundColor: '#f0faf4' }}>
-              <Typography variant="caption" color="text.secondary">You</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
-                <Typography variant="body1">To show</Typography>
-                <GapSelect gapIdx={0} />
-                <Typography variant="body1">and</Typography>
-                <GapSelect gapIdx={1} />
-                <Typography variant="body1">.</Typography>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <Box sx={{ ...cardSx(P.teal), mb: 3 }}>
+            <CharacterMessage speaker="Ms. Mabrouki" message="Complete the dialogue by choosing the correct terms. Think about why we write reports and why balance (showing both good and bad) is important." />
+          </Box>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Box sx={{ ...cardSx(P.green), mb: 3 }}>
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ color: P.green.border }}>Word Bank:</Typography>
+            <Stack direction="row" flexWrap="wrap" gap={1}>
+              {WORD_BANK.map(w => <Box key={w} sx={{ bgcolor: P.green.border, color: 'white', px: 2, py: 0.5, borderRadius: '12px', fontWeight: 'bold', fontSize: '0.85rem' }}>{w}</Box>)}
+            </Stack>
+          </Box>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <Box sx={{ ...cardSx(P.blue), mb: 3 }}>
+            <Stack spacing={2}>
+              {/* Ms. Mabrouki */}
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                <Box sx={{ width: 50, height: 50, borderRadius: '50%', bgcolor: '#1D4ED8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Typography variant="body2" color="white" fontWeight="bold">MM</Typography>
+                </Box>
+                <Box sx={{ ...cardSx(P.blue), flex: 1, p: 2 }}>
+                  <Typography variant="caption" color="text.secondary">Ms. Mabrouki</Typography>
+                  <Typography variant="body1" sx={{ mt: 0.5 }}>Why write report?</Typography>
+                </Box>
               </Box>
-              {submitted && (answers[0] !== 'success' || answers[1] !== 'challenge') && (
-                <Typography variant="body2" color="error" sx={{ mt: 0.5 }}>Correct: "To show success and challenge."</Typography>
-              )}
-            </Paper>
-          </Box>
-
-          {/* Lilia */}
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-            <Box sx={{ width: 50, height: 50, borderRadius: '50%', backgroundColor: '#e67e22', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Typography variant="body2" color="white" fontWeight="bold">LI</Typography>
-            </Box>
-            <Paper elevation={1} sx={{ p: 2, flex: 1, borderRadius: 2, backgroundColor: '#fef9e7' }}>
-              <Typography variant="caption" color="text.secondary">Lilia</Typography>
-              <Typography variant="body1" sx={{ mt: 0.5 }}>Balance?</Typography>
-            </Paper>
-          </Box>
-
-          {/* You - gaps 2, 3, 4 */}
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexDirection: 'row-reverse' }}>
-            <Box sx={{ width: 50, height: 50, borderRadius: '50%', backgroundColor: '#27ae60', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Typography variant="body2" color="white" fontWeight="bold">You</Typography>
-            </Box>
-            <Paper elevation={1} sx={{ p: 2, flex: 1, borderRadius: 2, backgroundColor: '#f0faf4' }}>
-              <Typography variant="caption" color="text.secondary">You</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
-                <Typography variant="body1">Yes, show</Typography>
-                <GapSelect gapIdx={2} />
-                <Typography variant="body1">and</Typography>
-                <GapSelect gapIdx={3} />
-                <GapSelect gapIdx={4} />
-                <Typography variant="body1">honest.</Typography>
+              {/* You - gaps 0, 1 */}
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexDirection: 'row-reverse' }}>
+                <Box sx={{ width: 50, height: 50, borderRadius: '50%', bgcolor: P.green.border, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Typography variant="body2" color="white" fontWeight="bold">You</Typography>
+                </Box>
+                <Box sx={{ ...cardSx(P.green), flex: 1, p: 2 }}>
+                  <Typography variant="caption" color="text.secondary">You</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
+                    <Typography variant="body1">To show</Typography>
+                    <GapSelect gapIdx={0} />
+                    <Typography variant="body1">and</Typography>
+                    <GapSelect gapIdx={1} />
+                    <Typography variant="body1">.</Typography>
+                  </Box>
+                  {submitted && (answers[0] !== 'success' || answers[1] !== 'challenge') && (
+                    <Typography variant="body2" color="error" sx={{ mt: 0.5 }}>Correct: "To show success and challenge."</Typography>
+                  )}
+                </Box>
               </Box>
-              {submitted && (answers[2] !== 'strength' || answers[3] !== 'weakness' || answers[4] !== 'because') && (
-                <Typography variant="body2" color="error" sx={{ mt: 0.5 }}>Correct: "Yes, show strength and weakness because honest."</Typography>
-              )}
-            </Paper>
+              {/* Lilia */}
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                <Box sx={{ width: 50, height: 50, borderRadius: '50%', bgcolor: '#C2410C', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Typography variant="body2" color="white" fontWeight="bold">LI</Typography>
+                </Box>
+                <Box sx={{ ...cardSx(P.yellow), flex: 1, p: 2 }}>
+                  <Typography variant="caption" color="text.secondary">Lilia</Typography>
+                  <Typography variant="body1" sx={{ mt: 0.5 }}>Balance?</Typography>
+                </Box>
+              </Box>
+              {/* You - gaps 2, 3, 4 */}
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexDirection: 'row-reverse' }}>
+                <Box sx={{ width: 50, height: 50, borderRadius: '50%', bgcolor: P.green.border, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Typography variant="body2" color="white" fontWeight="bold">You</Typography>
+                </Box>
+                <Box sx={{ ...cardSx(P.green), flex: 1, p: 2 }}>
+                  <Typography variant="caption" color="text.secondary">You</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
+                    <Typography variant="body1">Yes, show</Typography>
+                    <GapSelect gapIdx={2} />
+                    <Typography variant="body1">and</Typography>
+                    <GapSelect gapIdx={3} />
+                    <GapSelect gapIdx={4} />
+                    <Typography variant="body1">honest.</Typography>
+                  </Box>
+                  {submitted && (answers[2] !== 'strength' || answers[3] !== 'weakness' || answers[4] !== 'because') && (
+                    <Typography variant="body2" color="error" sx={{ mt: 0.5 }}>Correct: "Yes, show strength and weakness because honest."</Typography>
+                  )}
+                </Box>
+              </Box>
+            </Stack>
           </Box>
-        </Stack>
-      </Paper>
-
-      {!submitted ? (
-        <Button variant="contained" onClick={handleSubmit} disabled={!allAnswered} fullWidth size="large"
-          sx={{ backgroundColor: '#27ae60', '&:hover': { backgroundColor: '#1e8449' } }}>
-          Check My Answers
-        </Button>
-      ) : (
-        <Paper elevation={3} sx={{ p: 3, textAlign: 'center', backgroundColor: '#f0faf4', border: '2px solid #27ae60', borderRadius: 2 }}>
-          <CheckCircleIcon sx={{ fontSize: 50, color: '#27ae60', mb: 1 }} />
-          <Typography variant="h5" color="success.dark" gutterBottom>Task A Complete! Score: {score}/5</Typography>
-          <Button variant="contained" onClick={() => navigate('/phase6/subphase/1/step/3/remedial/b2/task/b')} size="large"
-            sx={{ mt: 2, backgroundColor: '#27ae60', '&:hover': { backgroundColor: '#1e8449' } }}>
-            Next: Task B →
-          </Button>
-        </Paper>
-      )}
+        </motion.div>
+        {!submitted ? (
+          <Box component="button" onClick={handleSubmit} disabled={!allAnswered} sx={{ width: '100%', ...cardSx(P.orange), p: 1.5, cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem', color: P.orange.border, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` }, '&:disabled': { opacity: 0.5, cursor: 'not-allowed' }, transition: 'all 0.15s ease' }}>
+            Check My Answers
+          </Box>
+        ) : (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...cardSx(P.green), textAlign: 'center' }}>
+              <CheckCircleIcon sx={{ fontSize: 50, color: P.green.border, mb: 1 }} />
+              <Typography variant="h5" gutterBottom sx={{ color: P.green.border }}>Task A Complete! Score: {score}/5</Typography>
+              <Box component="button" onClick={() => navigate('/phase6/subphase/1/step/3/remedial/b2/task/b')} sx={{ ...cardSx(P.orange), p: 1.5, cursor: 'pointer', fontWeight: 'bold', color: P.orange.border, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` }, transition: 'all 0.15s ease' }}>
+                Next: Task B →
+              </Box>
+            </Box>
+          </motion.div>
+        )}
+      </Container>
     </Box>
   )
 }

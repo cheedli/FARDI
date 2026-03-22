@@ -2,22 +2,20 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
-  Paper,
   Typography,
-  Button,
   TextField,
-  Card,
-  CardContent,
-  Alert,
   CircularProgress,
   Divider,
-  Stack
+  Stack,
+  Container,
+  useTheme
 } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary'
 import { useProgressSave } from '../../hooks/useProgressSave'
+import { motion } from 'framer-motion'
 
 /**
  * Phase 4 Step 4 Interaction 2: Video Script Writing
@@ -26,6 +24,30 @@ import { useProgressSave } from '../../hooks/useProgressSave'
 
 export default function Phase4Step4Interaction2() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const LIGHT = {
+    pageBg: '#FFFDE7',
+    blue:   { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+    green:  { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+    yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+    purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+    teal:   { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+    orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+    red:    { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+  }
+  const DARK = {
+    pageBg: '#0F0F1A',
+    blue:   { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+    green:  { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+    yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+    purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
+    teal:   { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+    orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+    red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+  }
+  const P = isDark ? DARK : LIGHT
+
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 2, context: 'main' })
   const [script, setScript] = useState('')
   const [evaluation, setEvaluation] = useState(null)
@@ -181,236 +203,281 @@ export default function Phase4Step4Interaction2() {
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, backgroundColor: 'primary.main', color: 'white' }}>
-        <Typography variant="h4" gutterBottom>
-          Phase 4: Marketing & Promotion
-        </Typography>
-        <Typography variant="h5" gutterBottom>
-          Step 4: Apply - Interaction 2
-        </Typography>
-        <Typography variant="body1">
-          Write a complete video script using the guided template
-        </Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
 
-      {/* Instructor Message */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage
-          speaker="Emna"
-          message="Now, write a script for your video using this guided template with examples."
-        />
-      </Paper>
+          {/* Header */}
+          <Box sx={{
+            bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
+              Phase 4: Marketing & Promotion
+            </Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.blue.shadow }}>
+              Step 4: Apply - Interaction 2
+            </Typography>
+            <Typography variant="body1" sx={{ color: P.blue.shadow }}>
+              Write a complete video script using the guided template
+            </Typography>
+          </Box>
 
-      {/* Instructions */}
-      <Alert severity="info" icon={<InfoIcon />} sx={{ mb: 3 }}>
-        <Typography variant="body2" gutterBottom fontWeight="bold">
-          Instructions:
-        </Typography>
-        <Typography variant="body2">
-          Follow the template below to write 4-8 sentences scripting video scenes (animation, jingle, dramatisation).
-          Adapt the examples to your ideas and self-detect/fix grammar/spelling/structure mistakes.
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
-          <strong>Hint:</strong> Use the examples as models—change words to make it your own script.
-        </Typography>
-      </Alert>
+          {/* Instructor Message */}
+          <Box sx={{
+            bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <CharacterMessage
+              speaker="Emna"
+              message="Now, write a script for your video using this guided template with examples."
+            />
+          </Box>
 
-      {/* Template with Examples */}
-      <Paper elevation={2} sx={{ p: 3, mb: 4, backgroundColor: 'info.lighter' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <VideoLibraryIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
-          <Typography variant="h6" color="primary">
-            Video Script Template with Examples
-          </Typography>
-        </Box>
+          {/* Instructions */}
+          <Box sx={{
+            bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`,
+            p: 3, mb: 3, display: 'flex', gap: 2, alignItems: 'flex-start',
+          }}>
+            <InfoIcon sx={{ color: P.blue.shadow, mt: 0.3 }} />
+            <Box>
+              <Typography variant="body2" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
+                Instructions:
+              </Typography>
+              <Typography variant="body2" sx={{ color: P.blue.shadow }}>
+                Follow the template below to write 4-8 sentences scripting video scenes (animation, jingle, dramatisation).
+                Adapt the examples to your ideas and self-detect/fix grammar/spelling/structure mistakes.
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic', color: P.blue.shadow }}>
+                <strong>Hint:</strong> Use the examples as models—change words to make it your own script.
+              </Typography>
+            </Box>
+          </Box>
 
-        <Stack spacing={3} sx={{ mt: 2 }}>
-          {/* Scene 1 */}
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                Scene 1 (Opening/Sketch):
+          {/* Template with Examples */}
+          <Box sx={{
+            bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+            p: 3, mb: 4,
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <VideoLibraryIcon sx={{ fontSize: 40, color: P.teal.shadow, mr: 2 }} />
+              <Typography variant="h6" fontWeight="bold" sx={{ color: P.teal.shadow }}>
+                Video Script Template with Examples
               </Typography>
-              <Typography variant="body2" sx={{ mb: 1, fontFamily: 'monospace', backgroundColor: 'grey.100', p: 1, borderRadius: 1 }}>
-                The video opens with [animation/clip] and jingle.
-              </Typography>
-              <Divider sx={{ my: 1 }} />
-              <Typography variant="body2" color="success.dark" fontWeight="bold">
-                Example (follow and adapt):
-              </Typography>
-              <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-                The video opens with colorful animation of cultures dancing and a catchy jingle.
-              </Typography>
-            </CardContent>
-          </Card>
+            </Box>
 
-          {/* Scene 2 */}
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                Scene 2 (Dramatisation/Storytelling):
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 1, fontFamily: 'monospace', backgroundColor: 'grey.100', p: 1, borderRadius: 1 }}>
-                Show dramatisation with [character/goal/obstacles].
-              </Typography>
-              <Divider sx={{ my: 1 }} />
-              <Typography variant="body2" color="success.dark" fontWeight="bold">
-                Example:
-              </Typography>
-              <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-                Show dramatisation with students meeting cultures (goal) and overcoming shyness (obstacle).
-              </Typography>
-            </CardContent>
-          </Card>
+            <Stack spacing={3} sx={{ mt: 2 }}>
+              {/* Scene 1 */}
+              <Box sx={{
+                bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+                borderRadius: '14px', boxShadow: `3px 3px 0 ${P.blue.shadow}`, p: 2,
+              }}>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ color: P.blue.shadow }} gutterBottom>
+                  Scene 1 (Opening/Sketch):
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 1, fontFamily: 'monospace', bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', p: 1, borderRadius: 1, color: P.blue.shadow }}>
+                  The video opens with [animation/clip] and jingle.
+                </Typography>
+                <Divider sx={{ my: 1, borderColor: P.blue.border }} />
+                <Typography variant="body2" fontWeight="bold" sx={{ color: P.green.shadow }}>
+                  Example (follow and adapt):
+                </Typography>
+                <Typography variant="body2" sx={{ fontStyle: 'italic', color: P.blue.shadow }}>
+                  The video opens with colorful animation of cultures dancing and a catchy jingle.
+                </Typography>
+              </Box>
 
-          {/* Scene 3 */}
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
-                Scene 3 (Features/Call to Action):
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 1, fontFamily: 'monospace', backgroundColor: 'grey.100', p: 1, borderRadius: 1 }}>
-                Feature event details and end with "Come on March 8!".
-              </Typography>
-              <Divider sx={{ my: 1 }} />
-              <Typography variant="body2" color="success.dark" fontWeight="bold">
-                Example:
-              </Typography>
-              <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-                Feature food, music, date March 8 at Student Center—come join us!
-              </Typography>
-            </CardContent>
-          </Card>
+              {/* Scene 2 */}
+              <Box sx={{
+                bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+                borderRadius: '14px', boxShadow: `3px 3px 0 ${P.blue.shadow}`, p: 2,
+              }}>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ color: P.blue.shadow }} gutterBottom>
+                  Scene 2 (Dramatisation/Storytelling):
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 1, fontFamily: 'monospace', bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', p: 1, borderRadius: 1, color: P.blue.shadow }}>
+                  Show dramatisation with [character/goal/obstacles].
+                </Typography>
+                <Divider sx={{ my: 1, borderColor: P.blue.border }} />
+                <Typography variant="body2" fontWeight="bold" sx={{ color: P.green.shadow }}>
+                  Example:
+                </Typography>
+                <Typography variant="body2" sx={{ fontStyle: 'italic', color: P.blue.shadow }}>
+                  Show dramatisation with students meeting cultures (goal) and overcoming shyness (obstacle).
+                </Typography>
+              </Box>
 
-        </Stack>
-      </Paper>
+              {/* Scene 3 */}
+              <Box sx={{
+                bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+                borderRadius: '14px', boxShadow: `3px 3px 0 ${P.blue.shadow}`, p: 2,
+              }}>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ color: P.blue.shadow }} gutterBottom>
+                  Scene 3 (Features/Call to Action):
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 1, fontFamily: 'monospace', bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', p: 1, borderRadius: 1, color: P.blue.shadow }}>
+                  Feature event details and end with "Come on March 8!".
+                </Typography>
+                <Divider sx={{ my: 1, borderColor: P.blue.border }} />
+                <Typography variant="body2" fontWeight="bold" sx={{ color: P.green.shadow }}>
+                  Example:
+                </Typography>
+                <Typography variant="body2" sx={{ fontStyle: 'italic', color: P.blue.shadow }}>
+                  Feature food, music, date March 8 at Student Center—come join us!
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
 
-      {/* Writing Area */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom color="primary">
-          Write Your Video Script
-        </Typography>
+          {/* Writing Area */}
+          <Box sx={{
+            bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow }}>
+              Write Your Video Script
+            </Typography>
 
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          <Typography variant="body2">
-            <strong>Assessment Focus:</strong> Grammar (tense consistency),
-            Spelling (e.g., "dramatisation"), Structure (scene sequence),
-            Vocabulary use, Following/adapting examples, Autonomous improvement
-          </Typography>
-        </Alert>
+            <Box sx={{
+              bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`,
+              borderRadius: '14px', boxShadow: `2px 2px 0 ${P.yellow.shadow}`,
+              p: 2, mb: 2,
+            }}>
+              <Typography variant="body2" sx={{ color: P.yellow.shadow }}>
+                <strong>Assessment Focus:</strong> Grammar (tense consistency),
+                Spelling (e.g., "dramatisation"), Structure (scene sequence),
+                Vocabulary use, Following/adapting examples, Autonomous improvement
+              </Typography>
+            </Box>
 
-        <TextField
-          fullWidth
-          multiline
-          rows={10}
-          variant="outlined"
-          placeholder="Write your video script here using the template above. Remember to include:
+            <TextField
+              fullWidth
+              multiline
+              rows={10}
+              variant="outlined"
+              placeholder="Write your video script here using the template above. Remember to include:
 Scene 1: Opening with animation/clip and jingle
 Scene 2: Dramatisation with characters, goal, and obstacles
 Scene 3: Features and call to action (Come on March 8!)
 
 Example start: The video opens with colorful animation..."
-          value={script}
-          onChange={(e) => setScript(e.target.value)}
-          disabled={submitted}
-          sx={{ mb: 2 }}
-        />
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="caption" color="text.secondary">
-            Words: {script.split(/\s+/).filter(w => w.length > 0).length} |
-            Sentences: {script.split(/[.!?]+/).filter(s => s.trim().length > 0).length}
-          </Typography>
-        </Box>
-
-        {!submitted && (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            disabled={loading || !script.trim()}
-            fullWidth
-            size="large"
-            startIcon={<VideoLibraryIcon />}
-          >
-            {loading ? <CircularProgress size={24} /> : 'Submit Video Script'}
-          </Button>
-        )}
-      </Paper>
-
-      {/* Evaluation Results */}
-      {evaluation && (
-        <Paper
-          elevation={3}
-          sx={{
-            p: 3,
-            mb: 3,
-            backgroundColor: evaluation.success ? 'success.lighter' : 'warning.lighter',
-            border: '2px solid',
-            borderColor: evaluation.success ? 'success.main' : 'warning.main'
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <CheckCircleIcon
-              sx={{
-                fontSize: 40,
-                color: evaluation.success ? 'success.main' : 'warning.main',
-                mr: 2
-              }}
+              value={script}
+              onChange={(e) => setScript(e.target.value)}
+              disabled={submitted}
+              sx={{ mb: 2 }}
             />
-            <Box>
-              <Typography variant="h6" color={evaluation.success ? 'success.dark' : 'warning.dark'}>
-                {evaluation.success ? 'Video Script Submitted!' : 'Try Again'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Level: {evaluation.level} | Score: +{evaluation.score} point{evaluation.score !== 1 ? 's' : ''}
-              </Typography>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Box component="span" sx={{
+                bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`,
+                borderRadius: '999px', px: 2, py: 0.5,
+                fontSize: '0.85rem', fontWeight: 700, color: P.yellow.shadow,
+                display: 'inline-block'
+              }}>
+                Words: {script.split(/\s+/).filter(w => w.length > 0).length} | Sentences: {script.split(/[.!?]+/).filter(s => s.trim().length > 0).length}
+              </Box>
             </Box>
+
+            {!submitted && (
+              <Box component="button" onClick={handleSubmit} disabled={loading || !script.trim()} sx={{
+                bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+                borderRadius: '12px', boxShadow: `3px 3px 0 ${P.orange.shadow}`,
+                px: 3, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                cursor: (loading || !script.trim()) ? 'not-allowed' : 'pointer',
+                color: P.orange.shadow, width: '100%', opacity: (loading || !script.trim()) ? 0.6 : 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.orange.shadow}` },
+                '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.orange.shadow}` }
+              }}>
+                <VideoLibraryIcon />
+                {loading ? <CircularProgress size={24} /> : 'Submit Video Script'}
+              </Box>
+            )}
           </Box>
 
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            {evaluation.feedback}
-          </Typography>
+          {/* Evaluation Results */}
+          {evaluation && (
+            <Box sx={{
+              bgcolor: evaluation.success ? P.green.bg : P.yellow.bg,
+              border: `2px solid ${evaluation.success ? P.green.border : P.yellow.border}`,
+              borderRadius: '20px',
+              boxShadow: `4px 4px 0 ${evaluation.success ? P.green.shadow : P.yellow.shadow}`,
+              p: 3, mb: 3,
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <CheckCircleIcon
+                  sx={{
+                    fontSize: 40,
+                    color: evaluation.success ? P.green.shadow : P.yellow.shadow,
+                    mr: 2
+                  }}
+                />
+                <Box>
+                  <Typography variant="h6" sx={{ color: evaluation.success ? P.green.shadow : P.yellow.shadow }}>
+                    {evaluation.success ? 'Video Script Submitted!' : 'Try Again'}
+                  </Typography>
+                  <Box component="span" sx={{
+                    bgcolor: evaluation.success ? P.green.bg : P.yellow.bg,
+                    border: `2px solid ${evaluation.success ? P.green.border : P.yellow.border}`,
+                    borderRadius: '999px', px: 2, py: 0.5,
+                    fontSize: '0.85rem', fontWeight: 700,
+                    color: evaluation.success ? P.green.shadow : P.yellow.shadow,
+                    display: 'inline-block', mt: 0.5
+                  }}>
+                    Level: {evaluation.level} | Score: +{evaluation.score} point{evaluation.score !== 1 ? 's' : ''}
+                  </Box>
+                </Box>
+              </Box>
 
-          {evaluation.details && (
-            <Box sx={{ mt: 2, p: 2, backgroundColor: 'white', borderRadius: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Evaluation Details:
+              <Typography variant="body1" sx={{ mb: 2, color: evaluation.success ? P.green.shadow : P.yellow.shadow }}>
+                {evaluation.feedback}
               </Typography>
-              {evaluation.details.grammar && (
-                <Typography variant="body2">
-                  Grammar: {evaluation.details.grammar}
-                </Typography>
+
+              {evaluation.details && (
+                <Box sx={{ mt: 2, p: 2, bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)', borderRadius: '10px' }}>
+                  <Typography variant="subtitle2" gutterBottom sx={{ color: evaluation.success ? P.green.shadow : P.yellow.shadow }}>
+                    Evaluation Details:
+                  </Typography>
+                  {evaluation.details.grammar && (
+                    <Typography variant="body2" sx={{ color: evaluation.success ? P.green.shadow : P.yellow.shadow }}>
+                      Grammar: {evaluation.details.grammar}
+                    </Typography>
+                  )}
+                  {evaluation.details.spelling && (
+                    <Typography variant="body2" sx={{ color: evaluation.success ? P.green.shadow : P.yellow.shadow }}>
+                      Spelling: {evaluation.details.spelling}
+                    </Typography>
+                  )}
+                  {evaluation.details.structure && (
+                    <Typography variant="body2" sx={{ color: evaluation.success ? P.green.shadow : P.yellow.shadow }}>
+                      Structure: {evaluation.details.structure}
+                    </Typography>
+                  )}
+                </Box>
               )}
-              {evaluation.details.spelling && (
-                <Typography variant="body2">
-                  Spelling: {evaluation.details.spelling}
-                </Typography>
-              )}
-              {evaluation.details.structure && (
-                <Typography variant="body2">
-                  Structure: {evaluation.details.structure}
-                </Typography>
+
+              {submitted && (
+                <Box component="button" onClick={handleContinue} sx={{
+                  bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                  borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
+                  px: 3, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                  cursor: 'pointer', color: P.green.shadow, width: '100%', mt: 2,
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
+                  '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` }
+                }}>
+                  Continue to Vocabulary Integration
+                </Box>
               )}
             </Box>
           )}
 
-          {submitted && (
-            <Button
-              variant="contained"
-              color="success"
-              onClick={handleContinue}
-              size="large"
-              fullWidth
-              sx={{ mt: 2 }}
-            >
-              Continue to Vocabulary Integration
-            </Button>
-          )}
-        </Paper>
-      )}
+        </motion.div>
+      </Container>
     </Box>
   )
 }

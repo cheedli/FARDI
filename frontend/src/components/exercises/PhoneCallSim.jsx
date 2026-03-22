@@ -1,24 +1,24 @@
 /**
- * PhoneCallSim - WhatsApp-style Chat Exercise Component
- * 
- * A dialogue completion exercise styled as WhatsApp with:
- * - WhatsApp green/white bubble colors
+ * PhoneCallSim - Clay/Bento Chat Exercise Component
+ *
+ * A dialogue completion exercise with clay theme styling:
+ * - Clay card containers with bold borders and drop shadows
  * - Typing animation before messages appear
  * - Progressive message reveal
  * - Natural audio playback
+ * - Fully mobile responsive
  */
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import {
     Box,
     Typography,
-    Paper,
     Avatar,
     IconButton,
-    Chip,
     Stack,
     Button,
     Fade,
-    Zoom
+    Zoom,
+    useTheme
 } from '@mui/material'
 import VolumeUpIcon from '@mui/icons-material/VolumeUp'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
@@ -27,6 +27,26 @@ import CallIcon from '@mui/icons-material/Call'
 import VideocamIcon from '@mui/icons-material/Videocam'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+
+const getPalette = (dark) => dark ? {
+    pageBg: '#0F0F1A', cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', divider: '#2A2A4A',
+    blue: { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+    green: { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+    purple: { bg: '#1E0A2E', border: '#CE93D8', shadow: '#7B1FA2' },
+    yellow: { bg: '#2A2200', border: '#F9A825', shadow: '#A06800', text: '#FFD54F' },
+    red: { bg: '#1F0000', border: '#EF9A9A', shadow: '#B71C1C' },
+    teal: { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+    orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+} : {
+    pageBg: '#FFFDE7', cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', divider: '#E0E0E0',
+    blue: { bg: '#BBDEFB', border: '#1976D2', shadow: '#1976D2' },
+    green: { bg: '#C8E6C9', border: '#388E3C', shadow: '#388E3C' },
+    purple: { bg: '#E1BEE7', border: '#8E24AA', shadow: '#8E24AA' },
+    yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F9A825', text: '#5D4037' },
+    red: { bg: '#FFCDD2', border: '#C62828', shadow: '#C62828' },
+    teal: { bg: '#B2EBF2', border: '#0097A7', shadow: '#0097A7' },
+    orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#F57C00' },
+}
 
 export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
     const [currentLineIndex, setCurrentLineIndex] = useState(0)
@@ -38,6 +58,9 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
     const [isTyping, setIsTyping] = useState(false)
     const [pendingMessage, setPendingMessage] = useState(null)
     const transcriptRef = useRef(null)
+    const theme = useTheme()
+    const dark = theme.palette.mode === 'dark'
+    const c = getPalette(dark)
 
     // Load a natural-sounding voice
     useEffect(() => {
@@ -323,7 +346,7 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
                 console.log(`Correct answers:`, correctAnswers)
                 filledWords.forEach((word, index) => {
                     const isCorrect = correctAnswers[index] && word === correctAnswers[index]
-                    console.log(`  [${index}] "${word}" vs "${correctAnswers[index]}": ${isCorrect ? '✅ +1' : '❌ +0'}`)
+                    console.log(`  [${index}] "${word}" vs "${correctAnswers[index]}": ${isCorrect ? '+1' : '+0'}`)
                 })
             })
 
@@ -366,80 +389,102 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
     useEffect(() => {
         const updateTime = () => {
             const now = new Date()
-            // Use user's locale for time format
             setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
         }
         updateTime()
-        const interval = setInterval(updateTime, 60000) // Update every minute
+        const interval = setInterval(updateTime, 60000)
         return () => clearInterval(interval)
     }, [])
 
+    // Clay button style helper
+    const clayBtn = (color) => ({
+        borderRadius: '14px',
+        border: `2px solid ${color.border}`,
+        boxShadow: `4px 4px 0 ${color.shadow}`,
+        fontWeight: 800,
+        transition: 'transform 0.12s, box-shadow 0.12s',
+        '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${color.shadow}` },
+    })
+
     return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-            {/* WhatsApp Container */}
-            <Paper
-                elevation={16}
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: { xs: 1, sm: 2 } }}>
+            {/* Chat Container - Clay Card */}
+            <Box
                 sx={{
                     width: '100%',
-                    maxWidth: 500,
-                    borderRadius: 3,
+                    maxWidth: { xs: '100%', sm: 500 },
+                    bgcolor: c.cardBg,
+                    border: `2px solid ${c.blue.border}`,
+                    borderRadius: '20px',
+                    boxShadow: `4px 4px 0 ${c.blue.shadow}`,
                     overflow: 'hidden',
-                    bgcolor: '#111b21',
                     position: 'relative'
                 }}
             >
-                {/* WhatsApp Header */}
+                {/* Chat Header - Clay styled */}
                 <Box sx={{
-                    bgcolor: '#202c33',
-                    p: 1.5,
+                    bgcolor: c.blue.bg,
+                    border: `none`,
+                    borderBottom: `2px solid ${c.blue.border}`,
+                    p: { xs: 1, sm: 1.5 },
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 1.5
+                    gap: { xs: 1, sm: 1.5 }
                 }}>
-                    <IconButton size="small" sx={{ color: '#aebac1' }}>
-                        <ArrowBackIcon />
+                    <IconButton size="small" sx={{ color: c.muted, minWidth: 44, minHeight: 44 }}>
+                        <ArrowBackIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
                     </IconButton>
                     <Avatar sx={{
-                        width: 40,
-                        height: 40,
-                        bgcolor: '#00a884',
-                        fontSize: '1rem',
-                        fontWeight: 600
+                        width: { xs: 36, sm: 40 },
+                        height: { xs: 36, sm: 40 },
+                        bgcolor: c.purple.bg,
+                        border: `2px solid ${c.purple.border}`,
+                        boxShadow: `2px 2px 0 ${c.purple.shadow}`,
+                        fontSize: { xs: '0.85rem', sm: '1rem' },
+                        fontWeight: 800,
+                        color: c.heading
                     }}>
                         {callerInitial}
                     </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                        <Typography variant="subtitle1" sx={{ color: '#e9edef', fontWeight: 500, lineHeight: 1.2 }}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{
+                            color: c.heading,
+                            fontWeight: 800,
+                            lineHeight: 1.2,
+                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                        }}>
                             {callerName}
                         </Typography>
-                        <Typography variant="caption" sx={{ color: '#8696a0' }}>
+                        <Typography sx={{ color: isTyping ? c.green.border : c.muted, fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600 }}>
                             {isTyping ? 'typing...' : 'online'}
                         </Typography>
                     </Box>
-                    <Stack direction="row" spacing={0.5}>
-                        <IconButton size="small" sx={{ color: '#aebac1' }}>
-                            <VideocamIcon />
+                    <Stack direction="row" spacing={0}>
+                        <IconButton sx={{ color: c.muted, minWidth: 44, minHeight: 44, display: { xs: 'none', sm: 'flex' } }}>
+                            <VideocamIcon sx={{ fontSize: 20 }} />
                         </IconButton>
-                        <IconButton size="small" sx={{ color: '#aebac1' }}>
-                            <CallIcon />
+                        <IconButton sx={{ color: c.muted, minWidth: 44, minHeight: 44 }}>
+                            <CallIcon sx={{ fontSize: 20 }} />
                         </IconButton>
-                        <IconButton size="small" sx={{ color: '#aebac1' }}>
-                            <MoreVertIcon />
+                        <IconButton sx={{ color: c.muted, minWidth: 44, minHeight: 44 }}>
+                            <MoreVertIcon sx={{ fontSize: 20 }} />
                         </IconButton>
                     </Stack>
                 </Box>
 
-                {/* Chat Background */}
+                {/* Chat Area */}
                 <Box
                     ref={transcriptRef}
                     sx={{
-                        height: 400,
+                        height: { xs: 350, sm: 400 },
                         overflowY: 'auto',
-                        bgcolor: '#0b141a',
-                        backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23182229\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-                        p: 2,
+                        bgcolor: c.pageBg,
+                        p: { xs: 1.5, sm: 2 },
                         '&::-webkit-scrollbar': { width: 6 },
-                        '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 3 }
+                        '&::-webkit-scrollbar-thumb': { bgcolor: c.divider, borderRadius: 3 }
                     }}
                 >
                     {visibleMessages.map((line, displayIdx) => {
@@ -451,6 +496,11 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
                         const isCompleted = userLineIdx !== -1 && isLineComplete(userLineIdx)
                         const isOutgoing = line.speaker?.toLowerCase().includes('you')
 
+                        // Pick bubble color based on role
+                        const bubbleColor = isOutgoing
+                            ? c.blue
+                            : (displayIdx % 2 === 0 ? c.teal : c.purple)
+
                         return (
                             <Fade in={true} key={line.originalIndex} timeout={300}>
                                 <Box
@@ -460,35 +510,42 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
                                         mb: 1.5
                                     }}
                                 >
-                                    <Paper
-                                        elevation={1}
+                                    {/* Clay message bubble */}
+                                    <Box
                                         sx={{
-                                            p: 1.5,
-                                            px: 2,
-                                            maxWidth: '80%',
-                                            bgcolor: isOutgoing ? '#005c4b' : '#202c33',
-                                            borderRadius: 2,
-                                            borderTopRightRadius: isOutgoing ? 0 : 2,
-                                            borderTopLeftRadius: isOutgoing ? 2 : 0,
+                                            p: { xs: 1.25, sm: 1.5 },
+                                            px: { xs: 1.5, sm: 2 },
+                                            maxWidth: { xs: '85%', sm: '75%' },
+                                            bgcolor: bubbleColor.bg,
+                                            borderRadius: '16px',
+                                            border: `2px solid ${isCurrentLine ? c.yellow.border : bubbleColor.border}`,
+                                            boxShadow: isCurrentLine
+                                                ? `4px 4px 0 ${c.yellow.shadow}`
+                                                : `3px 3px 0 ${bubbleColor.shadow}`,
                                             position: 'relative',
-                                            border: isCurrentLine ? '2px solid #00a884' : 'none',
-                                            boxShadow: isCurrentLine ? '0 0 15px rgba(0, 168, 132, 0.3)' : 'none'
+                                            transition: 'box-shadow 0.2s, border-color 0.2s'
                                         }}
                                     >
-                                        {/* Sender name for group effect */}
+                                        {/* Sender name */}
                                         {!isOutgoing && (
-                                            <Typography variant="caption" sx={{ color: '#00a884', fontWeight: 600, display: 'block', mb: 0.5 }}>
+                                            <Typography sx={{
+                                                color: bubbleColor.border,
+                                                fontWeight: 800,
+                                                display: 'block',
+                                                mb: 0.5,
+                                                fontSize: { xs: '0.7rem', sm: '0.75rem' }
+                                            }}>
                                                 {line.speaker}
                                             </Typography>
                                         )}
 
                                         <Typography
-                                            variant="body2"
                                             sx={{
-                                                color: '#e9edef',
+                                                color: c.body,
                                                 lineHeight: 1.5,
-                                                fontSize: '0.95rem',
-                                                wordBreak: 'break-word'
+                                                fontSize: { xs: '0.88rem', sm: '0.95rem' },
+                                                wordBreak: 'break-word',
+                                                fontWeight: 500
                                             }}
                                         >
                                             {isUserInput ? getDisplayText(line) : line.text}
@@ -496,30 +553,31 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
 
                                         {/* Time and status */}
                                         <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center" sx={{ mt: 0.5 }}>
-                                            <Typography variant="caption" sx={{ color: '#8696a0', fontSize: '0.7rem' }}>
+                                            <Typography sx={{ color: c.muted, fontSize: '0.65rem', fontWeight: 600 }}>
                                                 {currentTime}
                                             </Typography>
                                             {isOutgoing && (
-                                                <DoneAllIcon sx={{ fontSize: 14, color: isCompleted ? '#53bdeb' : '#8696a0' }} />
+                                                <DoneAllIcon sx={{ fontSize: 14, color: isCompleted ? c.green.border : c.muted }} />
                                             )}
                                         </Stack>
 
                                         {/* Audio button for incoming */}
                                         {!isOutgoing && line.text && (
                                             <IconButton
-                                                size="small"
                                                 onClick={() => playAudio(line.text)}
                                                 disabled={isPlaying}
                                                 sx={{
                                                     position: 'absolute',
-                                                    right: -40,
+                                                    right: { xs: -36, sm: -40 },
                                                     top: '50%',
                                                     transform: 'translateY(-50%)',
-                                                    color: isPlaying ? '#00a884' : '#8696a0',
-                                                    '&:hover': { color: '#00a884' }
+                                                    color: isPlaying ? c.blue.border : c.muted,
+                                                    minWidth: 44,
+                                                    minHeight: 44,
+                                                    '&:hover': { color: c.blue.border }
                                                 }}
                                             >
-                                                <VolumeUpIcon sx={{ fontSize: 20 }} />
+                                                <VolumeUpIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
                                             </IconButton>
                                         )}
 
@@ -529,32 +587,33 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
                                                 <CheckCircleIcon
                                                     sx={{
                                                         position: 'absolute',
-                                                        left: -30,
+                                                        left: { xs: -28, sm: -30 },
                                                         top: '50%',
                                                         transform: 'translateY(-50%)',
-                                                        color: '#00a884',
-                                                        fontSize: 22
+                                                        color: c.green.border,
+                                                        fontSize: { xs: 20, sm: 22 }
                                                     }}
                                                 />
                                             </Zoom>
                                         )}
-                                    </Paper>
+                                    </Box>
                                 </Box>
                             </Fade>
                         )
                     })}
 
-                    {/* Typing Indicator */}
+                    {/* Typing Indicator - Clay styled */}
                     {isTyping && (
                         <Fade in={true}>
                             <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1.5 }}>
-                                <Paper
+                                <Box
                                     sx={{
                                         p: 1.5,
                                         px: 2.5,
-                                        bgcolor: '#202c33',
-                                        borderRadius: 2,
-                                        borderTopLeftRadius: 0,
+                                        bgcolor: c.teal.bg,
+                                        borderRadius: '16px',
+                                        border: `2px solid ${c.teal.border}`,
+                                        boxShadow: `3px 3px 0 ${c.teal.shadow}`,
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: 0.5
@@ -567,7 +626,7 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
                                                 width: 8,
                                                 height: 8,
                                                 borderRadius: '50%',
-                                                bgcolor: '#8696a0',
+                                                bgcolor: c.teal.border,
                                                 animation: `typing 1.4s infinite ${i * 0.2}s`,
                                                 '@keyframes typing': {
                                                     '0%, 60%, 100%': { transform: 'translateY(0)', opacity: 0.4 },
@@ -576,94 +635,138 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
                                             }}
                                         />
                                     ))}
-                                </Paper>
+                                </Box>
                             </Box>
                         </Fade>
                     )}
 
-                    {/* Completion Message */}
+                    {/* Completion Message - Green clay card */}
                     {isComplete && (
                         <Fade in={true}>
                             <Box sx={{ textAlign: 'center', py: 3 }}>
-                                <Paper sx={{
+                                <Box sx={{
                                     display: 'inline-block',
-                                    px: 3,
+                                    px: { xs: 2, sm: 3 },
                                     py: 1.5,
-                                    bgcolor: 'rgba(0, 168, 132, 0.2)',
-                                    borderRadius: 2
+                                    bgcolor: c.green.bg,
+                                    border: `2px solid ${c.green.border}`,
+                                    borderRadius: '20px',
+                                    boxShadow: `4px 4px 0 ${c.green.shadow}`
                                 }}>
-                                    <Typography variant="body2" sx={{ color: '#00a884' }}>
-                                        🎉 Conversation complete!
+                                    <Typography sx={{ color: c.green.border, fontWeight: 800, fontSize: { xs: '0.85rem', sm: '0.95rem' } }}>
+                                        Conversation complete!
                                     </Typography>
-                                </Paper>
+                                </Box>
                             </Box>
                         </Fade>
                     )}
                 </Box>
 
-                {/* Word Bank / Input Area */}
+                {/* Word Bank / Input Area - Clay styled */}
                 {!isComplete && userInputLines.length > 0 && (
                     <Box sx={{
-                        p: 2,
-                        bgcolor: '#202c33',
-                        borderTop: '1px solid #2a3942'
+                        p: { xs: 1.5, sm: 2 },
+                        bgcolor: c.cardBg,
+                        borderTop: `2px solid ${c.divider}`
                     }}>
                         {/* Guided Questions */}
                         {guidedQuestions && guidedQuestions.length > 0 && guidedQuestions[currentLineIndex] && (
                             <Box sx={{
                                 mb: 1.5,
-                                p: 1,
-                                bgcolor: 'rgba(0, 92, 75, 0.2)',
-                                borderRadius: 1,
-                                border: '1px solid rgba(0, 92, 75, 0.4)'
+                                p: { xs: 0.75, sm: 1 },
+                                bgcolor: c.yellow.bg,
+                                borderRadius: '14px',
+                                border: `2px solid ${c.yellow.border}`,
+                                boxShadow: `2px 2px 0 ${c.yellow.shadow}`
                             }}>
-                                <Typography sx={{ color: '#25d366', fontSize: '0.7rem', fontWeight: 600, mb: 0.5 }}>
-                                    💡 Tip:
+                                <Typography sx={{ color: c.yellow.text || c.yellow.border, fontSize: '0.7rem', fontWeight: 800, mb: 0.5 }}>
+                                    Tip:
                                 </Typography>
-                                <Typography sx={{ color: '#8696a0', fontSize: '0.75rem', pl: 1 }}>
+                                <Typography sx={{ color: c.muted, fontSize: '0.75rem', pl: 1, fontWeight: 500 }}>
                                     {guidedQuestions[currentLineIndex]}
                                 </Typography>
                             </Box>
                         )}
-                        <Typography variant="caption" sx={{ color: '#8696a0', display: 'block', mb: 1.5 }}>
+                        <Typography sx={{ color: c.muted, display: 'block', mb: 1.5, fontSize: { xs: '0.72rem', sm: '0.78rem' }, fontWeight: 600 }}>
                             Tap words to complete your message:
                         </Typography>
-                        <Stack direction="row" flexWrap="wrap" gap={1}>
+                        <Stack direction="row" flexWrap="wrap" gap={{ xs: 0.75, sm: 1 }}>
                             {wordBank.map((word, idx) => {
                                 return (
-                                    <Chip
+                                    <Box
                                         key={idx}
-                                        label={word}
                                         onClick={() => handleWordSelect(word)}
                                         sx={{
-                                            bgcolor: '#00a884',
-                                            color: 'white',
-                                            fontWeight: 500,
+                                            px: { xs: 1.25, sm: 1.75 },
+                                            py: { xs: 0.5, sm: 0.4 },
+                                            borderRadius: '50px',
+                                            bgcolor: c.purple.bg,
+                                            border: `2px solid ${c.purple.border}`,
+                                            boxShadow: `2px 2px 0 ${c.purple.shadow}`,
+                                            fontSize: { xs: '0.72rem', sm: '0.8rem' },
+                                            fontWeight: 800,
+                                            color: c.heading,
                                             cursor: 'pointer',
+                                            userSelect: 'none',
+                                            minHeight: 44,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            transition: 'transform 0.12s, box-shadow 0.12s',
                                             '&:hover': {
-                                                bgcolor: '#008c6e'
+                                                transform: 'translate(-1px,-1px)',
+                                                boxShadow: `3px 3px 0 ${c.purple.shadow}`
+                                            },
+                                            '&:active': {
+                                                transform: 'translate(1px,1px)',
+                                                boxShadow: `1px 1px 0 ${c.purple.shadow}`
                                             }
                                         }}
-                                    />
+                                    >
+                                        {word}
+                                    </Box>
                                 )
                             })}
                         </Stack>
 
                         <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography variant="caption" sx={{ color: '#8696a0' }}>
+                            {/* Progress pill */}
+                            <Box sx={{
+                                px: 1.75,
+                                py: 0.4,
+                                borderRadius: '50px',
+                                bgcolor: c.blue.bg,
+                                border: `2px solid ${c.blue.border}`,
+                                boxShadow: `2px 2px 0 ${c.blue.shadow}`,
+                                fontSize: '0.8rem',
+                                fontWeight: 800,
+                                color: c.heading
+                            }}>
                                 {currentLineIndex + 1} / {userInputLines.length}
-                            </Typography>
+                            </Box>
                             <Button
                                 size="small"
                                 onClick={handleRemoveLastWord}
-                                sx={{ color: '#8696a0', '&:hover': { color: '#e9edef' } }}
+                                sx={{
+                                    color: c.heading,
+                                    bgcolor: c.red.bg,
+                                    minHeight: 44,
+                                    ...clayBtn(c.red),
+                                    px: 2,
+                                    fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                                    textTransform: 'none',
+                                    '&:hover': {
+                                        bgcolor: c.red.bg,
+                                        transform: 'translate(-2px,-2px)',
+                                        boxShadow: `6px 6px 0 ${c.red.shadow}`
+                                    }
+                                }}
                             >
                                 Undo
                             </Button>
                         </Box>
                     </Box>
                 )}
-            </Paper>
+            </Box>
         </Box>
     )
 }

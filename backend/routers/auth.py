@@ -386,6 +386,54 @@ async def check_email(request: Request):
         return {"available": False, "message": "Server error"}
 
 
+@router.post("/api/forgot-password")
+async def forgot_password(request: Request):
+    """Send password reset link."""
+    try:
+        data = await request.json()
+        email = (data.get("email") or "").strip().lower()
+        if not email or not validate_email(email):
+            raise HTTPException(status_code=400, detail="Valid email is required")
+
+        token = user_manager.create_password_reset_token(email)
+        # Always return success to avoid email enumeration
+        # In production, send an email with the reset link here
+        if token:
+            logger.info(f"Password reset token created for {email}: {token}")
+        return {"message": "If an account exists with that email, a reset link has been sent."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in forgot-password: {str(e)}")
+        raise HTTPException(status_code=500, detail="Server error")
+
+
+@router.post("/api/reset-password")
+async def reset_password(request: Request):
+    """Reset password using token."""
+    try:
+        data = await request.json()
+        token = data.get("token", "").strip()
+        new_password = data.get("password", "")
+
+        if not token:
+            raise HTTPException(status_code=400, detail="Reset token is required")
+
+        pw_ok, pw_msg = validate_password(new_password)
+        if not pw_ok:
+            raise HTTPException(status_code=400, detail=pw_msg)
+
+        success, message = user_manager.reset_password_with_token(token, new_password)
+        if not success:
+            raise HTTPException(status_code=400, detail=message)
+        return {"message": message}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in reset-password: {str(e)}")
+        raise HTTPException(status_code=500, detail="Server error")
+
+
 @router.get("/api/debug/db-test")
 async def debug_db_test():
     """Debug endpoint to test database connectivity."""

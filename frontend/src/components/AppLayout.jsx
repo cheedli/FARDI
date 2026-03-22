@@ -1,5 +1,5 @@
 import React from 'react'
-import { Outlet, Link as RouterLink, useLocation, Navigate } from 'react-router-dom'
+import { Outlet, Link as RouterLink, useLocation, Navigate, useNavigate } from 'react-router-dom'
 import {
   Box, Typography, Stack, Button, Avatar, Chip, IconButton, Tooltip,
   Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider
@@ -73,6 +73,7 @@ export default function AppLayout() {
   const { stats, loading: statsLoading } = useUserStats()
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = React.useState(false)
+  const navigate = useNavigate()
 
   const D = mode === 'dark' ? DARK : LIGHT
 
@@ -125,6 +126,30 @@ export default function AppLayout() {
   }
 
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/')
+
+  // Navigate to phase, resuming where the user left off for phases 3+
+  const handlePhaseClick = async (phase) => {
+    if (phase.id >= 3) {
+      try {
+        const res = await fetch(`/api/progress/resume?phase=${phase.id}`, { credentials: 'include' })
+        const d = await res.json()
+        if (d.success && d.data && !d.data.is_complete) {
+          const { subphase, step, interaction } = d.data
+          let url
+          if (subphase) {
+            url = `/phase${phase.id}/subphase/${subphase}/step/${step}/interaction/${interaction}`
+          } else if (interaction) {
+            url = `/phase${phase.id}/step/${step}/interaction/${interaction}`
+          } else {
+            url = `/phase${phase.id}/step/${step || 1}`
+          }
+          navigate(url, { state: { resumeFrom: d.data.item_index, previousResponses: d.data.previous_responses, sessionId: d.data.session_id } })
+          return
+        }
+      } catch {}
+    }
+    navigate(phase.path)
+  }
 
   // Clay nav item styles helper
   const navItemSx = (active, colorKey) => {
@@ -377,8 +402,7 @@ export default function AppLayout() {
                 return (
                   <ListItem key={phase.id} disablePadding sx={{ mb: 0.5 }}>
                     <ListItemButton
-                      component={unlocked ? RouterLink : 'div'}
-                      to={unlocked ? phase.path : undefined}
+                      onClick={unlocked ? () => handlePhaseClick(phase) : undefined}
                       disabled={!unlocked}
                       sx={{
                         borderRadius: '10px',

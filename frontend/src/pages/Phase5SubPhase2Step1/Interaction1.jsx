@@ -1,65 +1,51 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography } from '@mui/material'
+import { Box, Container, Typography } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import WordshakeGame from '../../components/phase5/WordshakeGame.jsx'
 import { useProgressSave } from '../../hooks/useProgressSave'
 
-/**
- * Phase 5 SubPhase 2 Step 1: Engage
- * Interaction 1: Wordshake Game
- * Play individually for 3 minutes to form instruction words
- */
+const LIGHT = { pageBg: '#FFFDE7', blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' }, teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' } }
+const DARK  = { pageBg: '#0F0F1A', blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' }, teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' } }
+const clay  = (c) => ({ bgcolor: c.bg, border: `2px solid ${c.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${c.shadow}`, p: 3 })
 
 const TARGET_WORDS = ['please', 'thank you', 'first', 'then', 'after', 'careful', 'help', 'guide', 'welcome', 'queue', 'safety', 'listen']
 
 export default function Phase5SubPhase2Step1Interaction1() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 5, subphase: 2, step: 1, interaction: 1, context: 'main' })
 
   const handleGameComplete = (gameData) => {
     saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction1', is_correct: true, score: gameData })
-    // Store score
     sessionStorage.setItem('phase5_subphase2_step1_interaction1_score', gameData.score || '0')
-    
-    // Navigate to next interaction after a short delay
-    setTimeout(() => {
-      navigate('/phase5/subphase/2/step/1/interaction/2')
-    }, 2000)
+    setTimeout(() => { navigate('/phase5/subphase/2/step/1/interaction/2') }, 2000)
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)', color: 'white' }}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">
-          Phase 5: Execution & Problem-Solving
-        </Typography>
-        <Typography variant="h5" gutterBottom>
-          SubPhase 2 Step 1: Engage - Interaction 1
-        </Typography>
-        <Typography variant="body1">
-          Activate your instruction vocabulary
-        </Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ ...clay(P.blue), mb: 3 }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ color: P.blue.border, mb: 1 }}>Phase 5: Execution &amp; Problem-Solving</Typography>
+            <Typography variant="h5" sx={{ color: P.blue.border, mb: 1 }}>SubPhase 2 Step 1: Engage - Interaction 1</Typography>
+            <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>Activate your instruction vocabulary</Typography>
+          </Box>
+        </motion.div>
 
-      {/* Instructor Message */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage
-          speaker="Ms. Mabrouki"
-          message="To activate instruction vocabulary, play 'Wordshake' individually for 3 minutes and form as many words as you can from these target words: please, thank you, first, then, after, careful, help, guide, welcome, queue, safety, listen. Link: https://learnenglishteens.britishcouncil.org/vocabulary/vocabulary-games/wordshake"
-        />
-      </Paper>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <Box sx={{ ...clay(P.teal), mb: 3 }}>
+            <CharacterMessage speaker="Ms. Mabrouki" message="To activate instruction vocabulary, play 'Wordshake' individually for 3 minutes and form as many words as you can from these target words: please, thank you, first, then, after, careful, help, guide, welcome, queue, safety, listen. Link: https://learnenglishteens.britishcouncil.org/vocabulary/vocabulary-games/wordshake" />
+          </Box>
+        </motion.div>
 
-      {/* Game Component */}
-      <WordshakeGame
-        step={1}
-        interaction={1}
-        subphase={2}
-        targetTime={180} // 3 minutes
-        targetWords={TARGET_WORDS}
-        onComplete={handleGameComplete}
-      />
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <WordshakeGame step={1} interaction={1} subphase={2} targetTime={180} targetWords={TARGET_WORDS} onComplete={handleGameComplete} />
+        </motion.div>
+      </Container>
     </Box>
   )
 }

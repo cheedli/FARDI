@@ -1,15 +1,29 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, Select, MenuItem, FormControl, Alert, Stack } from '@mui/material'
-import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { Box, Container, Typography, Stack, Select, MenuItem, FormControl } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase6API } from '../../../lib/phase6_api.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
-/**
- * Phase 6 SubPhase 1 Step 5 - Level B1 - Task A
- * Negotiation Gap Fill — Fill gaps correcting grammar/structure in report dialogue
- */
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+  green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+  red: { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+  blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+  green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+  red: { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+  blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1D4ED8' },
+}
 
 const DIALOGUE = [
   { speaker: 'SKANDER', text: 'Summary?' },
@@ -31,6 +45,8 @@ const DIALOGUE = [
 
 export default function Phase6SP1Step5RemB1TaskA() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 5, interaction: 1, context: 'remedial_b1' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
@@ -50,12 +66,20 @@ export default function Phase6SP1Step5RemB1TaskA() {
     try { await phase6API.logRemedialActivity(5, 'B1', 'A', correct, 3, 0, 1) } catch (e) { console.error(e) }
   }
 
+  const cardSx = (color) => ({
+    bgcolor: P[color].bg,
+    border: `2px solid ${P[color].border}`,
+    borderRadius: '20px',
+    boxShadow: `4px 4px 0 ${P[color].shadow}`,
+    p: 3,
+  })
+
   const renderLine = (line, idx) => {
     if (line.gaps) {
       let gapIdx = 0
       return (
         <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-          <Box sx={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #27ae60, #1e8449)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>You</Box>
+          <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: P.green.border, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '0.75rem', flexShrink: 0 }}>You</Box>
           {line.template.map((part, pi) => {
             if (part === '[') {
               const gap = line.gaps[gapIdx++]
@@ -64,13 +88,12 @@ export default function Phase6SP1Step5RemB1TaskA() {
               return (
                 <React.Fragment key={pi}>
                   <FormControl size="small" sx={{ minWidth: 120 }}>
-                    <Select value={answers[gap.id] || ''} onChange={(e) => setAnswers({ ...answers, [gap.id]: e.target.value })} disabled={submitted}
-                      sx={{ borderColor: isCorrect ? 'success.main' : isWrong ? 'error.main' : undefined }}>
+                    <Select value={answers[gap.id] || ''} onChange={(e) => setAnswers({ ...answers, [gap.id]: e.target.value })} disabled={submitted}>
                       <MenuItem value="" disabled><em>Choose...</em></MenuItem>
                       {gap.options.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
                     </Select>
                   </FormControl>
-                  {submitted && isWrong && <Typography variant="caption" color="error">→ {gap.correct}</Typography>}
+                  {submitted && isWrong && <Typography variant="caption" sx={{ color: P.red.border }}>→ {gap.correct}</Typography>}
                 </React.Fragment>
               )
             }
@@ -82,7 +105,7 @@ export default function Phase6SP1Step5RemB1TaskA() {
     const isInstructor = line.speaker !== 'You'
     return (
       <Box key={idx} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 2 }}>
-        <Box sx={{ width: 36, height: 36, borderRadius: '50%', background: isInstructor ? 'linear-gradient(135deg, #2980b9, #1a5276)' : 'linear-gradient(135deg, #27ae60, #1e8449)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '0.7rem', flexShrink: 0 }}>
+        <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: isInstructor ? P.blue.border : P.green.border, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '0.7rem', flexShrink: 0 }}>
           {line.speaker === 'SKANDER' ? 'SK' : line.speaker === 'Emna' ? 'EM' : 'You'}
         </Box>
         <Box>
@@ -94,48 +117,90 @@ export default function Phase6SP1Step5RemB1TaskA() {
   }
 
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto', p: 3 }}>
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)', color: 'white', borderRadius: 2 }}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">Phase 6: Reflection and Evaluation</Typography>
-        <Typography variant="h5" gutterBottom>Step 5: Remedial Practice - Level B1</Typography>
-        <Typography variant="h6" gutterBottom>Task A: Negotiation Gap Fill</Typography>
-        <Typography variant="body1">Fill the gaps to correct grammar/structure in the report dialogue</Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ ...cardSx('orange'), mb: 3 }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.orange.border }}>
+              Phase 6: Reflection &amp; Evaluation
+            </Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.orange.border }}>Step 5: Remedial Practice — Level B1</Typography>
+            <Typography variant="h6" sx={{ color: P.orange.border }}>Task A: Negotiation Gap Fill</Typography>
+            <Typography variant="body1" color="text.secondary">Fill the gaps to correct grammar/structure in the report dialogue</Typography>
+          </Box>
+        </motion.div>
 
-      <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <CharacterMessage
-          speaker="Ms. Mabrouki"
-          message="Negotiation Gap Fill! Complete the dialogue by choosing the correct word for each gap. Focus on correct past tense and proper report vocabulary structure."
-        />
-      </Paper>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <Box sx={{ ...cardSx('teal'), mb: 3 }}>
+            <CharacterMessage
+              speaker="Ms. Mabrouki"
+              message="Negotiation Gap Fill! Complete the dialogue by choosing the correct word for each gap. Focus on correct past tense and proper report vocabulary structure."
+            />
+          </Box>
+        </motion.div>
 
-      <Alert severity="info" sx={{ mb: 3 }}>
-        <Typography variant="body2"><strong>Instructions:</strong> SKANDER and Emna ask about the report. Complete your responses using correct past tense and report vocabulary.</Typography>
-      </Alert>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Box sx={{ ...cardSx('teal'), mb: 3 }}>
+            <Typography variant="body2"><strong>Instructions:</strong> SKANDER and Emna ask about the report. Complete your responses using correct past tense and report vocabulary.</Typography>
+          </Box>
+        </motion.div>
 
-      <Paper elevation={2} sx={{ p: 3, mb: 3, backgroundColor: '#f9fef9', borderRadius: 2 }}>
-        {DIALOGUE.map((line, idx) => renderLine(line, idx))}
-      </Paper>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <Box sx={{ ...cardSx('orange'), mb: 3 }}>
+            {DIALOGUE.map((line, idx) => renderLine(line, idx))}
+          </Box>
+        </motion.div>
 
-      {!submitted ? (
-        <Button variant="contained" onClick={handleSubmit} disabled={!allFilled} fullWidth size="large"
-          sx={{ background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)', '&:hover': { opacity: 0.9 } }}>
-          Submit Dialogue
-        </Button>
-      ) : (
-        <Paper elevation={3} sx={{ p: 3, mt: 3, textAlign: 'center', backgroundColor: '#e8f8f0', borderRadius: 2 }}>
-          <CheckCircleIcon sx={{ fontSize: 50, color: '#27ae60', mb: 1 }} />
-          <Typography variant="h5" color="success.dark" fontWeight="bold">Task A Complete!</Typography>
-          <Typography variant="h6" sx={{ mt: 1 }}>Score: {score}/3</Typography>
-          <Typography variant="body1" sx={{ mt: 1 }}>
-            {score === 3 ? 'Perfect! Correct past tense and vocabulary.' : score >= 2 ? 'Good work! Review the corrections above.' : 'Keep practicing — focus on past tense verbs in reports.'}
-          </Typography>
-          <Button variant="contained" onClick={() => navigate('/phase6/subphase/1/step/5/remedial/b1/task/b')} size="large"
-            sx={{ mt: 2, background: 'linear-gradient(135deg, #27ae60 0%, #1e8449 100%)', '&:hover': { opacity: 0.9 } }}>
-            Next: Task B →
-          </Button>
-        </Paper>
-      )}
+        {!submitted ? (
+          <Box
+            component="button"
+            onClick={handleSubmit}
+            disabled={!allFilled}
+            sx={{
+              width: '100%', py: 1.5,
+              bgcolor: P.orange.bg,
+              border: `2px solid ${P.orange.border}`,
+              borderRadius: '16px',
+              boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+              cursor: !allFilled ? 'not-allowed' : 'pointer',
+              opacity: !allFilled ? 0.5 : 1,
+              fontWeight: 'bold', fontSize: '1rem',
+              color: P.orange.border,
+              '&:hover': allFilled ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` } : {},
+              transition: 'all 0.15s ease',
+            }}
+          >
+            Submit Dialogue
+          </Box>
+        ) : (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...cardSx('green'), textAlign: 'center' }}>
+              <CheckCircleIcon sx={{ fontSize: 50, color: P.green.border, mb: 1 }} />
+              <Typography variant="h5" sx={{ color: P.green.border }} gutterBottom>Task A Complete!</Typography>
+              <Typography variant="h6" sx={{ mt: 1 }}>Score: {score}/3</Typography>
+              <Typography variant="body1" sx={{ mt: 1 }}>
+                {score === 3 ? 'Perfect! Correct past tense and vocabulary.' : score >= 2 ? 'Good work! Review the corrections above.' : 'Keep practicing — focus on past tense verbs in reports.'}
+              </Typography>
+              <Box
+                component="button"
+                onClick={() => navigate('/phase6/subphase/1/step/5/remedial/b1/task/b')}
+                sx={{
+                  mt: 2, px: 6, py: 1.5,
+                  bgcolor: P.green.bg,
+                  border: `2px solid ${P.green.border}`,
+                  borderRadius: '16px',
+                  boxShadow: `4px 4px 0 ${P.green.shadow}`,
+                  cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem', color: P.green.border,
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` },
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                Next: Task B →
+              </Box>
+            </Box>
+          </motion.div>
+        )}
+      </Container>
     </Box>
   )
 }

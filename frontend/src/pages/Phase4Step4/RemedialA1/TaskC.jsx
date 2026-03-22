@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, Stack, Alert } from '@mui/material'
+import { Box, Typography, Container, useTheme } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import SentenceBuilder from '../../../components/exercises/SentenceBuilder.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
+import { motion } from 'framer-motion'
 
 /**
  * Phase 4 Step 4 - Level A1 - Task C: Grammar Exercise (Simple Sentences)
@@ -43,6 +44,30 @@ const SENTENCE_TEMPLATES = [
 
 export default function Phase4Step4RemedialA1TaskC() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const LIGHT = {
+    pageBg: '#FFFDE7',
+    blue:   { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+    green:  { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+    yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+    purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+    teal:   { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+    orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+    red:    { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+  }
+  const DARK = {
+    pageBg: '#0F0F1A',
+    blue:   { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+    green:  { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+    yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+    purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
+    teal:   { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+    orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+    red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+  }
+  const P = isDark ? DARK : LIGHT
+
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 3, context: 'remedial_a1' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [showFinalResults, setShowFinalResults] = useState(false)
@@ -160,114 +185,131 @@ export default function Phase4Step4RemedialA1TaskC() {
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, backgroundColor: 'primary.light', color: 'primary.contrastText' }}>
-        <Typography variant="h4" gutterBottom>
-          Phase 4 Step 4: Apply - Remedial Practice
-        </Typography>
-        <Typography variant="h5" gutterBottom>
-          Level A1 - Task C: Sentence Builder
-        </Typography>
-        <Typography variant="body1">
-          Write 6 simple sentences following the template examples
-        </Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
 
-      {/* Instructor Message */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage
-          speaker="MS. MABROUKI"
-          message="Excellent progress! For the final task, write 6 simple sentences following the examples shown. Use simple present tense and basic structure. You can copy the examples or write your own similar sentences!"
-        />
-      </Paper>
-
-      {/* Sentence Builder Game */}
-      {!gameCompleted && (
-        <Box>
-          <SentenceBuilder
-            exercise={SENTENCE_BUILDER_EXERCISE}
-            onComplete={handleGameComplete}
-          />
-        </Box>
-      )}
-
-      {/* Navigation */}
-      {gameCompleted && !showFinalResults && (
-        <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 4 }}>
-          <Button
-            variant="contained"
-            color="success"
-            onClick={handleContinue}
-            size="large"
-          >
-            View Final Results
-          </Button>
-        </Stack>
-      )}
-
-      {/* Final Results - Pass/Fail */}
-      {showFinalResults && (
-        <Paper
-          elevation={8}
-          sx={{
-            p: 5,
-            mt: 3,
-            textAlign: 'center',
-            backgroundColor: finalScore.passed ? 'success.main' : 'warning.main',
-            color: 'white'
-          }}
-        >
-          <Typography variant="h3" gutterBottom fontWeight="bold">
-            {finalScore.passed ? '🎉 Congratulations!' : '💪 Keep Practicing!'}
-          </Typography>
-
-          <Box sx={{ my: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Phase 4 Step 4 - Remedial A1 - Final Results
+          {/* Header */}
+          <Box sx={{
+            bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
+              Phase 4 Step 4: Apply - Remedial Practice
             </Typography>
-            <Typography variant="h6" sx={{ mt: 2 }}>
-              Task A (Term Treasure Hunt): {finalScore.taskA} / 8
+            <Typography variant="h5" gutterBottom sx={{ color: P.blue.shadow }}>
+              Level A1 - Task C: Sentence Builder
             </Typography>
-            <Typography variant="h6">
-              Task B (Fill Quest): {finalScore.taskB} / 8
-            </Typography>
-            <Typography variant="h6">
-              Task C (Sentence Builder): {finalScore.taskC} / 6
-            </Typography>
-            <Typography variant="h4" sx={{ mt: 2, fontWeight: 'bold' }}>
-              Total Score: {finalScore.total} / 22
-            </Typography>
-            <Typography variant="body1" sx={{ mt: 1, opacity: 0.9 }}>
-              Pass Threshold: 18 / 22 (80%)
+            <Typography variant="body1" sx={{ color: P.blue.shadow }}>
+              Write 6 simple sentences following the template examples
             </Typography>
           </Box>
 
-          {finalScore.passed ? (
-            <Box>
-              <Typography variant="h6" sx={{ mt: 3 }}>
-                ✅ You have passed Remedial A1!
-              </Typography>
-              <Typography variant="body1" sx={{ mt: 1 }}>
-                Proceeding to Dashboard...
-              </Typography>
+          {/* Instructor Message */}
+          <Box sx={{
+            bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <CharacterMessage
+              speaker="MS. MABROUKI"
+              message="Excellent progress! For the final task, write 6 simple sentences following the examples shown. Use simple present tense and basic structure. You can copy the examples or write your own similar sentences!"
+            />
+          </Box>
+
+          {/* Sentence Builder Game */}
+          {!gameCompleted && (
+            <Box sx={{
+              bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+              borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+              p: 3, mb: 3,
+            }}>
+              <SentenceBuilder
+                exercise={SENTENCE_BUILDER_EXERCISE}
+                onComplete={handleGameComplete}
+              />
             </Box>
-          ) : (
-            <Box>
-              <Typography variant="h6" sx={{ mt: 3 }}>
-                ❌ Score below passing threshold
+          )}
+
+          {/* Navigation */}
+          {gameCompleted && !showFinalResults && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
+              <Box component="button" onClick={handleContinue} sx={{
+                bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
+                px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                cursor: 'pointer', color: P.green.shadow,
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
+                '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` }
+              }}>
+                View Final Results
+              </Box>
+            </Box>
+          )}
+
+          {/* Final Results - Pass/Fail */}
+          {showFinalResults && (
+            <Box sx={{
+              bgcolor: finalScore.passed ? P.green.bg : P.yellow.bg,
+              border: `2px solid ${finalScore.passed ? P.green.border : P.yellow.border}`,
+              borderRadius: '20px',
+              boxShadow: `4px 4px 0 ${finalScore.passed ? P.green.shadow : P.yellow.shadow}`,
+              p: 5, mt: 3, textAlign: 'center',
+            }}>
+              <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                {finalScore.passed ? 'Congratulations!' : 'Keep Practicing!'}
               </Typography>
-              <Typography variant="body1" sx={{ mt: 1 }}>
-                Restarting Remedial A1 to help you improve...
+
+              <Box sx={{ my: 3 }}>
+                <Typography variant="h5" gutterBottom sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                  Phase 4 Step 4 - Remedial A1 - Final Results
+                </Typography>
+                <Typography variant="h6" sx={{ mt: 2, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                  Task A (Term Treasure Hunt): {finalScore.taskA} / 8
+                </Typography>
+                <Typography variant="h6" sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                  Task B (Fill Quest): {finalScore.taskB} / 8
+                </Typography>
+                <Typography variant="h6" sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                  Task C (Sentence Builder): {finalScore.taskC} / 6
+                </Typography>
+                <Typography variant="h4" sx={{ mt: 2, fontWeight: 'bold', color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                  Total Score: {finalScore.total} / 22
+                </Typography>
+                <Typography variant="body1" sx={{ mt: 1, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                  Pass Threshold: 18 / 22 (80%)
+                </Typography>
+              </Box>
+
+              {finalScore.passed ? (
+                <Box>
+                  <Typography variant="h6" sx={{ mt: 3, color: P.green.shadow }}>
+                    You have passed Remedial A1!
+                  </Typography>
+                  <Typography variant="body1" sx={{ mt: 1, color: P.green.shadow }}>
+                    Proceeding to Dashboard...
+                  </Typography>
+                </Box>
+              ) : (
+                <Box>
+                  <Typography variant="h6" sx={{ mt: 3, color: P.yellow.shadow }}>
+                    Score below passing threshold
+                  </Typography>
+                  <Typography variant="body1" sx={{ mt: 1, color: P.yellow.shadow }}>
+                    Restarting Remedial A1 to help you improve...
+                  </Typography>
+                </Box>
+              )}
+
+              <Typography variant="body2" sx={{ mt: 3, color: finalScore.passed ? P.green.shadow : P.yellow.shadow, opacity: 0.8 }}>
+                Redirecting in 5 seconds...
               </Typography>
             </Box>
           )}
 
-          <Typography variant="body2" sx={{ mt: 3, opacity: 0.8 }}>
-            Redirecting in 5 seconds...
-          </Typography>
-        </Paper>
-      )}
+        </motion.div>
+      </Container>
     </Box>
   )
 }

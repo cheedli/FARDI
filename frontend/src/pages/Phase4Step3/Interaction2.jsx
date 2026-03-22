@@ -2,20 +2,18 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
-  Paper,
   Typography,
-  Button,
   TextField,
-  Card,
-  CardContent,
-  Alert,
   CircularProgress,
-  Chip,
   Stack,
-  Grid
+  Grid,
+  Container
 } from '@mui/material'
+import { useTheme } from '@mui/material'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import { useProgressSave } from '../../hooks/useProgressSave'
 
 /**
@@ -43,6 +41,30 @@ const VIDEOS = [
 
 export default function Phase4Step3Interaction2() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const LIGHT = {
+    pageBg: '#FFFDE7',
+    blue:   { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+    green:  { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+    yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+    purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+    teal:   { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+    orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+    red:    { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+  }
+  const DARK = {
+    pageBg: '#0F0F1A',
+    blue:   { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+    green:  { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+    yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+    purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
+    teal:   { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+    orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+    red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+  }
+  const P = isDark ? DARK : LIGHT
+
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 2, context: 'main' })
   const [answer, setAnswer] = useState('')
   const [evaluation, setEvaluation] = useState(null)
@@ -178,168 +200,211 @@ export default function Phase4Step3Interaction2() {
   }
 
   const handleContinue = () => {
-    // Navigate to Interaction 3
     navigate('/phase4/step/3/interaction/3')
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, backgroundColor: 'success.light', color: 'white' }}>
-        <Typography variant="h4" gutterBottom>
-          Phase 4: Marketing & Promotion
-        </Typography>
-        <Typography variant="h5" gutterBottom>
-          Step 3: Explain - Interaction 2
-        </Typography>
-        <Typography variant="body1">
-          Watch two videos and explain "dramatisation" in advertising
-        </Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="lg">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
 
-      {/* Instructor Message */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage
-          speaker="Lilia"
-          message="Now watch these two video ads (first 3:30 on film drama principles; second 5:30 on successful ad keys). Listen for 'dramatisation', 'character', 'goal', 'obstacles', 'small ideas', 'friction'. After, explain 'dramatisation' in videos."
-        />
-      </Paper>
-
-      {/* Key Terms to Listen For */}
-      <Paper elevation={1} sx={{ p: 3, mb: 3, backgroundColor: 'info.lighter' }}>
-        <Typography variant="subtitle1" gutterBottom fontWeight="bold" color="primary">
-          Key Terms to Listen For:
-        </Typography>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {KEY_TERMS.map((term, index) => (
-            <Chip key={index} label={term} color="primary" variant="outlined" />
-          ))}
-        </Stack>
-      </Paper>
-
-      {/* Videos Section */}
-      <Typography variant="h6" gutterBottom color="primary" sx={{ mb: 2 }}>
-        Educational Videos
-      </Typography>
-
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {VIDEOS.map((video, index) => (
-          <Grid item xs={12} md={6} key={index}>
-            <Card elevation={3}>
-              <Box sx={{ position: 'relative', paddingTop: '56.25%', backgroundColor: '#000' }}>
-                <iframe
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    border: 0
-                  }}
-                  src={video.url}
-                  title={video.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </Box>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  {index + 1}. {video.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {video.description}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* Question Section */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom color="primary">
-          Question: What is "dramatisation" in videos and what is its purpose?
-        </Typography>
-
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <Typography variant="body2">
-            <strong>Hint:</strong> Include "story in video because..." and reference character/goal/obstacles from the first video or small ideas from the second.
-          </Typography>
-        </Alert>
-
-        <TextField
-          fullWidth
-          multiline
-          rows={5}
-          variant="outlined"
-          placeholder="Explain dramatisation and describe its purpose. Use examples from the videos..."
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          disabled={submitted}
-          sx={{ mb: 2 }}
-        />
-
-        {!submitted && (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            disabled={loading || !answer.trim()}
-            fullWidth
-            size="large"
-          >
-            {loading ? <CircularProgress size={24} /> : 'Submit Answer'}
-          </Button>
-        )}
-      </Paper>
-
-      {/* Evaluation Results */}
-      {evaluation && (
-        <Paper
-          elevation={3}
-          sx={{
-            p: 3,
-            mb: 3,
-            backgroundColor: evaluation.success ? 'success.lighter' : 'warning.lighter',
-            border: '2px solid',
-            borderColor: evaluation.success ? 'success.main' : 'warning.main'
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <CheckCircleIcon
-              sx={{
-                fontSize: 40,
-                color: evaluation.success ? 'success.main' : 'warning.main',
-                mr: 2
-              }}
-            />
-            <Box>
-              <Typography variant="h6" color={evaluation.success ? 'success.dark' : 'warning.dark'}>
-                {evaluation.success ? 'Answer Submitted!' : 'Try Again'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Level: {evaluation.level} | Score: {evaluation.score}/5
-              </Typography>
-            </Box>
+          {/* Header */}
+          <Box sx={{
+            bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
+              Phase 4: Marketing & Promotion
+            </Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.blue.shadow }}>
+              Step 3: Explain - Interaction 2
+            </Typography>
+            <Typography variant="body1" sx={{ color: P.blue.shadow }}>
+              Watch two videos and explain "dramatisation" in advertising
+            </Typography>
           </Box>
 
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            {evaluation.feedback}
+          {/* Instructor Message */}
+          <Box sx={{
+            bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <CharacterMessage
+              speaker="Lilia"
+              message="Now watch these two video ads (first 3:30 on film drama principles; second 5:30 on successful ad keys). Listen for 'dramatisation', 'character', 'goal', 'obstacles', 'small ideas', 'friction'. After, explain 'dramatisation' in videos."
+            />
+          </Box>
+
+          {/* Key Terms */}
+          <Box sx={{
+            bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.purple.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="subtitle1" gutterBottom fontWeight="bold" sx={{ color: P.purple.shadow }}>
+              Key Terms to Listen For:
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              {KEY_TERMS.map((term, index) => (
+                <Box key={index} component="span" sx={{
+                  bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`,
+                  borderRadius: '999px', px: 2, py: 0.5,
+                  fontSize: '0.85rem', fontWeight: 700, color: P.purple.shadow,
+                  display: 'inline-block'
+                }}>{term}</Box>
+              ))}
+            </Stack>
+          </Box>
+
+          {/* Videos Section */}
+          <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow, mb: 2 }}>
+            Educational Videos
           </Typography>
 
-          {submitted && (
-            <Button
-              variant="contained"
-              color="success"
-              onClick={handleContinue}
-              size="large"
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            {VIDEOS.map((video, index) => (
+              <Grid item xs={12} md={6} key={index}>
+                <Box sx={{
+                  bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+                  borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+                  p: 3, overflow: 'hidden',
+                }}>
+                  <Box sx={{ position: 'relative', paddingTop: '56.25%', backgroundColor: '#000', borderRadius: '12px', overflow: 'hidden', mb: 2 }}>
+                    <iframe
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        border: 0
+                      }}
+                      src={video.url}
+                      title={video.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </Box>
+                  <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow }}>
+                    {index + 1}. {video.title}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: P.orange.shadow, opacity: 0.8 }}>
+                    {video.description}
+                  </Typography>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Question Section */}
+          <Box sx={{
+            bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow }}>
+              Question: What is "dramatisation" in videos and what is its purpose?
+            </Typography>
+
+            <Box sx={{
+              bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+              borderRadius: '12px', p: 2, mb: 3,
+            }}>
+              <Typography variant="body2" sx={{ color: P.blue.shadow }}>
+                <strong>Hint:</strong> Include "story in video because..." and reference character/goal/obstacles from the first video or small ideas from the second.
+              </Typography>
+            </Box>
+
+            <TextField
               fullWidth
-            >
-              Complete Step 3
-            </Button>
+              multiline
+              rows={5}
+              variant="outlined"
+              placeholder="Explain dramatisation and describe its purpose. Use examples from the videos..."
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              disabled={submitted}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  '& fieldset': { borderColor: P.orange.border },
+                  '&:hover fieldset': { borderColor: P.orange.shadow },
+                  '&.Mui-focused fieldset': { borderColor: P.orange.shadow },
+                }
+              }}
+            />
+
+            {!submitted && (
+              <Box component="button" onClick={handleSubmit} disabled={loading || !answer.trim()} sx={{
+                width: '100%',
+                bgcolor: (loading || !answer.trim()) ? 'grey.200' : P.blue.bg,
+                border: `2px solid ${(loading || !answer.trim()) ? '#ccc' : P.blue.border}`,
+                borderRadius: '12px',
+                boxShadow: (loading || !answer.trim()) ? 'none' : `3px 3px 0 ${P.blue.shadow}`,
+                px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                cursor: (loading || !answer.trim()) ? 'not-allowed' : 'pointer',
+                color: (loading || !answer.trim()) ? 'grey.500' : P.blue.shadow,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                '&:hover': (loading || !answer.trim()) ? {} : { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.blue.shadow}` },
+                '&:active': (loading || !answer.trim()) ? {} : { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.blue.shadow}` },
+              }}>
+                {loading ? <CircularProgress size={20} /> : 'Submit Answer'}
+              </Box>
+            )}
+          </Box>
+
+          {/* Evaluation Results */}
+          {evaluation && (
+            <Box sx={{
+              bgcolor: evaluation.success ? P.green.bg : P.red.bg,
+              border: `2px solid ${evaluation.success ? P.green.border : P.red.border}`,
+              borderRadius: '20px',
+              boxShadow: `4px 4px 0 ${evaluation.success ? P.green.shadow : P.red.shadow}`,
+              p: 3, mb: 3,
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <CheckCircleIcon sx={{
+                  fontSize: 40,
+                  color: evaluation.success ? P.green.shadow : P.red.shadow,
+                  mr: 2
+                }} />
+                <Box>
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: evaluation.success ? P.green.shadow : P.red.shadow }}>
+                    {evaluation.success ? 'Answer Submitted!' : 'Try Again'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: evaluation.success ? P.green.shadow : P.red.shadow, opacity: 0.8 }}>
+                    Level: {evaluation.level} | Score: {evaluation.score}/5
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Typography variant="body1" sx={{ color: evaluation.success ? P.green.shadow : P.red.shadow, mb: 2 }}>
+                {evaluation.feedback}
+              </Typography>
+
+              {submitted && (
+                <Box component="button" onClick={handleContinue} sx={{
+                  width: '100%',
+                  bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                  borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
+                  px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                  cursor: 'pointer', color: P.green.shadow,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
+                  '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` },
+                }}>
+                  <PlayArrowIcon fontSize="small" />
+                  Complete Step 3
+                </Box>
+              )}
+            </Box>
           )}
-        </Paper>
-      )}
+
+        </motion.div>
+      </Container>
     </Box>
   )
 }

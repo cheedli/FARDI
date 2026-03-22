@@ -1,13 +1,29 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, Stack, Alert } from '@mui/material'
+import { Box, Container, Typography } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import GapFillStory from '../../../components/GapFillStory.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
-const WORD_BANK_ORIGINAL = ['emergency', 'backup', 'announce', 'update', 'communicate', 'fix']
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+  green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+  green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+}
 
+const WORD_BANK_ORIGINAL = ['emergency', 'backup', 'announce', 'update', 'communicate', 'fix']
 const SENTENCES = [
   'Ms. Mabrouki: Lights out?',
   'You: It is ___.',
@@ -15,7 +31,6 @@ const SENTENCES = [
   'You: Use ___ and ___.',
   'You: ___ social media.'
 ]
-
 const CORRECT_ANSWERS = {
   'g_1_0': 'emergency',
   'g_3_0': 'backup',
@@ -25,25 +40,31 @@ const CORRECT_ANSWERS = {
 
 export default function Phase5Step2RemedialB2TaskA() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 2, interaction: 1, context: 'remedial_b2' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
 
-  const shuffledWordBank = useMemo(() => {
-    return [...WORD_BANK_ORIGINAL].sort(() => Math.random() - 0.5)
-  }, [])
+  const cardSx = (color) => ({
+    bgcolor: color.bg,
+    border: `2px solid ${color.border}`,
+    borderRadius: '20px',
+    boxShadow: `4px 4px 0 ${color.shadow}`,
+    p: 3,
+  })
 
-  const handleAnswerChange = (key, value) => {
-    setAnswers(prev => ({ ...prev, [key]: value }))
-  }
+  const shuffledWordBank = useMemo(() => [...WORD_BANK_ORIGINAL].sort(() => Math.random() - 0.5), [])
+
+  const handleAnswerChange = (key, value) => setAnswers(prev => ({ ...prev, [key]: value }))
 
   const calculateScore = () => {
-    let correctCount = 0
+    let count = 0
     Object.entries(CORRECT_ANSWERS).forEach(([key, correct]) => {
-      if (answers[key]?.toLowerCase().trim() === correct.toLowerCase()) correctCount++
+      if (answers[key]?.toLowerCase().trim() === correct.toLowerCase()) count++
     })
-    return correctCount
+    return count
   }
 
   const handleSubmit = async () => {
@@ -51,49 +72,49 @@ export default function Phase5Step2RemedialB2TaskA() {
     setScore(finalScore)
     setSubmitted(true)
     sessionStorage.setItem('phase5_step2_remedial_b2_taskA_score', finalScore.toString())
-    try {
-      await phase5API.logRemedialActivity(2, 'B2', 'A', finalScore, 4, 0)
-    } catch (error) {
-      console.error('Failed to log task completion:', error)
-    }
-  }
-
-  const handleContinue = () => {
-    navigate('/phase5/subphase/1/step/2/remedial/b2/task/b')
+    try { await phase5API.logRemedialActivity(2, 'B2', 'A', finalScore, 4, 0) } catch (e) { console.error(e) }
   }
 
   const allFilled = Object.keys(CORRECT_ANSWERS).every(key => answers[key])
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)', color: 'white' }}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">Phase 5: Execution & Problem-Solving</Typography>
-        <Typography variant="h5" gutterBottom>Step 2: Remedial Practice - Level B2</Typography>
-        <Typography variant="h6" gutterBottom>Task A: Role-Play Dialogue</Typography>
-        <Typography variant="body1">Complete dialogue handling crisis</Typography>
-      </Paper>
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage speaker="Ms. Mabrouki" message="Welcome to Role-Play Dialogue! Complete the crisis dialogue by filling in the gaps!" />
-      </Paper>
-      {!submitted && (
-        <Box>
-          <GapFillStory templates={SENTENCES} wordBank={shuffledWordBank} answers={answers} onChange={handleAnswerChange} />
-          <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 4 }}>
-            <Button variant="contained" color="primary" size="large" onClick={handleSubmit} disabled={!allFilled} sx={{ px: 6 }}>Submit Answers</Button>
-          </Stack>
-        </Box>
-      )}
-      {submitted && (
-        <>
-          <Paper elevation={3} sx={{ p: 4, mb: 3, backgroundColor: 'success.lighter', textAlign: 'center' }}>
-            <Typography variant="h5" color="success.dark" gutterBottom>✓ Task A Complete!</Typography>
-            <Typography variant="h6" sx={{ mt: 2 }}>Score: {score} / 4</Typography>
-          </Paper>
-          <Stack direction="row" spacing={2} justifyContent="flex-end">
-            <Button variant="contained" color="success" onClick={handleContinue} size="large">Next: Task B →</Button>
-          </Stack>
-        </>
-      )}
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ ...cardSx(P.orange), mb: 3 }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.orange.border }}>Phase 5: Execution &amp; Problem-Solving</Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.orange.border }}>Step 2: Remedial Practice - Level B2</Typography>
+            <Typography variant="h6" gutterBottom sx={{ color: P.orange.border }}>Task A: Role-Play Dialogue</Typography>
+            <Typography variant="body1" color="text.secondary">Complete dialogue handling crisis</Typography>
+          </Box>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Box sx={{ ...cardSx(P.teal), mb: 3 }}>
+            <CharacterMessage speaker="Ms. Mabrouki" message="Welcome to Role-Play Dialogue! Complete the crisis dialogue by filling in the gaps!" />
+          </Box>
+        </motion.div>
+        {!submitted && (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <Box sx={{ ...cardSx(P.blue), mb: 3 }}>
+              <GapFillStory templates={SENTENCES} wordBank={shuffledWordBank} answers={answers} onChange={handleAnswerChange} />
+            </Box>
+            <Box component="button" onClick={handleSubmit} disabled={!allFilled} sx={{ width: '100%', bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`, borderRadius: '14px', boxShadow: `4px 4px 0 ${P.orange.shadow}`, py: 1.5, cursor: !allFilled ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '1rem', color: P.orange.border, opacity: !allFilled ? 0.5 : 1, '&:hover': allFilled ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` } : {}, transition: 'all 0.15s ease' }}>
+              Submit Answers
+            </Box>
+          </motion.div>
+        )}
+        {submitted && (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...cardSx(P.green), mb: 3, textAlign: 'center' }}>
+              <Typography variant="h5" fontWeight="bold" sx={{ color: P.green.border }}>Task A Complete!</Typography>
+              <Typography variant="h6" sx={{ mt: 2 }} color="text.secondary">Score: {score} / 4</Typography>
+            </Box>
+            <Box component="button" onClick={() => navigate('/phase5/subphase/1/step/2/remedial/b2/task/b')} sx={{ width: '100%', bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '14px', boxShadow: `4px 4px 0 ${P.green.shadow}`, py: 1.5, cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem', color: P.green.border, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }, transition: 'all 0.15s ease' }}>
+              Next: Task B →
+            </Box>
+          </motion.div>
+        )}
+      </Container>
     </Box>
   )
 }

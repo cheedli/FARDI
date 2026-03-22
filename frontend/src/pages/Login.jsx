@@ -149,6 +149,20 @@ export default function Login() {
                 }}
               />
 
+              <Box sx={{ textAlign: 'right', mt: -1 }}>
+                <Box
+                  component={RouterLink} to="/forgot-password"
+                  sx={{
+                    fontSize: '0.8rem', fontWeight: 700, color: D.muted,
+                    textDecoration: 'none',
+                    '&:hover': { color: D.purple.border },
+                    transition: 'color 0.15s',
+                  }}
+                >
+                  Forgot password?
+                </Box>
+              </Box>
+
               <FormControlLabel
                 control={
                   <Checkbox

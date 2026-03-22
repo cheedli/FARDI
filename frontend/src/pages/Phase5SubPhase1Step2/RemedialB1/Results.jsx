@@ -1,25 +1,43 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, Stack, Alert, LinearProgress } from '@mui/material'
-import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { Box, Container, Typography, Stack, LinearProgress } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
+import { motion } from 'framer-motion'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import { phase5API } from '../../../lib/phase5_api.jsx'
 
-/**
- * Phase 5 Step 2 - Remedial B1 - Results Page
- * Shows final scores and pass/fail status
- * All 3 tasks: A, B, C = 8 points total
- * Pass threshold: 6/8 (75%)
- */
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+  green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+  teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+  green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+  teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+}
 
 export default function Phase5Step2RemedialB1Results() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const [loading, setLoading] = useState(true)
-  const [scores, setScores] = useState({
-    taskA: 0, taskB: 0, taskC: 0,
-    total: 0, passed: false
-  })
+  const [scores, setScores] = useState({ taskA: 0, taskB: 0, taskC: 0, total: 0, passed: false })
   const [countdown, setCountdown] = useState(10)
+
+  const cardSx = (color) => ({
+    bgcolor: color.bg,
+    border: `2px solid ${color.border}`,
+    borderRadius: '20px',
+    boxShadow: `4px 4px 0 ${color.shadow}`,
+    p: 3,
+  })
 
   useEffect(() => {
     calculateFinalScore()
@@ -38,13 +56,10 @@ export default function Phase5Step2RemedialB1Results() {
     const taskAScore = parseInt(sessionStorage.getItem('phase5_step2_remedial_b1_taskA_score') || '0')
     const taskBScore = parseInt(sessionStorage.getItem('phase5_step2_remedial_b1_taskB_score') || '0')
     const taskCScore = parseInt(sessionStorage.getItem('phase5_step2_remedial_b1_taskC_score') || '0')
-
     const total = taskAScore + taskBScore + taskCScore
-    const passed = total >= 6 // 6/8 = 75%
-
+    const passed = total >= 6
     setScores({ taskA: taskAScore, taskB: taskBScore, taskC: taskCScore, total, passed })
     setLoading(false)
-
     try {
       await phase5API.logRemedialActivity(2, 'B1', 'final', total, {
         task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore
@@ -62,43 +77,90 @@ export default function Phase5Step2RemedialB1Results() {
     }
   }
 
-  if (loading) return <Box sx={{ textAlign: 'center', p: 4 }}><Typography>Loading results...</Typography></Box>
+  if (loading) {
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography>Loading results...</Typography>
+      </Box>
+    )
+  }
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)', color: 'white' }}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">Phase 5: Execution & Problem-Solving</Typography>
-        <Typography variant="h5" gutterBottom>Step 2: Remedial Practice - Level B1</Typography>
-        <Typography variant="h6" gutterBottom>Final Results</Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          <Box sx={{ ...cardSx(P.orange), mb: 3 }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.orange.border }}>
+              Phase 5: Execution &amp; Problem-Solving
+            </Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.orange.border }}>
+              Step 2: Remedial Practice - Level B1
+            </Typography>
+            <Typography variant="h6" sx={{ color: P.orange.border }}>Final Results</Typography>
+          </Box>
+        </motion.div>
 
-      <Paper elevation={3} sx={{ p: 4, mb: 3, backgroundColor: scores.passed ? 'success.lighter' : 'error.lighter', textAlign: 'center' }}>
-        <EmojiEventsIcon sx={{ fontSize: 60, color: scores.passed ? 'success.main' : 'error.main', mb: 2 }} />
-        <Typography variant="h4" color={scores.passed ? 'success.dark' : 'error.dark'} gutterBottom>
-          {scores.passed ? 'Congratulations! You Passed!' : 'Keep Practicing!'}
-        </Typography>
-        <Typography variant="h5" sx={{ mt: 2 }}>Total Score: {scores.total} / 8</Typography>
-        <Typography variant="body1" sx={{ mt: 1 }}>Pass Threshold: 6/8 (75%)</Typography>
-      </Paper>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Box sx={{ ...cardSx(scores.passed ? P.green : P.orange), mb: 3, textAlign: 'center' }}>
+            <EmojiEventsIcon sx={{ fontSize: 60, color: scores.passed ? P.green.border : P.orange.border, mb: 2 }} />
+            <Typography variant="h4" fontWeight="bold" sx={{ color: scores.passed ? P.green.border : P.orange.border }} gutterBottom>
+              {scores.passed ? 'Congratulations! You Passed!' : 'Keep Practicing!'}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2 }} color="text.secondary">Total Score: {scores.total} / 8</Typography>
+            <Typography variant="body1" sx={{ mt: 1 }} color="text.secondary">Pass Threshold: 6/8 (75%)</Typography>
+          </Box>
+        </motion.div>
 
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>Task Breakdown:</Typography>
-        <Stack spacing={1} sx={{ mt: 2 }}>
-          <Box><Typography>Task A (Negotiation Simulator): {scores.taskA} / 4</Typography><LinearProgress variant="determinate" value={(scores.taskA/4)*100} /></Box>
-          <Box><Typography>Task B (Instruction Builder): {scores.taskB} / 6</Typography><LinearProgress variant="determinate" value={(scores.taskB/6)*100} /></Box>
-          <Box><Typography>Task C (Wordshake Quiz): {scores.taskC} / 6</Typography><LinearProgress variant="determinate" value={(scores.taskC/6)*100} /></Box>
-        </Stack>
-      </Paper>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <Box sx={{ ...cardSx(P.yellow), mb: 3 }}>
+            <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.yellow.border }}>Task Breakdown:</Typography>
+            <Stack spacing={2} sx={{ mt: 2 }}>
+              <Box sx={{ ...cardSx(P.blue), p: 2 }}>
+                <Typography variant="body1" gutterBottom>Task A (Negotiation Simulator): {scores.taskA} / 4</Typography>
+                <LinearProgress variant="determinate" value={(scores.taskA / 4) * 100} sx={{ height: 8, borderRadius: 4 }} />
+              </Box>
+              <Box sx={{ ...cardSx(P.blue), p: 2 }}>
+                <Typography variant="body1" gutterBottom>Task B (Instruction Builder): {scores.taskB} / 6</Typography>
+                <LinearProgress variant="determinate" value={(scores.taskB / 6) * 100} sx={{ height: 8, borderRadius: 4 }} />
+              </Box>
+              <Box sx={{ ...cardSx(P.blue), p: 2 }}>
+                <Typography variant="body1" gutterBottom>Task C (Wordshake Quiz): {scores.taskC} / 6</Typography>
+                <LinearProgress variant="determinate" value={(scores.taskC / 6) * 100} sx={{ height: 8, borderRadius: 4 }} />
+              </Box>
+            </Stack>
+          </Box>
+        </motion.div>
 
-      <Alert severity={scores.passed ? 'success' : 'warning'} sx={{ mb: 3 }}>
-        {scores.passed 
-          ? 'You will proceed to the dashboard. Great work!'
-          : `Redirecting to repeat B1 remedial in ${countdown} seconds...`}
-      </Alert>
-
-      <Button variant="contained" color={scores.passed ? 'success' : 'primary'} onClick={handleRedirect} size="large" fullWidth>
-        {scores.passed ? 'Continue to Dashboard' : 'Retry B1 Remedial'}
-      </Button>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <Box sx={{ ...cardSx(scores.passed ? P.green : P.yellow), mb: 3 }}>
+            <Typography variant="body1" sx={{ color: scores.passed ? P.green.border : P.yellow.border }}>
+              {scores.passed
+                ? 'You will proceed to the dashboard. Great work!'
+                : `Redirecting to repeat B1 remedial in ${countdown} seconds...`}
+            </Typography>
+          </Box>
+          <Box
+            component="button"
+            onClick={handleRedirect}
+            sx={{
+              width: '100%',
+              bgcolor: scores.passed ? P.green.bg : P.orange.bg,
+              border: `2px solid ${scores.passed ? P.green.border : P.orange.border}`,
+              borderRadius: '14px',
+              boxShadow: `4px 4px 0 ${scores.passed ? P.green.shadow : P.orange.shadow}`,
+              py: 1.5,
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              color: scores.passed ? P.green.border : P.orange.border,
+              '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${scores.passed ? P.green.shadow : P.orange.shadow}` },
+              transition: 'all 0.15s ease',
+            }}
+          >
+            {scores.passed ? 'Continue to Dashboard' : 'Retry B1 Remedial'}
+          </Box>
+        </motion.div>
+      </Container>
     </Box>
   )
 }

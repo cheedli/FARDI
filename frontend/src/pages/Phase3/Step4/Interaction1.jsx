@@ -1,27 +1,44 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  TextField,
-  Card,
-  CardContent,
-  Alert,
-  CircularProgress,
-  Grid,
-  IconButton,
-  Divider,
-  Chip
+  Box, Typography, TextField, CircularProgress, Grid, IconButton, Container, useTheme
 } from '@mui/material'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
 import InfoIcon from '@mui/icons-material/Info'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { useProgressSave } from '../../../hooks/useProgressSave'
+
+// ── Clay palette ──────────────────────────────────────────────────────────────
+const LIGHT = {
+  pageBg: '#FFFDE7', cardBg: '#ffffff', heading: '#1A237E', body: '#37474F',
+  muted: '#78909C', divider: '#E0E0E0',
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#388E3C' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1976D2' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F9A825', text: '#5D4037' },
+  orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#F57C00' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#C62828' },
+  teal:   { bg: '#B2EBF2', border: '#0097A7', shadow: '#0097A7' },
+}
+const DARK = {
+  pageBg: '#0F0F1A', cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5',
+  muted: '#607D8B', divider: '#2A2A4A',
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  yellow: { bg: '#2A2200', border: '#F9A825', shadow: '#A06800', text: '#FFD54F' },
+  orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+  red:    { bg: '#1F0000', border: '#EF9A9A', shadow: '#B71C1C' },
+  teal:   { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+}
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.45, ease: 'easeOut' } }),
+}
 
 /**
  * Phase 3 Step 4 - Interaction 1: Budget Creation
@@ -41,6 +58,10 @@ const DEFAULT_FUNDING_SOURCES = [
 
 export default function Phase3Step4Interaction1() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const D = isDark ? DARK : LIGHT
+
   const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 4, interaction: 1, context: 'main' })
   const [costItems, setCostItems] = useState(DEFAULT_COST_ITEMS)
   const [fundingSources, setFundingSources] = useState(DEFAULT_FUNDING_SOURCES)
@@ -55,15 +76,11 @@ export default function Phase3Step4Interaction1() {
   }
 
   const handleRemoveCostItem = (id) => {
-    if (costItems.length > 1) {
-      setCostItems(costItems.filter(item => item.id !== id))
-    }
+    if (costItems.length > 1) setCostItems(costItems.filter(item => item.id !== id))
   }
 
   const handleCostItemChange = (id, field, value) => {
-    setCostItems(costItems.map(item =>
-      item.id === id ? { ...item, [field]: value } : item
-    ))
+    setCostItems(costItems.map(item => item.id === id ? { ...item, [field]: value } : item))
   }
 
   const handleAddFundingSource = () => {
@@ -72,38 +89,21 @@ export default function Phase3Step4Interaction1() {
   }
 
   const handleRemoveFundingSource = (id) => {
-    if (fundingSources.length > 1) {
-      setFundingSources(fundingSources.filter(item => item.id !== id))
-    }
+    if (fundingSources.length > 1) setFundingSources(fundingSources.filter(item => item.id !== id))
   }
 
   const handleFundingSourceChange = (id, field, value) => {
-    setFundingSources(fundingSources.map(item =>
-      item.id === id ? { ...item, [field]: value } : item
-    ))
+    setFundingSources(fundingSources.map(item => item.id === id ? { ...item, [field]: value } : item))
   }
 
-  const calculateTotal = (items) => {
-    return items.reduce((sum, item) => {
-      const amount = parseFloat(item.amount) || 0
-      return sum + amount
-    }, 0)
-  }
+  const calculateTotal = (items) => items.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0)
 
   const handleSubmit = async () => {
-    // Validation
     const filledCosts = costItems.filter(item => item.name.trim() && item.amount)
     const filledFunding = fundingSources.filter(item => item.name.trim() && item.amount)
 
-    if (filledCosts.length < 1) {
-      alert('Please add at least 1 cost item with name and amount.')
-      return
-    }
-
-    if (filledFunding.length < 1) {
-      alert('Please add at least 1 funding source with name and amount.')
-      return
-    }
+    if (filledCosts.length < 1) { alert('Please add at least 1 cost item with name and amount.'); return }
+    if (filledFunding.length < 1) { alert('Please add at least 1 funding source with name and amount.'); return }
 
     setLoading(true)
 
@@ -122,96 +122,57 @@ export default function Phase3Step4Interaction1() {
       const data = await response.json()
 
       if (data.success !== false) {
-        setEvaluation({
-          success: true,
-          score: data.score || 1,
-          level: data.level || 'A1',
-          feedback: data.feedback || 'Good work on your budget!',
-          details: data.details || {}
-        })
+        setEvaluation({ success: true, score: data.score || 1, level: data.level || 'A1', feedback: data.feedback || 'Good work on your budget!', details: data.details || {} })
         setSubmitted(true)
-
-        // Store score
         sessionStorage.setItem('phase3_step4_interaction1_score', data.score || 1)
       } else {
-        setEvaluation({
-          success: false,
-          score: 0,
-          level: 'Below A1',
-          feedback: data.feedback || 'Please try again with more detail.'
-        })
+        setEvaluation({ success: false, score: 0, level: 'Below A1', feedback: data.feedback || 'Please try again with more detail.' })
       }
     } catch (error) {
       console.error('Evaluation error:', error)
 
-      // Fallback evaluation based on CEFR criteria
       const totalCosts = calculateTotal(filledCosts)
       const totalFunding = calculateTotal(filledFunding)
       const hasJustification = budgetJustification.trim().length > 0
       const justificationWords = budgetJustification.trim().split(/\s+/).length
       const justificationLower = budgetJustification.toLowerCase()
 
-      // Check for key vocabulary
       const hasFinancialVocab = /\b(cost|expense|budget|sponsor|funding|donation|ticket|sales|profit|loss|need|necessary)\b/i.test(budgetJustification)
       const hasConnectors = /\b(because|so|due to|since|therefore|as|in order to)\b/i.test(budgetJustification)
       const hasComparison = /\b(more|less|expensive|cheaper|essential|important|priority|critical)\b/i.test(budgetJustification)
 
-      let score = 0
-      let level = 'Below A1'
-      let feedback = ''
+      let score = 0, level = 'Below A1', feedback = ''
 
-      // C1: 5 points - Realistic, coherent budget with financial logic
       if (filledCosts.length >= 4 && filledFunding.length >= 1 &&
         hasJustification && justificationWords >= 40 &&
         hasFinancialVocab && hasConnectors &&
         (justificationLower.includes('balance') || justificationLower.includes('risk') ||
           justificationLower.includes('realistic') || justificationLower.includes('financial logic') ||
           justificationLower.includes('coherent') || justificationLower.includes('strategic'))) {
-        score = 5
-        level = 'C1'
+        score = 5; level = 'C1'
         feedback = 'Excellent! Your budget demonstrates sophisticated financial planning with realistic costs, balanced funding sources, and professional justification. You show clear understanding of financial logic and risk management.'
-      }
-      // B2: 4 points - Well-structured budget with comparison or prioritization
-      else if (filledCosts.length >= 4 && filledFunding.length >= 1 &&
+      } else if (filledCosts.length >= 4 && filledFunding.length >= 1 &&
         hasJustification && justificationWords >= 25 &&
         hasFinancialVocab && hasConnectors && hasComparison) {
-        score = 4
-        level = 'B2'
+        score = 4; level = 'B2'
         feedback = 'Very good! Your budget is well-structured with clear categories and priorities. You effectively compared costs and explained funding strategies with good use of financial vocabulary.'
-      }
-      // B1: 3 points - Budget with clear categories and short justifications
-      else if (filledCosts.length >= 3 && filledFunding.length >= 1 &&
-        hasJustification && justificationWords >= 15 &&
-        hasFinancialVocab) {
-        score = 3
-        level = 'B1'
+      } else if (filledCosts.length >= 3 && filledFunding.length >= 1 &&
+        hasJustification && justificationWords >= 15 && hasFinancialVocab) {
+        score = 3; level = 'B1'
         feedback = 'Good! Your budget has clear categories and you provided justifications for your costs. You used appropriate financial vocabulary. Try adding more detail about priorities and funding strategies.'
-      }
-      // A2: 2 points - Simple budget with prices or explanations
-      else if (filledCosts.length >= 2 && filledFunding.length >= 1 &&
+      } else if (filledCosts.length >= 2 && filledFunding.length >= 1 &&
         (hasJustification || filledCosts.some(item => item.description))) {
-        score = 2
-        level = 'A2'
+        score = 2; level = 'A2'
         feedback = 'Good start! You created a simple budget with costs and funding. Try to add more justification explaining why each cost is necessary and how you will manage the budget.'
-      }
-      // A1: 1 point - List of costs with basic words
-      else if (filledCosts.length >= 1 && filledFunding.length >= 1) {
-        score = 1
-        level = 'A1'
+      } else if (filledCosts.length >= 1 && filledFunding.length >= 1) {
+        score = 1; level = 'A1'
         feedback = 'You created a basic budget list. Try to add more cost items (at least 4) and explain why each cost is important for the festival.'
-      }
-      else {
-        score = 0
-        level = 'Below A1'
+      } else {
+        score = 0; level = 'Below A1'
         feedback = 'Please create a budget with at least 1 cost item and 1 funding source. Include names and amounts for each item.'
       }
 
-      setEvaluation({
-        success: score > 0,
-        score,
-        level,
-        feedback
-      })
+      setEvaluation({ success: score > 0, score, level, feedback })
       setSubmitted(score > 0)
       if (score > 0) {
         sessionStorage.setItem('phase3_step4_interaction1_score', score)
@@ -222,345 +183,352 @@ export default function Phase3Step4Interaction1() {
     }
   }
 
-  const handleContinue = () => {
-    navigate('/app/phase3/step/4/interaction/2')
-  }
+  const handleContinue = () => navigate('/app/phase3/step/4/interaction/2')
 
   const totalCosts = calculateTotal(costItems)
   const totalFunding = calculateTotal(fundingSources)
   const balance = totalFunding - totalCosts
 
+  const inputSx = {
+    '& .MuiOutlinedInput-root': {
+      bgcolor: D.cardBg,
+      '& fieldset': { borderColor: D.divider },
+      '&:hover fieldset': { borderColor: D.blue.border },
+    },
+    '& .MuiInputBase-input': { color: D.body },
+    '& .MuiInputLabel-root': { color: D.muted },
+  }
+
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, backgroundColor: 'warning.main', color: 'white' }}>
-        <Typography variant="h4" gutterBottom>
-          Phase 3: Sponsorship & Budgeting
-        </Typography>
-        <Typography variant="h5" gutterBottom>
-          Step 4: Apply - Interaction 1
-        </Typography>
-        <Typography variant="body1">
-          Create a Mini Budget for the Global Cultures Festival
-        </Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: D.pageBg }}>
+      <Container maxWidth="md" sx={{ pt: { xs: 3, md: 4 }, pb: 6 }}>
 
-      {/* Instructor Message */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage
-          speaker="Ms. Mabrouki"
-          message="Now it's time to create your own budget! Think about what the festival needs and how much each item might cost. Then, decide where the money will come from. Don't worry about being perfect—just make realistic estimates and explain your thinking."
-        />
-      </Paper>
-
-      {/* Instructions */}
-      <Alert severity="info" icon={<InfoIcon />} sx={{ mb: 3 }}>
-        <Typography variant="body2" gutterBottom fontWeight="bold">
-          Instructions:
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 1 }}>
-          1. List at least 4 cost items (e.g., venue, sound, promotion, logistics)
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 1 }}>
-          2. Add at least 1 funding source (sponsor, ticket sales, donation)
-        </Typography>
-        <Typography variant="body2">
-          3. Write a short justification explaining your budget choices
-        </Typography>
-      </Alert>
-
-      {/* Cost Items Section */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <AccountBalanceIcon sx={{ mr: 1, color: 'error.main' }} />
-          <Typography variant="h6" color="error.main">
-            Cost Items (Expenses)
-          </Typography>
-        </Box>
-
-        {costItems.map((item, index) => (
-          <Card key={item.id} variant="outlined" sx={{ mb: 2 }}>
-            <CardContent>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={4}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Cost Item Name"
-                    placeholder="e.g., Venue Rental"
-                    value={item.name}
-                    onChange={(e) => handleCostItemChange(item.id, 'name', e.target.value)}
-                    disabled={submitted}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={3}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    label="Amount (TND)"
-                    placeholder="500"
-                    value={item.amount}
-                    onChange={(e) => handleCostItemChange(item.id, 'amount', e.target.value)}
-                    disabled={submitted}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Description (optional)"
-                    placeholder="Why needed?"
-                    value={item.description}
-                    onChange={(e) => handleCostItemChange(item.id, 'description', e.target.value)}
-                    disabled={submitted}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={1}>
-                  {costItems.length > 1 && !submitted && (
-                    <IconButton
-                      color="error"
-                      onClick={() => handleRemoveCostItem(item.id)}
-                      size="small"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  )}
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        ))}
-
-        {!submitted && (
-          <Button
-            startIcon={<AddIcon />}
-            onClick={handleAddCostItem}
-            variant="outlined"
-            size="small"
-          >
-            Add Cost Item
-          </Button>
-        )}
-
-        <Divider sx={{ my: 2 }} />
-
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Typography variant="h6" color="error.main">
-            Total Costs: {totalCosts.toFixed(2)} TND
-          </Typography>
-        </Box>
-      </Paper>
-
-      {/* Funding Sources Section */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <AttachMoneyIcon sx={{ mr: 1, color: 'success.main' }} />
-          <Typography variant="h6" color="success.main">
-            Funding Sources (Income)
-          </Typography>
-        </Box>
-
-        {fundingSources.map((item, index) => (
-          <Card key={item.id} variant="outlined" sx={{ mb: 2 }}>
-            <CardContent>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={4}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Funding Source Name"
-                    placeholder="e.g., Sponsor, Ticket Sales"
-                    value={item.name}
-                    onChange={(e) => handleFundingSourceChange(item.id, 'name', e.target.value)}
-                    disabled={submitted}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={3}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    label="Amount (TND)"
-                    placeholder="1000"
-                    value={item.amount}
-                    onChange={(e) => handleFundingSourceChange(item.id, 'amount', e.target.value)}
-                    disabled={submitted}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Description (optional)"
-                    placeholder="Where from?"
-                    value={item.description}
-                    onChange={(e) => handleFundingSourceChange(item.id, 'description', e.target.value)}
-                    disabled={submitted}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={1}>
-                  {fundingSources.length > 1 && !submitted && (
-                    <IconButton
-                      color="error"
-                      onClick={() => handleRemoveFundingSource(item.id)}
-                      size="small"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  )}
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        ))}
-
-        {!submitted && (
-          <Button
-            startIcon={<AddIcon />}
-            onClick={handleAddFundingSource}
-            variant="outlined"
-            size="small"
-          >
-            Add Funding Source
-          </Button>
-        )}
-
-        <Divider sx={{ my: 2 }} />
-
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Typography variant="h6" color="success.main">
-            Total Funding: {totalFunding.toFixed(2)} TND
-          </Typography>
-        </Box>
-      </Paper>
-
-      {/* Budget Summary */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: balance >= 0 ? 'success.lighter' : 'error.lighter' }}>
-        <Typography variant="h6" gutterBottom>
-          Budget Summary
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={4}>
-            <Typography variant="body2">Total Costs:</Typography>
-            <Typography variant="h6" color="error.main">{totalCosts.toFixed(2)} TND</Typography>
-          </Grid>
-          <Grid item xs={4}>
-            <Typography variant="body2">Total Funding:</Typography>
-            <Typography variant="h6" color="success.main">{totalFunding.toFixed(2)} TND</Typography>
-          </Grid>
-          <Grid item xs={4}>
-            <Typography variant="body2">Balance:</Typography>
-            <Typography variant="h6" color={balance >= 0 ? 'success.main' : 'error.main'}>
-              {balance >= 0 ? '+' : ''}{balance.toFixed(2)} TND
+        {/* Header */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
+          <Box sx={{
+            bgcolor: D.yellow.bg, border: `2px solid ${D.yellow.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${D.yellow.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+              <Box sx={{ px: 1.75, py: 0.4, borderRadius: '50px', fontSize: '0.8rem', fontWeight: 800,
+                bgcolor: D.orange.bg, border: `2px solid ${D.orange.border}`, color: D.orange.border }}>
+                Phase 3
+              </Box>
+              <Box sx={{ px: 1.75, py: 0.4, borderRadius: '50px', fontSize: '0.8rem', fontWeight: 800,
+                bgcolor: D.green.bg, border: `2px solid ${D.green.border}`, color: D.green.border }}>
+                Step 4 — Interaction 1
+              </Box>
+            </Box>
+            <Typography variant="h5" fontWeight={800} sx={{ color: D.heading }}>
+              Sponsorship &amp; Budgeting
             </Typography>
-          </Grid>
-        </Grid>
-        {balance < 0 && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            Your costs exceed your funding. Consider adding more funding sources or reducing costs.
-          </Alert>
-        )}
-      </Paper>
-
-      {/* Justification Section */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom color="primary">
-          Budget Justification
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 2 }}>
-          Explain why you chose these costs and funding sources. What are your priorities?
-        </Typography>
-
-        <TextField
-          fullWidth
-          multiline
-          rows={5}
-          variant="outlined"
-          placeholder="..."
-          value={budgetJustification}
-          onChange={(e) => setBudgetJustification(e.target.value)}
-          disabled={submitted}
-          sx={{ mb: 2 }}
-        />
-
-        <Typography variant="caption" color="text.secondary">
-          Words: {budgetJustification.trim().split(/\s+/).filter(w => w.length > 0).length}
-        </Typography>
-      </Paper>
-
-      {/* Submit Button */}
-      {!submitted && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-          <Button
-            variant="contained"
-            color="warning"
-            onClick={handleSubmit}
-            disabled={loading}
-            size="large"
-            sx={{ px: 6 }}
-          >
-            {loading ? <CircularProgress size={24} /> : 'Submit Budget'}
-          </Button>
-        </Box>
-      )}
-
-      {/* Evaluation Results */}
-      {evaluation && (
-        <Paper
-          elevation={3}
-          sx={{
-            p: 3,
-            mb: 3,
-            backgroundColor: evaluation.success ? 'success.lighter' : 'warning.lighter',
-            border: '2px solid',
-            borderColor: evaluation.success ? 'success.main' : 'warning.main'
-          }}
-        >
-          <Typography variant="h6" color={evaluation.success ? 'success.dark' : 'warning.dark'} gutterBottom>
-            {evaluation.success ? 'Budget Submitted!' : 'Try Again'}
-          </Typography>
-          <Box sx={{ mb: 2 }}>
-            <Chip label={`Level: ${evaluation.level}`} color="primary" sx={{ mr: 1 }} />
-            <Chip label={`Score: +${evaluation.score} point${evaluation.score !== 1 ? 's' : ''}`} color="success" />
+            <Typography variant="body2" sx={{ color: D.body, mt: 0.5 }}>
+              Create a Mini Budget for the Global Cultures Festival
+            </Typography>
           </Box>
+        </motion.div>
 
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            {evaluation.feedback}
-          </Typography>
+        {/* Instructor Message */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={1}>
+          <Box sx={{ bgcolor: D.cardBg, border: `2px solid ${D.divider}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${D.divider}`, p: 3, mb: 3 }}>
+            <CharacterMessage
+              speaker="Ms. Mabrouki"
+              message="Now it's time to create your own budget! Think about what the festival needs and how much each item might cost. Then, decide where the money will come from. Don't worry about being perfect—just make realistic estimates and explain your thinking."
+            />
+          </Box>
+        </motion.div>
 
-          {evaluation.details && (
-            <Box sx={{ mt: 2, p: 2, backgroundColor: 'white', borderRadius: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Evaluation Details:
+        {/* Instructions */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={2}>
+          <Box sx={{
+            bgcolor: D.blue.bg, border: `2px solid ${D.blue.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${D.blue.shadow}`,
+            p: 3, mb: 3, display: 'flex', gap: 2,
+          }}>
+            <InfoIcon sx={{ color: D.blue.border, mt: 0.3, flexShrink: 0 }} />
+            <Box>
+              <Typography variant="body2" fontWeight={800} sx={{ color: D.heading, mb: 1 }}>Instructions:</Typography>
+              {[
+                '1. List at least 4 cost items (e.g., venue, sound, promotion, logistics)',
+                '2. Add at least 1 funding source (sponsor, ticket sales, donation)',
+                '3. Write a short justification explaining your budget choices',
+              ].map((t, i) => (
+                <Typography key={i} variant="body2" sx={{ color: D.body, mb: 0.5 }}>{t}</Typography>
+              ))}
+            </Box>
+          </Box>
+        </motion.div>
+
+        {/* Cost Items */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={3}>
+          <Box sx={{ bgcolor: D.cardBg, border: `2px solid ${D.red.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${D.red.shadow}`, p: 3, mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
+              <AccountBalanceIcon sx={{ color: D.red.border }} />
+              <Typography variant="h6" fontWeight={800} sx={{ color: D.red.border }}>
+                Cost Items (Expenses)
               </Typography>
-              {evaluation.details.vocabulary && (
-                <Typography variant="body2">
-                  Vocabulary: {evaluation.details.vocabulary}
+            </Box>
+
+            {costItems.map((item) => (
+              <Box key={item.id} sx={{ bgcolor: D.pageBg, border: `1px solid ${D.divider}`, borderRadius: '14px', p: 2, mb: 2 }}>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={12} sm={4}>
+                    <TextField fullWidth size="small" label="Cost Item Name" placeholder="e.g., Venue Rental"
+                      value={item.name} onChange={(e) => handleCostItemChange(item.id, 'name', e.target.value)}
+                      disabled={submitted} sx={inputSx} />
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <TextField fullWidth size="small" type="number" label="Amount (TND)" placeholder="500"
+                      value={item.amount} onChange={(e) => handleCostItemChange(item.id, 'amount', e.target.value)}
+                      disabled={submitted} sx={inputSx} />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField fullWidth size="small" label="Description (optional)" placeholder="Why needed?"
+                      value={item.description} onChange={(e) => handleCostItemChange(item.id, 'description', e.target.value)}
+                      disabled={submitted} sx={inputSx} />
+                  </Grid>
+                  <Grid item xs={12} sm={1}>
+                    {costItems.length > 1 && !submitted && (
+                      <IconButton color="error" onClick={() => handleRemoveCostItem(item.id)} size="small">
+                        <DeleteIcon />
+                      </IconButton>
+                    )}
+                  </Grid>
+                </Grid>
+              </Box>
+            ))}
+
+            {!submitted && (
+              <Box
+                component="button"
+                onClick={handleAddCostItem}
+                sx={{
+                  display: 'flex', alignItems: 'center', gap: 0.5,
+                  px: 2, py: 0.75, bgcolor: 'transparent',
+                  border: `2px solid ${D.divider}`, borderRadius: '14px',
+                  fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
+                  color: D.body, mb: 2,
+                  '&:hover': { borderColor: D.red.border, color: D.red.border },
+                }}
+              >
+                <AddIcon fontSize="small" /> Add Cost Item
+              </Box>
+            )}
+
+            <Box sx={{ borderTop: `2px solid ${D.divider}`, pt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+              <Typography variant="h6" fontWeight={800} sx={{ color: D.red.border }}>
+                Total Costs: {totalCosts.toFixed(2)} TND
+              </Typography>
+            </Box>
+          </Box>
+        </motion.div>
+
+        {/* Funding Sources */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={4}>
+          <Box sx={{ bgcolor: D.cardBg, border: `2px solid ${D.green.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${D.green.shadow}`, p: 3, mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
+              <AttachMoneyIcon sx={{ color: D.green.border }} />
+              <Typography variant="h6" fontWeight={800} sx={{ color: D.green.border }}>
+                Funding Sources (Income)
+              </Typography>
+            </Box>
+
+            {fundingSources.map((item) => (
+              <Box key={item.id} sx={{ bgcolor: D.pageBg, border: `1px solid ${D.divider}`, borderRadius: '14px', p: 2, mb: 2 }}>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={12} sm={4}>
+                    <TextField fullWidth size="small" label="Funding Source Name" placeholder="e.g., Sponsor, Ticket Sales"
+                      value={item.name} onChange={(e) => handleFundingSourceChange(item.id, 'name', e.target.value)}
+                      disabled={submitted} sx={inputSx} />
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <TextField fullWidth size="small" type="number" label="Amount (TND)" placeholder="1000"
+                      value={item.amount} onChange={(e) => handleFundingSourceChange(item.id, 'amount', e.target.value)}
+                      disabled={submitted} sx={inputSx} />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField fullWidth size="small" label="Description (optional)" placeholder="Where from?"
+                      value={item.description} onChange={(e) => handleFundingSourceChange(item.id, 'description', e.target.value)}
+                      disabled={submitted} sx={inputSx} />
+                  </Grid>
+                  <Grid item xs={12} sm={1}>
+                    {fundingSources.length > 1 && !submitted && (
+                      <IconButton color="error" onClick={() => handleRemoveFundingSource(item.id)} size="small">
+                        <DeleteIcon />
+                      </IconButton>
+                    )}
+                  </Grid>
+                </Grid>
+              </Box>
+            ))}
+
+            {!submitted && (
+              <Box
+                component="button"
+                onClick={handleAddFundingSource}
+                sx={{
+                  display: 'flex', alignItems: 'center', gap: 0.5,
+                  px: 2, py: 0.75, bgcolor: 'transparent',
+                  border: `2px solid ${D.divider}`, borderRadius: '14px',
+                  fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
+                  color: D.body, mb: 2,
+                  '&:hover': { borderColor: D.green.border, color: D.green.border },
+                }}
+              >
+                <AddIcon fontSize="small" /> Add Funding Source
+              </Box>
+            )}
+
+            <Box sx={{ borderTop: `2px solid ${D.divider}`, pt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+              <Typography variant="h6" fontWeight={800} sx={{ color: D.green.border }}>
+                Total Funding: {totalFunding.toFixed(2)} TND
+              </Typography>
+            </Box>
+          </Box>
+        </motion.div>
+
+        {/* Budget Summary */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={5}>
+          <Box sx={{
+            bgcolor: balance >= 0 ? D.green.bg : D.red.bg,
+            border: `2px solid ${balance >= 0 ? D.green.border : D.red.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${balance >= 0 ? D.green.shadow : D.red.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h6" fontWeight={800} sx={{ color: D.heading, mb: 2 }}>Budget Summary</Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={4}>
+                <Typography variant="caption" sx={{ color: D.muted }}>Total Costs:</Typography>
+                <Typography variant="h6" fontWeight={800} sx={{ color: D.red.border }}>{totalCosts.toFixed(2)} TND</Typography>
+              </Grid>
+              <Grid item xs={4}>
+                <Typography variant="caption" sx={{ color: D.muted }}>Total Funding:</Typography>
+                <Typography variant="h6" fontWeight={800} sx={{ color: D.green.border }}>{totalFunding.toFixed(2)} TND</Typography>
+              </Grid>
+              <Grid item xs={4}>
+                <Typography variant="caption" sx={{ color: D.muted }}>Balance:</Typography>
+                <Typography variant="h6" fontWeight={800} sx={{ color: balance >= 0 ? D.green.border : D.red.border }}>
+                  {balance >= 0 ? '+' : ''}{balance.toFixed(2)} TND
                 </Typography>
+              </Grid>
+            </Grid>
+            {balance < 0 && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: D.yellow.bg, border: `2px solid ${D.yellow.border}`, borderRadius: '12px' }}>
+                <Typography variant="body2" sx={{ color: D.body }}>
+                  Your costs exceed your funding. Consider adding more funding sources or reducing costs.
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </motion.div>
+
+        {/* Justification */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={6}>
+          <Box sx={{ bgcolor: D.cardBg, border: `2px solid ${D.divider}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${D.divider}`, p: 3, mb: 3 }}>
+            <Typography variant="h6" fontWeight={800} sx={{ color: D.heading, mb: 1 }}>Budget Justification</Typography>
+            <Typography variant="body2" sx={{ color: D.body, mb: 2 }}>
+              Explain why you chose these costs and funding sources. What are your priorities?
+            </Typography>
+            <TextField
+              fullWidth multiline rows={5} variant="outlined"
+              placeholder="..."
+              value={budgetJustification}
+              onChange={(e) => setBudgetJustification(e.target.value)}
+              disabled={submitted}
+              sx={{ ...inputSx, mb: 1 }}
+            />
+            <Typography variant="caption" sx={{ color: D.muted }}>
+              Words: {budgetJustification.trim().split(/\s+/).filter(w => w.length > 0).length}
+            </Typography>
+          </Box>
+        </motion.div>
+
+        {/* Submit */}
+        {!submitted && (
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={7}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+              <Box
+                component="button"
+                onClick={handleSubmit}
+                disabled={loading}
+                sx={{
+                  px: 5, py: 1.5,
+                  bgcolor: D.yellow.bg, border: `2px solid ${D.yellow.border}`,
+                  borderRadius: '14px', boxShadow: `4px 4px 0 ${D.yellow.shadow}`,
+                  fontWeight: 800, fontSize: '1rem', cursor: loading ? 'not-allowed' : 'pointer',
+                  color: D.yellow.border, opacity: loading ? 0.7 : 1,
+                  '&:hover:not(:disabled)': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.yellow.shadow}` },
+                }}
+              >
+                {loading ? <CircularProgress size={22} /> : 'Submit Budget'}
+              </Box>
+            </Box>
+          </motion.div>
+        )}
+
+        {/* Evaluation */}
+        {evaluation && (
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={8}>
+            <Box sx={{
+              bgcolor: evaluation.success ? D.green.bg : D.yellow.bg,
+              border: `2px solid ${evaluation.success ? D.green.border : D.yellow.border}`,
+              borderRadius: '20px',
+              boxShadow: `4px 4px 0 ${evaluation.success ? D.green.shadow : D.yellow.shadow}`,
+              p: 3, mb: 3,
+            }}>
+              <Typography variant="h6" fontWeight={800} sx={{ color: evaluation.success ? D.green.border : D.yellow.border, mb: 2 }}>
+                {evaluation.success ? 'Budget Submitted!' : 'Try Again'}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                <Box sx={{ px: 1.75, py: 0.4, borderRadius: '50px', fontSize: '0.8rem', fontWeight: 800,
+                  bgcolor: D.blue.bg, border: `2px solid ${D.blue.border}`, color: D.blue.border }}>
+                  Level: {evaluation.level}
+                </Box>
+                <Box sx={{ px: 1.75, py: 0.4, borderRadius: '50px', fontSize: '0.8rem', fontWeight: 800,
+                  bgcolor: D.green.bg, border: `2px solid ${D.green.border}`, color: D.green.border }}>
+                  Score: +{evaluation.score} point{evaluation.score !== 1 ? 's' : ''}
+                </Box>
+              </Box>
+
+              <Typography variant="body1" sx={{ color: D.body, mb: 2 }}>{evaluation.feedback}</Typography>
+
+              {evaluation.details && (
+                <Box sx={{ p: 2, bgcolor: D.cardBg, borderRadius: '12px', mb: 2 }}>
+                  <Typography variant="subtitle2" fontWeight={700} sx={{ color: D.heading, mb: 1 }}>
+                    Evaluation Details:
+                  </Typography>
+                  {evaluation.details.vocabulary && (
+                    <Typography variant="body2" sx={{ color: D.body }}>Vocabulary: {evaluation.details.vocabulary}</Typography>
+                  )}
+                  {evaluation.details.organization && (
+                    <Typography variant="body2" sx={{ color: D.body }}>Organization: {evaluation.details.organization}</Typography>
+                  )}
+                </Box>
               )}
-              {evaluation.details.organization && (
-                <Typography variant="body2">
-                  Organization: {evaluation.details.organization}
-                </Typography>
+
+              {submitted && (
+                <Box
+                  component="button"
+                  onClick={handleContinue}
+                  sx={{
+                    width: '100%', py: 1.5,
+                    bgcolor: D.green.bg, border: `2px solid ${D.green.border}`,
+                    borderRadius: '14px', boxShadow: `4px 4px 0 ${D.green.shadow}`,
+                    fontWeight: 800, fontSize: '1rem', cursor: 'pointer', color: D.green.border,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                    '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` },
+                  }}
+                >
+                  <CheckCircleIcon /> Continue to Sponsor Pitch
+                </Box>
               )}
             </Box>
-          )}
+          </motion.div>
+        )}
 
-          {submitted && (
-            <Button
-              variant="contained"
-              color="success"
-              onClick={handleContinue}
-              size="large"
-              fullWidth
-              sx={{ mt: 2 }}
-            >
-              Continue to Sponsor Pitch
-            </Button>
-          )}
-        </Paper>
-      )}
+      </Container>
     </Box>
   )
 }

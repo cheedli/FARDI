@@ -1,10 +1,33 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, Stack, TextField, Alert, LinearProgress } from '@mui/material'
+import { Box, Typography, Button, Stack, TextField, LinearProgress, Container } from '@mui/material'
+import { useTheme } from '@mui/material'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { CheckCircle, Cancel } from '@mui/icons-material'
 import { phase5API } from '../../../lib/phase5_api.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
+
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  blue:   { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+  green:  { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+  purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+  teal:   { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+  red:    { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+}
+const DARK = {
+  pageBg: '#0F0F1A',
+  blue:   { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+  green:  { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+  purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
+  teal:   { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+  red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+}
 
 /**
  * Phase 5 Step 1 - Level A1 - Task C: Simple Sentence Writing
@@ -53,13 +76,15 @@ const SENTENCE_PROMPTS = [
 
 export default function Phase5Step1RemedialA1TaskC() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
+  const P = isDark ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 1, interaction: 3, context: 'remedial_a1' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState(Array(SENTENCE_PROMPTS.length).fill(''))
   const [submitted, setSubmitted] = useState(false)
   const [results, setResults] = useState([])
   const [score, setScore] = useState(0)
-  const [showFinalResults, setShowFinalResults] = useState(false)
 
   const currentPrompt = SENTENCE_PROMPTS[currentIndex]
 
@@ -84,10 +109,8 @@ export default function Phase5Step1RemedialA1TaskC() {
   const checkAnswer = (userAnswer, prompt) => {
     const normalized = userAnswer.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[.,!?;:]/g, '')
     const termNormalized = prompt.term.toLowerCase()
-
     const hasTerm = normalized.includes(termNormalized)
     const hasBasicStructure = normalized.split(' ').length >= 2
-
     return hasTerm && hasBasicStructure
   }
 
@@ -157,10 +180,8 @@ export default function Phase5Step1RemedialA1TaskC() {
     }
 
     if (passed) {
-      // Navigate to dashboard or next phase
       navigate('/dashboard')
     } else {
-      // Repeat A1 remedial
       navigate('/phase5/subphase/1/step/1/remedial/a1/task/a')
     }
   }
@@ -168,152 +189,237 @@ export default function Phase5Step1RemedialA1TaskC() {
   const progress = ((currentIndex + 1) / SENTENCE_PROMPTS.length) * 100
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', color: 'white' }}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">
-          Phase 5: Execution & Problem-Solving
-        </Typography>
-        <Typography variant="h5" gutterBottom>
-          Step 1: Remedial Practice - Level A1
-        </Typography>
-        <Typography variant="h6" gutterBottom>
-          Task C: Sentence Builder
-        </Typography>
-        <Typography variant="body1">
-          Write 6 very simple sentences about the problem
-        </Typography>
-      </Paper>
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
 
-      {/* Instructor Message */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <CharacterMessage
-          speaker="Ms. Mabrouki"
-          message="Excellent work! Now let's build sentences. Write a simple sentence for each term. Use the hint to help you. Remember: simple present tense and basic meaning!"
-        />
-      </Paper>
-
-      {!submitted ? (
-        <>
-          {/* Progress */}
-          <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2">
-                Sentence {currentIndex + 1} of {SENTENCE_PROMPTS.length}
-              </Typography>
-              <Typography variant="body2" color="primary" fontWeight="bold">
-                {Math.round(progress)}% Complete
-              </Typography>
-            </Box>
-            <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 1 }} />
-          </Paper>
-
-          {/* Current Sentence */}
-          <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom color="primary">
-              Term: <strong>{currentPrompt.term}</strong>
+          {/* Header */}
+          <Box sx={{
+            bgcolor: P.orange.bg,
+            border: `2px solid ${P.orange.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h4" gutterBottom fontWeight={700} color={P.orange.border}>
+              Phase 5: Execution &amp; Problem-Solving
             </Typography>
-            <Alert severity="info" sx={{ mb: 2 }}>
-              <Typography variant="body2">
-                <strong>Hint:</strong> {currentPrompt.hint}
-              </Typography>
-            </Alert>
+            <Typography variant="h5" gutterBottom color={P.orange.shadow}>
+              Step 1: Remedial Practice - Level A1
+            </Typography>
+            <Typography variant="h6" gutterBottom color={P.orange.shadow}>
+              Task C: Sentence Builder
+            </Typography>
+            <Typography variant="body1" color={isDark ? 'rgba(255,255,255,0.7)' : 'text.secondary'}>
+              Write 6 very simple sentences about the problem
+            </Typography>
+          </Box>
 
-            <TextField
-              fullWidth
-              multiline
-              rows={2}
-              variant="outlined"
-              placeholder={`Write a simple sentence using "${currentPrompt.term}"...`}
-              value={userAnswers[currentIndex]}
-              onChange={(e) => handleAnswerChange(e.target.value)}
-              sx={{ mb: 2 }}
+          {/* Instructor Message */}
+          <Box sx={{
+            bgcolor: P.teal.bg,
+            border: `2px solid ${P.teal.border}`,
+            borderRadius: '20px',
+            boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <CharacterMessage
+              speaker="Ms. Mabrouki"
+              message="Excellent work! Now let's build sentences. Write a simple sentence for each term. Use the hint to help you. Remember: simple present tense and basic meaning!"
             />
+          </Box>
 
-            <Stack direction="row" spacing={2} justifyContent="space-between">
-              <Button
-                variant="outlined"
-                onClick={handlePrevious}
-                disabled={currentIndex === 0}
-              >
-                ← Previous
-              </Button>
-              {currentIndex === SENTENCE_PROMPTS.length - 1 ? (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleSubmit}
-                  disabled={!userAnswers[currentIndex].trim()}
-                >
-                  Submit All Sentences
-                </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleNext}
-                  disabled={!userAnswers[currentIndex].trim()}
-                >
-                  Next →
-                </Button>
-              )}
-            </Stack>
-          </Paper>
-        </>
-      ) : (
-        <>
-          {/* Results */}
-          <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: 'grey.50' }}>
-            <Typography variant="h5" gutterBottom color="primary">
-              Results: {score} / {SENTENCE_PROMPTS.length} Correct
-            </Typography>
-
-            <Stack spacing={2} sx={{ mt: 2 }}>
-              {results.map((result, index) => (
-                <Paper
-                  key={index}
-                  elevation={1}
-                  sx={{
-                    p: 2,
-                    backgroundColor: result.isCorrect ? 'success.lighter' : 'error.lighter',
-                    border: '1px solid',
-                    borderColor: result.isCorrect ? 'success.main' : 'error.main'
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    {result.isCorrect ? (
-                      <CheckCircle sx={{ color: 'success.main', mr: 1 }} />
-                    ) : (
-                      <Cancel sx={{ color: 'error.main', mr: 1 }} />
-                    )}
-                    <Typography variant="subtitle2" fontWeight="bold">
-                      Sentence {index + 1}: {SENTENCE_PROMPTS[index].term}
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" sx={{ mb: 0.5 }}>
-                    <strong>Your answer:</strong> {result.userAnswer || '(empty)'}
+          {!submitted ? (
+            <>
+              {/* Progress */}
+              <Box sx={{
+                bgcolor: P.yellow.bg,
+                border: `2px solid ${P.yellow.border}`,
+                borderRadius: '16px',
+                p: 2, mb: 3,
+              }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color={P.yellow.shadow}>
+                    Sentence {currentIndex + 1} of {SENTENCE_PROMPTS.length}
                   </Typography>
-                  {!result.isCorrect && (
-                    <Typography variant="body2" color="success.dark">
-                      <strong>Example:</strong> {result.correctAnswer}
-                    </Typography>
-                  )}
-                </Paper>
-              ))}
-            </Stack>
-          </Paper>
+                  <Typography variant="body2" fontWeight={700} color={P.yellow.shadow}>
+                    {Math.round(progress)}% Complete
+                  </Typography>
+                </Box>
+                <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 1 }} />
+              </Box>
 
-          <Button
-            variant="contained"
-            color="success"
-            onClick={handleContinue}
-            size="large"
-            fullWidth
-          >
-            Continue to Final Results →
-          </Button>
-        </>
-      )}
+              {/* Current Sentence */}
+              <Box sx={{
+                bgcolor: P.blue.bg,
+                border: `2px solid ${P.blue.border}`,
+                borderRadius: '20px',
+                boxShadow: `4px 4px 0 ${P.blue.shadow}`,
+                p: 3, mb: 3,
+              }}>
+                <Typography variant="h6" gutterBottom fontWeight={700} color={P.blue.shadow}>
+                  Term: <strong>{currentPrompt.term}</strong>
+                </Typography>
+                <Box sx={{
+                  bgcolor: P.teal.bg,
+                  border: `2px solid ${P.teal.border}`,
+                  borderRadius: '12px',
+                  p: 2, mb: 2,
+                }}>
+                  <Typography variant="body2" color={P.teal.shadow}>
+                    <strong>Hint:</strong> {currentPrompt.hint}
+                  </Typography>
+                </Box>
+
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={2}
+                  variant="outlined"
+                  placeholder={`Write a simple sentence using "${currentPrompt.term}"...`}
+                  value={userAnswers[currentIndex]}
+                  onChange={(e) => handleAnswerChange(e.target.value)}
+                  sx={{ mb: 2 }}
+                />
+
+                <Stack direction="row" spacing={2} justifyContent="space-between">
+                  <Box
+                    component="button"
+                    onClick={handlePrevious}
+                    disabled={currentIndex === 0}
+                    sx={{
+                      bgcolor: P.blue.bg,
+                      border: `2px solid ${P.blue.border}`,
+                      borderRadius: '10px',
+                      px: 3, py: 1,
+                      fontWeight: 600, fontSize: '0.9rem',
+                      cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+                      opacity: currentIndex === 0 ? 0.4 : 1,
+                      color: P.blue.shadow,
+                      transition: 'transform 0.15s',
+                      '&:hover': currentIndex > 0 ? { transform: 'translate(-1px,-1px)' } : {},
+                    }}
+                  >
+                    ← Previous
+                  </Box>
+                  {currentIndex === SENTENCE_PROMPTS.length - 1 ? (
+                    <Box
+                      component="button"
+                      onClick={handleSubmit}
+                      disabled={!userAnswers[currentIndex].trim()}
+                      sx={{
+                        bgcolor: P.green.bg,
+                        border: `2px solid ${P.green.border}`,
+                        borderRadius: '10px',
+                        boxShadow: `2px 2px 0 ${P.green.shadow}`,
+                        px: 3, py: 1,
+                        fontWeight: 700, fontSize: '0.9rem',
+                        cursor: !userAnswers[currentIndex].trim() ? 'not-allowed' : 'pointer',
+                        opacity: !userAnswers[currentIndex].trim() ? 0.5 : 1,
+                        color: P.green.shadow,
+                        transition: 'transform 0.15s, box-shadow 0.15s',
+                        '&:hover': userAnswers[currentIndex].trim() ? { transform: 'translate(-1px,-1px)', boxShadow: `3px 3px 0 ${P.green.shadow}` } : {},
+                      }}
+                    >
+                      Submit All Sentences
+                    </Box>
+                  ) : (
+                    <Box
+                      component="button"
+                      onClick={handleNext}
+                      disabled={!userAnswers[currentIndex].trim()}
+                      sx={{
+                        bgcolor: P.blue.bg,
+                        border: `2px solid ${P.blue.border}`,
+                        borderRadius: '10px',
+                        boxShadow: `2px 2px 0 ${P.blue.shadow}`,
+                        px: 3, py: 1,
+                        fontWeight: 700, fontSize: '0.9rem',
+                        cursor: !userAnswers[currentIndex].trim() ? 'not-allowed' : 'pointer',
+                        opacity: !userAnswers[currentIndex].trim() ? 0.5 : 1,
+                        color: P.blue.shadow,
+                        transition: 'transform 0.15s, box-shadow 0.15s',
+                        '&:hover': userAnswers[currentIndex].trim() ? { transform: 'translate(-1px,-1px)', boxShadow: `3px 3px 0 ${P.blue.shadow}` } : {},
+                      }}
+                    >
+                      Next →
+                    </Box>
+                  )}
+                </Stack>
+              </Box>
+            </>
+          ) : (
+            <>
+              {/* Results */}
+              <Box sx={{
+                bgcolor: P.yellow.bg,
+                border: `2px solid ${P.yellow.border}`,
+                borderRadius: '20px',
+                boxShadow: `4px 4px 0 ${P.yellow.shadow}`,
+                p: 3, mb: 3,
+              }}>
+                <Typography variant="h5" gutterBottom fontWeight={700} color={P.yellow.shadow}>
+                  Results: {score} / {SENTENCE_PROMPTS.length} Correct
+                </Typography>
+
+                <Stack spacing={2} sx={{ mt: 2 }}>
+                  {results.map((result, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        bgcolor: result.isCorrect ? P.green.bg : P.red.bg,
+                        border: `2px solid ${result.isCorrect ? P.green.border : P.red.border}`,
+                        borderRadius: '14px',
+                        p: 2,
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        {result.isCorrect ? (
+                          <CheckCircle sx={{ color: P.green.border, mr: 1 }} />
+                        ) : (
+                          <Cancel sx={{ color: P.red.border, mr: 1 }} />
+                        )}
+                        <Typography variant="subtitle2" fontWeight={700} color={result.isCorrect ? P.green.shadow : P.red.shadow}>
+                          Sentence {index + 1}: {SENTENCE_PROMPTS[index].term}
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" sx={{ mb: 0.5 }}>
+                        <strong>Your answer:</strong> {result.userAnswer || '(empty)'}
+                      </Typography>
+                      {!result.isCorrect && (
+                        <Typography variant="body2" color={P.green.shadow}>
+                          <strong>Example:</strong> {result.correctAnswer}
+                        </Typography>
+                      )}
+                    </Box>
+                  ))}
+                </Stack>
+              </Box>
+
+              <Box
+                component="button"
+                onClick={handleContinue}
+                sx={{
+                  width: '100%',
+                  bgcolor: P.green.bg,
+                  border: `2px solid ${P.green.border}`,
+                  borderRadius: '12px',
+                  boxShadow: `3px 3px 0 ${P.green.shadow}`,
+                  py: 1.5,
+                  fontWeight: 700, fontSize: '1rem',
+                  cursor: 'pointer',
+                  color: P.green.shadow,
+                  transition: 'transform 0.15s, box-shadow 0.15s',
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
+                }}
+              >
+                Continue to Final Results →
+              </Box>
+            </>
+          )}
+
+        </motion.div>
+      </Container>
     </Box>
   )
 }

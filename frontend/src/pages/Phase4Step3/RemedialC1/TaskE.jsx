@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Paper, Typography, Button, Stack, TextField, Alert, Chip, LinearProgress, Avatar } from '@mui/material'
+import { Box, Typography, Stack, TextField, LinearProgress, Avatar, Container, useTheme } from '@mui/material'
+import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
@@ -13,89 +14,51 @@ import { useProgressSave } from '../../../hooks/useProgressSave'
 /**
  * Phase 4 Step 3 - Remedial C1 - Task E: Tense Odyssey
  * Mixed tenses grammar exercise - Complete 6 sentences using different tenses
- * Inspired by ESL Games Plus mixed tenses games
  * Score: +1 for each correct tense (6 total)
  */
 
+const LIGHT = {
+  pageBg: '#FFFDE7',
+  purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+  green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+  teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+  red: { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+}
+const DARK = {
+  pageBg: '#1a1a2e',
+  purple: { bg: '#2d1b4e', border: '#A855F7', shadow: '#7E22CE' },
+  green: { bg: '#052e16', border: '#22C55E', shadow: '#15803D' },
+  blue: { bg: '#1e3a5f', border: '#3B82F6', shadow: '#1D4ED8' },
+  teal: { bg: '#042f2e', border: '#14B8A6', shadow: '#0F766E' },
+  orange: { bg: '#431407', border: '#F97316', shadow: '#C2410C' },
+  red: { bg: '#450a0a', border: '#EF4444', shadow: '#B91C1C' },
+}
+
+const cardSx = (color) => ({
+  bgcolor: color.bg,
+  border: `2px solid ${color.border}`,
+  borderRadius: '20px',
+  boxShadow: `4px 4px 0 ${color.shadow}`,
+  p: 3,
+})
+
 const TENSE_SENTENCES = [
-  {
-    id: 1,
-    odyssey: 'Odyssey 1',
-    character: 'Marketing Historian',
-    avatar: '📜',
-    before: 'Promotional is to sell',
-    infinitive: 'to use',
-    answer: 'has been used',
-    tenseType: 'Present Perfect',
-    after: 'since early ads.',
-    concept: 'present perfect for actions started in past and continuing'
-  },
-  {
-    id: 2,
-    odyssey: 'Odyssey 2',
-    character: 'Video Analyst',
-    avatar: '📹',
-    before: 'Persuasive uses logos',
-    infinitive: 'to use',
-    answer: 'used',
-    tenseType: 'Simple Past',
-    after: 'in video 1.',
-    concept: 'simple past for completed action in video'
-  },
-  {
-    id: 3,
-    odyssey: 'Odyssey 3',
-    character: 'Data Scientist',
-    avatar: '📊',
-    before: 'Targeted group is specific',
-    infinitive: 'to become',
-    answer: 'has become',
-    tenseType: 'Present Perfect',
-    after: 'more with data.',
-    concept: 'present perfect for change over time'
-  },
-  {
-    id: 4,
-    odyssey: 'Odyssey 4',
-    character: 'Campaign Director',
-    avatar: '🎬',
-    before: 'Original idea is new',
-    infinitive: 'to be',
-    answer: 'was',
-    tenseType: 'Simple Past',
-    after: 'key in past campaigns.',
-    concept: 'simple past for historical campaigns'
-  },
-  {
-    id: 5,
-    odyssey: 'Odyssey 5',
-    character: 'Creative Director',
-    avatar: '🎨',
-    before: 'Creative ads make memorable',
-    infinitive: 'to stand',
-    answer: 'have always stood',
-    tenseType: 'Present Perfect',
-    after: 'out.',
-    concept: 'present perfect with "always" for ongoing truth'
-  },
-  {
-    id: 6,
-    odyssey: 'Odyssey 6',
-    character: 'Ethics Officer',
-    avatar: '⚖️',
-    before: 'Ethical is honest',
-    infinitive: 'to remain',
-    answer: 'remains',
-    tenseType: 'Simple Present',
-    after: 'important today.',
-    concept: 'simple present for current truth/fact'
-  }
+  { id: 1, odyssey: 'Odyssey 1', character: 'Marketing Historian', avatar: '📜', before: 'Promotional is to sell', infinitive: 'to use', answer: 'has been used', tenseType: 'Present Perfect', after: 'since early ads.', concept: 'present perfect for actions started in past and continuing' },
+  { id: 2, odyssey: 'Odyssey 2', character: 'Video Analyst', avatar: '📹', before: 'Persuasive uses logos', infinitive: 'to use', answer: 'used', tenseType: 'Simple Past', after: 'in video 1.', concept: 'simple past for completed action in video' },
+  { id: 3, odyssey: 'Odyssey 3', character: 'Data Scientist', avatar: '📊', before: 'Targeted group is specific', infinitive: 'to become', answer: 'has become', tenseType: 'Present Perfect', after: 'more with data.', concept: 'present perfect for change over time' },
+  { id: 4, odyssey: 'Odyssey 4', character: 'Campaign Director', avatar: '🎬', before: 'Original idea is new', infinitive: 'to be', answer: 'was', tenseType: 'Simple Past', after: 'key in past campaigns.', concept: 'simple past for historical campaigns' },
+  { id: 5, odyssey: 'Odyssey 5', character: 'Creative Director', avatar: '🎨', before: 'Creative ads make memorable', infinitive: 'to stand', answer: 'have always stood', tenseType: 'Present Perfect', after: 'out.', concept: 'present perfect with "always" for ongoing truth' },
+  { id: 6, odyssey: 'Odyssey 6', character: 'Ethics Officer', avatar: '⚖️', before: 'Ethical is honest', infinitive: 'to remain', answer: 'remains', tenseType: 'Simple Present', after: 'important today.', concept: 'simple present for current truth/fact' }
 ]
 
-const TIME_LIMIT = 300 // 5 minutes for all 6 sentences
+const TIME_LIMIT = 300
 
 export default function RemedialC1TaskE() {
   const navigate = useNavigate()
+  const theme = useTheme()
+  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 5, context: 'remedial_c1' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
@@ -108,575 +71,235 @@ export default function RemedialC1TaskE() {
 
   const currentSentence = TENSE_SENTENCES[currentSentenceIndex]
 
-  // Timer
   useEffect(() => {
     if (!gameStarted || gameFinished || submitted) return
-
     if (timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
       return () => clearTimeout(timer)
-    } else {
-      // Time's up! Auto-submit
-      handleSubmitAll()
-    }
+    } else { handleSubmitAll() }
   }, [timeLeft, gameStarted, gameFinished, submitted])
 
-  const handleAnswerChange = (sentenceId, value) => {
-    setAnswers({
-      ...answers,
-      [sentenceId]: value
-    })
-  }
-
-  const handleNext = () => {
-    if (currentSentenceIndex < TENSE_SENTENCES.length - 1) {
-      setCurrentSentenceIndex(currentSentenceIndex + 1)
-    }
-  }
-
-  const handlePrevious = () => {
-    if (currentSentenceIndex > 0) {
-      setCurrentSentenceIndex(currentSentenceIndex - 1)
-    }
-  }
+  const handleAnswerChange = (sentenceId, value) => setAnswers({ ...answers, [sentenceId]: value })
+  const handleNext = () => { if (currentSentenceIndex < TENSE_SENTENCES.length - 1) setCurrentSentenceIndex(currentSentenceIndex + 1) }
+  const handlePrevious = () => { if (currentSentenceIndex > 0) setCurrentSentenceIndex(currentSentenceIndex - 1) }
 
   const handleSubmitAll = async () => {
     setSubmitted(true)
-
-    // Evaluate each answer
     const evaluatedResults = TENSE_SENTENCES.map(sentence => {
       const userAnswer = (answers[sentence.id] || '').trim().toLowerCase()
       const correctAnswer = sentence.answer.toLowerCase()
-
-      // Check if answer is correct (allow some flexibility)
-      // IMPORTANT: Must have an answer (not empty) to be correct
-      const isCorrect = userAnswer.length > 0 && (
-        userAnswer === correctAnswer ||
-        userAnswer === correctAnswer.replace(' ', '') ||
-        correctAnswer.includes(userAnswer) ||
-        userAnswer.includes(correctAnswer)
-      )
-
-      return {
-        sentenceId: sentence.id,
-        odyssey: sentence.odyssey,
-        character: sentence.character,
-        avatar: sentence.avatar,
-        userAnswer: answers[sentence.id] || '',
-        correctAnswer: sentence.answer,
-        tenseType: sentence.tenseType,
-        isCorrect: isCorrect,
-        fullSentence: `${sentence.before} ${sentence.answer} ${sentence.after}`
-      }
+      const isCorrect = userAnswer.length > 0 && (userAnswer === correctAnswer || userAnswer === correctAnswer.replace(' ', '') || correctAnswer.includes(userAnswer) || userAnswer.includes(correctAnswer))
+      return { sentenceId: sentence.id, odyssey: sentence.odyssey, character: sentence.character, avatar: sentence.avatar, userAnswer: answers[sentence.id] || '', correctAnswer: sentence.answer, tenseType: sentence.tenseType, isCorrect, fullSentence: `${sentence.before} ${sentence.answer} ${sentence.after}` }
     })
-
     setResults(evaluatedResults)
-
-    // Calculate score
     const totalScore = evaluatedResults.filter(r => r.isCorrect).length
     setScore(totalScore)
-
-    // Save score
     sessionStorage.setItem('remedial_step3_c1_taskE_score', totalScore)
     await logTaskCompletion(totalScore)
-
     setGameFinished(true)
   }
 
   const logTaskCompletion = async (finalScore) => {
     saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskE', is_correct: true, score: finalScore })
     try {
-      await fetch('/api/phase4/remedial/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          level: 'C1',
-          task: 'E',
-          step: 2,
-          score: finalScore,
-          max_score: 6,
-          completed: true
-        })
-      })
-    } catch (error) {
-      console.error('Failed to log task completion:', error)
-    }
+      await fetch('/api/phase4/remedial/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ level: 'C1', task: 'E', step: 2, score: finalScore, max_score: 6, completed: true }) })
+    } catch (error) { console.error('Failed to log task completion:', error) }
   }
 
-  const handleStartGame = () => {
-    setGameStarted(true)
-  }
-
-  const handleContinue = () => {
-    navigate('/dashboard')
-  }
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
-
+  const formatTime = (seconds) => `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`
   const allAnswered = TENSE_SENTENCES.every(s => answers[s.id]?.trim())
 
+  // Start screen
   if (!gameStarted) {
     return (
-      <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-        <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #8e44ad 0%, #6c3483 100%)', color: 'white' }}>
-          <Typography variant="h4" gutterBottom fontWeight="bold">
-            Phase 4 - Step 3: Remedial Activities
-          </Typography>
-          <Typography variant="h5" gutterBottom>
-            Level C1 - Task E: Tense Odyssey 🗺️
-          </Typography>
-          <Typography variant="body1">
-            Mixed tenses grammar exercise - Master verb tenses with video contexts!
-          </Typography>
-        </Paper>
-
-        <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-          <CharacterMessage
-            character="MS. MABROUKI"
-            message="Welcome to Tense Odyssey! 🗺️ Embark on a journey through different verb tenses. Complete 6 sentences using the correct tense (present perfect, simple past, simple present, etc.). Each correct tense = 1 point. Total: 6 points! Ready to navigate through time? 🚀"
-          />
-        </Paper>
-
-        <Paper elevation={6} sx={{ p: 4, textAlign: 'center', background: 'linear-gradient(135deg, #8e44ad 0%, #6c3483 100%)' }}>
-          <ExploreIcon sx={{ fontSize: 100, color: 'white', mb: 2 }} />
-          <Typography variant="h4" gutterBottom sx={{ color: 'white' }} fontWeight="bold">
-            Tense Odyssey
-          </Typography>
-          <Typography variant="h6" sx={{ color: 'white', mb: 4 }}>
-            6 Odysseys • Mixed Tenses • 5 Minutes • Navigate Through Time!
-          </Typography>
-
-          <Box sx={{ mb: 4 }}>
-            <Paper elevation={3} sx={{ p: 3, backgroundColor: 'rgba(255,255,255,0.95)', maxWidth: 700, mx: 'auto' }}>
-              <Typography variant="h6" sx={{ color: '#2c3e50', fontWeight: 'bold', mb: 2 }}>
-                📚 Grammar Focus: Mixed Tenses
-              </Typography>
-              <Typography variant="body1" sx={{ color: '#34495e', textAlign: 'left' }}>
-                <strong>Tenses You'll Use:</strong><br />
-                • <strong>Present Perfect:</strong> has/have + past participle (for ongoing or recent actions)<br />
-                • <strong>Simple Past:</strong> verb + -ed (for completed actions)<br />
-                • <strong>Simple Present:</strong> base verb (for facts/routines)<br />
-                <br />
-                <strong>Context Clues:</strong><br />
-                • "since early ads" → Present Perfect<br />
-                • "in video 1" → Simple Past<br />
-                • "today" → Simple Present
-              </Typography>
-            </Paper>
-          </Box>
-
-          <Button
-            variant="contained"
-            size="large"
-            onClick={handleStartGame}
-            sx={{
-              py: 2,
-              px: 8,
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              backgroundColor: '#27ae60',
-              color: 'white',
-              '&:hover': { backgroundColor: '#229954' }
-            }}
-          >
-            START ODYSSEY! 🎮
-          </Button>
-        </Paper>
+      <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+        <Container maxWidth="md">
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...cardSx(P.purple), mb: 3 }}>
+              <Typography variant="h4" fontWeight="bold" sx={{ color: P.purple.shadow, mb: 0.5 }}>Phase 4 - Step 3: Remedial Activities</Typography>
+              <Typography variant="h5" sx={{ color: P.purple.border, mb: 0.5 }}>Level C1 - Task E: Tense Odyssey 🗺️</Typography>
+              <Typography variant="body1" color="text.secondary">Mixed tenses grammar exercise - Master verb tenses with video contexts!</Typography>
+            </Box>
+            <Box sx={{ ...cardSx(P.blue), mb: 3 }}>
+              <CharacterMessage character="MS. MABROUKI" message="Welcome to Tense Odyssey! 🗺️ Embark on a journey through different verb tenses. Complete 6 sentences using the correct tense (present perfect, simple past, simple present, etc.). Each correct tense = 1 point. Total: 6 points! Ready to navigate through time? 🚀" />
+            </Box>
+            <Box sx={{ ...cardSx(P.purple), textAlign: 'center', py: 4 }}>
+              <ExploreIcon sx={{ fontSize: 80, color: P.purple.shadow, mb: 2 }} />
+              <Typography variant="h4" fontWeight="bold" sx={{ color: P.purple.shadow, mb: 1 }}>Tense Odyssey</Typography>
+              <Typography variant="h6" sx={{ color: P.purple.border, mb: 3 }}>6 Odysseys • Mixed Tenses • 5 Minutes • Navigate Through Time!</Typography>
+              <Box sx={{ ...cardSx(P.blue), maxWidth: 600, mx: 'auto', mb: 3, textAlign: 'left' }}>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: P.blue.shadow, mb: 1 }}>📚 Grammar Focus: Mixed Tenses</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  • <strong>Present Perfect:</strong> has/have + past participle (for ongoing or recent actions)<br />
+                  • <strong>Simple Past:</strong> verb + -ed (for completed actions)<br />
+                  • <strong>Simple Present:</strong> base verb (for facts/routines)
+                </Typography>
+              </Box>
+              <Box component="button" onClick={() => setGameStarted(true)}
+                sx={{ px: 8, py: 2, fontSize: '1.5rem', fontWeight: 'bold', cursor: 'pointer', bgcolor: P.green.border, color: '#fff', border: `2px solid ${P.green.shadow}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${P.green.shadow}`, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` } }}>
+                START ODYSSEY! 🎮
+              </Box>
+            </Box>
+          </motion.div>
+        </Container>
       </Box>
     )
   }
 
+  // Results screen
   if (gameFinished) {
-    const perfectScore = score === 6
-
     return (
-      <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-        <Paper elevation={0} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #8e44ad 0%, #6c3483 100%)', color: 'white' }}>
-          <Typography variant="h4" gutterBottom fontWeight="bold">
-            Phase 4 - Step 3: Remedial Activities
-          </Typography>
-          <Typography variant="h5" gutterBottom>
-            Level C1 - Task E: Tense Odyssey - Results 🏆
-          </Typography>
-        </Paper>
-
-        {/* Results Summary */}
-        <Paper elevation={6} sx={{ p: 4, mb: 3, background: 'linear-gradient(135deg, #8e44ad 0%, #6c3483 100%)' }}>
-          <Box sx={{ color: 'white', textAlign: 'center' }}>
-            <EmojiEventsIcon sx={{ fontSize: 80, mb: 2 }} />
-            <Typography variant="h3" gutterBottom fontWeight="bold">
-              {perfectScore ? 'Odyssey Mastered! 🎉' : 'Odyssey Complete! 🎊'}
-            </Typography>
-            <Paper elevation={4} sx={{ p: 4, backgroundColor: 'white', maxWidth: 300, mx: 'auto', my: 3 }}>
-              <Typography variant="h2" fontWeight="bold" sx={{ color: '#8e44ad' }}>
-                {score} / 6
+      <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+        <Container maxWidth="md">
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+            <Box sx={{ ...cardSx(P.purple), mb: 3, textAlign: 'center' }}>
+              <EmojiEventsIcon sx={{ fontSize: 80, color: P.purple.shadow, mb: 1 }} />
+              <Typography variant="h3" fontWeight="bold" sx={{ color: P.purple.shadow }}>
+                {score === 6 ? 'Odyssey Mastered! 🎉' : 'Odyssey Complete! 🎊'}
               </Typography>
-              <Typography variant="h6" color="text.secondary">
-                Correct Tenses
-              </Typography>
-            </Paper>
-            {perfectScore && (
-              <Alert severity="success" sx={{ mt: 2, backgroundColor: 'rgba(46, 204, 113, 0.9)' }}>
-                <strong>Amazing!</strong> You mastered all mixed tenses! Grammar champion! 🌟
-              </Alert>
-            )}
-          </Box>
-        </Paper>
-
-        {/* Detailed Results */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: '#ecf0f1' }}>
-          <Typography variant="h5" gutterBottom sx={{ color: '#8e44ad' }} fontWeight="bold">
-            Tense Review
-          </Typography>
-
-          <Stack spacing={2} sx={{ mt: 2 }}>
-            {results.map((result, index) => (
-              <Paper
-                key={result.sentenceId}
-                elevation={2}
-                sx={{
-                  p: 3,
-                  borderLeft: '4px solid',
-                  borderColor: result.isCorrect ? '#27ae60' : '#e74c3c',
-                  backgroundColor: result.isCorrect ? '#d5f4e6' : '#fadbd8'
-                }}
-              >
-                <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-                  <Avatar sx={{ width: 56, height: 56, fontSize: '2rem', backgroundColor: '#8e44ad' }}>
-                    {result.avatar}
-                  </Avatar>
-                  <Box>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Chip
-                        label={result.odyssey}
-                        sx={{
-                          backgroundColor: '#8e44ad',
-                          color: 'white',
-                          fontWeight: 'bold'
-                        }}
-                      />
-                      <Chip
-                        label={result.tenseType}
-                        sx={{
-                          backgroundColor: '#3498db',
-                          color: 'white',
-                          fontWeight: 'bold'
-                        }}
-                      />
-                      {result.isCorrect ? (
-                        <Chip
-                          label="+1 Point"
-                          icon={<CheckCircleIcon />}
-                          sx={{
-                            backgroundColor: '#27ae60',
-                            color: 'white',
-                            fontWeight: 'bold'
-                          }}
-                        />
-                      ) : (
-                        <Chip
-                          label="+0 Points"
-                          icon={<CancelIcon />}
-                          sx={{
-                            backgroundColor: '#e74c3c',
-                            color: 'white',
-                            fontWeight: 'bold'
-                          }}
-                        />
-                      )}
-                    </Stack>
-                    <Typography variant="subtitle1" sx={{ color: '#34495e', fontWeight: 600, mt: 0.5 }}>
-                      {result.character}
-                    </Typography>
+            </Box>
+            <Box sx={{ ...cardSx(P.green), mb: 3, textAlign: 'center' }}>
+              <Typography variant="h2" fontWeight="bold" sx={{ color: P.green.shadow }}>{score} / 6</Typography>
+              <Typography variant="h6" color="text.secondary">Correct Tenses</Typography>
+            </Box>
+            <Box sx={{ ...cardSx(P.blue), mb: 3 }}>
+              <Typography variant="h5" fontWeight="bold" sx={{ color: P.blue.shadow, mb: 2 }}>Tense Review</Typography>
+              <Stack spacing={2}>
+                {results.map((result, index) => (
+                  <Box key={result.sentenceId} sx={{ p: 3, borderRadius: '14px', bgcolor: result.isCorrect ? P.green.bg : P.red.bg, border: `2px solid ${result.isCorrect ? P.green.border : P.red.border}` }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <Avatar sx={{ bgcolor: P.purple.border, fontSize: '1.2rem', width: 44, height: 44 }}>{result.avatar}</Avatar>
+                      <Box>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Box sx={{ px: 1.5, py: 0.25, borderRadius: '8px', bgcolor: P.purple.border, color: 'white', fontWeight: 'bold', fontSize: '0.8rem' }}>{result.odyssey}</Box>
+                          <Box sx={{ px: 1.5, py: 0.25, borderRadius: '8px', bgcolor: P.blue.border, color: 'white', fontWeight: 'bold', fontSize: '0.8rem' }}>{result.tenseType}</Box>
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">{result.character}</Typography>
+                      </Box>
+                      {result.isCorrect ? <CheckCircleIcon sx={{ color: P.green.shadow, ml: 'auto' }} /> : <CancelIcon sx={{ color: P.red.shadow, ml: 'auto' }} />}
+                    </Box>
+                    <Box sx={{ p: 2, bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'white', borderRadius: '10px', mb: 1 }}>
+                      <Typography variant="h6" sx={{ color: P.green.shadow, fontWeight: 'bold' }}>"{result.fullSentence}"</Typography>
+                    </Box>
+                    <Box sx={{ p: 2, bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.7)', borderRadius: '10px' }}>
+                      <Typography variant="h6" sx={{ color: result.isCorrect ? P.green.shadow : P.red.shadow, fontWeight: 'bold' }}>
+                        Your answer: "{result.userAnswer || '(no answer)'}"
+                      </Typography>
+                    </Box>
+                    {!result.isCorrect && (
+                      <Box sx={{ mt: 1, p: 2, bgcolor: P.blue.bg, border: `1px solid ${P.blue.border}`, borderRadius: '10px' }}>
+                        <Typography variant="body2" fontWeight={500} sx={{ color: P.blue.shadow }}>
+                          Remember: {TENSE_SENTENCES[index].concept}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
-                </Stack>
-
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body1" sx={{ color: '#1a252f', fontWeight: 600, mb: 1 }}>
-                    Correct Sentence:
-                  </Typography>
-                  <Paper sx={{ p: 2, backgroundColor: 'white' }}>
-                    <Typography variant="h6" sx={{ color: '#27ae60', fontWeight: 'bold' }}>
-                      "{result.fullSentence}"
-                    </Typography>
-                  </Paper>
-                </Box>
-
-                <Box>
-                  <Typography variant="body1" sx={{ color: '#1a252f', fontWeight: 600, mb: 1 }}>
-                    Your Answer:
-                  </Typography>
-                  <Paper sx={{ p: 2, backgroundColor: 'white' }}>
-                    <Typography variant="h6" component="div" sx={{ color: result.isCorrect ? '#27ae60' : '#e74c3c', fontWeight: 'bold' }}>
-                      "{TENSE_SENTENCES[index].before} <span style={{
-                        textDecoration: 'underline',
-                        backgroundColor: result.isCorrect ? '#d5f4e6' : '#fadbd8',
-                        padding: '2px 8px'
-                      }}>{result.userAnswer || '(no answer)'}</span> {TENSE_SENTENCES[index].after}"
-                    </Typography>
-                  </Paper>
-                </Box>
-
-                {!result.isCorrect && (
-                  <Alert severity="info" sx={{ mt: 2 }}>
-                    <Typography variant="body2" sx={{ color: '#1a252f', fontWeight: 500 }}>
-                      <strong>Remember:</strong> {TENSE_SENTENCES[index].concept}
-                    </Typography>
-                  </Alert>
-                )}
-              </Paper>
-            ))}
-          </Stack>
-        </Paper>
-
-        {/* Continue Button */}
-        <Box sx={{ textAlign: 'center' }}>
-          <Button
-            variant="contained"
-            size="large"
-            onClick={handleContinue}
-            sx={{
-              py: 2,
-              px: 6,
-              fontSize: '1.2rem',
-              fontWeight: 'bold',
-              background: 'linear-gradient(135deg, #27ae60 0%, #229954 100%)',
-              '&:hover': { background: 'linear-gradient(135deg, #229954 0%, #1e8449 100%)' }
-            }}
-          >
-            Complete C1 Remedial →
-          </Button>
-        </Box>
+                ))}
+              </Stack>
+            </Box>
+            <Box sx={{ textAlign: 'center' }}>
+              <Box component="button" onClick={() => navigate('/dashboard')}
+                sx={{ px: 6, py: 2, fontSize: '1.2rem', fontWeight: 'bold', cursor: 'pointer', bgcolor: P.green.border, color: '#fff', border: `2px solid ${P.green.shadow}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${P.green.shadow}`, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` } }}>
+                Complete C1 Remedial →
+              </Box>
+            </Box>
+          </motion.div>
+        </Container>
       </Box>
     )
   }
 
   // Game in progress
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Header with Timer */}
-      <Paper elevation={0} sx={{ p: 2, mb: 2, background: 'linear-gradient(135deg, #8e44ad 0%, #6c3483 100%)', color: 'white' }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="h5" fontWeight="bold">
-            {currentSentence.odyssey} / 6
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <TimerIcon />
-            <Typography variant="h6" sx={{
-              color: timeLeft <= 60 ? '#e74c3c' : 'white',
-              fontWeight: timeLeft <= 60 ? 'bold' : 'normal'
-            }}>
-              {formatTime(timeLeft)}
+    <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+      <Container maxWidth="md">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+          {/* Header with timer */}
+          <Box sx={{ ...cardSx(P.purple), mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="h5" fontWeight="bold" sx={{ color: P.purple.shadow }}>
+                {currentSentence.odyssey} / 6
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 0.5, borderRadius: '10px', bgcolor: timeLeft <= 60 ? P.red.bg : P.teal.bg, border: `2px solid ${timeLeft <= 60 ? P.red.border : P.teal.border}` }}>
+                <TimerIcon sx={{ color: timeLeft <= 60 ? P.red.shadow : P.teal.shadow, fontSize: 20 }} />
+                <Typography variant="h6" fontWeight="bold" sx={{ color: timeLeft <= 60 ? P.red.shadow : P.teal.shadow }}>{formatTime(timeLeft)}</Typography>
+              </Box>
+            </Box>
+            <LinearProgress variant="determinate" value={(currentSentenceIndex + 1) / TENSE_SENTENCES.length * 100}
+              sx={{ height: 8, borderRadius: '8px', bgcolor: 'rgba(168,85,247,0.15)', '& .MuiLinearProgress-bar': { bgcolor: P.purple.border, borderRadius: '8px' } }} />
+          </Box>
+
+          {/* Instructions */}
+          <Box sx={{ ...cardSx(P.blue), mb: 3 }}>
+            <Typography variant="body1" fontWeight={600}>
+              <strong>Instructions:</strong> Fill in the blank with the correct verb tense based on the context. Navigate between odysseys using the arrows below.
             </Typography>
           </Box>
-        </Stack>
 
-        <LinearProgress
-          variant="determinate"
-          value={(currentSentenceIndex + 1) / TENSE_SENTENCES.length * 100}
-          sx={{
-            mt: 2,
-            height: 8,
-            borderRadius: 1,
-            backgroundColor: 'rgba(255,255,255,0.3)',
-            '& .MuiLinearProgress-bar': {
-              backgroundColor: '#27ae60'
-            }
-          }}
-        />
-      </Paper>
-
-      {/* Instructions */}
-      <Alert severity="info" sx={{ mb: 3 }}>
-        <Typography variant="body1" sx={{ color: '#1a252f', fontWeight: 600 }}>
-          <strong>Instructions:</strong> Fill in the blank with the correct verb tense based on the context. Navigate between odysseys using the arrows below.
-        </Typography>
-      </Alert>
-
-      {/* Current Sentence */}
-      <Paper elevation={6} sx={{ p: 4, mb: 3, backgroundColor: '#f8f9fa', border: '3px solid #8e44ad' }}>
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
-          <Avatar sx={{ width: 64, height: 64, fontSize: '2.5rem', backgroundColor: '#8e44ad' }}>
-            {currentSentence.avatar}
-          </Avatar>
-          <Box>
-            <Chip
-              label={currentSentence.odyssey}
-              sx={{
-                backgroundColor: '#8e44ad',
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: '1.1rem',
-                py: 2.5,
-                mb: 1
-              }}
-            />
-            <Typography variant="h6" sx={{ color: '#2c3e50', fontWeight: 'bold' }}>
-              {currentSentence.character} says:
-            </Typography>
+          {/* Current sentence */}
+          <Box sx={{ ...cardSx(P.teal), mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+              <Avatar sx={{ width: 64, height: 64, fontSize: '2rem', bgcolor: P.purple.border }}>{currentSentence.avatar}</Avatar>
+              <Box>
+                <Box sx={{ px: 2, py: 0.5, borderRadius: '10px', bgcolor: P.purple.border, color: 'white', fontWeight: 'bold', fontSize: '1rem', display: 'inline-block', mb: 0.5 }}>{currentSentence.odyssey}</Box>
+                <Typography variant="h6" fontWeight="bold">{currentSentence.character} says:</Typography>
+              </Box>
+            </Box>
+            <Box sx={{ p: 3, bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'white', borderRadius: '14px', border: `2px solid ${P.purple.border}`, mb: 2 }}>
+              <RecordVoiceOverIcon sx={{ color: P.purple.border, mb: 1 }} />
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
+                <Typography variant="h5" sx={{ fontWeight: 500 }}>"{currentSentence.before}</Typography>
+                <TextField value={answers[currentSentence.id] || ''} onChange={(e) => handleAnswerChange(currentSentence.id, e.target.value)}
+                  placeholder={currentSentence.infinitive} variant="outlined"
+                  sx={{ minWidth: 250, '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: P.purple.bg, '& fieldset': { borderColor: P.purple.border, borderWidth: 3 }, '&:hover fieldset': { borderColor: P.purple.shadow }, '&.Mui-focused fieldset': { borderColor: P.purple.shadow }, '& input': { fontWeight: 700, fontSize: '1.3rem', textAlign: 'center' } } }}
+                />
+                <Typography variant="h5" sx={{ fontWeight: 500 }}>{currentSentence.after}"</Typography>
+              </Box>
+            </Box>
+            <Box sx={{ p: 2, bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '10px' }}>
+              <Typography variant="body1" fontWeight={500} sx={{ color: P.green.shadow }}>
+                <strong>Concept:</strong> {currentSentence.concept}
+              </Typography>
+            </Box>
           </Box>
-        </Stack>
 
-        <Paper elevation={3} sx={{ p: 4, backgroundColor: 'white', border: '2px solid #8e44ad' }}>
-          <RecordVoiceOverIcon sx={{ fontSize: 40, color: '#8e44ad', mb: 2 }} />
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
-            <Typography variant="h5" sx={{ color: '#2c3e50', fontWeight: 500 }}>
-              "{currentSentence.before}
-            </Typography>
-
-            <TextField
-              value={answers[currentSentence.id] || ''}
-              onChange={(e) => handleAnswerChange(currentSentence.id, e.target.value)}
-              placeholder={currentSentence.infinitive}
-              variant="outlined"
-              sx={{
-                minWidth: 250,
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: '#f3e5f5',
-                  '& fieldset': {
-                    borderColor: '#8e44ad',
-                    borderWidth: 3
-                  },
-                  '&:hover fieldset': {
-                    borderColor: '#6c3483'
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#6c3483'
-                  },
-                  '& input': {
-                    color: '#1a252f',
-                    fontWeight: 700,
-                    fontSize: '1.3rem',
-                    textAlign: 'center'
-                  },
-                  '& input::placeholder': {
-                    color: '#95a5a6',
-                    opacity: 0.8,
-                    fontWeight: 500
-                  }
-                }
-              }}
-            />
-
-            <Typography variant="h5" sx={{ color: '#2c3e50', fontWeight: 500 }}>
-              {currentSentence.after}"
-            </Typography>
+          {/* Navigation */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+            <Box component="button" onClick={handlePrevious} disabled={currentSentenceIndex === 0}
+              sx={{ px: 3, py: 1.5, fontWeight: 'bold', cursor: currentSentenceIndex === 0 ? 'not-allowed' : 'pointer', bgcolor: 'transparent', color: P.purple.border, border: `2px solid ${P.purple.border}`, borderRadius: '12px', opacity: currentSentenceIndex === 0 ? 0.4 : 1, '&:hover': { bgcolor: P.purple.bg } }}>
+              ← Previous Odyssey
+            </Box>
+            <Box component="button" onClick={handleNext} disabled={currentSentenceIndex === TENSE_SENTENCES.length - 1}
+              sx={{ px: 3, py: 1.5, fontWeight: 'bold', cursor: currentSentenceIndex === TENSE_SENTENCES.length - 1 ? 'not-allowed' : 'pointer', bgcolor: 'transparent', color: P.purple.border, border: `2px solid ${P.purple.border}`, borderRadius: '12px', opacity: currentSentenceIndex === TENSE_SENTENCES.length - 1 ? 0.4 : 1, '&:hover': { bgcolor: P.purple.bg } }}>
+              Next Odyssey →
+            </Box>
           </Box>
-        </Paper>
 
-        <Alert severity="success" sx={{ mt: 3, backgroundColor: '#d4edda' }}>
-          <Typography variant="body1" sx={{ color: '#1a252f', fontWeight: 500 }}>
-            <strong>Concept:</strong> {currentSentence.concept}
-          </Typography>
-        </Alert>
-      </Paper>
+          {/* Progress dots */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mb: 3 }}>
+            {TENSE_SENTENCES.map((s, idx) => (
+              <Box key={s.id} component="button" onClick={() => setCurrentSentenceIndex(idx)}
+                sx={{ width: 36, height: 36, borderRadius: '50%', border: `2px solid ${idx === currentSentenceIndex ? P.purple.shadow : P.purple.border}`, cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem', bgcolor: idx === currentSentenceIndex ? P.purple.border : answers[s.id]?.trim() ? P.green.border : 'transparent', color: idx === currentSentenceIndex || answers[s.id]?.trim() ? 'white' : P.purple.border }}>
+                {s.avatar}
+              </Box>
+            ))}
+          </Box>
 
-      {/* Navigation */}
-      <Stack direction="row" spacing={2} justifyContent="space-between" sx={{ mb: 3 }}>
-        <Button
-          variant="outlined"
-          size="large"
-          onClick={handlePrevious}
-          disabled={currentSentenceIndex === 0}
-          sx={{
-            borderColor: '#8e44ad',
-            color: '#8e44ad',
-            borderWidth: 2,
-            '&:hover': { borderColor: '#6c3483', backgroundColor: '#f3e5f5', borderWidth: 2 }
-          }}
-        >
-          ← Previous Odyssey
-        </Button>
+          {/* Submit */}
+          <Box sx={{ textAlign: 'center' }}>
+            <Box component="button" onClick={handleSubmitAll} disabled={!allAnswered}
+              sx={{ px: 8, py: 2, fontSize: '1.3rem', fontWeight: 'bold', cursor: !allAnswered ? 'not-allowed' : 'pointer', bgcolor: allAnswered ? P.purple.border : 'grey.400', color: '#fff', border: `2px solid ${allAnswered ? P.purple.shadow : '#999'}`, borderRadius: '16px', boxShadow: allAnswered ? `4px 4px 0 ${P.purple.shadow}` : 'none', '&:hover': { transform: allAnswered ? 'translate(-2px,-2px)' : 'none' } }}>
+              {allAnswered ? 'Complete Odyssey! 🗺️' : `Answer All First (${Object.keys(answers).filter(k => answers[k]?.trim()).length}/6)`}
+            </Box>
+          </Box>
 
-        <Button
-          variant="outlined"
-          size="large"
-          onClick={handleNext}
-          disabled={currentSentenceIndex === TENSE_SENTENCES.length - 1}
-          sx={{
-            borderColor: '#8e44ad',
-            color: '#8e44ad',
-            borderWidth: 2,
-            '&:hover': { borderColor: '#6c3483', backgroundColor: '#f3e5f5', borderWidth: 2 }
-          }}
-        >
-          Next Odyssey →
-        </Button>
-      </Stack>
-
-      {/* Progress Overview */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: '#ecf0f1' }}>
-        <Typography variant="h6" gutterBottom sx={{ color: '#2c3e50', fontWeight: 'bold' }}>
-          Odyssey Progress:
-        </Typography>
-        <Stack direction="row" spacing={1} flexWrap="wrap">
-          {TENSE_SENTENCES.map((sentence, index) => (
-            <Chip
-              key={sentence.id}
-              label={`O${index + 1}`}
-              avatar={<Avatar sx={{ fontSize: '1.2rem' }}>{sentence.avatar}</Avatar>}
-              onClick={() => setCurrentSentenceIndex(index)}
-              sx={{
-                backgroundColor: answers[sentence.id]?.trim()
-                  ? index === currentSentenceIndex
-                    ? '#27ae60'
-                    : '#8e44ad'
-                  : index === currentSentenceIndex
-                    ? '#e67e22'
-                    : '#95a5a6',
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: '1rem',
-                cursor: 'pointer',
-                '&:hover': {
-                  opacity: 0.8
-                }
-              }}
-            />
-          ))}
-        </Stack>
-        <Typography variant="body2" sx={{ mt: 2, color: '#7f8c8d' }}>
-          Answered: {Object.keys(answers).filter(key => answers[key]?.trim()).length} / 6
-        </Typography>
-      </Paper>
-
-      {/* Submit Button */}
-      <Box sx={{ textAlign: 'center' }}>
-        <Button
-          variant="contained"
-          size="large"
-          onClick={handleSubmitAll}
-          disabled={!allAnswered}
-          sx={{
-            py: 3,
-            px: 8,
-            fontSize: '1.3rem',
-            fontWeight: 'bold',
-            background: allAnswered
-              ? 'linear-gradient(135deg, #8e44ad 0%, #6c3483 100%)'
-              : '#bdc3c7',
-            '&:hover': {
-              background: allAnswered
-                ? 'linear-gradient(135deg, #6c3483 0%, #5b2c6f 100%)'
-                : '#95a5a6'
-            }
-          }}
-        >
-          {allAnswered ? 'Complete Odyssey! 🗺️' : `Answer All First (${Object.keys(answers).filter(key => answers[key]?.trim()).length}/6)`}
-        </Button>
-      </Box>
-
-      {/* Timer Warning */}
-      {timeLeft <= 60 && (
-        <Alert severity="warning" sx={{ mt: 3, backgroundColor: '#f39c12', color: 'white' }}>
-          <strong>Hurry!</strong> Only {timeLeft} seconds left!
-        </Alert>
-      )}
+          {timeLeft <= 60 && (
+            <Box sx={{ mt: 3, p: 2, bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`, borderRadius: '12px', textAlign: 'center' }}>
+              <Typography variant="h6" fontWeight="bold" sx={{ color: P.orange.shadow }}>Hurry! Only {timeLeft} seconds left!</Typography>
+            </Box>
+          )}
+        </motion.div>
+      </Container>
     </Box>
   )
 }
