@@ -160,14 +160,12 @@ def get_next_phase2_step(current_step):
 
 
 def determine_phase2_user_level(total_score):
-    if total_score <= 7:
+    if total_score < 10:
         return 'A1'
-    elif total_score <= 10:
+    elif total_score < 15:
         return 'A2'
-    elif total_score <= 15:
-        return 'B1'
     else:
-        return 'B2'
+        return 'B1'
 
 
 def get_next_remedial_level(current_level):
