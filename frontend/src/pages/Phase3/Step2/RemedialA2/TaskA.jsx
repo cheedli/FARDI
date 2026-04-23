@@ -100,7 +100,7 @@ export default function Phase3Step2RemedialA2TaskA() {
   }
 
   const handleNext = () => {
-    navigate('/app/dashboard')
+    navigate('/phase3/step/2/interaction/1')
   }
 
   const allAnswered = Object.keys(answers).length === GAP_FILL_SENTENCES.length &&
@@ -295,7 +295,7 @@ export default function Phase3Step2RemedialA2TaskA() {
                 '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` },
               }}
             >
-              Complete A2 Task <ArrowForwardIcon />
+              Retry Step 2 <ArrowForwardIcon />
             </Box>
           )}
         </Box>

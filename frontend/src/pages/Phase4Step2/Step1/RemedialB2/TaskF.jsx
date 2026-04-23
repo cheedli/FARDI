@@ -31,7 +31,7 @@ const TIME_LIMIT = 300
 
 export default function RemedialB2TaskF() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 6, context: 'remedial_b2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 6, context: 'remedial_b2' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
   const [currentLineIndex, setCurrentLineIndex] = useState(0)
@@ -195,7 +195,7 @@ export default function RemedialB2TaskF() {
               </Box>
             </Box>
             <Box sx={{ textAlign: 'center' }}>
-              <Box component="button" onClick={() => navigate('/phase4_2/step1/remedial/b2/results')} sx={{
+              <Box component="button" onClick={() => navigate('/phase4_2/step/1/remedial/b2/results')} sx={{
                 bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
                 px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem', cursor: 'pointer', color: P.green.shadow,
                 display: 'inline-flex', alignItems: 'center', gap: 1,

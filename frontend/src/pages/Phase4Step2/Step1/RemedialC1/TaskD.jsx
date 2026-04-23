@@ -23,7 +23,7 @@ const SENTENCES_TO_CRITIQUE = [
 
 export default function Phase4_2RemedialC1TaskD() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 4, context: 'remedial_c1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 4, context: 'remedial_c1' })
   const [critiques, setCritiques] = useState({})
   const [showResults, setShowResults] = useState(false)
   const theme = useTheme()

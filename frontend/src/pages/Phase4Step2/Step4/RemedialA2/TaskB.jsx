@@ -39,7 +39,7 @@ const SENTENCES = [
 
 export default function Phase4_2Step4RemedialA2TaskB() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 2, context: 'remedial_a2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 4, interaction: 2, context: 'remedial_a2' })
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

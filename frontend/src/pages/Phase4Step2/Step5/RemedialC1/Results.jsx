@@ -15,6 +15,7 @@ import {
 import { useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import { CharacterMessage } from '../../../../components/Avatar.jsx';
+import { requestPhase42FinalScore } from '../../shared/routing.js';
 
 const Results = () => {
   const navigate = useNavigate();
@@ -58,6 +59,12 @@ const Results = () => {
     const taskD = parseInt(sessionStorage.getItem('phase4_2_step5_remedialC1_taskD') || '0');
     const total = taskA + taskB + taskC + taskD;
     setScores({ taskA, taskB, taskC, taskD, total });
+    requestPhase42FinalScore(5, 'c1', { total_score: total })
+      .then((data) => {
+        if (data.passed) sessionStorage.setItem('phase4_2_redirect_url', data.next_url);
+        else sessionStorage.removeItem('phase4_2_redirect_url');
+      })
+      .catch((error) => console.error('Failed to calculate Phase 4.2 Step 5 C1 final score:', error));
   }, []);
 
   const maxScore = 40; // 4 + 12 + 12 + 12

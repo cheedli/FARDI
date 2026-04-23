@@ -5,10 +5,11 @@ import { useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import { CharacterMessage } from '../../../../components/Avatar.jsx';
 import { useProgressSave } from '../../../../hooks/useProgressSave'
+import { requestPhase42TaskBScore } from '../../shared/routing.js'
 
 const TaskB = () => {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 2, context: 'remedial_b2' });
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 5, interaction: 2, context: 'remedial_b2' });
 
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
@@ -47,25 +48,28 @@ We doing this for make people happy always
 Very amazing festival you coming please
 Share everyone who you knowing right now`;
 
-  const keyImprovements = ['the festival', 'at a', 'great time', 'many', 'to offer', 'are available', 'at the event', 'a friend', 'who likes', 'hashtag', 'we are doing', 'to make', 'please come', 'share with'];
+  const handleSubmit = async () => {
+    try {
+      const data = await requestPhase42TaskBScore(5, 'B2', {
+        text: rewrittenPost,
+        faulty_post: faultyPost,
+        criteria: 'rewrite the faulty social media post with correct grammar, coherence, and stronger promotional language',
+      })
 
-  const evaluateRewrite = (userPost) => {
-    const lowerPost = userPost.toLowerCase().trim();
-    if (lowerPost.length < 100) return 2;
-    let matches = 0;
-    keyImprovements.forEach(improvement => { if (lowerPost.includes(improvement.toLowerCase())) matches++; });
-    if (matches >= 10) return 10;
-    if (matches >= 8) return 8;
-    if (matches >= 6) return 6;
-    if (matches >= 4) return 4;
-    return 2;
-  };
-
-  const handleSubmit = () => {
-    const calculatedScore = evaluateRewrite(rewrittenPost);
-    setScore(calculatedScore);
-    setSubmitted(true);
-    sessionStorage.setItem('phase4_2_step5_remedialB2_taskB', calculatedScore.toString());
+      setScore(data.score)
+      setSubmitted(true)
+      sessionStorage.setItem('phase4_2_step5_remedialB2_taskB', data.score.toString())
+      saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: rewrittenPost, is_correct: true, score: data.score })
+      await fetch('/api/phase4/remedial/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ phase: '4.2', step: 5, level: 'B2', task: 'B', score: data.score, max_score: 10, content: rewrittenPost })
+      })
+    } catch (error) {
+      console.error('Evaluation error:', error)
+      alert('Evaluation failed. Please try again.')
+    }
   };
 
   const handleNext = () => navigate('/phase4_2/step/5/remedial/b2/task/c');

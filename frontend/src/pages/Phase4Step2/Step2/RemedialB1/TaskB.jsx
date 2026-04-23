@@ -62,7 +62,7 @@ export default function Phase4_2Step2RemedialB1TaskB() {
   }
   const P = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 2, context: 'remedial_b1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 2, interaction: 2, context: 'remedial_b1' })
   const [proposals, setProposals] = useState(Array(6).fill(''))
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)

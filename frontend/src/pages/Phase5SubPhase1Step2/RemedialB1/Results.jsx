@@ -30,6 +30,7 @@ export default function Phase5Step2RemedialB1Results() {
   const [loading, setLoading] = useState(true)
   const [scores, setScores] = useState({ taskA: 0, taskB: 0, taskC: 0, total: 0, passed: false })
   const [countdown, setCountdown] = useState(10)
+  const [nextUrl, setNextUrl] = useState('/phase5/subphase/1/step/2/remedial/b1/task/a')
 
   const cardSx = (color) => ({
     bgcolor: color.bg,
@@ -57,24 +58,24 @@ export default function Phase5Step2RemedialB1Results() {
     const taskBScore = parseInt(sessionStorage.getItem('phase5_step2_remedial_b1_taskB_score') || '0')
     const taskCScore = parseInt(sessionStorage.getItem('phase5_step2_remedial_b1_taskC_score') || '0')
     const total = taskAScore + taskBScore + taskCScore
-    const passed = total >= 6
+    const passed = total >= 12
     setScores({ taskA: taskAScore, taskB: taskBScore, taskC: taskCScore, total, passed })
     setLoading(false)
     try {
-      await phase5API.logRemedialActivity(2, 'B1', 'final', total, {
+      const result = await phase5API.calculateRemedialScore(2, 'B1', {
         task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore
       })
+      const backendPassed = result?.data?.passed
+      const backendNextUrl = result?.data?.next_url
+      setScores(prev => ({ ...prev, passed: backendPassed ?? prev.passed }))
+      setNextUrl(backendNextUrl || '/phase5/subphase/1/step/2/remedial/b1/task/a')
     } catch (error) {
       console.error('Failed to log final score:', error)
     }
   }
 
   const handleRedirect = () => {
-    if (scores.passed) {
-      navigate('/dashboard')
-    } else {
-      navigate('/phase5/step2/remedial-b1/task-a')
-    }
+    navigate(nextUrl)
   }
 
   if (loading) {
@@ -106,8 +107,8 @@ export default function Phase5Step2RemedialB1Results() {
             <Typography variant="h4" fontWeight="bold" sx={{ color: scores.passed ? P.green.border : P.orange.border }} gutterBottom>
               {scores.passed ? 'Congratulations! You Passed!' : 'Keep Practicing!'}
             </Typography>
-            <Typography variant="h5" sx={{ mt: 2 }} color="text.secondary">Total Score: {scores.total} / 8</Typography>
-            <Typography variant="body1" sx={{ mt: 1 }} color="text.secondary">Pass Threshold: 6/8 (75%)</Typography>
+            <Typography variant="h5" sx={{ mt: 2 }} color="text.secondary">Total Score: {scores.total} / 15</Typography>
+            <Typography variant="body1" sx={{ mt: 1 }} color="text.secondary">Pass Threshold: 12/15</Typography>
           </Box>
         </motion.div>
 
@@ -135,7 +136,7 @@ export default function Phase5Step2RemedialB1Results() {
           <Box sx={{ ...cardSx(scores.passed ? P.green : P.yellow), mb: 3 }}>
             <Typography variant="body1" sx={{ color: scores.passed ? P.green.border : P.yellow.border }}>
               {scores.passed
-                ? 'You will proceed to the dashboard. Great work!'
+                ? 'You will proceed to the next step. Great work!'
                 : `Redirecting to repeat B1 remedial in ${countdown} seconds...`}
             </Typography>
           </Box>

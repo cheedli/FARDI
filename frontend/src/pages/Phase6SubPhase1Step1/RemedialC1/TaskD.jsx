@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { resolveSubphase1RemedialNextUrl } from '../../Phase6SubPhase1/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
@@ -125,8 +126,8 @@ export default function Phase6SP1Step1RemC1TaskD() {
     }
   }
 
-  const handleContinue = () => {
-    navigate('/phase6/subphase/1/step/2')
+  const handleContinue = async () => {
+    navigate(await resolveSubphase1RemedialNextUrl(1, 'C1'))
   }
 
   return (
@@ -352,7 +353,7 @@ export default function Phase6SP1Step1RemC1TaskD() {
                   transition: 'all 0.15s'
                 }}
               >
-                Continue to Step 2 →
+                Continue →
               </Box>
             </Box>
           </motion.div>

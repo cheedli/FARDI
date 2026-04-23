@@ -148,7 +148,7 @@ export default function Phase3Step4RemedialC1TaskA() {
     } catch (error) { console.error('Failed to log task:', error) }
   }
 
-  const handleNext = () => navigate('/app/dashboard')
+  const handleNext = () => navigate('/phase3/step/4/interaction/1')
 
   const allSectionsComplete = Object.values(proposal).every(section => section.trim().split(/\s+/).length >= 15)
   const passThreshold = 8
@@ -305,7 +305,7 @@ export default function Phase3Step4RemedialC1TaskA() {
                 '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` },
               }}
             >
-              Complete C1 Task <ArrowForwardIcon fontSize="small" />
+              Retry Step 4 <ArrowForwardIcon fontSize="small" />
             </Box>
           )}
         </Box>

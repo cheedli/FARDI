@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material/styles'
 import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { resolveSubphase2RemedialNextUrl } from '../../Phase5SubPhase2/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const LIGHT = { pageBg: '#FFFDE7', orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' }, blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' }, yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' } }
@@ -55,7 +56,7 @@ export default function Phase5SubPhase2Step1RemedialB2TaskD() {
     try { await phase5API.logRemedialActivity(1, 'B2', 'D', correctCount, 6, 2) } catch (e) { console.error(e) }
   }
 
-  const handleContinue = () => navigate('/phase5/subphase/2/step/2')
+  const handleContinue = async () => navigate(await resolveSubphase2RemedialNextUrl(1, 'B2'))
   const progress = ((currentIndex + 1) / 6) * 100
 
   return (

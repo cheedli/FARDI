@@ -30,7 +30,7 @@ const TIME_LIMIT = 300
 
 export default function Phase4_2RemedialB1TaskE() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 5, context: 'remedial_b1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 5, context: 'remedial_b1' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0)

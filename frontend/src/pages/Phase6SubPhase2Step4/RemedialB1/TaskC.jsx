@@ -4,6 +4,7 @@ import { Box, Container, Typography, RadioGroup, FormControlLabel, Radio, useThe
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { resolveSubphase2RemedialNextUrl } from '../../Phase6SubPhase2/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const LIGHT = { pageBg: '#FFFDE7', orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' }, blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' }, yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' }, red: { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' } }
@@ -94,8 +95,8 @@ export default function Phase6SP2Step4RemB1TaskC() {
               <CheckCircleIcon sx={{ fontSize: 50, color: P.green.border, mb: 1 }} />
               <Typography variant="h5" sx={{ color: P.green.shadow }} gutterBottom>Task C Complete! Score: {score}/6</Typography>
               <Typography variant="body1" sx={{ mb: 2 }}>{score === 6 ? 'Perfect! You have mastered all feedback vocabulary terms.' : score >= 4 ? 'Well done! Review the highlighted answers above.' : 'Good effort! Study the feedback terms and try the quiz again.'}</Typography>
-              <Box component="button" onClick={() => navigate('/phase6/subphase/2/step/4/remedial/b2/task/a')} sx={{ bgcolor: P.green.border, color: 'white', border: `2px solid ${P.green.shadow}`, borderRadius: '14px', boxShadow: `4px 4px 0 ${P.green.shadow}`, py: 1.5, px: 4, fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }, transition: 'all 0.15s' }}>
-                Continue to Remedial B2 — Task A
+              <Box component="button" onClick={async () => navigate(await resolveSubphase2RemedialNextUrl(4, 'B1'))} sx={{ bgcolor: P.green.border, color: 'white', border: `2px solid ${P.green.shadow}`, borderRadius: '14px', boxShadow: `4px 4px 0 ${P.green.shadow}`, py: 1.5, px: 4, fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }, transition: 'all 0.15s' }}>
+                Continue
               </Box>
             </Box>
           </motion.div>

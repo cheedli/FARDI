@@ -125,6 +125,7 @@ export default function RemedialB1TaskD() {
     const taskBScore = parseInt(sessionStorage.getItem('remedial_step3_b1_taskB_score') || 0)
     const taskCScore = parseInt(sessionStorage.getItem('remedial_step3_b1_taskC_score') || 0)
     const taskDScore = parseInt(sessionStorage.getItem('remedial_step3_b1_taskD_score') || 0)
+    let nextUrl = '/phase4/step3/remedial/b1/taskA'
     try {
       const response = await fetch('/api/phase4/step3/remedial/b1/final-score', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
@@ -132,11 +133,14 @@ export default function RemedialB1TaskD() {
       })
       const result = await response.json()
       if (result.success) {
-        const { passed, required_total } = result.data
+        const { passed, required_total, next_url: backendNextUrl } = result.data
+        if (backendNextUrl) {
+          nextUrl = backendNextUrl.replace(/^\/app/, '')
+        }
         alert(`B1 Remedial Complete!\n\nRequired Tasks Score: ${required_total}/27\nPass Threshold: 22/27\n\nResult: ${passed ? '✅ PASSED' : '❌ FAILED - Please retry'}`)
-        navigate('/dashboard')
+        navigate(nextUrl)
       }
-    } catch (error) { console.error('Failed to submit final score:', error); navigate('/dashboard') }
+    } catch (error) { console.error('Failed to submit final score:', error); navigate(nextUrl) }
   }
 
   const formatTime = (seconds) => `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`

@@ -40,7 +40,7 @@ const DIALOGUE_MESSAGES = [
 
 export default function Phase4_2Step3RemedialB1TaskA() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 1, context: 'remedial_b1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 3, interaction: 1, context: 'remedial_b1' })
   const [wordBank] = useState(() => [...WORD_BANK_ORIGINAL].sort(() => Math.random() - 0.5))
   const [selectedWord, setSelectedWord] = useState(null)
   const [answers, setAnswers] = useState({})

@@ -6,8 +6,8 @@ import { motion } from 'framer-motion'
 
 /**
  * Phase 4 Step 5 - Remedial B2 - Results Page
- * Total: 46 points (6+8+8+12+6+6)
- * Pass threshold: 37/46 (80%)
+ * Total: 46 points
+ * Pass threshold: 37/46
  */
 
 const LIGHT = {
@@ -72,10 +72,14 @@ export default function Phase4Step5RemedialB2Results() {
     const passed = total >= PASS_THRESHOLD
 
     try {
-      await fetch('/api/phase4/step5/remedial/b2/final-score', {
+      const response = await fetch('/api/phase4/step5/remedial/b2/final-score', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
         body: JSON.stringify({ task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore, task_d_score: taskDScore, task_e_score: taskEScore, task_f_score: taskFScore })
       })
+      const data = await response.json()
+      if (data.success) {
+        sessionStorage.setItem('phase4_step5_b2_next_url', data.data.next_url || (passed ? '/phase4_2/step/1' : '/phase4/step/5/remedial/b2/taskA'))
+      }
     } catch (err) { console.error('Failed to log final score:', err) }
 
     setScores({ taskA: taskAScore, taskB: taskBScore, taskC: taskCScore, taskD: taskDScore, taskE: taskEScore, taskF: taskFScore, total, passed })
@@ -84,7 +88,7 @@ export default function Phase4Step5RemedialB2Results() {
 
   const handleRedirect = () => {
     TASKS.forEach(t => sessionStorage.removeItem(`phase4_step5_remedial_b2_${t.key}_score`))
-    navigate(scores.passed ? '/phase4/complete' : '/phase4/step/5/remedial/b2/taskA')
+    navigate(sessionStorage.getItem('phase4_step5_b2_next_url') || (scores.passed ? '/phase4_2/step/1' : '/phase4/step/5/remedial/b2/taskA'))
   }
 
   if (loading) {
@@ -149,7 +153,7 @@ export default function Phase4Step5RemedialB2Results() {
           </Box>
 
           <Box component="button" onClick={handleRedirect} sx={{ display: 'block', width: '100%', bgcolor: passed ? P.green.bg : P.orange.bg, border: `2px solid ${passed ? P.green.border : P.orange.border}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${passed ? P.green.shadow : P.orange.shadow}`, p: 2, cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold', color: passed ? P.green.shadow : P.orange.shadow, textAlign: 'center', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${passed ? P.green.shadow : P.orange.shadow}` } }}>
-            {passed ? '🏆 Go to Dashboard Now' : '🔄 Restart Now'}
+            {passed ? '🏆 Continue to Phase 4.2' : '🔄 Restart Now'}
           </Box>
 
         </motion.div>

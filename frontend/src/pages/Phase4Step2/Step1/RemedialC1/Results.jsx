@@ -8,6 +8,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ErrorIcon from '@mui/icons-material/Error'
 import HomeIcon from '@mui/icons-material/Home'
 import RefreshIcon from '@mui/icons-material/Refresh'
+import { requestPhase42FinalScore } from '../../shared/routing.js'
 
 /**
  * Phase 4.2 Step 1 - Level C1 Remedial Results
@@ -72,12 +73,11 @@ export default function Phase4_2RemedialC1Results() {
     logRemedialCompletion(averageScore, passed)
   }, [])
 
-  const logRemedialCompletion = async (score, passed) => {
+  const logRemedialCompletion = async (score) => {
     try {
-      await fetch('/api/phase4/remedial/complete', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ phase: '4.2', step: 1, level: 'C1', final_score: score, max_score: 10, passed })
-      })
+      const data = await requestPhase42FinalScore(1, 'c1', { total_score: score })
+      if (data.passed) sessionStorage.setItem('phase4_2_redirect_url', data.next_url)
+      else sessionStorage.removeItem('phase4_2_redirect_url')
     } catch (error) { console.error('Failed to log remedial completion:', error) }
   }
 

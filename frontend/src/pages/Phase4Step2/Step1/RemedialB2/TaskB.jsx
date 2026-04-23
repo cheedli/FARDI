@@ -8,6 +8,7 @@ import CreateIcon from '@mui/icons-material/Create'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { useProgressSave } from '../../../../hooks/useProgressSave'
+import { requestPhase42TaskBScore } from '../../shared/routing.js'
 
 /**
  * Phase 4.2 Step 1 - Remedial B2 - Task B: Writing
@@ -18,7 +19,7 @@ import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 export default function RemedialB2TaskB() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 2, context: 'remedial_b2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 2, context: 'remedial_b2' })
   const [paragraph, setParagraph] = useState('')
   const [sentenceCount, setSentenceCount] = useState(0)
   const [submitted, setSubmitted] = useState(false)
@@ -58,28 +59,25 @@ export default function RemedialB2TaskB() {
   const handleSubmit = async () => {
     setEvaluating(true)
     try {
-      const response = await fetch('/api/phase4/remedial/evaluate-writing', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ phase: '4.2', step: 1, level: 'B2', task: 'B', paragraph, expected_sentences: 8, topic: 'effective social media posts' })
+      const data = await requestPhase42TaskBScore(1, 'B2', {
+        paragraph,
+        expected_sentences: 8,
+        topic: 'effective social media posts',
       })
-      const data = await response.json()
-      if (data.success) {
-        setScore(data.score); setFeedback(data.feedback)
-        sessionStorage.setItem('remedial_phase4_2_step1_b2_taskB_score', data.score)
-        await fetch('/api/phase4/remedial/log', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-          body: JSON.stringify({ phase: '4.2', level: 'B2', task: 'B', step: 1, score: data.score, max_score: 10, completed: true })
-        })
-      } else {
-        const fallbackScore = sentenceCount >= 8 ? 7 : Math.floor((sentenceCount / 8) * 7)
-        setScore(fallbackScore); setFeedback('Good effort! Try to include more details about social media strategies.')
-        sessionStorage.setItem('remedial_phase4_2_step1_b2_taskB_score', fallbackScore)
-      }
+
+      setScore(data.score)
+      setFeedback(data.feedback)
+      sessionStorage.setItem('remedial_phase4_2_step1_b2_taskB_score', data.score)
+
+      await fetch('/api/phase4/remedial/log', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ phase: '4.2', level: 'B2', task: 'B', step: 1, score: data.score, max_score: 10, completed: true })
+      })
     } catch (error) {
       console.error('Evaluation error:', error)
-      const fallbackScore = sentenceCount >= 8 ? 7 : Math.floor((sentenceCount / 8) * 7)
-      setScore(fallbackScore); setFeedback('Good effort! Your paragraph shows understanding of social media concepts.')
-      sessionStorage.setItem('remedial_phase4_2_step1_b2_taskB_score', fallbackScore)
+      alert('Evaluation failed. Please try again.')
+      setEvaluating(false)
+      return
     }
     setSubmitted(true); setEvaluating(false)
   }
@@ -191,7 +189,7 @@ export default function RemedialB2TaskB() {
               }}>{evaluating ? 'Evaluating...' : canSubmit ? 'Submit Paragraph' : `Write ${8 - sentenceCount} More Sentences`}</Box>
             )}
             {submitted && (
-              <Box component="button" onClick={() => navigate('/phase4_2/step1/remedial/b2/taskC')} sx={{
+              <Box component="button" onClick={() => navigate('/phase4_2/step/1/remedial/b2/taskC')} sx={{
                 bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '12px', boxShadow: `3px 3px 0 ${P.blue.shadow}`,
                 px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem', cursor: 'pointer', color: P.blue.shadow,
                 display: 'flex', alignItems: 'center', gap: 1,

@@ -9,7 +9,7 @@ import { motion } from 'framer-motion'
  * Phase 4 Step 4 - Remedial B1 - Results Page
  * Shows final scores and pass/fail status
  * All 6 tasks: A-F = 38 points total
- * Pass threshold: 31/38 (80%)
+ * Pass threshold: 22/38
  */
 
 export default function RemedialB1Results() {
@@ -67,7 +67,7 @@ export default function RemedialB1Results() {
     const taskFScore = parseInt(sessionStorage.getItem('remedial_step4_b1_taskF_score') || '0')
 
     const total = taskAScore + taskBScore + taskCScore + taskDScore + taskEScore + taskFScore
-    const passed = total >= 31
+    const passed = total >= 22
 
     console.log('\n' + '='.repeat(60))
     console.log('PHASE 4 STEP 4 - REMEDIAL B1 - FINAL RESULTS')
@@ -80,7 +80,7 @@ export default function RemedialB1Results() {
     console.log('Task F (Grammar Kahoot):', taskFScore, '/6')
     console.log('-'.repeat(60))
     console.log('TOTAL SCORE:', total, '/38')
-    console.log('PASS THRESHOLD: 31/38 (80%)')
+    console.log('PASS THRESHOLD: 22/38')
     console.log('-'.repeat(60))
     if (passed) {
       console.log('✅ PASSED - Student will proceed to next phase')
@@ -102,7 +102,10 @@ export default function RemedialB1Results() {
         })
       })
       const data = await response.json()
-      if (data.success) console.log('Step 4 B1 Final score logged to backend:', data.data)
+      if (data.success) {
+        console.log('Step 4 B1 Final score logged to backend:', data.data)
+        sessionStorage.setItem('phase4_step4_b1_next_url', data.data.next_url || (passed ? '/phase4/step/5' : '/phase4/step/4/remedial/b1/taskA'))
+      }
     } catch (error) {
       console.error('Failed to log final score:', error)
     }
@@ -118,11 +121,7 @@ export default function RemedialB1Results() {
     sessionStorage.removeItem('remedial_step4_b1_taskE_score')
     sessionStorage.removeItem('remedial_step4_b1_taskF_score')
 
-    if (scores.passed) {
-      navigate('/dashboard')
-    } else {
-      navigate('/phase4/step/4/remedial/b1/taskA')
-    }
+    navigate(sessionStorage.getItem('phase4_step4_b1_next_url') || (scores.passed ? '/phase4/step/5' : '/phase4/step/4/remedial/b1/taskA'))
   }
 
   const handleRedirectNow = () => setCountdown(0)
@@ -178,7 +177,7 @@ export default function RemedialB1Results() {
               </Typography>
               <Typography variant="body1" sx={{ color: scores.passed ? P.green.shadow : P.orange.shadow }}>Total Points</Typography>
               <Typography variant="caption" sx={{ display: 'block', mt: 1, color: scores.passed ? P.green.shadow : P.orange.shadow, opacity: 0.8 }}>
-                Pass Threshold: 31/38 (80%)
+                Pass Threshold: 22/38
               </Typography>
             </Box>
 

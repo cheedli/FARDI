@@ -30,6 +30,7 @@ export default function Phase5Step2RemedialB2Results() {
   const [loading, setLoading] = useState(true)
   const [scores, setScores] = useState({ taskA: 0, taskB: 0, taskC: 0, taskD: 0, total: 0, passed: false })
   const [countdown, setCountdown] = useState(10)
+  const [nextUrl, setNextUrl] = useState('/phase5/subphase/1/step/2/remedial/b2/task/a')
 
   const cardSx = (color) => ({
     bgcolor: color.bg,
@@ -56,13 +57,26 @@ export default function Phase5Step2RemedialB2Results() {
     const taskCScore = parseInt(sessionStorage.getItem('phase5_step2_remedial_b2_taskC_score') || '0')
     const taskDScore = parseInt(sessionStorage.getItem('phase5_step2_remedial_b2_taskD_score') || '0')
     const total = taskAScore + taskBScore + taskCScore + taskDScore
-    const passed = total >= 6
+    const passed = total >= 21
     setScores({ taskA: taskAScore, taskB: taskBScore, taskC: taskCScore, taskD: taskDScore, total, passed })
     setLoading(false)
-    try { await phase5API.logRemedialActivity(2, 'B2', 'final', total, { task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore, task_d_score: taskDScore }) } catch (e) { console.error(e) }
+    try {
+      const result = await phase5API.calculateRemedialScore(2, 'B2', {
+        task_a_score: taskAScore,
+        task_b_score: taskBScore,
+        task_c_score: taskCScore,
+        task_d_score: taskDScore
+      })
+      const backendPassed = result?.data?.passed
+      const backendNextUrl = result?.data?.next_url
+      setScores(prev => ({ ...prev, passed: backendPassed ?? prev.passed }))
+      setNextUrl(backendNextUrl || '/phase5/subphase/1/step/2/remedial/b2/task/a')
+    } catch (e) {
+      console.error(e)
+    }
   }
 
-  const handleRedirect = () => navigate(scores.passed ? '/dashboard' : '/phase5/step2/remedial-b2/task-a')
+  const handleRedirect = () => navigate(nextUrl)
 
   if (loading) return <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Typography>Loading results...</Typography></Box>
 
@@ -82,8 +96,8 @@ export default function Phase5Step2RemedialB2Results() {
             <Typography variant="h4" fontWeight="bold" sx={{ color: scores.passed ? P.green.border : P.orange.border }} gutterBottom>
               {scores.passed ? 'Congratulations! You Passed!' : 'Keep Practicing!'}
             </Typography>
-            <Typography variant="h5" sx={{ mt: 2 }} color="text.secondary">Total Score: {scores.total} / 8</Typography>
-            <Typography variant="body1" sx={{ mt: 1 }} color="text.secondary">Pass Threshold: 6/8 (75%)</Typography>
+            <Typography variant="h5" sx={{ mt: 2 }} color="text.secondary">Total Score: {scores.total} / 26</Typography>
+            <Typography variant="body1" sx={{ mt: 1 }} color="text.secondary">Pass Threshold: 21/26</Typography>
           </Box>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
@@ -107,11 +121,11 @@ export default function Phase5Step2RemedialB2Results() {
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <Box sx={{ ...cardSx(scores.passed ? P.green : P.yellow), mb: 3 }}>
             <Typography variant="body1" sx={{ color: scores.passed ? P.green.border : P.yellow.border }}>
-              {scores.passed ? 'You will proceed to the dashboard. Great work!' : `Redirecting to repeat B2 remedial in ${countdown} seconds...`}
+              {scores.passed ? 'You will proceed to the next step. Great work!' : `Redirecting to repeat B2 remedial in ${countdown} seconds...`}
             </Typography>
           </Box>
           <Box component="button" onClick={handleRedirect} sx={{ width: '100%', bgcolor: scores.passed ? P.green.bg : P.orange.bg, border: `2px solid ${scores.passed ? P.green.border : P.orange.border}`, borderRadius: '14px', boxShadow: `4px 4px 0 ${scores.passed ? P.green.shadow : P.orange.shadow}`, py: 1.5, cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem', color: scores.passed ? P.green.border : P.orange.border, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${scores.passed ? P.green.shadow : P.orange.shadow}` }, transition: 'all 0.15s ease' }}>
-            {scores.passed ? 'Continue to Dashboard' : 'Retry B2 Remedial'}
+            {scores.passed ? 'Continue to Next Step' : 'Retry B2 Remedial'}
           </Box>
         </motion.div>
       </Container>

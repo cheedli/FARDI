@@ -47,7 +47,7 @@ export default function Phase4_2Step2RemedialC1TaskD() {
   }
   const P = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 4, context: 'remedial_c1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 2, interaction: 4, context: 'remedial_c1' })
   const [critiques, setCritiques] = useState({})
   const [showResults, setShowResults] = useState(false)
 

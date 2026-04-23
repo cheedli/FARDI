@@ -6,6 +6,8 @@ import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import SchoolIcon from '@mui/icons-material/School'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { getSubphase1MainRouting } from '../Phase6SubPhase1/shared/routing.js'
+import { usePhase6ScoreResume } from '../Phase6/shared/useScoreResumeSave.js'
 
 const LIGHT = {
   pageBg: '#FFFDE7',
@@ -22,14 +24,6 @@ const DARK = {
   orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
 }
 
-const determineRemedialLevel = (i2Score) => {
-  if (i2Score <= 1) return 'A1'
-  if (i2Score <= 2) return 'A2'
-  if (i2Score <= 3) return 'B1'
-  if (i2Score <= 4) return 'B2'
-  return 'C1'
-}
-
 export default function Phase6SP1Step2ScoreCalculation() {
   const navigate = useNavigate()
   const theme = useTheme()
@@ -37,6 +31,8 @@ export default function Phase6SP1Step2ScoreCalculation() {
   const [loading, setLoading] = useState(true)
   const [scores, setScores] = useState({ interaction1: 0, interaction2: 0, interaction3: 0, total: 0 })
   const [routing, setRouting] = useState(null)
+
+  usePhase6ScoreResume({ subphase: 1, step: 2, scores, routing })
 
   useEffect(() => { calculateScore() }, [])
 
@@ -48,24 +44,26 @@ export default function Phase6SP1Step2ScoreCalculation() {
     setScores({ interaction1: interaction1Score, interaction2: interaction2Score, interaction3: interaction3Score, total: totalScore })
 
     try {
+      const fallbackRouting = getSubphase1MainRouting(2, interaction2Score)
       const result = await phase6API.calculateStepScore(2, {
         interaction1_score: interaction1Score, interaction2_score: interaction2Score, interaction3_score: interaction3Score
       }, 1)
       if (result && result.data) {
         const data = result.data
-        const remedialLevel = data.total?.remedial_level || data.interaction2?.level || determineRemedialLevel(interaction2Score)
-        const shouldProceed = data.total?.should_proceed ?? (interaction2Score >= 3)
-        setRouting({ remedialLevel, totalScore: data.total_score || totalScore, shouldProceed })
-        sessionStorage.setItem('phase6_sp1_step2_total_score', (data.total_score || totalScore).toString())
+        const remedialLevel = data.total?.remedial_level || data.interaction2?.level || fallbackRouting.remedialLevel
+        const shouldProceed = data.total?.should_proceed ?? fallbackRouting.shouldProceed
+        const nextUrl = data.total?.next_url || data.next_url || fallbackRouting.nextUrl
+        const resolvedTotalScore = data.total?.score ?? data.total_score ?? totalScore
+        setRouting({ remedialLevel, totalScore: resolvedTotalScore, shouldProceed, nextUrl })
+        sessionStorage.setItem('phase6_sp1_step2_total_score', resolvedTotalScore.toString())
         sessionStorage.setItem('phase6_sp1_step2_remedial_level', remedialLevel)
       } else throw new Error('No data')
     } catch (error) {
       console.error('Score calculation error:', error)
-      const remedialLevel = determineRemedialLevel(interaction2Score)
-      const shouldProceed = interaction2Score >= 3
-      setRouting({ remedialLevel, totalScore, shouldProceed })
+      const fallbackRouting = getSubphase1MainRouting(2, interaction2Score)
+      setRouting({ ...fallbackRouting, totalScore })
       sessionStorage.setItem('phase6_sp1_step2_total_score', totalScore.toString())
-      sessionStorage.setItem('phase6_sp1_step2_remedial_level', remedialLevel)
+      sessionStorage.setItem('phase6_sp1_step2_remedial_level', fallbackRouting.remedialLevel)
     } finally {
       setLoading(false)
     }
@@ -73,8 +71,7 @@ export default function Phase6SP1Step2ScoreCalculation() {
 
   const handleContinue = () => {
     if (!routing) return
-    if (routing.shouldProceed) navigate('/phase6/subphase/1/step/3')
-    else navigate(`/phase6/subphase/1/step/2/remedial/${routing.remedialLevel.toLowerCase()}/task/a`)
+    navigate(routing.nextUrl)
   }
 
   const cardSx = (color) => ({
@@ -96,7 +93,7 @@ export default function Phase6SP1Step2ScoreCalculation() {
     )
   }
 
-  const scorePercent = (scores.total / 6) * 100
+  const scorePercent = (scores.total / 7) * 100
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
@@ -122,7 +119,7 @@ export default function Phase6SP1Step2ScoreCalculation() {
             <Stack spacing={2} sx={{ mt: 2 }}>
               {[
                 { label: 'Interaction 1 (Sushi Spell)', score: scores.interaction1, max: 1 },
-                { label: 'Interaction 2 (Writing Choice Explanation)', score: scores.interaction2, max: 4 },
+                { label: 'Interaction 2 (Writing Choice Explanation)', score: scores.interaction2, max: 5 },
                 { label: 'Interaction 3 (Sushi Spell)', score: scores.interaction3, max: 1 }
               ].map((item, idx) => (
                 <Box key={idx} sx={{ ...cardSx(P.blue), p: 2 }}>
@@ -139,7 +136,7 @@ export default function Phase6SP1Step2ScoreCalculation() {
 
               <Box sx={{ ...cardSx(P.green), p: 2, border: `3px solid ${P.green.border}` }}>
                 <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ color: P.green.border }}>
-                  Total Score: {scores.total} / 6 points
+                  Total Score: {scores.total} / 7 points
                 </Typography>
                 <LinearProgress
                   variant="determinate"
@@ -169,12 +166,14 @@ export default function Phase6SP1Step2ScoreCalculation() {
               </Box>
 
               <Typography variant="body1" sx={{ mb: 2 }}>
-                You scored <strong>{scores.total} / 6 points</strong> in the Explore phase. You'll now complete tailored remedial activities at <strong>{routing.remedialLevel}</strong> level to strengthen your report writing skills.
+                {routing.shouldProceed
+                  ? <>You scored <strong>{scores.total} / 7 points</strong> in the Explore phase and can continue directly to Step 3.</>
+                  : <>You scored <strong>{scores.total} / 7 points</strong> in the Explore phase. You'll now complete tailored remedial activities at <strong>{routing.remedialLevel}</strong> level to strengthen your report writing skills.</>}
               </Typography>
 
               <Box sx={{ ...cardSx(P.blue), p: 2, mb: 3 }}>
                 <Typography variant="body2">
-                  <strong>Next Steps:</strong> Complete the remedial activities designed for your {routing.remedialLevel} level. These activities will help you write a better post-event report.
+                  <strong>Next Steps:</strong> {routing.shouldProceed ? 'Continue to Step 3.' : `Complete the remedial activities designed for your ${routing.remedialLevel} level. These activities will help you write a better post-event report.`}
                 </Typography>
               </Box>
 

@@ -24,16 +24,19 @@ def save_phase3_progress(user_id, step, interaction=None, context='main', score=
     """Save progress and optionally a response for Phase 3."""
     conn = get_db_connection()
     try:
-        # Upsert resume pointer
-        conn.execute(
-            """INSERT INTO student_progress (user_id, phase, step, interaction, context, is_complete)
-               VALUES (?, 3, ?, ?, ?, 0)
-               ON CONFLICT(user_id, phase) DO UPDATE SET
-                   step = excluded.step,
-                   interaction = excluded.interaction,
-                   context = excluded.context""",
-            (user_id, step, interaction or 0, context)
-        )
+        # Only update the resume pointer when we have a real Phase 3 location.
+        # Some analytics/logging calls intentionally do not carry a step and should
+        # not clobber a valid in-progress exercise with step 0.
+        if step and step > 0:
+            conn.execute(
+                """INSERT INTO student_progress (user_id, phase, step, interaction, context, is_complete)
+                   VALUES (?, 3, ?, ?, ?, 0)
+                   ON CONFLICT(user_id, phase) DO UPDATE SET
+                       step = excluded.step,
+                       interaction = excluded.interaction,
+                       context = excluded.context""",
+                (user_id, step, interaction or 0, context)
+            )
         # Insert response if answer provided
         if answer is not None:
             is_correct_int = None
@@ -105,7 +108,7 @@ async def calculate_step_score(step_id: int, request: Request, user: dict = Depe
     Calculate Phase 3 step score and determine remedial routing.
     Steps 1-3: I1 (vocab game, 0-8), I2 (game, 0-8), I3 (sentence CEFR, 1-5)
     Step 4: I1 (budget, 1-5), I2 (pitch CEFR, 1-5)
-    The CEFR score (I3 for steps 1-3, I2 for step 4) drives remedial level.
+    Routing is based on total score thresholds per step.
     """
     try:
         user_id = user["user_id"]
@@ -117,25 +120,58 @@ async def calculate_step_score(step_id: int, request: Request, user: dict = Depe
 
         total_score = interaction1_score + interaction2_score + interaction3_score
 
-        # CEFR assessment score determines remedial level
-        # Steps 1-3: I3 is the sentence production (1-5 CEFR)
-        # Step 4: I2 is the pitch (1-5 CEFR)
-        cefr_score = interaction3_score if step_id <= 3 else interaction2_score
-
         level_map = {1: 'A1', 2: 'A2', 3: 'B1', 4: 'B2', 5: 'C1'}
-        remedial_level = level_map.get(cefr_score, 'A1')
-        should_proceed = cefr_score >= 3
-
-        # Determine next URL
-        next_step_map = {1: 2, 2: 3, 3: 4, 4: None}
-        next_step = next_step_map.get(step_id)
-
-        if should_proceed and next_step:
-            next_url = f"/app/phase3/step/{next_step}"
-        elif should_proceed and not next_step:
-            next_url = "/app/phase4/step/1"
+        if step_id == 1:
+            if total_score < 12:
+                remedial_level = 'A1'
+            elif total_score < 18:
+                remedial_level = 'A2'
+            elif total_score < 22:
+                remedial_level = 'B1'
+            elif total_score < 26:
+                remedial_level = 'B2'
+            else:
+                remedial_level = 'C1'
+            i1_max, i2_max, i3_max, total_max = 8, 8, 5, 21
+        elif step_id == 2:
+            if total_score < 8:
+                remedial_level = 'A1'
+            elif total_score < 13:
+                remedial_level = 'A2'
+            elif total_score < 18:
+                remedial_level = 'B1'
+            elif total_score < 21:
+                remedial_level = 'B2'
+            else:
+                remedial_level = 'C1'
+            i1_max, i2_max, i3_max, total_max = 10, 8, 5, 23
+        elif step_id == 3:
+            if total_score < 6:
+                remedial_level = 'A1'
+            elif total_score < 11:
+                remedial_level = 'A2'
+            elif total_score < 14:
+                remedial_level = 'B1'
+            elif total_score < 17:
+                remedial_level = 'B2'
+            else:
+                remedial_level = 'C1'
+            i1_max, i2_max, i3_max, total_max = 8, 5, 5, 18
         else:
-            next_url = f"/app/phase3/step/{step_id}/remedial/{remedial_level.lower()}/task/a"
+            if total_score < 2:
+                remedial_level = 'A1'
+            elif total_score < 4:
+                remedial_level = 'A2'
+            elif total_score < 6:
+                remedial_level = 'B1'
+            elif total_score < 8:
+                remedial_level = 'B2'
+            else:
+                remedial_level = 'C1'
+            i1_max, i2_max, i3_max, total_max = 5, 5, 0, 10
+
+        should_proceed = False
+        next_url = f"/app/phase3/step/{step_id}/remedial/{remedial_level.lower()}/taskA"
 
         # TERMINAL OUTPUT
         print("\n" + "="*60)
@@ -143,32 +179,26 @@ async def calculate_step_score(step_id: int, request: Request, user: dict = Depe
         print("="*60)
         print(f"User ID: {user_id}")
         print(f"I1={interaction1_score}, I2={interaction2_score}, I3={interaction3_score}")
-        print(f"Total: {total_score}, CEFR Score: {cefr_score}, Level: {remedial_level}")
-        print(f"PROCEED: {'YES' if should_proceed else 'NO - Remedial Required'}")
+        print(f"Total: {total_score}/{total_max}, Level: {remedial_level}")
+        print(f"ROUTING TO: Remedial {remedial_level}")
         print("="*60 + "\n")
 
-        logger.info(f"Phase 3 Step {step_id} - User {user_id}: I1={interaction1_score}, I2={interaction2_score}, I3={interaction3_score}, Total={total_score}, Level={remedial_level}, Proceed={should_proceed}")
+        logger.info(f"Phase 3 Step {step_id} - User {user_id}: I1={interaction1_score}, I2={interaction2_score}, I3={interaction3_score}, Total={total_score}, Level={remedial_level}, Next={next_url}")
 
         # Save to DB
         save_phase3_progress(
-            user_id, step=step_id, interaction=None, context='main',
+            user_id, step=step_id, interaction=0, context='score',
             score=total_score, item_id=f'step{step_id}_score', item_type='score',
             prompt=f'Phase 3 Step {step_id} Score', answer=json.dumps({'i1': interaction1_score, 'i2': interaction2_score, 'i3': interaction3_score}),
             is_correct=should_proceed
         )
 
-        # Max scores depend on step
-        if step_id <= 3:
-            i1_max, i2_max, i3_max, total_max = 8, 8, 5, 21
-        else:
-            i1_max, i2_max, i3_max, total_max = 5, 5, 0, 10
-
         return {
             'success': True,
             'data': {
                 'interaction1': {'score': interaction1_score, 'max_score': i1_max},
-                'interaction2': {'score': interaction2_score, 'max_score': i2_max, 'level': level_map.get(interaction2_score, 'A1') if step_id > 3 else None},
-                'interaction3': {'score': interaction3_score, 'max_score': i3_max, 'level': level_map.get(interaction3_score, 'A1') if step_id <= 3 else None},
+                'interaction2': {'score': interaction2_score, 'max_score': i2_max, 'level': level_map.get(interaction2_score) if step_id > 3 else None},
+                'interaction3': {'score': interaction3_score, 'max_score': i3_max, 'level': level_map.get(interaction3_score) if step_id <= 3 else None},
                 'total': {
                     'score': total_score,
                     'max_score': total_max,

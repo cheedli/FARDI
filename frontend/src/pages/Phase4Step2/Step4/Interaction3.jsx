@@ -13,6 +13,7 @@ import { useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import SushiSpellGame from '../../../components/SushiSpellGame.jsx'
+import { requestPhase42StepScore } from '../shared/routing.js'
 
 // Target words for Phase 4.2 - Social Media vocabulary
 const TARGET_WORDS = [
@@ -140,6 +141,7 @@ function Phase4_2Step4Interaction3() {
         setFeedback(data.feedback)
         setSubmitted(true)
 
+        sessionStorage.setItem('phase4_2_step4_int3_score', data.score.toString())
         const currentScore = parseInt(sessionStorage.getItem('phase4_2_step4_score') || '0')
         const totalScore = currentScore + data.score
         sessionStorage.setItem('phase4_2_step4_score', totalScore.toString())
@@ -168,24 +170,25 @@ function Phase4_2Step4Interaction3() {
     }
   }
 
-  const handleFinish = () => {
-    const totalScore = parseInt(sessionStorage.getItem('phase4_2_step4_score') || '0')
-    const totalMax = 15
-    const percentage = (totalScore / totalMax) * 100
+  const handleFinish = async () => {
+    const int1Score = parseInt(sessionStorage.getItem('phase4_2_step4_int1_score') || '0')
+    const int2Score = parseInt(sessionStorage.getItem('phase4_2_step4_int2_score') || '0')
+    const int3Score = parseInt(sessionStorage.getItem('phase4_2_step4_int3_score') || '0')
 
-    sessionStorage.setItem('phase4_2_step4_total_score', totalScore.toString())
-    sessionStorage.setItem('phase4_2_step4_total_max', totalMax.toString())
-    sessionStorage.setItem('phase4_2_step4_percentage', percentage.toFixed(2))
-
-    console.log(`[Phase 4.2 Step 4 - TOTAL] Score: ${totalScore}/${totalMax} (${percentage.toFixed(1)}%)`)
-
-    if (percentage >= 80) {
-      console.log('[Phase 4.2 Step 4] ≥80% → Proceeding to Step 5')
-      navigate('/app/phase4_2/step/5/interaction/1')
-    } else {
-      console.log('[Phase 4.2 Step 4] <80% → Need to retry')
-      alert(`Your score was ${percentage.toFixed(1)}%. You need 80% or higher to proceed to Step 5. Please review the material and try again.`)
-      navigate('/app/phase4_2/step/4/interaction/1')
+    try {
+      const data = await requestPhase42StepScore(4, {
+        interaction1_score: int1Score,
+        interaction2_score: int2Score,
+        interaction3_score: int3Score,
+      })
+      sessionStorage.setItem('phase4_2_step4_total_score', data.total.score.toString())
+      sessionStorage.setItem('phase4_2_step4_total_max', data.total.max_score.toString())
+      sessionStorage.setItem('phase4_2_step4_next_url', data.total.next_url)
+      sessionStorage.setItem('phase4_2_step4_remedial_level', data.total.remedial_level)
+      navigate(data.total.next_url)
+    } catch (error) {
+      console.error('Failed to calculate Phase 4.2 Step 4 routing:', error)
+      alert('Unable to calculate the next route right now. Please try again.')
     }
   }
 

@@ -16,6 +16,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import InfoIcon from '@mui/icons-material/Info'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import { useProgressSave } from '../../../hooks/useProgressSave'
+import { requestPhase42StepScore } from '../shared/routing.js'
 
 /**
  * Phase 4.2 Step 2 - Interaction 3: Revise & Improve
@@ -50,7 +51,7 @@ export default function Phase4_2Step2Interaction3() {
   }
   const P = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 3, context: 'main' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 2, interaction: 3, context: 'main' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
   const [revision, setRevision] = useState('')
@@ -169,28 +170,24 @@ export default function Phase4_2Step2Interaction3() {
     }
   }
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const int1Score = parseInt(sessionStorage.getItem('phase4_2_step2_int1_score') || '0')
     const int2Score = parseInt(sessionStorage.getItem('phase4_2_step2_int2_score') || '0')
     const int3Score = parseInt(sessionStorage.getItem('phase4_2_step2_int3_score') || '0')
-
-    const totalScore = int1Score + int2Score + int3Score
-    const totalMax = 15
-    const percentage = (totalScore / totalMax) * 100
-
-    sessionStorage.setItem('phase4_2_step2_total_score', totalScore.toString())
-    sessionStorage.setItem('phase4_2_step2_total_max', totalMax.toString())
-    sessionStorage.setItem('phase4_2_step2_percentage', percentage.toFixed(2))
-
-    console.log(`[Phase 4.2 Step 2 - TOTAL] Score: ${totalScore}/${totalMax} (${percentage.toFixed(1)}%)`)
-
-    if (percentage >= 80) {
-      console.log('[Phase 4.2 Step 2] ≥80% → Proceeding to Step 3')
-      navigate('/app/phase4_2/step/3/interaction/1')
-    } else {
-      console.log('[Phase 4.2 Step 2] <80% → Need to retry')
-      alert(`Your score was ${percentage.toFixed(1)}%. You need 80% or higher to proceed to Step 3. Please review the material and try again.`)
-      navigate('/app/phase4_2/step/2/interaction/1')
+    try {
+      const data = await requestPhase42StepScore(2, {
+        interaction1_score: int1Score,
+        interaction2_score: int2Score,
+        interaction3_score: int3Score,
+      })
+      sessionStorage.setItem('phase4_2_step2_total_score', data.total.score.toString())
+      sessionStorage.setItem('phase4_2_step2_total_max', data.total.max_score.toString())
+      sessionStorage.setItem('phase4_2_step2_next_url', data.total.next_url)
+      sessionStorage.setItem('phase4_2_step2_remedial_level', data.total.remedial_level)
+      navigate(data.total.next_url)
+    } catch (error) {
+      console.error('Failed to calculate Phase 4.2 Step 2 routing:', error)
+      alert('Unable to calculate the next route right now. Please try again.')
     }
   }
 

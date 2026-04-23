@@ -27,7 +27,7 @@ const FLASHCARDS = [
 
 export default function Phase4_2Step3RemedialB1TaskD() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 4, context: 'remedial_b1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 3, interaction: 4, context: 'remedial_b1' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [viewed, setViewed] = useState(new Set())

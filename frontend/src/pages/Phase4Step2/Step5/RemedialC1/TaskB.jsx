@@ -5,10 +5,11 @@ import { useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import { CharacterMessage } from '../../../../components/Avatar.jsx';
 import { useProgressSave } from '../../../../hooks/useProgressSave'
+import { requestPhase42TaskBScore } from '../../shared/routing.js'
 
 const TaskB = () => {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 2, context: 'remedial_c1' });
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 5, interaction: 2, context: 'remedial_c1' });
 
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
@@ -47,54 +48,28 @@ This initiative aims at promote intercultural understanding between communities
 We anticipate that festival will receive positive response from public
 Booking is necessary and available through our website immediately`;
 
-  const keyImprovements = [
-    'the festival',
-    'occurring',
-    'offers',
-    'a unique',
-    'will be exposed',
-    'to global',
-    'showcases',
-    'from around the world',
-    'encourage',
-    'to share',
-    'their experience',
-    'should be posted',
-    'aims to promote',
-    'the festival',
-    'a positive',
-    'from the public',
-    'furthermore',
-    'moreover',
-    'additionally'
-  ];
+  const handleSubmit = async () => {
+    try {
+      const data = await requestPhase42TaskBScore(5, 'C1', {
+        text: rewrittenPost,
+        faulty_post: faultyPost,
+        criteria: 'rewrite the advanced faulty post with sophisticated grammar, discourse markers, and professional register',
+      })
 
-  const evaluateRewrite = (userPost) => {
-    const lowerPost = userPost.toLowerCase().trim();
-
-    if (lowerPost.length < 150) return 3; // Too short for C1
-
-    let matches = 0;
-    keyImprovements.forEach(improvement => {
-      if (lowerPost.includes(improvement.toLowerCase())) {
-        matches++;
-      }
-    });
-
-    // C1 level scoring - higher standards
-    if (matches >= 14) return 12;
-    if (matches >= 12) return 10;
-    if (matches >= 10) return 8;
-    if (matches >= 7) return 6;
-    if (matches >= 5) return 4;
-    return 2;
-  };
-
-  const handleSubmit = () => {
-    const calculatedScore = evaluateRewrite(rewrittenPost);
-    setScore(calculatedScore);
-    setSubmitted(true);
-    sessionStorage.setItem('phase4_2_step5_remedialC1_taskB', calculatedScore.toString());
+      setScore(data.score)
+      setSubmitted(true)
+      sessionStorage.setItem('phase4_2_step5_remedialC1_taskB', data.score.toString())
+      saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: rewrittenPost, is_correct: true, score: data.score })
+      await fetch('/api/phase4/remedial/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ phase: '4.2', step: 5, level: 'C1', task: 'B', score: data.score, max_score: 12, content: rewrittenPost })
+      })
+    } catch (error) {
+      console.error('Evaluation error:', error)
+      alert('Evaluation failed. Please try again.')
+    }
   };
 
   const handleNext = () => {

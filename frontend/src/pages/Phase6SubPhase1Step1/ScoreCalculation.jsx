@@ -12,6 +12,8 @@ import { useTheme } from '@mui/material/styles'
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { getSubphase1MainRouting } from '../Phase6SubPhase1/shared/routing.js'
+import { usePhase6ScoreResume } from '../Phase6/shared/useScoreResumeSave.js'
 
 /**
  * Phase 6 SubPhase 1 Step 1: Score Calculation and Remedial Routing
@@ -49,21 +51,11 @@ export default function Phase6SP1Step1ScoreCalculation() {
   })
   const [routing, setRouting] = useState(null)
 
+  usePhase6ScoreResume({ subphase: 1, step: 1, scores, routing })
+
   useEffect(() => {
     calculateScore()
   }, [])
-
-  /**
-   * Determine remedial level based on interaction2_score (writing task).
-   * 1 → A2, 2 → B1, 3 → B2, 4 → C1
-   */
-  const determineRemedialLevel = (i2Score) => {
-    if (i2Score <= 1) return 'A1'
-    if (i2Score <= 2) return 'A2'
-    if (i2Score <= 3) return 'B1'
-    if (i2Score <= 4) return 'B2'
-    return 'C1'
-  }
 
   const calculateScore = async () => {
     setCalculating(true)
@@ -71,7 +63,7 @@ export default function Phase6SP1Step1ScoreCalculation() {
     try {
       // Read scores from sessionStorage
       const interaction1Score = parseInt(sessionStorage.getItem('phase6_sp1_step1_interaction1_score') || '0')
-      const interaction2Score = parseInt(sessionStorage.getItem('phase6_sp1_step1_interaction2_score') || '1')
+      const interaction2Score = parseInt(sessionStorage.getItem('phase6_sp1_step1_interaction2_score') || '2')
       const interaction3Score = parseInt(sessionStorage.getItem('phase6_sp1_step1_interaction3_score') || '0')
       const totalScore = interaction1Score + interaction2Score + interaction3Score
 
@@ -83,8 +75,11 @@ export default function Phase6SP1Step1ScoreCalculation() {
       })
 
       // Send to backend for calculation
-      let remedialLevel = determineRemedialLevel(interaction2Score)
-      let shouldProceed = interaction2Score >= 3
+      const fallbackRouting = getSubphase1MainRouting(1, interaction2Score)
+      let remedialLevel = fallbackRouting.remedialLevel
+      let shouldProceed = fallbackRouting.shouldProceed
+      let nextUrl = fallbackRouting.nextUrl
+      let resolvedTotalScore = totalScore
 
       try {
         const result = await phase6API.calculateStepScore(1, {
@@ -95,29 +90,29 @@ export default function Phase6SP1Step1ScoreCalculation() {
 
         if (result && result.data) {
           const data = result.data
-          remedialLevel = data.total?.remedial_level || data.interaction2?.level || determineRemedialLevel(interaction2Score)
-          shouldProceed = data.total?.should_proceed ?? (interaction2Score >= 3)
-        } else if (result && result.remedial_level) {
-          remedialLevel = result.remedial_level
+          remedialLevel = data.total?.remedial_level || data.interaction2?.level || fallbackRouting.remedialLevel
+          shouldProceed = data.total?.should_proceed ?? fallbackRouting.shouldProceed
+          nextUrl = data.total?.next_url || data.next_url || fallbackRouting.nextUrl
+          resolvedTotalScore = data.total?.score ?? data.total_score ?? totalScore
         }
       } catch (apiError) {
         console.warn('Backend score calculation failed, using local routing:', apiError)
       }
 
       // Store in sessionStorage
-      sessionStorage.setItem('phase6_sp1_step1_total_score', totalScore.toString())
+      sessionStorage.setItem('phase6_sp1_step1_total_score', resolvedTotalScore.toString())
       sessionStorage.setItem('phase6_sp1_step1_remedial_level', remedialLevel)
 
-      setRouting({ remedialLevel, totalScore, shouldProceed })
+      setRouting({ remedialLevel, totalScore: resolvedTotalScore, shouldProceed, nextUrl })
 
       console.log('\n' + '='.repeat(60))
       console.log('PHASE 6 SP1 STEP 1 - SCORE SUMMARY')
       console.log('='.repeat(60))
       console.log('Interaction 1 (Wordshake):', interaction1Score, '/1')
-      console.log('Interaction 2 (Festival Reflection):', interaction2Score, '/4')
+      console.log('Interaction 2 (Festival Reflection):', interaction2Score, '/5')
       console.log('Interaction 3 (Sushi Spell):', interaction3Score, '/1')
       console.log('-'.repeat(60))
-      console.log('TOTAL SCORE:', totalScore, '/6')
+      console.log('TOTAL SCORE:', resolvedTotalScore, '/7')
       console.log('Assigned Level:', remedialLevel)
       console.log('='.repeat(60) + '\n')
 
@@ -125,10 +120,10 @@ export default function Phase6SP1Step1ScoreCalculation() {
       console.error('Error calculating score:', error)
       // Fallback
       const interaction1Score = parseInt(sessionStorage.getItem('phase6_sp1_step1_interaction1_score') || '0')
-      const interaction2Score = parseInt(sessionStorage.getItem('phase6_sp1_step1_interaction2_score') || '1')
+      const interaction2Score = parseInt(sessionStorage.getItem('phase6_sp1_step1_interaction2_score') || '2')
       const interaction3Score = parseInt(sessionStorage.getItem('phase6_sp1_step1_interaction3_score') || '0')
       const totalScore = interaction1Score + interaction2Score + interaction3Score
-      const remedialLevel = determineRemedialLevel(interaction2Score)
+      const fallbackRouting = getSubphase1MainRouting(1, interaction2Score)
 
       setScores({
         interaction1: interaction1Score,
@@ -137,10 +132,9 @@ export default function Phase6SP1Step1ScoreCalculation() {
         total: totalScore
       })
 
-      const shouldProceed = interaction2Score >= 3
-      setRouting({ remedialLevel, totalScore, shouldProceed })
+      setRouting({ ...fallbackRouting, totalScore })
       sessionStorage.setItem('phase6_sp1_step1_total_score', totalScore.toString())
-      sessionStorage.setItem('phase6_sp1_step1_remedial_level', remedialLevel)
+      sessionStorage.setItem('phase6_sp1_step1_remedial_level', fallbackRouting.remedialLevel)
     } finally {
       setCalculating(false)
       setLoading(false)
@@ -149,12 +143,7 @@ export default function Phase6SP1Step1ScoreCalculation() {
 
   const handleContinue = () => {
     if (!routing) return
-    if (routing.shouldProceed) {
-      navigate('/phase6/subphase/1/step/2')
-    } else {
-      const levelLower = routing.remedialLevel.toLowerCase()
-      navigate(`/phase6/subphase/1/step/1/remedial/${levelLower}/task/a`)
-    }
+    navigate(routing.nextUrl)
   }
 
   if (loading || calculating) {
@@ -210,7 +199,7 @@ export default function Phase6SP1Step1ScoreCalculation() {
             <Stack spacing={2} sx={{ mt: 2 }}>
               {[
                 { label: 'Interaction 1 (Wordshake)', score: scores.interaction1, max: 1 },
-                { label: 'Interaction 2 (Festival Reflection)', score: scores.interaction2, max: 4 },
+                { label: 'Interaction 2 (Festival Reflection)', score: scores.interaction2, max: 5 },
                 { label: 'Interaction 3 (Sushi Spell)', score: scores.interaction3, max: 1 },
               ].map((item, idx) => (
                 <Box key={idx} sx={{
@@ -240,11 +229,11 @@ export default function Phase6SP1Step1ScoreCalculation() {
                 p: 2
               }}>
                 <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ color: P.green.shadow }}>
-                  Total Score: {scores.total} / 6 points
+                  Total Score: {scores.total} / 7 points
                 </Typography>
                 <LinearProgress
                   variant="determinate"
-                  value={(scores.total / 6) * 100}
+                  value={(scores.total / 7) * 100}
                   sx={{
                     mt: 1,
                     height: 12,
@@ -272,7 +261,7 @@ export default function Phase6SP1Step1ScoreCalculation() {
                 <CheckCircleIcon sx={{ fontSize: 50, color: P.teal.border, mr: 2 }} />
                 <Box>
                   <Typography variant="h5" sx={{ color: P.teal.shadow }}>
-                    Practice Activities Ready
+                    {routing.shouldProceed ? 'Ready for Step 2' : 'Practice Activities Ready'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Assigned Level: <strong>{routing.remedialLevel}</strong>
@@ -281,9 +270,9 @@ export default function Phase6SP1Step1ScoreCalculation() {
               </Box>
 
               <Typography variant="body1" sx={{ mb: 2 }}>
-                Based on your reflection writing (Interaction 2), you have been assigned to{' '}
-                <strong>{routing.remedialLevel}</strong> level remedial activities. These exercises will
-                strengthen your post-event report writing skills before moving to Step 2.
+                {routing.shouldProceed
+                  ? <>Your Step 1 performance places you at <strong>{routing.remedialLevel}</strong> level, so you can continue directly to Step 2.</>
+                  : <>Based on your reflection writing (Interaction 2), you have been assigned to <strong>{routing.remedialLevel}</strong> level remedial activities. These exercises will strengthen your post-event report writing skills before moving to Step 2.</>}
               </Typography>
 
               <Box sx={{
@@ -295,9 +284,10 @@ export default function Phase6SP1Step1ScoreCalculation() {
                 mb: 3
               }}>
                 <Typography variant="body2" sx={{ color: P.blue.shadow }}>
-                  <strong>Next Steps:</strong> You will complete remedial activities designed for{' '}
-                  {routing.remedialLevel} level. These activities will help you practise reflection and
-                  evaluation language for writing post-event reports.
+                  <strong>Next Steps:</strong>{' '}
+                  {routing.shouldProceed
+                    ? 'Continue to the next step and keep building your report.'
+                    : `You will complete remedial activities designed for ${routing.remedialLevel} level. These activities will help you practise reflection and evaluation language for writing post-event reports.`}
                 </Typography>
               </Box>
 

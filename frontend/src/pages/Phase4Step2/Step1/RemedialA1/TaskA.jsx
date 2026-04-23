@@ -26,7 +26,7 @@ const WORD_IMAGE_PAIRS = [
 
 export default function Phase4_2RemedialA1TaskA() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 1, context: 'remedial_a1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 1, context: 'remedial_a1' })
   const [matches, setMatches] = useState({})
   const [selectedWord, setSelectedWord] = useState(null)
   const [selectedImage, setSelectedImage] = useState(null)

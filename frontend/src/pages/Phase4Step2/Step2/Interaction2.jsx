@@ -47,7 +47,7 @@ export default function Phase4_2Step2Interaction2() {
   }
   const P = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 2, context: 'main' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 2, interaction: 2, context: 'main' })
   const [explanation, setExplanation] = useState('')
   const [originalCaption, setOriginalCaption] = useState('')
   const [evaluation, setEvaluation] = useState(null)

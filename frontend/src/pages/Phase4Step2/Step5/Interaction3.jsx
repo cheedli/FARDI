@@ -4,6 +4,7 @@ import { Container, Typography, TextField, Box, CircularProgress, Divider, Link 
 import { useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { requestPhase42StepScore } from '../shared/routing.js'
 
 function Phase4_2Step5Interaction3() {
   const navigate = useNavigate()
@@ -80,6 +81,7 @@ function Phase4_2Step5Interaction3() {
         setSubmitted(true)
 
         sessionStorage.setItem('phase4_2_step5_final_post', enhancedPost)
+        sessionStorage.setItem('phase4_2_step5_int3_score', data.score.toString())
         const currentScore = parseInt(sessionStorage.getItem('phase4_2_step5_score') || '0')
         const finalTotalScore = currentScore + data.score
         sessionStorage.setItem('phase4_2_step5_score', finalTotalScore.toString())
@@ -116,41 +118,25 @@ function Phase4_2Step5Interaction3() {
     }
   }
 
-  const handleFinish = () => {
-    const step5Score = parseInt(sessionStorage.getItem('phase4_2_step5_score') || '0')
-    const step5Max = 15
-    const step5Percentage = (step5Score / step5Max) * 100
+  const handleFinish = async () => {
+    const int1Score = parseInt(sessionStorage.getItem('phase4_2_step5_int1_score') || '0')
+    const int2Score = parseInt(sessionStorage.getItem('phase4_2_step5_int2_score') || '0')
+    const int3Score = parseInt(sessionStorage.getItem('phase4_2_step5_int3_score') || '0')
 
-    sessionStorage.setItem('phase4_2_step5_total_score', step5Score.toString())
-    sessionStorage.setItem('phase4_2_step5_total_max', step5Max.toString())
-    sessionStorage.setItem('phase4_2_step5_percentage', step5Percentage.toFixed(2))
-
-    console.log(`[Phase 4.2 Step 5 - TOTAL] Score: ${step5Score}/${step5Max} (${step5Percentage.toFixed(1)}%)`)
-
-    if (step5Percentage >= 80) {
-      const step1Percentage = parseFloat(sessionStorage.getItem('phase4_2_step1_percentage') || '0')
-      const step2Percentage = parseFloat(sessionStorage.getItem('phase4_2_step2_percentage') || '0')
-      const step3Percentage = parseFloat(sessionStorage.getItem('phase4_2_step3_percentage') || '0')
-      const step4Percentage = parseFloat(sessionStorage.getItem('phase4_2_step4_percentage') || '0')
-      const step5Pct = (step5Score / step5Max) * 100
-
-      const overallPercentage = (step1Percentage + step2Percentage + step3Percentage + step4Percentage + step5Pct) / 5
-
-      console.log(`[Phase 4.2 - OVERALL] Average: ${overallPercentage.toFixed(1)}%`)
-
-      if (overallPercentage >= 80) {
-        console.log('[Phase 4.2 Complete] ≥80% overall → Completed successfully')
-        alert(`Congratulations! You completed Phase 4.2 with ${overallPercentage.toFixed(1)}% overall score. Well done!`)
-        navigate('/dashboard')
-      } else {
-        console.log('[Phase 4.2 Complete] <80% overall → Need to retry Phase 4.2')
-        alert(`Your overall Phase 4.2 score was ${overallPercentage.toFixed(1)}%. You need 80% or higher overall. Please review and retry Phase 4.2.`)
-        navigate('/app/phase4_2/step/1/interaction/1')
-      }
-    } else {
-      console.log('[Phase 4.2 Step 5] <80% → Need to retry Step 5')
-      alert(`Your Step 5 score was ${step5Percentage.toFixed(1)}%. You need 80% or higher. Please review and try again.`)
-      navigate('/app/phase4_2/step/5/interaction/1')
+    try {
+      const data = await requestPhase42StepScore(5, {
+        interaction1_score: int1Score,
+        interaction2_score: int2Score,
+        interaction3_score: int3Score,
+      })
+      sessionStorage.setItem('phase4_2_step5_total_score', data.total.score.toString())
+      sessionStorage.setItem('phase4_2_step5_total_max', data.total.max_score.toString())
+      sessionStorage.setItem('phase4_2_step5_next_url', data.total.next_url)
+      sessionStorage.setItem('phase4_2_step5_remedial_level', data.total.remedial_level)
+      navigate(data.total.next_url)
+    } catch (error) {
+      console.error('Failed to calculate Phase 4.2 Step 5 routing:', error)
+      alert('Unable to calculate the next route right now. Please try again.')
     }
   }
 

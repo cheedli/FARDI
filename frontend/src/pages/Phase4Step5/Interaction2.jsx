@@ -100,32 +100,13 @@ export default function Phase4Step5Interaction2() {
   const [loadingLevel, setLoadingLevel] = useState(true)
 
   useEffect(() => {
-    const fetchStudentLevel = async () => {
-      try {
-        const response = await fetch('/api/phase4/step4/student-level', {
-          credentials: 'include'
-        })
-        const data = await response.json()
-        const level = data.level || 'A1'
-        setStudentLevel(level)
+    const savedLevel = sessionStorage.getItem('student_cefr_level') || 'A1'
+    setStudentLevel(savedLevel)
 
-        // Pre-fill with expected spelling-corrected answer from Interaction 1
-        const expectedSpellingCorrected = SPELLING_CORRECTED_TEXTS[level]
-        setSpellingCorrected(expectedSpellingCorrected)
-        setCorrectedText(expectedSpellingCorrected)
-      } catch (error) {
-        console.error('Error fetching student level:', error)
-        const savedLevel = sessionStorage.getItem('student_cefr_level') || 'A1'
-        setStudentLevel(savedLevel)
-
-        const expectedSpellingCorrected = SPELLING_CORRECTED_TEXTS[savedLevel]
-        setSpellingCorrected(expectedSpellingCorrected)
-        setCorrectedText(expectedSpellingCorrected)
-      } finally {
-        setLoadingLevel(false)
-      }
-    }
-    fetchStudentLevel()
+    const expectedSpellingCorrected = SPELLING_CORRECTED_TEXTS[savedLevel]
+    setSpellingCorrected(expectedSpellingCorrected)
+    setCorrectedText(expectedSpellingCorrected)
+    setLoadingLevel(false)
   }, [])
 
   const handleSubmit = async () => {
@@ -149,7 +130,8 @@ export default function Phase4Step5Interaction2() {
         },
         credentials: 'include',
         body: JSON.stringify({
-          correctedText: correctedText.trim()
+          correctedText: correctedText.trim(),
+          level: studentLevel
         })
       })
 

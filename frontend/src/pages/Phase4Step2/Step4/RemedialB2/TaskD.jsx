@@ -41,7 +41,7 @@ const TERMS = [
 
 export default function RemedialB2TaskD() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 4, context: 'remedial_b2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 4, interaction: 4, context: 'remedial_b2' })
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
 
@@ -82,7 +82,7 @@ export default function RemedialB2TaskD() {
     saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskD', is_correct: true, score: totalScore })
   }
 
-  const handleContinue = () => { navigate('/phase4_2/step4/remedial/b2/results') }
+  const handleContinue = () => { navigate('/phase4_2/step/4/remedial/b2/results') }
 
   const allAnswered = TERMS.every(term => {
     const answer = answers[term.id] || {}

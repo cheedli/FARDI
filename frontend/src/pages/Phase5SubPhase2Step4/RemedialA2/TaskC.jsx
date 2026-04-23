@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material/styles'
 import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { resolveSubphase2RemedialNextUrl } from '../../Phase5SubPhase2/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const LIGHT = {
@@ -59,7 +60,7 @@ export default function Phase5SubPhase2Step4RemedialA2TaskC() {
     try { await phase5API.logRemedialActivity(4, 'A2', 'C', finalScore, 6, 2) } catch (error) { console.error('Failed to log task completion:', error) }
   }
 
-  const handleContinue = () => navigate('/phase5/subphase/2/step/5')
+  const handleContinue = async () => navigate(await resolveSubphase2RemedialNextUrl(4, 'A2'))
   const allFilled = sentences.every(s => s.trim().length > 0)
 
   return (

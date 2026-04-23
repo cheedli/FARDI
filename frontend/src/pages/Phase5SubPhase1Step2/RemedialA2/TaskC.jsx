@@ -93,22 +93,16 @@ export default function Phase5Step2RemedialA2TaskC() {
     const taskAScore = parseInt(sessionStorage.getItem('phase5_step2_remedial_a2_taskA_score') || '0')
     const taskBScore = parseInt(sessionStorage.getItem('phase5_step2_remedial_a2_taskB_score') || '0')
     const taskCScore = parseInt(sessionStorage.getItem('phase5_step2_remedial_a2_taskC_score') || '0')
-    const totalScore = taskAScore + taskBScore + taskCScore
-    const maxScore = 6 + 6 + 6
-    const threshold = Math.ceil(maxScore * 0.8)
-    const passed = totalScore >= threshold
+    let nextUrl = '/phase5/subphase/1/step/2/remedial/a2/task/a'
     try {
-      await phase5API.calculateRemedialScore(2, 'A2', {
+      const result = await phase5API.calculateRemedialScore(2, 'A2', {
         task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore
       })
+      nextUrl = result?.data?.next_url || nextUrl
     } catch (error) {
       console.error('Failed to log final score:', error)
     }
-    if (passed) {
-      navigate('/dashboard')
-    } else {
-      navigate('/phase5/subphase/1/step/2/remedial/a2/task/a')
-    }
+    navigate(nextUrl)
   }
 
   const progress = ((currentIndex + 1) / 6) * 100

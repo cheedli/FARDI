@@ -42,7 +42,7 @@ const QUESTIONS = [
 
 export default function RemedialB2TaskB() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 2, context: 'remedial_b2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 4, interaction: 2, context: 'remedial_b2' })
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
 
@@ -83,7 +83,7 @@ export default function RemedialB2TaskB() {
     saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score: calculatedScore })
   }
 
-  const handleContinue = () => { navigate('/phase4_2/step4/remedial/b2/taskC') }
+  const handleContinue = () => { navigate('/phase4_2/step/4/remedial/b2/taskC') }
 
   const answeredCount = Object.keys(answers).filter(key => (answers[key] || '').trim().length >= 20).length
   const canSubmit = answeredCount === 8

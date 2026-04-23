@@ -29,7 +29,7 @@ const TERM_PAIRS = [
 
 export default function Phase4_2Step3RemedialA2TaskA() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 1, context: 'remedial_a2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 3, interaction: 1, context: 'remedial_a2' })
   const [matches, setMatches] = useState({})
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)

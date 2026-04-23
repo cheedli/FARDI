@@ -149,19 +149,15 @@ export default function Phase2Remedial() {
       const storageKey = `remedial_${stepId}_${level}_${d.activity.id}`
       const sessionAnswers = sessionStorage.getItem(storageKey)
 
-      if (sessionAnswers) {
+      if (d.saved_responses && Object.keys(d.saved_responses).length > 0) {
+        setAnswers(d.saved_responses)
+        sessionStorage.setItem(storageKey, JSON.stringify(d.saved_responses))
+      } else if (sessionAnswers) {
         try {
           setAnswers(JSON.parse(sessionAnswers))
         } catch (e) {
-          if (d.saved_responses && Object.keys(d.saved_responses).length > 0) {
-            setAnswers(d.saved_responses)
-          } else {
-            setAnswers({})
-          }
+          setAnswers({})
         }
-      } else if (d.saved_responses && Object.keys(d.saved_responses).length > 0) {
-        setAnswers(d.saved_responses)
-        sessionStorage.setItem(storageKey, JSON.stringify(d.saved_responses))
       } else {
         setAnswers({})
       }

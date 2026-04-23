@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { resolveSubphase1RemedialNextUrl } from '../../Phase6SubPhase1/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
@@ -164,10 +165,10 @@ export default function Phase6SP1Step5RemC1TaskD() {
               </Typography>
               <Box
                 component="button"
-                onClick={() => navigate('/phase6/subphase/2/step/1')}
+                onClick={async () => navigate(await resolveSubphase1RemedialNextUrl(5, 'C1'))}
                 sx={{ ...cardSx('blue'), mt: 2, cursor: 'pointer', fontWeight: 700, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.blue.shadow}` } }}
               >
-                Continue to Sub-Phase 2 →
+                Continue →
               </Box>
             </Box>
           )}

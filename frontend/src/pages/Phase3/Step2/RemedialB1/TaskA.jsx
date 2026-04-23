@@ -87,7 +87,7 @@ export default function Phase3Step2RemedialB1TaskA() {
   }
 
   const handleNext = () => {
-    navigate('/app/dashboard')
+    navigate('/phase3/step/2/interaction/1')
   }
 
   const isComplete = wordCount >= 60 && sentenceCount >= 4
@@ -234,7 +234,7 @@ export default function Phase3Step2RemedialB1TaskA() {
                 '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` },
               }}
             >
-              Complete B1 Task <ArrowForwardIcon />
+              Retry Step 2 <ArrowForwardIcon />
             </Box>
           )}
         </Box>

@@ -109,23 +109,9 @@ export default function Phase4Step5Interaction1() {
 
   // Fetch student's level from Phase 4 Step 4 remedial work
   useEffect(() => {
-    const fetchStudentLevel = async () => {
-      try {
-        const response = await fetch('/api/phase4/step4/student-level', {
-          credentials: 'include'
-        })
-        const data = await response.json()
-        setStudentLevel(data.level || 'A1')
-      } catch (error) {
-        console.error('Error fetching student level:', error)
-        // Fallback to sessionStorage or default to A1
-        const savedLevel = sessionStorage.getItem('student_cefr_level') || 'A1'
-        setStudentLevel(savedLevel)
-      } finally {
-        setLoadingLevel(false)
-      }
-    }
-    fetchStudentLevel()
+    const savedLevel = sessionStorage.getItem('student_cefr_level') || 'A1'
+    setStudentLevel(savedLevel)
+    setLoadingLevel(false)
   }, [])
 
   const handleSubmit = async () => {
@@ -149,7 +135,8 @@ export default function Phase4Step5Interaction1() {
         },
         credentials: 'include',
         body: JSON.stringify({
-          correctedText: correctedText.trim()
+          correctedText: correctedText.trim(),
+          level: studentLevel
         })
       })
 

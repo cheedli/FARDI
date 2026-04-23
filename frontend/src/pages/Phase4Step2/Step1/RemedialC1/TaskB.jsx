@@ -14,7 +14,7 @@ import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 export default function Phase4_2RemedialC1TaskB() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 2, context: 'remedial_c1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 2, context: 'remedial_c1' })
   const [analysis, setAnalysis] = useState('')
   const [showResults, setShowResults] = useState(false)
   const [wordCount, setWordCount] = useState(0)

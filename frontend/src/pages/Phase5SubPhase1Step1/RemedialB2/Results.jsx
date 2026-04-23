@@ -38,6 +38,7 @@ export default function Phase5Step1RemedialB2Results() {
     total: 0, passed: false
   })
   const [countdown, setCountdown] = useState(10)
+  const [nextUrl, setNextUrl] = useState('/phase5/subphase/1/step/1/remedial/b2/task/a')
 
   useEffect(() => {
     calculateFinalScore()
@@ -67,21 +68,21 @@ export default function Phase5Step1RemedialB2Results() {
     setLoading(false)
 
     try {
-      await phase5API.calculateRemedialScore(1, 'B2', {
+      const result = await phase5API.calculateRemedialScore(1, 'B2', {
         task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore,
         task_d_score: taskDScore, task_e_score: taskEScore, task_f_score: taskFScore
       })
+      const backendPassed = result?.data?.passed
+      const backendNextUrl = result?.data?.next_url
+      setScores(prev => ({ ...prev, passed: backendPassed ?? prev.passed }))
+      setNextUrl(backendNextUrl || '/phase5/subphase/1/step/1/remedial/b2/task/a')
     } catch (error) {
       console.error('Failed to log final score:', error)
     }
   }
 
   const handleRedirect = () => {
-    if (scores.passed) {
-      navigate('/dashboard')
-    } else {
-      navigate('/phase5/subphase/1/step/1/remedial/b2/task/a')
-    }
+    navigate(nextUrl)
   }
 
   if (loading) return (
@@ -164,7 +165,7 @@ export default function Phase5Step1RemedialB2Results() {
             p: 2, mb: 3,
           }}>
             <Typography variant="body2" fontWeight={600} color={scores.passed ? P.green.shadow : P.yellow.shadow}>
-              {scores.passed ? 'You will proceed to the dashboard. Great work!' : `Redirecting to repeat B2 remedial in ${countdown} seconds...`}
+              {scores.passed ? 'You will proceed to the next step. Great work!' : `Redirecting to repeat B2 remedial in ${countdown} seconds...`}
             </Typography>
           </Box>
 

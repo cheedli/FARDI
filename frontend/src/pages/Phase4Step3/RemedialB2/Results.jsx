@@ -63,7 +63,14 @@ export default function RemedialB2Results() {
     try {
       const response = await fetch('/api/phase4/step3/remedial/b2/final-score', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ task_a_score: taskAScore, task_b_score: taskBScore })
+        body: JSON.stringify({
+          task_a_score: taskAScore,
+          task_b_score: taskBScore,
+          task_c_score: taskCScore,
+          task_d_score: taskDScore,
+          task_e_score: taskEScore,
+          task_f_score: taskFScore
+        })
       })
       const data = await response.json()
       if (data.success) console.log('Step 3 B2 Final score logged to backend:', data.data)
@@ -74,7 +81,7 @@ export default function RemedialB2Results() {
 
   const handleRedirect = () => {
     ['taskA','taskB','taskC','taskD','taskE','taskF'].forEach(t => sessionStorage.removeItem(`remedial_step3_b2_${t}_score`))
-    if (scores.passed) navigate('/dashboard')
+    if (scores.passed) navigate('/phase4/step/4')
     else navigate('/phase4/step3/remedial/b2/taskA')
   }
 
@@ -97,12 +104,12 @@ export default function RemedialB2Results() {
 
   const resultColor = scores.passed ? 'green' : 'orange'
   const taskRows = [
-    { label: 'Task A', score: scores.taskA, max: 7, threshold: 6 },
-    { label: 'Task B', score: scores.taskB, max: 7, threshold: 6 },
+    { label: 'Task A', score: scores.taskA, max: 10, threshold: 8 },
+    { label: 'Task B', score: scores.taskB, max: 8, threshold: 6 },
     { label: 'Task C', score: scores.taskC, max: 8, threshold: 6 },
-    { label: 'Task D', score: scores.taskD, max: 7, threshold: 6 },
-    { label: 'Task E', score: scores.taskE, max: 8, threshold: 6 },
-    { label: 'Task F', score: scores.taskF, max: 7, threshold: 6 },
+    { label: 'Task D', score: scores.taskD, max: 6, threshold: 4 },
+    { label: 'Task E', score: scores.taskE, max: 6, threshold: 4 },
+    { label: 'Task F', score: scores.taskF, max: 6, threshold: 4 },
   ]
 
   return (

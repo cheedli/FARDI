@@ -9,6 +9,7 @@ import QuizIcon from '@mui/icons-material/Quiz'
 import CreateIcon from '@mui/icons-material/Create'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { useProgressSave } from '../../../../hooks/useProgressSave'
+import { requestPhase42TaskBScore } from '../../shared/routing.js'
 
 /**
  * Phase 4.2 Step 3 - Remedial B2 - Task B: Explain Expedition
@@ -31,7 +32,7 @@ const GUIDED_QUESTIONS = [
 
 export default function RemedialB2TaskB() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 2, context: 'remedial_b2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 3, interaction: 2, context: 'remedial_b2' })
   const [explanation, setExplanation] = useState('')
   const [sentenceCount, setSentenceCount] = useState(0)
   const [submitted, setSubmitted] = useState(false)
@@ -74,48 +75,31 @@ export default function RemedialB2TaskB() {
     setEvaluating(true)
 
     try {
-      const response = await fetch('/api/phase4/4_2/step3/remedial/evaluate', {
+      const data = await requestPhase42TaskBScore(3, 'B2', {
+        paragraph: explanation,
+        expected_sentences: 8,
+        topic: 'social media post elements',
+        guided_questions: GUIDED_QUESTIONS,
+      })
+
+      setScore(data.score)
+      setFeedback(data.feedback)
+      sessionStorage.setItem('phase4_2_step3_b2_taskB', data.score)
+
+      await fetch('/api/phase4/remedial/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          level: 'B2',
-          task: 'B',
-          paragraph: explanation,
-          expected_sentences: 8,
-          topic: 'social media post elements',
-          guided_questions: GUIDED_QUESTIONS
+          phase: '4.2', level: 'B2', task: 'B', step: 3,
+          score: data.score, max_score: 8, completed: true
         })
       })
-
-      const data = await response.json()
-
-      if (data.success) {
-        setScore(data.score)
-        setFeedback(data.feedback)
-        sessionStorage.setItem('phase4_2_step3_b2_taskB', data.score)
-
-        await fetch('/api/phase4/remedial/log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            phase: '4.2', level: 'B2', task: 'B', step: 3,
-            score: data.score, max_score: 8, completed: true
-          })
-        })
-      } else {
-        const fallbackScore = sentenceCount >= 8 ? 6 : Math.floor((sentenceCount / 8) * 6)
-        setScore(fallbackScore)
-        setFeedback('Good effort! Try to address more of the guided questions about social media post elements.')
-        sessionStorage.setItem('phase4_2_step3_b2_taskB', fallbackScore)
-      }
     } catch (error) {
       console.error('Evaluation error:', error)
-      const fallbackScore = sentenceCount >= 8 ? 6 : Math.floor((sentenceCount / 8) * 6)
-      setScore(fallbackScore)
-      setFeedback('Good effort! Your explanation shows understanding of social media post elements.')
-      sessionStorage.setItem('phase4_2_step3_b2_taskB', fallbackScore)
+      alert('Evaluation failed. Please try again.')
+      setEvaluating(false)
+      return
     }
 
     setSubmitted(true)
@@ -123,7 +107,7 @@ export default function RemedialB2TaskB() {
   }
 
   const handleContinue = () => {
-    navigate('/phase4_2/step3/remedial/b2/taskC')
+    navigate('/phase4_2/step/3/remedial/b2/taskC')
   }
 
   const canSubmit = sentenceCount >= 8 && explanation.trim().length >= 200

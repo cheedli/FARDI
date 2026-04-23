@@ -86,12 +86,19 @@ export default function Dashboard() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    const pendingPhase42Redirect = sessionStorage.getItem('phase4_2_redirect_url')
+    if (pendingPhase42Redirect) {
+      sessionStorage.removeItem('phase4_2_redirect_url')
+      navigate(pendingPhase42Redirect)
+      return
+    }
+
     fetch('/api/dashboard', { credentials: 'include' })
       .then(async r => { if (!r.ok) throw new Error('Failed to load dashboard'); return r.json() })
       .then(setData)
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
-  }, [])
+  }, [navigate])
 
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) return (
@@ -139,16 +146,39 @@ export default function Dashboard() {
   const hasPhase2Progress = phase2_progress?.responses?.length > 0 || phase2_progress?.steps?.length > 0 || phase2_progress?.remedial_activities?.length > 0
   const hasPhase3Progress = phase3_progress != null && (phase3_progress.total_responses > 0 || phase3_progress.step > 0)
   const hasPhase4Progress = phase4_progress != null && (phase4_progress.total_responses > 0 || phase4_progress.step > 0)
+  const phase2StepOrder = ['step_1', 'step_2', 'step_3', 'final_writing']
+  const getNextPhase2StepId = (stepId) => {
+    const idx = phase2StepOrder.indexOf(stepId)
+    return idx >= 0 && idx < phase2StepOrder.length - 1 ? phase2StepOrder[idx + 1] : null
+  }
 
   const getCurrentPhase2Step = () => {
+    const steps = phase2_progress?.steps || []
+    if (steps.length > 0) {
+      const activeStep = steps[steps.length - 1]
+      const remedial = activeStep?.remedial_progress || {}
+      const remedialLevel = remedial.level || activeStep?.remedial_level
+      const hasCompletedRemedial = remedial.status === 'completed'
+
+      if (hasCompletedRemedial) {
+        const nextStepId = getNextPhase2StepId(activeStep.step_id)
+        return nextStepId ? { type: 'step', stepId: nextStepId } : { type: 'complete', url: '/phase2/complete' }
+      }
+
+      if (activeStep?.needs_remedial && remedialLevel && remedial.status !== 'completed') {
+        const idx = Number.isInteger(remedial.activity_index) ? remedial.activity_index : 0
+        return { type: 'remedial', url: `/phase2/remedial/${activeStep.step_id}/${remedialLevel}?activity=${idx}` }
+      }
+    }
+
     if (phase2_progress?.remedial_activities?.length > 0) {
       const last = phase2_progress.remedial_activities[phase2_progress.remedial_activities.length - 1]
-      if (!last.completed) return { type: 'remedial', url: `/phase2/remedial/${last.step_id}/${last.level}` }
+      if (!last.completed) return { type: 'remedial', url: `/phase2/remedial/${last.step_id}/${last.level}?activity=${last.activity_index || 0}` }
     }
-    if (!phase2_progress?.steps?.length) return null
-    const inc = phase2_progress.steps.find(s => !s.completed_at)
+    if (!steps.length) return null
+    const inc = steps.find(s => !s.completed_at)
     if (inc) return { type: 'step', stepId: inc.step_id }
-    const last = phase2_progress.steps[phase2_progress.steps.length - 1]
+    const last = steps[steps.length - 1]
     return last ? { type: 'step', stepId: last.step_id } : null
   }
   const currentPhase2Step = getCurrentPhase2Step()
@@ -169,7 +199,11 @@ export default function Dashboard() {
     if (phase.id === 1) return '/game'
     if (phase.id === 2) {
       if (hasPhase2Progress && currentPhase2Step)
-        return currentPhase2Step.type === 'remedial' ? currentPhase2Step.url : `/phase2/step/${currentPhase2Step.stepId}`
+        return currentPhase2Step.type === 'remedial'
+          ? currentPhase2Step.url
+          : currentPhase2Step.type === 'complete'
+            ? currentPhase2Step.url
+            : `/phase2/step/${currentPhase2Step.stepId}`
       return '/phase2'
     }
     if (phase.id === 3) return '/phase3/step/1'
@@ -199,8 +233,81 @@ export default function Dashboard() {
     return '/'
   }
 
-  const buildResumeUrl = ({ phase, subphase, step, interaction }) => {
+  const buildPhase3ResumeUrl = ({ step, interaction, context }) => {
+    const safeStep = step || 1
+    if (context === 'score') return `/phase3/step/${safeStep}/score`
+    if (context && context.startsWith('remedial_')) {
+      const level = context.replace('remedial_', '')
+      const taskIndex = Math.max(1, interaction || 1)
+      const taskLetter = String.fromCharCode(64 + taskIndex)
+      return `/phase3/step/${safeStep}/remedial/${level}/task${taskLetter}`
+    }
+    return `/phase3/step/${safeStep}/interaction/${interaction || 1}`
+  }
+
+  const buildPhase4ResumeUrl = ({ subphase, step, interaction, context }) => {
+    const safeStep = step || 1
+    const safeInteraction = interaction || 1
+
+    if (subphase === 2) {
+      if (context && context.startsWith('remedial_')) {
+        const level = context.replace('remedial_', '')
+        const taskLetter = String.fromCharCode(64 + safeInteraction)
+        const taskSlug = safeStep === 5 ? `task${taskLetter.toLowerCase()}` : `task${taskLetter}`
+        return `/phase4_2/step/${safeStep}/remedial/${level}/${taskSlug}`
+      }
+      return `/phase4_2/step/${safeStep}/interaction/${safeInteraction}`
+    }
+
+    if (context && context.startsWith('remedial_')) {
+      const level = context.replace('remedial_', '')
+      const taskLetter = String.fromCharCode(64 + safeInteraction)
+      if (safeStep === 1) return `/phase4/remedial/${level}/task${taskLetter}`
+      if (safeStep === 3) return `/phase4/step3/remedial/${level}/task${taskLetter}`
+      return `/phase4/step/${safeStep}/remedial/${level}/task${taskLetter}`
+    }
+
+    return `/phase4/step/${safeStep}/interaction/${safeInteraction}`
+  }
+
+  const buildPhase5ResumeUrl = ({ subphase, step, interaction, context }) => {
+    const safeSubphase = subphase || 1
+    const safeStep = step || 1
+
+    if (context === 'score') return `/phase5/subphase/${safeSubphase}/step/${safeStep}/score`
+
+    if (context && context.startsWith('remedial_')) {
+      const level = context.replace('remedial_', '')
+      const taskIndex = Math.max(1, interaction || 1)
+      const taskLetter = String.fromCharCode(96 + taskIndex)
+      return `/phase5/subphase/${safeSubphase}/step/${safeStep}/remedial/${level}/task/${taskLetter}`
+    }
+
+    return `/phase5/subphase/${safeSubphase}/step/${safeStep}/interaction/${interaction || 1}`
+  }
+
+  const buildPhase6ResumeUrl = ({ subphase, step, interaction, context }) => {
+    const safeSubphase = subphase || 1
+    const safeStep = step || 1
+
+    if (context === 'score') return `/phase6/subphase/${safeSubphase}/step/${safeStep}/score`
+
+    if (context && context.startsWith('remedial_')) {
+      const level = context.replace('remedial_', '')
+      const taskIndex = Math.max(1, interaction || 1)
+      const taskLetter = String.fromCharCode(96 + taskIndex)
+      return `/phase6/subphase/${safeSubphase}/step/${safeStep}/remedial/${level}/task/${taskLetter}`
+    }
+
+    return `/phase6/subphase/${safeSubphase}/step/${safeStep}/interaction/${interaction || 1}`
+  }
+
+  const buildResumeUrl = ({ phase, subphase, step, interaction, context }) => {
     if (phase === 1 || phase === 2) return getPhaseStartUrl(phase)
+    if (phase === 3) return buildPhase3ResumeUrl({ step, interaction, context })
+    if (phase === 4) return buildPhase4ResumeUrl({ subphase, step, interaction, context })
+    if (phase === 5) return buildPhase5ResumeUrl({ subphase, step, interaction, context })
+    if (phase === 6) return buildPhase6ResumeUrl({ subphase, step, interaction, context })
     if (subphase) return `/phase${phase}/subphase/${subphase}/step/${step}/interaction/${interaction}`
     return `/phase${phase}/step/${step}/interaction/${interaction}`
   }

@@ -4,6 +4,7 @@ import { Box, Container, Typography, CircularProgress, LinearProgress, Stack, us
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { usePhase5ScoreResume } from '../Phase5/shared/useScoreResumeSave.js'
 
 const LIGHT = {
   pageBg: '#FFFDE7',
@@ -35,6 +36,8 @@ export default function Phase5Step5ScoreCalculation() {
   })
   const [routing, setRouting] = useState(null)
 
+  usePhase5ScoreResume({ subphase: 1, step: 5, scores, routing })
+
   useEffect(() => {
     calculateScore()
   }, [])
@@ -61,12 +64,23 @@ export default function Phase5Step5ScoreCalculation() {
         const data = result.data
         const remedialLevel = data.total?.remedial_level || data.interaction2?.level || determineRemedialLevel(interaction2Score)
         const shouldProceed = data.total?.should_proceed ?? (interaction2Score >= 3)
-        setRouting({ remedialLevel, shouldProceed, totalScore: data.total_score || totalScore })
+        const nextUrl = data.total?.next_url || data.next_url || (shouldProceed
+          ? '/phase5/subphase/2/step/1'
+          : `/phase5/subphase/1/step/5/remedial/${remedialLevel.toLowerCase()}/task/a`)
+        setRouting({ remedialLevel, shouldProceed, totalScore: data.total?.score || data.total_score || totalScore, nextUrl })
         sessionStorage.setItem('phase5_step5_total_score', totalScore.toString())
         sessionStorage.setItem('phase5_step5_remedial_level', remedialLevel)
       } else {
         const remedialLevel = determineRemedialLevel(interaction2Score)
-        setRouting({ remedialLevel, shouldProceed: interaction2Score >= 3, totalScore })
+        const shouldProceed = interaction2Score >= 3
+        setRouting({
+          remedialLevel,
+          shouldProceed,
+          totalScore,
+          nextUrl: shouldProceed
+            ? '/phase5/subphase/2/step/1'
+            : `/phase5/subphase/1/step/5/remedial/${remedialLevel.toLowerCase()}/task/a`
+        })
         sessionStorage.setItem('phase5_step5_total_score', totalScore.toString())
         sessionStorage.setItem('phase5_step5_remedial_level', remedialLevel)
       }
@@ -74,7 +88,15 @@ export default function Phase5Step5ScoreCalculation() {
       console.error('Error calculating score:', error)
       const interaction2Score = parseInt(sessionStorage.getItem('phase5_step5_interaction2_score') || '2')
       const remedialLevel = determineRemedialLevel(interaction2Score)
-      setRouting({ remedialLevel, shouldProceed: interaction2Score >= 3, totalScore: scores.total })
+      const shouldProceed = interaction2Score >= 3
+      setRouting({
+        remedialLevel,
+        shouldProceed,
+        totalScore,
+        nextUrl: shouldProceed
+          ? '/phase5/subphase/2/step/1'
+          : `/phase5/subphase/1/step/5/remedial/${remedialLevel.toLowerCase()}/task/a`
+      })
     } finally {
       setCalculating(false)
       setLoading(false)
@@ -90,13 +112,8 @@ export default function Phase5Step5ScoreCalculation() {
   }
 
   const handleContinue = () => {
-    if (!routing) return
-    if (routing.shouldProceed) {
-      navigate('/phase5/subphase/2/step/1')
-    } else {
-      const levelLower = routing.remedialLevel.toLowerCase()
-      navigate(`/phase5/subphase/1/step/5/remedial/${levelLower}/task/a`)
-    }
+    if (!routing?.nextUrl) return
+    navigate(routing.nextUrl)
   }
 
   const clay = (color) => ({
@@ -162,11 +179,15 @@ export default function Phase5Step5ScoreCalculation() {
               </Box>
               <Typography variant="body1" sx={{ mb: 2 }}>
                 {routing.shouldProceed
-                  ? `You've scored ${routing.totalScore} points! You'll proceed to remedial activities at ${routing.remedialLevel} level.`
+                  ? `You've scored ${routing.totalScore} points! You'll proceed directly to SubPhase 2.`
                   : `You've scored ${routing.totalScore} points. You'll complete remedial activities at ${routing.remedialLevel} level.`}
               </Typography>
               <Box sx={{ bgcolor: P.blue.bg, border: `1px solid ${P.blue.border}`, borderRadius: '12px', p: 2, mt: 2 }}>
-                <Typography variant="body2" sx={{ color: P.blue.border }}><strong>Next Steps:</strong> You'll complete remedial activities designed for {routing.remedialLevel} level.</Typography>
+                <Typography variant="body2" sx={{ color: P.blue.border }}>
+                  <strong>Next Steps:</strong> {routing.shouldProceed
+                    ? 'You will continue to SubPhase 2.'
+                    : `You'll complete remedial activities designed for ${routing.remedialLevel} level.`}
+                </Typography>
               </Box>
               <Box
                 component="button"
@@ -179,25 +200,9 @@ export default function Phase5Step5ScoreCalculation() {
                 }}
               >
                 <Typography variant="button" fontWeight="bold" sx={{ color: routing.shouldProceed ? P.green.border : P.blue.border }}>
-                  Continue to {routing.remedialLevel} Remedial Activities
+                  {routing.shouldProceed ? 'Continue to SubPhase 2' : `Continue to ${routing.remedialLevel} Remedial Activities`}
                 </Typography>
               </Box>
-              {routing.shouldProceed && (
-                <Box
-                  component="button"
-                  onClick={() => navigate('/phase5/subphase/2/step/1')}
-                  sx={{
-                    ...clay(P.green),
-                    cursor: 'pointer', width: '100%', mt: 2,
-                    '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` },
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  <Typography variant="button" fontWeight="bold" sx={{ color: P.green.border }}>
-                    Skip Remedials - Proceed to SubPhase 2
-                  </Typography>
-                </Box>
-              )}
             </Box>
           </motion.div>
         )}

@@ -192,7 +192,7 @@ export default function RemedialC1TaskH() {
             </Stack>
             <Box
               component="button"
-              onClick={() => {
+              onClick={async () => {
                 const taskScores = {
                   A: parseInt(sessionStorage.getItem('remedial_step3_c1_taskA_score') || '0'),
                   B: parseInt(sessionStorage.getItem('remedial_step3_c1_taskB_score') || '0'),
@@ -203,21 +203,45 @@ export default function RemedialC1TaskH() {
                   G: parseInt(sessionStorage.getItem('remedial_step3_c1_taskG_score') || '0'),
                   H: parseInt(sessionStorage.getItem('remedial_step3_c1_taskH_score') || '0')
                 }
-                const totalScore = Object.values(taskScores).reduce((sum, score) => sum + score, 0)
-                const maxScore = 48
-                const percentage = (totalScore / maxScore) * 100
-                console.log('=== REMEDIAL C1 COMPLETION ===', taskScores, `Total: ${totalScore}/${maxScore} (${percentage.toFixed(1)}%)`)
-                if (percentage >= 80) {
-                  sessionStorage.removeItem('phase4_remedial_level')
-                  navigate('/dashboard')
+                const totalScore = Object.values(taskScores).reduce((sum, value) => sum + value, 0)
+                console.log('=== REMEDIAL C1 COMPLETION ===', taskScores, `Total: ${totalScore}/54`)
+
+                try {
+                  const response = await fetch('/api/phase4/step3/remedial/c1/final-score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                      task_a_score: taskScores.A,
+                      task_b_score: taskScores.B,
+                      task_c_score: taskScores.C,
+                      task_d_score: taskScores.D,
+                      task_e_score: taskScores.E,
+                      task_f_score: taskScores.F,
+                      task_g_score: taskScores.G,
+                      task_h_score: taskScores.H
+                    })
+                  })
+                  const data = await response.json()
+                  const nextUrl = data?.data?.next_url?.replace(/^\/app/, '')
+                  if (data?.success && nextUrl) {
+                    navigate(nextUrl)
+                    return
+                  }
+                } catch (error) {
+                  console.error('Failed to log final C1 score:', error)
+                }
+
+                if (totalScore >= 43) {
+                  navigate('/phase4/step/4')
                 } else {
-                  alert(`Your score: ${totalScore}/${maxScore} (${percentage.toFixed(1)}%). You need 80% to pass. Please try the Remedial C1 exercises again!`)
+                  alert(`Your score: ${totalScore}/54. You need 43/54 to pass. Please try the Remedial C1 exercises again.`)
                   navigate('/phase4/step3/remedial/c1/taskA')
                 }
               }}
               sx={{ ...cardSx('orange'), width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1rem', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` } }}
             >
-              Continue
+              Continue to Step 4
             </Box>
           </motion.div>
         </Container>

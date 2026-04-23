@@ -25,7 +25,7 @@ const MATCHING_PAIRS = [
 
 export default function Phase4_2Step5RemedialA2TaskA() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 1, context: 'remedial_a2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 5, interaction: 1, context: 'remedial_a2' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
 

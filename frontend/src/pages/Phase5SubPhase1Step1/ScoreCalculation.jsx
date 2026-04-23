@@ -12,6 +12,7 @@ import { useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { usePhase5ScoreResume } from '../Phase5/shared/useScoreResumeSave.js'
 
 const LIGHT = {
   pageBg: '#FFFDE7',
@@ -54,6 +55,8 @@ export default function Phase5Step1ScoreCalculation() {
   })
   const [routing, setRouting] = useState(null)
 
+  usePhase5ScoreResume({ subphase: 1, step: 1, scores, routing })
+
   useEffect(() => {
     calculateScore()
   }, [])
@@ -87,11 +90,15 @@ export default function Phase5Step1ScoreCalculation() {
         const data = result.data
         const remedialLevel = data.total?.remedial_level || data.interaction2?.level || determineRemedialLevel(interaction2Score)
         const shouldProceed = data.total?.should_proceed ?? (interaction2Score >= 3)
+        const nextUrl = data.total?.next_url || data.next_url || (shouldProceed
+          ? '/phase5/subphase/1/step/2'
+          : `/phase5/subphase/1/step/1/remedial/${remedialLevel.toLowerCase()}/task/a`)
 
         setRouting({
           remedialLevel,
           shouldProceed,
-          totalScore: data.total_score || totalScore
+          totalScore: data.total?.score || data.total_score || totalScore,
+          nextUrl
         })
 
         // Store in sessionStorage
@@ -101,21 +108,25 @@ export default function Phase5Step1ScoreCalculation() {
         console.log('\n' + '='.repeat(60))
         console.log('PHASE 5 STEP 1 - SCORE SUMMARY')
         console.log('='.repeat(60))
-        console.log('Interaction 1 (Wordshake):', interaction1Score, '/5')
+        console.log('Interaction 1 (Wordshake):', interaction1Score, '/1')
         console.log('Interaction 2 (Solution):', interaction2Score, '/5')
-        console.log('Interaction 3 (Sushi Spell):', interaction3Score, '/5')
+        console.log('Interaction 3 (Sushi Spell):', interaction3Score, '/1')
         console.log('-'.repeat(60))
-        console.log('TOTAL SCORE:', totalScore, '/15')
+        console.log('TOTAL SCORE:', totalScore, '/7')
         console.log('Assigned Level:', remedialLevel)
         console.log('Should Proceed:', shouldProceed)
         console.log('='.repeat(60) + '\n')
       } else {
         // Fallback routing
         const remedialLevel = determineRemedialLevel(interaction2Score)
+        const shouldProceed = interaction2Score >= 3
         setRouting({
           remedialLevel,
-          shouldProceed: interaction2Score >= 3,
-          totalScore
+          shouldProceed,
+          totalScore,
+          nextUrl: shouldProceed
+            ? '/phase5/subphase/1/step/2'
+            : `/phase5/subphase/1/step/1/remedial/${remedialLevel.toLowerCase()}/task/a`
         })
         sessionStorage.setItem('phase5_step1_total_score', totalScore.toString())
         sessionStorage.setItem('phase5_step1_remedial_level', remedialLevel)
@@ -127,7 +138,8 @@ export default function Phase5Step1ScoreCalculation() {
       const interaction2Score = parseInt(sessionStorage.getItem('phase5_step1_interaction2_score') || '0')
       const interaction3Score = parseInt(sessionStorage.getItem('phase5_step1_interaction3_score') || '0')
       const totalScore = interaction1Score + interaction2Score + interaction3Score
-      const remedialLevel = determineRemedialLevel(totalScore)
+      const remedialLevel = determineRemedialLevel(interaction2Score)
+      const shouldProceed = interaction2Score >= 3
 
       setScores({
         interaction1: interaction1Score,
@@ -138,8 +150,11 @@ export default function Phase5Step1ScoreCalculation() {
 
       setRouting({
         remedialLevel,
-        shouldProceed: interaction2Score >= 3,
-        totalScore
+        shouldProceed,
+        totalScore,
+        nextUrl: shouldProceed
+          ? '/phase5/subphase/1/step/2'
+          : `/phase5/subphase/1/step/1/remedial/${remedialLevel.toLowerCase()}/task/a`
       })
 
       sessionStorage.setItem('phase5_step1_total_score', totalScore.toString())
@@ -160,14 +175,8 @@ export default function Phase5Step1ScoreCalculation() {
   }
 
   const handleContinue = () => {
-    if (!routing) return
-
-    if (routing.shouldProceed) {
-      navigate('/phase5/subphase/1/step/2')
-    } else {
-      const levelLower = routing.remedialLevel.toLowerCase()
-      navigate(`/phase5/subphase/1/step/1/remedial/${levelLower}/task/a`)
-    }
+    if (!routing?.nextUrl) return
+    navigate(routing.nextUrl)
   }
 
   if (loading || calculating) {
@@ -216,9 +225,9 @@ export default function Phase5Step1ScoreCalculation() {
 
             <Stack spacing={2} sx={{ mt: 2 }}>
               {[
-                { label: 'Interaction 1 (Wordshake)', score: scores.interaction1, max: 5 },
+                { label: 'Interaction 1 (Wordshake)', score: scores.interaction1, max: 1 },
                 { label: 'Interaction 2 (Solution Suggestion)', score: scores.interaction2, max: 5 },
-                { label: 'Interaction 3 (Sushi Spell)', score: scores.interaction3, max: 5 },
+                { label: 'Interaction 3 (Sushi Spell)', score: scores.interaction3, max: 1 },
               ].map((item, i) => (
                 <Box key={i} sx={{
                   bgcolor: P.blue.bg,
@@ -247,11 +256,11 @@ export default function Phase5Step1ScoreCalculation() {
                 p: 2,
               }}>
                 <Typography variant="h5" gutterBottom fontWeight={700} color={P.green.shadow}>
-                  Total Score: {scores.total} / 15 points
+                  Total Score: {scores.total} / 7 points
                 </Typography>
                 <LinearProgress
                   variant="determinate"
-                  value={(scores.total / 15) * 100}
+                  value={(scores.total / 7) * 100}
                   sx={{ mt: 1, height: 10, borderRadius: 1 }}
                   color="success"
                 />
@@ -282,7 +291,7 @@ export default function Phase5Step1ScoreCalculation() {
 
               <Typography variant="body1" sx={{ mb: 2, color: isDark ? 'rgba(255,255,255,0.85)' : 'text.primary' }}>
                 {routing.shouldProceed
-                  ? `You've scored ${routing.totalScore} points! You'll proceed to remedial activities at ${routing.remedialLevel} level to strengthen your skills before moving forward.`
+                  ? `You've scored ${routing.totalScore} points! You'll proceed directly to Step 2.`
                   : `You've scored ${routing.totalScore} points. You'll complete remedial activities at ${routing.remedialLevel} level to build your problem-solving vocabulary and skills.`}
               </Typography>
 
@@ -293,8 +302,9 @@ export default function Phase5Step1ScoreCalculation() {
                 p: 2, mb: 3,
               }}>
                 <Typography variant="body2" color={P.blue.shadow}>
-                  <strong>Next Steps:</strong> You'll complete remedial activities designed for {routing.remedialLevel} level.
-                  These activities will help you practice problem-solving vocabulary and grammar.
+                  <strong>Next Steps:</strong> {routing.shouldProceed
+                    ? 'You will continue to Step 2.'
+                    : `You'll complete remedial activities designed for ${routing.remedialLevel} level. These activities will help you practice problem-solving vocabulary and grammar.`}
                 </Typography>
               </Box>
 
@@ -315,7 +325,7 @@ export default function Phase5Step1ScoreCalculation() {
                   '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${routing.shouldProceed ? P.green.shadow : P.teal.shadow}` },
                 }}
               >
-                Continue to {routing.remedialLevel} Remedial Activities
+                {routing.shouldProceed ? 'Continue to Step 2' : `Continue to ${routing.remedialLevel} Remedial Activities`}
               </Box>
             </Box>
           )}

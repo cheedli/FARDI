@@ -134,7 +134,7 @@ export default function Phase4_2Step2RemedialA2TaskA() {
   }
   const P = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 1, context: 'remedial_a2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 2, interaction: 1, context: 'remedial_a2' })
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION)
   const [timerActive, setTimerActive] = useState(true)
   const [matches, setMatches] = useState({})

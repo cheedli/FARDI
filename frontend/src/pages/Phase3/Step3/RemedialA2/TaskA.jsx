@@ -90,7 +90,7 @@ export default function Phase3Step3RemedialA2TaskA() {
     } catch (error) { console.error('Failed to log task:', error) }
   }
 
-  const handleNext = () => { navigate('/app/dashboard') }
+  const handleNext = () => { navigate('/phase3/step/3/interaction/1') }
   const allAnswered = Object.keys(answers).length === GAP_FILL_SENTENCES.length &&
     Object.values(answers).every(a => a && a.trim().length > 0)
   const passThreshold = 8
@@ -269,7 +269,7 @@ export default function Phase3Step3RemedialA2TaskA() {
                 '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: '6px 6px 0 #2E7D32' },
               }}
             >
-              Complete A2 Task <ArrowForwardIcon fontSize="small" />
+              Retry Step 3 <ArrowForwardIcon fontSize="small" />
             </Box>
           )}
         </Box>

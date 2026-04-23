@@ -162,41 +162,64 @@ export default function Phase4Step3Interaction3() {
     }
   }
 
-  const handleContinue = () => {
-    // Calculate total score from all 3 interactions
-    const score1 = parseInt(sessionStorage.getItem('phase4_step3_interaction1_score') || '0')
-    const score2 = parseInt(sessionStorage.getItem('phase4_step3_interaction2_score') || '0')
-    const score3 = parseInt(sessionStorage.getItem('phase4_step3_interaction3_score') || '0')
+  const handleContinue = async () => {
+    const score1 = parseInt(sessionStorage.getItem('phase4_step3_interaction1_score') || '1')
+    const score2 = parseInt(sessionStorage.getItem('phase4_step3_interaction2_score') || '1')
+    const score3 = parseInt(sessionStorage.getItem('phase4_step3_interaction3_score') || '1')
     const totalScore = score1 + score2 + score3
 
-    // Store total score
     sessionStorage.setItem('phase4_step3_total_score', totalScore)
 
-    // Check if student should proceed: I3 (sentence production) score >= 3 means B1+ level
-    const shouldProceed = score3 >= 3
-    if (shouldProceed) {
-      console.log(`[Phase 4 Step 3] I3 score ${score3}/5 >= 3 (B1+). Proceeding to Step 4.`)
-      navigate('/phase4/step/4')
-      return
+    console.log(`[Phase 4 Step 3] Calculating score - I1=${score1}, I2=${score2}, I3=${score3}, Total=${totalScore}`)
+
+    try {
+      const response = await fetch('/api/phase4/step/3/calculate-score', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          interaction1_score: score1,
+          interaction2_score: score2,
+          interaction3_score: score3
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        const nextUrl = data.data?.total?.next_url
+        const remedialLevel = data.data?.total?.remedial_level
+
+        if (nextUrl) {
+          const clientUrl = nextUrl.replace(/^\/app/, '')
+          console.log(`[Phase 4 Step 3] Backend assigned remedial: ${remedialLevel}`)
+          console.log(`[Phase 4 Step 3] Routing to: ${clientUrl}`)
+          navigate(clientUrl)
+          return
+        }
+      } else {
+        console.error('Error calculating score:', data.error)
+      }
+    } catch (error) {
+      console.error('Error calling calculate-score endpoint:', error)
     }
 
-    // Route to remedial phase based on total score
     let remedialPath = ''
-
-    if (totalScore <= 3) {
-      remedialPath = '/phase4/step/3/remedial/a1/task/a'
-    } else if (totalScore <= 6) {
-      remedialPath = '/phase4/step/3/remedial/a2/task/a'
-    } else if (totalScore <= 9) {
-      remedialPath = '/phase4/step/3/remedial/b1/task/a'
-    } else if (totalScore <= 12) {
-      remedialPath = '/phase4/step/3/remedial/b2/task/a'
+    if (totalScore < 4) {
+      remedialPath = '/phase4/step3/remedial/a1/taskA'
+    } else if (totalScore < 7) {
+      remedialPath = '/phase4/step3/remedial/a2/taskA'
+    } else if (totalScore < 10) {
+      remedialPath = '/phase4/step3/remedial/b1/taskA'
+    } else if (totalScore < 13) {
+      remedialPath = '/phase4/step3/remedial/b2/taskA'
     } else {
-      remedialPath = '/phase4/step/3/remedial/c1/task/a'
+      remedialPath = '/phase4/step3/remedial/c1/taskA'
     }
 
-    console.log(`[Phase 4 Step 3 - TOTAL] Score: ${totalScore}/15 | I3 score: ${score3}/5 (below B1, routing to remedial)`)
-    console.log(`[Phase 4 Step 3] Routing to: ${remedialPath}`)
+    console.log(`[Phase 4 Step 3 - FALLBACK] Routing to: ${remedialPath}`)
     navigate(remedialPath)
   }
 
@@ -361,10 +384,10 @@ export default function Phase4Step3Interaction3() {
                 const totalScore = score1 + score2 + score3
 
                 let assignedLevel = ''
-                if (totalScore <= 3) assignedLevel = 'A1'
-                else if (totalScore <= 6) assignedLevel = 'A2'
-                else if (totalScore <= 9) assignedLevel = 'B1'
-                else if (totalScore <= 12) assignedLevel = 'B2'
+                if (totalScore < 4) assignedLevel = 'A1'
+                else if (totalScore < 7) assignedLevel = 'A2'
+                else if (totalScore < 10) assignedLevel = 'B1'
+                else if (totalScore < 13) assignedLevel = 'B2'
                 else assignedLevel = 'C1'
 
                 return (
@@ -393,9 +416,7 @@ export default function Phase4Step3Interaction3() {
                           <strong>Assigned Level: {assignedLevel}</strong>
                         </Typography>
                         <Typography variant="body2" sx={{ mt: 1, color: P.blue.shadow, opacity: 0.8 }}>
-                          {score3 >= 3
-                            ? 'Great job! You will proceed to the next step.'
-                            : `You will now proceed to ${assignedLevel}-level activities.`}
+                          {`You will now proceed to ${assignedLevel}-level activities.`}
                         </Typography>
                       </Stack>
                     </Box>
@@ -410,7 +431,7 @@ export default function Phase4Step3Interaction3() {
                       '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` },
                     }}>
                       <PlayArrowIcon fontSize="small" />
-                      {score3 >= 3 ? 'Continue to Step 4' : `Continue to ${assignedLevel} Activities`}
+                      {`Continue to ${assignedLevel} Activities`}
                     </Box>
                   </>
                 )

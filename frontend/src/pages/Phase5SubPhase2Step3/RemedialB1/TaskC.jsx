@@ -4,6 +4,7 @@ import { Box, Container, Typography, Stack, Radio, RadioGroup, FormControlLabel,
 import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { resolveSubphase2RemedialNextUrl } from '../../Phase5SubPhase2/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const LIGHT = {
@@ -58,9 +59,7 @@ export default function Phase5SubPhase2Step3RemedialB1TaskC() {
     }
   }
 
-  const handleContinue = () => {
-    navigate('/phase5/subphase/2/step/4')
-  }
+  const handleContinue = async () => navigate(await resolveSubphase2RemedialNextUrl(3, 'B1'))
 
   const allAnswered = QUESTIONS.every(q => answers[q.id] !== undefined)
 

@@ -30,19 +30,33 @@ def get_db_connection_p4():
     return conn
 
 
-def save_phase4_progress(user_id, step, interaction=None, context='main', score=None, item_id=None, item_type=None, prompt=None, answer=None, is_correct=None):
+def save_phase4_progress(
+    user_id,
+    step,
+    interaction=None,
+    context='main',
+    score=None,
+    item_id=None,
+    item_type=None,
+    prompt=None,
+    answer=None,
+    is_correct=None,
+    subphase=None,
+):
     """Save progress and optionally a response for Phase 4."""
     conn = get_db_connection_p4()
     try:
-        conn.execute(
-            """INSERT INTO student_progress (user_id, phase, step, interaction, context, is_complete)
-               VALUES (?, 4, ?, ?, ?, 0)
-               ON CONFLICT(user_id, phase) DO UPDATE SET
-                   step = excluded.step,
-                   interaction = excluded.interaction,
-                   context = excluded.context""",
-            (user_id, step, interaction or 0, context)
-        )
+        if step and step > 0:
+            conn.execute(
+                """INSERT INTO student_progress (user_id, phase, subphase, step, interaction, context, is_complete)
+                   VALUES (?, 4, ?, ?, ?, ?, 0)
+                   ON CONFLICT(user_id, phase) DO UPDATE SET
+                       subphase = excluded.subphase,
+                       step = excluded.step,
+                       interaction = excluded.interaction,
+                       context = excluded.context""",
+                (user_id, subphase, step, interaction or 0, context)
+            )
         if answer is not None:
             is_correct_int = None
             if is_correct is not None:
@@ -50,13 +64,484 @@ def save_phase4_progress(user_id, step, interaction=None, context='main', score=
             answer_val = answer if isinstance(answer, str) else json.dumps(answer)
             conn.execute(
                 """INSERT INTO student_responses
-                    (user_id, phase, step, interaction, item_index, context, item_id, item_type, prompt, response, is_correct, score)
-                   VALUES (?, 4, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)""",
-                (user_id, step, interaction or 0, context, item_id, item_type, prompt, answer_val, is_correct_int, score)
+                    (user_id, phase, subphase, step, interaction, item_index, context, item_id, item_type, prompt, response, is_correct, score)
+                   VALUES (?, 4, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)""",
+                (user_id, subphase, step, interaction or 0, context, item_id, item_type, prompt, answer_val, is_correct_int, score)
             )
         conn.commit()
     finally:
         conn.close()
+
+
+def _phase4_total_to_level(total_score, thresholds):
+    """Map a cumulative score to a remedial CEFR level."""
+    for limit, level in thresholds:
+        if total_score < limit:
+            return level
+    return 'C1'
+
+
+def _phase4_step_path(step):
+    return f"/phase4/step/{step}"
+
+
+def _phase4_remedial_start_url(step, level):
+    if step == 1:
+        return f"/phase4/remedial/{level.lower()}/taskA"
+    return f"/phase4/step/{step}/remedial/{level.lower()}/taskA"
+
+
+def _phase4_retry_url(step, level):
+    return _phase4_remedial_start_url(step, level)
+
+
+def _phase4_next_step_url(step):
+    if step == 5:
+        return "/phase4_2/step/1"
+    return _phase4_step_path(step + 2 if step == 1 else step + 1)
+
+
+def _phase4_normalize_to_cefr(score, max_score):
+    """Normalize raw task scores into the 1-5 CEFR score band used by routing."""
+    if max_score <= 0:
+        return 1
+    bounded = max(0, min(score, max_score))
+    return min(5, max(1, round((bounded / max_score) * 4) + 1))
+
+
+def _phase4_build_main_score_payload(interaction_scores, interaction_max_scores, total_score, total_max_score, remedial_level, next_url):
+    level_to_name = {1: 'A1', 2: 'A2', 3: 'B1', 4: 'B2', 5: 'C1'}
+    payload = {}
+    for index, (score, max_score) in enumerate(zip(interaction_scores, interaction_max_scores), start=1):
+        payload[f'interaction{index}'] = {
+            'score': score,
+            'max_score': max_score,
+            'level': level_to_name.get(score, 'A1')
+        }
+    payload['total'] = {
+        'score': total_score,
+        'max_score': total_max_score,
+        'remedial_level': f'Remedial {remedial_level}',
+        'should_proceed': False,
+        'next_url': next_url
+    }
+    return payload
+
+
+_PHASE4_2_MAIN_CONFIG = {
+    1: {
+        'thresholds': [(4, 'A1'), (7, 'A2'), (10, 'B1'), (13, 'B2')],
+        'max_scores': [8, 5, 8],
+    },
+    2: {
+        'thresholds': [(7, 'A2'), (10, 'B1'), (13, 'B2')],
+        'max_scores': [5, 5, 5],
+    },
+    3: {
+        'thresholds': [(7, 'A2'), (10, 'B1'), (13, 'B2')],
+        'max_scores': [5, 5, 5],
+    },
+    4: {
+        'thresholds': [(7, 'A2'), (10, 'B1'), (13, 'B2')],
+        'max_scores': [5, 5, 5],
+    },
+    5: {
+        'thresholds': [(7, 'A2'), (10, 'B1'), (13, 'B2')],
+        'max_scores': [5, 5, 5],
+    },
+}
+
+
+_PHASE4_2_FINAL_CONFIG = {
+    1: {
+        'A1': {'threshold': 8, 'max_score': 10},
+        'A2': {'threshold': 8, 'max_score': 10},
+        'B1': {'threshold': 8, 'max_score': 10},
+        'B2': {'threshold': 8, 'max_score': 10},
+        'C1': {'threshold': 8, 'max_score': 10},
+    },
+    2: {
+        'A2': {'threshold': 8, 'max_score': 10},
+        'B1': {'threshold': 8, 'max_score': 10},
+        'B2': {'threshold': 8, 'max_score': 10},
+        'C1': {'threshold': 8, 'max_score': 10},
+    },
+    3: {
+        'A2': {'threshold': 18, 'max_score': 22},
+        'B1': {'threshold': 22, 'max_score': 28},
+        'B2': {'threshold': 27, 'max_score': 34},
+        'C1': {'threshold': 40, 'max_score': 50},
+    },
+    4: {
+        'A2': {'threshold': 18, 'max_score': 22},
+        'B1': {'threshold': 15, 'max_score': 19},
+        'B2': {'threshold': 26, 'max_score': 33},
+        'C1': {'threshold': 38, 'max_score': 48},
+    },
+    5: {
+        'A2': {'threshold': 14, 'max_score': 20},
+        'B1': {'threshold': 21, 'max_score': 30},
+        'B2': {'threshold': 24, 'max_score': 34},
+        'C1': {'threshold': 28, 'max_score': 40},
+    },
+}
+
+
+def _phase4_2_step_path(step):
+    return f"/phase4_2/step/{step}"
+
+
+def _phase4_2_main_next_step_url(step):
+    if step == 5:
+        return "/dashboard"
+    return _phase4_2_step_path(step + 1)
+
+
+def _phase4_2_remedial_start_url(step, level):
+    task_slug = "taska" if step == 5 else "taskA"
+    return f"/phase4_2/step/{step}/remedial/{level.lower()}/{task_slug}"
+
+
+def _phase4_2_retry_url(step, level):
+    return _phase4_2_remedial_start_url(step, level)
+
+
+def _phase4_2_count_sentences(text):
+    return len([segment for segment in re.split(r'[.!?]+', text) if segment.strip()])
+
+
+def _phase4_2_collect_keyword_hits(text, keywords):
+    lowered = text.lower()
+    return sum(1 for keyword in keywords if keyword in lowered)
+
+
+def _phase4_2_score_guided_writing(text, *, max_score, min_sentences, min_words, core_keywords, advanced_keywords=None):
+    sentence_count = _phase4_2_count_sentences(text)
+    word_count = len(text.split())
+    core_hits = _phase4_2_collect_keyword_hits(text, core_keywords)
+    advanced_hits = _phase4_2_collect_keyword_hits(text, advanced_keywords or [])
+
+    structure_score = min(3, round((sentence_count / max(min_sentences, 1)) * 3))
+    length_score = min(2, round((word_count / max(min_words, 1)) * 2))
+    keyword_score = min(3, core_hits)
+    advanced_score = min(max(0, max_score - 8), advanced_hits)
+
+    score = min(max_score, structure_score + length_score + keyword_score + advanced_score)
+
+    if score >= max_score - 1:
+        feedback = 'Strong response. Your writing is well developed and covers the expected ideas clearly.'
+    elif score >= max_score - 3:
+        feedback = 'Good effort. Add a bit more detail and coverage of the prompt to strengthen your answer.'
+    else:
+        feedback = 'Good start. Add more complete sentences and include more of the key social media ideas from the task.'
+
+    return score, feedback
+
+
+def _phase4_2_fallback_definition_feedback(definitions):
+    results = []
+    score = 0
+    for item in definitions:
+        term = str(item.get('term', '')).strip()
+        definition = str(item.get('definition', '')).strip()
+        words = definition.split()
+        has_example = any(marker in definition.lower() for marker in ['for example', 'example', 'like', '#', '@'])
+        correct = len(words) >= 4 and bool(term)
+        if correct:
+            score += 1
+        if correct and has_example:
+            comment = 'Clear definition with an example.'
+        elif correct:
+            comment = 'Good definition. Add an example next time for a stronger answer.'
+        else:
+            comment = f'Write a fuller definition for "{term}" using a short example.'
+        results.append({'correct': correct, 'comment': comment})
+    return score, results
+
+
+def _phase4_2_fallback_proposal_feedback(proposals):
+    results = []
+    score = 0
+    for item in proposals:
+        answer = str(item.get('answer', '')).strip()
+        correct = len(answer.split()) >= 3
+        if correct:
+            score += 1
+            comment = 'Clear proposal.'
+        else:
+            comment = 'Write a more complete proposal.'
+        results.append({'correct': correct, 'comment': comment})
+    return score, results
+
+
+@router.post("/4_2/step/{step}/remedial/{level}/task-b/evaluate")
+async def evaluate_phase4_2_remedial_task_b(step: int, level: str, request: Request, user: dict = Depends(get_current_user)):
+    """Evaluate Phase 4.2 remedial Task B activities through a single backend contract."""
+    try:
+        data = await request.json()
+        normalized_level = level.upper()
+
+        if step == 1 and normalized_level == 'B2':
+            paragraph = str(data.get('paragraph', '')).strip()
+            if not paragraph:
+                return JSONResponse(status_code=400, content={'success': False, 'error': 'Paragraph is required'})
+
+            system_prompt = (
+                'You are evaluating a B2 student paragraph about effective social media posts. '
+                'Score from 0 to 10. Reward clear organization, enough detail, and correct use of social media concepts. '
+                'Respond ONLY in JSON: {"score": 0-10, "feedback": "brief feedback"}'
+            )
+            user_prompt = (
+                f'Paragraph:\n"{paragraph}"\n'
+                'Expected focus: hashtags, captions, engagement, calls-to-action, tagging, stories, viral content, posting best practices.'
+            )
+            result = await _ai_evaluate_json(system_prompt, user_prompt, max_tokens=250)
+            if result:
+                score = max(0, min(10, int(result.get('score', 0))))
+                feedback = result.get('feedback', 'Your paragraph was evaluated successfully.')
+            else:
+                score, feedback = _phase4_2_score_guided_writing(
+                    paragraph,
+                    max_score=10,
+                    min_sentences=8,
+                    min_words=40,
+                    core_keywords=['hashtag', 'caption', 'engagement', 'call-to-action', 'tag', 'story', 'viral', 'post'],
+                    advanced_keywords=['strategy', 'audience'],
+                )
+
+            return {'success': True, 'score': score, 'feedback': feedback}
+
+        if step == 2 and normalized_level == 'B2':
+            paragraph = str(data.get('paragraph', '')).strip()
+            if not paragraph:
+                return JSONResponse(status_code=400, content={'success': False, 'error': 'Explanation is required'})
+
+            guided_questions = data.get('guided_questions') or []
+            system_prompt = (
+                'You are evaluating a B2 student explanation about planning a social media post. '
+                'Score from 0 to 10. Reward clear structure, coverage of the planning questions, and appropriate vocabulary. '
+                'Respond ONLY in JSON: {"score": 0-10, "feedback": "brief feedback"}'
+            )
+            user_prompt = (
+                f'Explanation:\n"{paragraph}"\n'
+                f'Guided questions: {json.dumps(guided_questions)}'
+            )
+            result = await _ai_evaluate_json(system_prompt, user_prompt, max_tokens=250)
+            if result:
+                score = max(0, min(10, int(result.get('score', 0))))
+                feedback = result.get('feedback', 'Your explanation was evaluated successfully.')
+            else:
+                score, feedback = _phase4_2_score_guided_writing(
+                    paragraph,
+                    max_score=10,
+                    min_sentences=8,
+                    min_words=40,
+                    core_keywords=['hashtag', 'caption', 'emoji', 'call-to-action', 'post', 'engagement', 'viral', 'comments'],
+                    advanced_keywords=['strategy', 'timing'],
+                )
+
+            return {'success': True, 'score': score, 'feedback': feedback}
+
+        if step == 3 and normalized_level == 'B1':
+            definitions = data.get('definitions') or []
+            if not definitions:
+                return JSONResponse(status_code=400, content={'success': False, 'error': 'Definitions are required'})
+
+            system_prompt = (
+                'You are evaluating eight B1-level social-media term definitions. '
+                'For each answer decide if it is acceptable at B1 level. '
+                'Respond ONLY in JSON with this shape: {"score": 0-8, "feedback": [{"correct": true|false, "comment": "brief comment"}]}'
+            )
+            user_prompt = f'Definitions:\n{json.dumps(definitions)}'
+            result = await _ai_evaluate_json(system_prompt, user_prompt, max_tokens=900)
+            feedback = result.get('feedback') if result else None
+            if isinstance(feedback, list):
+                normalized_feedback = []
+                for item in feedback[:len(definitions)]:
+                    normalized_feedback.append({
+                        'correct': bool(item.get('correct')),
+                        'comment': str(item.get('comment', 'Good effort.')),
+                    })
+                while len(normalized_feedback) < len(definitions):
+                    normalized_feedback.append({'correct': False, 'comment': 'Add a clearer definition.'})
+                score = max(0, min(8, int(result.get('score', 0))))
+                return {'success': True, 'score': score, 'feedback': normalized_feedback}
+
+            score, normalized_feedback = _phase4_2_fallback_definition_feedback(definitions)
+            return {'success': True, 'score': score, 'feedback': normalized_feedback}
+
+        if step == 3 and normalized_level == 'B2':
+            paragraph = str(data.get('paragraph', '') or data.get('explanation', '')).strip()
+            if not paragraph:
+                return JSONResponse(status_code=400, content={'success': False, 'error': 'Explanation is required'})
+
+            guided_questions = data.get('guided_questions') or []
+            system_prompt = (
+                'You are evaluating a B2 explanation about social media post elements. '
+                'Score from 0 to 8. Reward complete coverage of the guided questions, clear examples, and accurate vocabulary. '
+                'Respond ONLY in JSON: {"score": 0-8, "feedback": "brief feedback"}'
+            )
+            user_prompt = (
+                f'Explanation:\n"{paragraph}"\n'
+                f'Guided questions: {json.dumps(guided_questions)}'
+            )
+            result = await _ai_evaluate_json(system_prompt, user_prompt, max_tokens=250)
+            if result:
+                score = max(0, min(8, int(result.get('score', 0))))
+                feedback = result.get('feedback', 'Your explanation was evaluated successfully.')
+            else:
+                score, feedback = _phase4_2_score_guided_writing(
+                    paragraph,
+                    max_score=8,
+                    min_sentences=8,
+                    min_words=35,
+                    core_keywords=['hashtag', 'caption', 'emoji', 'call-to-action', 'tag', 'timing', 'visual', 'engagement'],
+                )
+
+            return {'success': True, 'score': score, 'feedback': feedback}
+
+        if step == 3 and normalized_level == 'C1':
+            text = str(data.get('text', '') or data.get('analysis', '')).strip()
+            if not text:
+                return JSONResponse(status_code=400, content={'success': False, 'error': 'Analysis is required'})
+
+            system_prompt = (
+                'You are evaluating a C1 analytical paragraph about social media effectiveness. '
+                'Score from 0 to 8. Reward sophistication, cohesion, precise terminology, and analytical depth. '
+                'Respond ONLY in JSON: {"score": 0-8, "feedback": "brief feedback"}'
+            )
+            user_prompt = f'Analysis:\n"{text}"'
+            result = await _ai_evaluate_json(system_prompt, user_prompt, max_tokens=250)
+            if result:
+                score = max(0, min(8, int(result.get('score', 0))))
+                feedback = result.get('feedback', 'Your analysis was evaluated successfully.')
+            else:
+                score, feedback = _phase4_2_score_guided_writing(
+                    text,
+                    max_score=8,
+                    min_sentences=8,
+                    min_words=45,
+                    core_keywords=['reach', 'caption', 'emotional', 'call-to-action', 'tagging', 'timing', 'analytics', 'optimization'],
+                )
+
+            return {'success': True, 'score': score, 'feedback': feedback}
+
+        if step == 4 and normalized_level == 'B1':
+            proposals = data.get('proposals') or []
+            if not proposals:
+                return JSONResponse(status_code=400, content={'success': False, 'error': 'Proposals are required'})
+
+            system_prompt = (
+                'You are evaluating eight B1-level proposals for a social media post plan. '
+                'For each answer decide if it is acceptable at B1 level. '
+                'Respond ONLY in JSON with this shape: {"score": 0-8, "feedback": [{"correct": true|false, "comment": "brief comment"}]}'
+            )
+            user_prompt = f'Proposals:\n{json.dumps(proposals)}'
+            result = await _ai_evaluate_json(system_prompt, user_prompt, max_tokens=900)
+            feedback = result.get('feedback') if result else None
+            if isinstance(feedback, list):
+                normalized_feedback = []
+                for item in feedback[:len(proposals)]:
+                    normalized_feedback.append({
+                        'correct': bool(item.get('correct')),
+                        'comment': str(item.get('comment', 'Good effort.')),
+                    })
+                while len(normalized_feedback) < len(proposals):
+                    normalized_feedback.append({'correct': False, 'comment': 'Add a clearer proposal.'})
+                score = max(0, min(8, int(result.get('score', 0))))
+                return {'success': True, 'score': score, 'feedback': normalized_feedback}
+
+            score, normalized_feedback = _phase4_2_fallback_proposal_feedback(proposals)
+            return {'success': True, 'score': score, 'feedback': normalized_feedback}
+
+        if step == 4 and normalized_level == 'C1':
+            text = str(data.get('text', '') or data.get('analysis', '')).strip()
+            if not text:
+                return JSONResponse(status_code=400, content={'success': False, 'error': 'Analysis is required'})
+
+            system_prompt = (
+                'You are evaluating a C1 analytical paragraph about post effectiveness. '
+                'Score from 0 to 8. Reward sophistication, cohesion, and use of strategic social-media terminology. '
+                'Respond ONLY in JSON: {"score": 0-8, "feedback": "brief feedback"}'
+            )
+            user_prompt = f'Analysis:\n"{text}"'
+            result = await _ai_evaluate_json(system_prompt, user_prompt, max_tokens=250)
+            if result:
+                score = max(0, min(8, int(result.get('score', 0))))
+                feedback = result.get('feedback', 'Your analysis was evaluated successfully.')
+            else:
+                score, feedback = _phase4_2_score_guided_writing(
+                    text,
+                    max_score=8,
+                    min_sentences=8,
+                    min_words=45,
+                    core_keywords=['reach', 'caption', 'emojis', 'call-to-action', 'tagging', 'timing', 'analytics', 'optimization'],
+                )
+
+            return {'success': True, 'score': score, 'feedback': feedback}
+
+        if step == 5 and normalized_level == 'B2':
+            text = str(data.get('text', '') or data.get('rewrite', '')).strip()
+            if not text:
+                return JSONResponse(status_code=400, content={'success': False, 'error': 'Rewrite is required'})
+
+            system_prompt = (
+                'You are evaluating a B2 rewrite of a faulty social-media post. '
+                'Score from 0 to 10. Reward grammar correction, coherence, suitable vocabulary, and an engaging tone. '
+                'Respond ONLY in JSON: {"score": 0-10, "feedback": "brief feedback"}'
+            )
+            user_prompt = f'Rewritten post:\n"{text}"'
+            result = await _ai_evaluate_json(system_prompt, user_prompt, max_tokens=250)
+            if result:
+                score = max(0, min(10, int(result.get('score', 0))))
+                feedback = result.get('feedback', 'Your rewrite was evaluated successfully.')
+            else:
+                score, feedback = _phase4_2_score_guided_writing(
+                    text,
+                    max_score=10,
+                    min_sentences=8,
+                    min_words=35,
+                    core_keywords=['festival', 'music', 'food', 'dance', 'friend', 'hashtag', 'share', 'event'],
+                    advanced_keywords=['engage', 'audience'],
+                )
+
+            return {'success': True, 'score': score, 'feedback': feedback}
+
+        if step == 5 and normalized_level == 'C1':
+            text = str(data.get('text', '') or data.get('rewrite', '')).strip()
+            if not text:
+                return JSONResponse(status_code=400, content={'success': False, 'error': 'Rewrite is required'})
+
+            system_prompt = (
+                'You are evaluating a C1 rewrite of a faulty promotional post. '
+                'Score from 0 to 12. Reward precise grammar correction, sophisticated vocabulary, coherent discourse markers, and professional register. '
+                'Respond ONLY in JSON: {"score": 0-12, "feedback": "brief feedback"}'
+            )
+            user_prompt = f'Rewritten post:\n"{text}"'
+            result = await _ai_evaluate_json(system_prompt, user_prompt, max_tokens=250)
+            if result:
+                score = max(0, min(12, int(result.get('score', 0))))
+                feedback = result.get('feedback', 'Your rewrite was evaluated successfully.')
+            else:
+                score, feedback = _phase4_2_score_guided_writing(
+                    text,
+                    max_score=12,
+                    min_sentences=8,
+                    min_words=50,
+                    core_keywords=['festival', 'participants', 'traditions', 'customs', 'share', 'hashtag', 'promote', 'website'],
+                    advanced_keywords=['furthermore', 'moreover', 'additionally', 'visibility'],
+                )
+
+            return {'success': True, 'score': score, 'feedback': feedback}
+
+        return JSONResponse(
+            status_code=404,
+            content={'success': False, 'error': f'No Phase 4.2 Task B evaluator for step {step} level {normalized_level}'}
+        )
+
+    except Exception as e:
+        logger.error(f"Error evaluating Phase 4.2 remedial Task B: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
 
 
 @router.get("/step/{step_id}")
@@ -161,12 +646,8 @@ async def log_remedial_task(request: Request, user: dict = Depends(get_current_u
 @router.post("/step/1/calculate-score")
 async def calculate_step1_score(request: Request, user: dict = Depends(get_current_user)):
     """
-    Calculate Phase 4 Step 1 total score and CEFR level
-    Based on 3 interactions:
-    - Interaction 1 (Matching): 0-8 points
-    - Interaction 2 (Wordshake): 0-8 points
-    - Interaction 3 (Sentence): 1-5 points (CEFR A1-C1)
-    Total: 21 points max
+    Calculate Phase 4 Step 1 total score and route every student into the matching
+    remedial path, following the upstream routing architecture.
     """
     try:
         user_id = user["user_id"]
@@ -195,68 +676,121 @@ async def calculate_step1_score(request: Request, user: dict = Depends(get_curre
                 'error': 'Interaction 3 score must be between 1 and 5'
             }, status_code=400)
 
-        # Calculate CEFR levels for individual interactions
-        def get_interaction_level(score):
-            """Map 8-point score to CEFR level"""
-            if score == 1:
-                return 'A1'
-            elif score <= 3:
-                return 'A2'
-            elif score <= 5:
-                return 'B1'
-            elif score <= 7:
-                return 'B2'
-            elif score == 8:
-                return 'C1'
-            else:
-                return 'Below A1'
-
-        interaction1_level = get_interaction_level(interaction1_score)
-        interaction2_level = get_interaction_level(interaction2_score)
-
-        # Interaction 3 already has CEFR level from sentence evaluation
-        level_to_name = {1: 'A1', 2: 'A2', 3: 'B1', 4: 'B2', 5: 'C1'}
-        interaction3_level = level_to_name.get(interaction3_score, 'A1')
-
-        # Calculate total score
         total_score = interaction1_score + interaction2_score + interaction3_score
-
-        # Determine remedial CEFR level based on Interaction 3 (sentence CEFR score)
-        remedial_map = {1: 'Remedial A1', 2: 'Remedial A2', 3: 'Remedial B1', 4: 'Remedial B2', 5: 'Remedial C1'}
-        remedial_level = remedial_map.get(interaction3_score, 'Remedial A1')
-
-        # Determine if should proceed (I3 CEFR >= B1 = 3 points)
-        should_proceed = interaction3_score >= 3
+        remedial_level = _phase4_total_to_level(total_score, [(7, 'A1'), (12, 'A2'), (16, 'B1'), (19, 'B2')])
+        next_url = _phase4_remedial_start_url(1, remedial_level)
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
         print("PHASE 4 STEP 1 - SCORING RESULTS")
         print("="*60)
         print(f"User ID: {user_id}")
-        print(f"\nInteraction 1 (Matching Game):")
-        print(f"  Score: {interaction1_score}/8 points")
-        print(f"  Level: {interaction1_level}")
-        print(f"\nInteraction 2 (Wordshake Game):")
-        print(f"  Score: {interaction2_score}/8 points")
-        print(f"  Level: {interaction2_level}")
-        print(f"\nInteraction 3 (Sentence Production):")
-        print(f"  Score: {interaction3_score}/5 points")
-        print(f"  Level: {interaction3_level}")
-        print(f"\n" + "-"*60)
+        print(f"I1={interaction1_score}/8, I2={interaction2_score}/8, I3={interaction3_score}/5")
         print(f"TOTAL SCORE: {total_score}/21 points")
-        print(f"REMEDIAL LEVEL: {remedial_level}")
-        print(f"PROCEED TO NEXT: {'YES' if should_proceed else 'NO - Remedial Required'}")
+        print(f"REMEDIAL LEVEL: Remedial {remedial_level}")
+        print(f"ROUTING TO: {next_url}")
         print("="*60 + "\n")
 
         logger.info(f"Phase 4 Step 1 scoring - User {user_id}: I1={interaction1_score}, I2={interaction2_score}, I3={interaction3_score}, Total={total_score}, Level={remedial_level}")
 
         # Save to DB
         save_phase4_progress(
-            user_id, step=1, context='main',
+            user_id, step=1, interaction=1, context=f'remedial_{remedial_level.lower()}', subphase=1,
             score=total_score, item_id='step1_score', item_type='score',
             prompt='Phase 4 Step 1 Score',
             answer=json.dumps({'i1': interaction1_score, 'i2': interaction2_score, 'i3': interaction3_score}),
-            is_correct=should_proceed
+            is_correct=False
+        )
+
+        return {
+            'success': True,
+            'data': _phase4_build_main_score_payload(
+                [interaction1_score, interaction2_score, interaction3_score],
+                [8, 8, 5],
+                total_score,
+                21,
+                remedial_level,
+                next_url
+            )
+        }
+
+    except Exception as e:
+        logger.error(f"Error calculating Phase 4 Step 1 score: {e}")
+        return JSONResponse({
+            'success': False,
+            'error': str(e)
+        }, status_code=500)
+
+
+@router.post("/step/3/calculate-score")
+async def calculate_step3_score(request: Request, user: dict = Depends(get_current_user)):
+    """
+    Calculate Phase 4 Step 3 total score and route to the matching remedial level.
+    All three interactions are CEFR-scored from 1-5, for a total max score of 15.
+    """
+    try:
+        user_id = user["user_id"]
+        data = await request.json()
+
+        interaction1_score = data.get('interaction1_score', 0)
+        interaction2_score = data.get('interaction2_score', 0)
+        interaction3_score = data.get('interaction3_score', 0)
+
+        if not (1 <= interaction1_score <= 5):
+            return JSONResponse({
+                'success': False,
+                'error': 'Interaction 1 score must be between 1 and 5'
+            }, status_code=400)
+
+        if not (1 <= interaction2_score <= 5):
+            return JSONResponse({
+                'success': False,
+                'error': 'Interaction 2 score must be between 1 and 5'
+            }, status_code=400)
+
+        if not (1 <= interaction3_score <= 5):
+            return JSONResponse({
+                'success': False,
+                'error': 'Interaction 3 score must be between 1 and 5'
+            }, status_code=400)
+
+        total_score = interaction1_score + interaction2_score + interaction3_score
+
+        level_to_name = {1: 'A1', 2: 'A2', 3: 'B1', 4: 'B2', 5: 'C1'}
+        interaction1_level = level_to_name.get(interaction1_score, 'A1')
+        interaction2_level = level_to_name.get(interaction2_score, 'A1')
+        interaction3_level = level_to_name.get(interaction3_score, 'A1')
+
+        if total_score < 4:
+            remedial_level = 'Remedial A1'
+        elif total_score < 7:
+            remedial_level = 'Remedial A2'
+        elif total_score < 10:
+            remedial_level = 'Remedial B1'
+        elif total_score < 13:
+            remedial_level = 'Remedial B2'
+        else:
+            remedial_level = 'Remedial C1'
+
+        next_url = f"/app/phase4/step3/remedial/{remedial_level.split()[-1].lower()}/taskA"
+
+        print("\n" + "="*60)
+        print("PHASE 4 STEP 3 - SCORING RESULTS")
+        print("="*60)
+        print(f"User ID: {user_id}")
+        print(f"I1={interaction1_score}, I2={interaction2_score}, I3={interaction3_score}")
+        print(f"Total: {total_score}/15, Level: {remedial_level}")
+        print(f"ROUTING TO: {next_url}")
+        print("="*60 + "\n")
+
+        logger.info(f"Phase 4 Step 3 - User {user_id}: I1={interaction1_score}, I2={interaction2_score}, I3={interaction3_score}, Total={total_score}, Level={remedial_level}")
+
+        save_phase4_progress(
+            user_id, step=3, interaction=1, context=f'remedial_{remedial_level.split()[-1].lower()}', subphase=1,
+            score=total_score, item_id='step3_score', item_type='score',
+            prompt='Phase 4 Step 3 Score',
+            answer=json.dumps({'i1': interaction1_score, 'i2': interaction2_score, 'i3': interaction3_score}),
+            is_correct=False
         )
 
         return {
@@ -264,12 +798,12 @@ async def calculate_step1_score(request: Request, user: dict = Depends(get_curre
             'data': {
                 'interaction1': {
                     'score': interaction1_score,
-                    'max_score': 8,
+                    'max_score': 5,
                     'level': interaction1_level
                 },
                 'interaction2': {
                     'score': interaction2_score,
-                    'max_score': 8,
+                    'max_score': 5,
                     'level': interaction2_level
                 },
                 'interaction3': {
@@ -279,15 +813,16 @@ async def calculate_step1_score(request: Request, user: dict = Depends(get_curre
                 },
                 'total': {
                     'score': total_score,
-                    'max_score': 21,
+                    'max_score': 15,
                     'remedial_level': remedial_level,
-                    'should_proceed': should_proceed
+                    'should_proceed': False,
+                    'next_url': next_url
                 }
             }
         }
 
     except Exception as e:
-        logger.error(f"Error calculating Phase 4 Step 1 score: {e}")
+        logger.error(f"Error calculating Phase 4 Step 3 score: {e}")
         return JSONResponse({
             'success': False,
             'error': str(e)
@@ -308,6 +843,7 @@ async def calculate_a1_final_score(request: Request, user: dict = Depends(get_cu
         task_b_score = data.get('task_b_score', 0)
         total_score = task_a_score + task_b_score
         passed = total_score >= 13
+        next_url = _phase4_next_step_url(1) if passed else _phase4_retry_url(1, 'A1')
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
@@ -324,7 +860,7 @@ async def calculate_a1_final_score(request: Request, user: dict = Depends(get_cu
         print(f"RESULT: {'PASSED' if passed else 'FAILED - RETRY REQUIRED'}")
         print("="*60 + "\n")
 
-        logger.info(f"Remedial A1 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, Total={total_score}, Passed={passed}")
+        logger.info(f"Remedial A1 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, Total={total_score}, Passed={passed}, Next={next_url}")
 
         return {
             'success': True,
@@ -334,7 +870,8 @@ async def calculate_a1_final_score(request: Request, user: dict = Depends(get_cu
                 'total_score': total_score,
                 'max_score': 16,
                 'passed': passed,
-                'pass_threshold': 13
+                'pass_threshold': 13,
+                'next_url': next_url
             }
         }
 
@@ -360,6 +897,7 @@ async def calculate_a2_final_score(request: Request, user: dict = Depends(get_cu
         task_b_score = data.get('task_b_score', 0)
         total_score = task_a_score + task_b_score
         passed = total_score >= 13
+        next_url = _phase4_next_step_url(1) if passed else _phase4_retry_url(1, 'A2')
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
@@ -376,7 +914,7 @@ async def calculate_a2_final_score(request: Request, user: dict = Depends(get_cu
         print(f"RESULT: {'PASSED' if passed else 'FAILED - RETRY REQUIRED'}")
         print("="*60 + "\n")
 
-        logger.info(f"Remedial A2 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, Total={total_score}, Passed={passed}")
+        logger.info(f"Remedial A2 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, Total={total_score}, Passed={passed}, Next={next_url}")
 
         return {
             'success': True,
@@ -386,7 +924,8 @@ async def calculate_a2_final_score(request: Request, user: dict = Depends(get_cu
                 'total_score': total_score,
                 'max_score': 16,
                 'passed': passed,
-                'pass_threshold': 13
+                'pass_threshold': 13,
+                'next_url': next_url
             }
         }
 
@@ -414,6 +953,7 @@ async def calculate_b1_final_score(request: Request, user: dict = Depends(get_cu
         task_d_score = data.get('task_d_score', 0)
         total_score = task_a_score + task_b_score + task_c_score + task_d_score
         passed = total_score >= 22
+        next_url = _phase4_next_step_url(1) if passed else _phase4_retry_url(1, 'B1')
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
@@ -434,7 +974,7 @@ async def calculate_b1_final_score(request: Request, user: dict = Depends(get_cu
         print(f"RESULT: {'PASSED' if passed else 'FAILED - RETRY REQUIRED'}")
         print("="*60 + "\n")
 
-        logger.info(f"Remedial B1 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, TaskC={task_c_score}, TaskD={task_d_score}, Total={total_score}, Passed={passed}")
+        logger.info(f"Remedial B1 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, TaskC={task_c_score}, TaskD={task_d_score}, Total={total_score}, Passed={passed}, Next={next_url}")
 
         return {
             'success': True,
@@ -446,7 +986,8 @@ async def calculate_b1_final_score(request: Request, user: dict = Depends(get_cu
                 'total_score': total_score,
                 'max_score': 27,
                 'passed': passed,
-                'pass_threshold': 22
+                'pass_threshold': 22,
+                'next_url': next_url
             }
         }
 
@@ -474,6 +1015,7 @@ async def calculate_b2_final_score(request: Request, user: dict = Depends(get_cu
         task_d_score = data.get('task_d_score', 0)
         total_score = task_a_score + task_b_score + task_c_score + task_d_score
         passed = total_score >= 24
+        next_url = _phase4_next_step_url(1) if passed else _phase4_retry_url(1, 'B2')
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
@@ -494,7 +1036,7 @@ async def calculate_b2_final_score(request: Request, user: dict = Depends(get_cu
         print(f"RESULT: {'PASSED' if passed else 'FAILED - RETRY REQUIRED'}")
         print("="*60 + "\n")
 
-        logger.info(f"Remedial B2 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, TaskC={task_c_score}, TaskD={task_d_score}, Total={total_score}, Passed={passed}")
+        logger.info(f"Remedial B2 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, TaskC={task_c_score}, TaskD={task_d_score}, Total={total_score}, Passed={passed}, Next={next_url}")
 
         return {
             'success': True,
@@ -506,7 +1048,8 @@ async def calculate_b2_final_score(request: Request, user: dict = Depends(get_cu
                 'total_score': total_score,
                 'max_score': 30,
                 'passed': passed,
-                'pass_threshold': 24
+                'pass_threshold': 24,
+                'next_url': next_url
             }
         }
 
@@ -534,6 +1077,7 @@ async def calculate_c1_final_score(request: Request, user: dict = Depends(get_cu
         task_d_score = data.get('task_d_score', 0)
         total_score = task_a_score + task_b_score + task_c_score + task_d_score
         passed = total_score >= 16
+        next_url = _phase4_next_step_url(1) if passed else _phase4_retry_url(1, 'C1')
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
@@ -554,7 +1098,7 @@ async def calculate_c1_final_score(request: Request, user: dict = Depends(get_cu
         print(f"RESULT: {'PASSED' if passed else 'FAILED - RETRY REQUIRED'}")
         print("="*60 + "\n")
 
-        logger.info(f"Remedial C1 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, TaskC={task_c_score}, TaskD={task_d_score}, Total={total_score}, Passed={passed}")
+        logger.info(f"Remedial C1 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, TaskC={task_c_score}, TaskD={task_d_score}, Total={total_score}, Passed={passed}, Next={next_url}")
 
         return {
             'success': True,
@@ -566,7 +1110,8 @@ async def calculate_c1_final_score(request: Request, user: dict = Depends(get_cu
                 'total_score': total_score,
                 'max_score': 19,
                 'passed': passed,
-                'pass_threshold': 16
+                'pass_threshold': 16,
+                'next_url': next_url
             }
         }
 
@@ -713,7 +1258,7 @@ Return ONLY valid JSON."""
 @router.post("/step3/remedial/a1/final-score")
 async def calculate_step3_a1_final_score(request: Request, user: dict = Depends(get_current_user)):
     """
-    Calculate and log Phase 4 Step 2 Remedial A1 final score
+    Calculate and log Phase 4 Step 3 Remedial A1 final score
     Pass threshold: >= 18/22 (~82%)
     """
     try:
@@ -725,10 +1270,11 @@ async def calculate_step3_a1_final_score(request: Request, user: dict = Depends(
         task_c_score = data.get('task_c_score', 0)
         total_score = task_a_score + task_b_score + task_c_score
         passed = total_score >= 18
+        next_url = "/app/phase4/step/4" if passed else "/app/phase4/step3/remedial/a1/retry"
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
-        print("PHASE 4 STEP 2 - REMEDIAL A1 - FINAL ASSESSMENT")
+        print("PHASE 4 STEP 3 - REMEDIAL A1 - FINAL ASSESSMENT")
         print("="*60)
         print(f"User ID: {user_id}")
         print(f"\nTask A (Term Treasure Hunt):")
@@ -741,9 +1287,10 @@ async def calculate_step3_a1_final_score(request: Request, user: dict = Depends(
         print(f"TOTAL SCORE: {total_score}/22 points")
         print(f"PASS THRESHOLD: 18/22 points (~82%)")
         print(f"RESULT: {'PASSED' if passed else 'FAILED - RETRY REQUIRED'}")
+        print(f"NEXT URL: {next_url}")
         print("="*60 + "\n")
 
-        logger.info(f"Phase 4 Step 2 Remedial A1 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, TaskC={task_c_score}, Total={total_score}, Passed={passed}")
+        logger.info(f"Phase 4 Step 3 Remedial A1 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, TaskC={task_c_score}, Total={total_score}, Passed={passed}")
 
         return {
             'success': True,
@@ -754,12 +1301,13 @@ async def calculate_step3_a1_final_score(request: Request, user: dict = Depends(
                 'total_score': total_score,
                 'max_score': 22,
                 'passed': passed,
-                'pass_threshold': 18
+                'pass_threshold': 18,
+                'next_url': next_url
             }
         }
 
     except Exception as e:
-        logger.error(f"Error calculating Step 2 A1 final score: {e}")
+        logger.error(f"Error calculating Step 3 A1 final score: {e}")
         return JSONResponse({
             'success': False,
             'error': str(e)
@@ -769,7 +1317,7 @@ async def calculate_step3_a1_final_score(request: Request, user: dict = Depends(
 @router.post("/step3/remedial/a2/final-score")
 async def calculate_step3_a2_final_score(request: Request, user: dict = Depends(get_current_user)):
     """
-    Calculate and log Phase 4 Step 2 Remedial A2 final score
+    Calculate and log Phase 4 Step 3 Remedial A2 final score
     Pass threshold: >= 18/22 (~82%)
     """
     try:
@@ -781,10 +1329,11 @@ async def calculate_step3_a2_final_score(request: Request, user: dict = Depends(
         task_c_score = data.get('task_c_score', 0)
         total_score = task_a_score + task_b_score + task_c_score
         passed = total_score >= 18
+        next_url = "/app/phase4/step/4" if passed else "/app/phase4/step3/remedial/a2/retry"
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
-        print("PHASE 4 STEP 2 - REMEDIAL A2 - FINAL ASSESSMENT")
+        print("PHASE 4 STEP 3 - REMEDIAL A2 - FINAL ASSESSMENT")
         print("="*60)
         print(f"User ID: {user_id}")
         print(f"\nTask A (Dialogue Adventure):")
@@ -797,9 +1346,10 @@ async def calculate_step3_a2_final_score(request: Request, user: dict = Depends(
         print(f"TOTAL SCORE: {total_score}/22 points")
         print(f"PASS THRESHOLD: 18/22 points (~82%)")
         print(f"RESULT: {'PASSED' if passed else 'FAILED - RETRY REQUIRED'}")
+        print(f"NEXT URL: {next_url}")
         print("="*60 + "\n")
 
-        logger.info(f"Phase 4 Step 2 Remedial A2 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, TaskC={task_c_score}, Total={total_score}, Passed={passed}")
+        logger.info(f"Phase 4 Step 3 Remedial A2 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, TaskC={task_c_score}, Total={total_score}, Passed={passed}")
 
         return {
             'success': True,
@@ -810,12 +1360,13 @@ async def calculate_step3_a2_final_score(request: Request, user: dict = Depends(
                 'total_score': total_score,
                 'max_score': 22,
                 'passed': passed,
-                'pass_threshold': 18
+                'pass_threshold': 18,
+                'next_url': next_url
             }
         }
 
     except Exception as e:
-        logger.error(f"Error calculating Step 2 A2 final score: {e}")
+        logger.error(f"Error calculating Step 3 A2 final score: {e}")
         return JSONResponse({
             'success': False,
             'error': str(e)
@@ -1218,8 +1769,9 @@ Return ONLY valid JSON."""
 @router.post("/step3/remedial/b2/final-score")
 async def calculate_step3_b2_final_score(request: Request, user: dict = Depends(get_current_user)):
     """
-    Calculate and log Phase 4 Step 2 Remedial B2 final score
-    Pass threshold: >= 15/18 (~83%)
+    Calculate and log Phase 4 Step 3 Remedial B2 final score
+    Tasks: A-F
+    Pass threshold: >= 35/44 (~80%)
     """
     try:
         user_id = user["user_id"]
@@ -1227,40 +1779,53 @@ async def calculate_step3_b2_final_score(request: Request, user: dict = Depends(
 
         task_a_score = data.get('task_a_score', 0)
         task_b_score = data.get('task_b_score', 0)
-        total_score = task_a_score + task_b_score
-        passed = total_score >= 15
+        task_c_score = data.get('task_c_score', 0)
+        task_d_score = data.get('task_d_score', 0)
+        task_e_score = data.get('task_e_score', 0)
+        task_f_score = data.get('task_f_score', 0)
+        total_score = task_a_score + task_b_score + task_c_score + task_d_score + task_e_score + task_f_score
+        passed = total_score >= 35
+        next_url = "/app/phase4/step/4" if passed else "/app/phase4/step3/remedial/b2/retry"
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
-        print("PHASE 4 STEP 2 - REMEDIAL B2 - FINAL ASSESSMENT")
+        print("PHASE 4 STEP 3 - REMEDIAL B2 - FINAL ASSESSMENT")
         print("="*60)
         print(f"User ID: {user_id}")
-        print(f"\nTask A (Role-Play Saga):")
-        print(f"  Score: {task_a_score}/10 points")
-        print(f"\nTask B (Explain Expedition):")
-        print(f"  Score: {task_b_score}/8 points")
+        print(f"\nTask A (Role-Play Saga):         {task_a_score}/10 points")
+        print(f"Task B (Explain Expedition):     {task_b_score}/8 points")
+        print(f"Task C:                          {task_c_score}/8 points")
+        print(f"Task D:                          {task_d_score}/6 points")
+        print(f"Task E:                          {task_e_score}/6 points")
+        print(f"Task F:                          {task_f_score}/6 points")
         print(f"\n" + "-"*60)
-        print(f"TOTAL SCORE: {total_score}/18 points")
-        print(f"PASS THRESHOLD: 15/18 points (~83%)")
+        print(f"TOTAL SCORE: {total_score}/44 points")
+        print(f"PASS THRESHOLD: 35/44 points (~80%)")
         print(f"RESULT: {'PASSED' if passed else 'FAILED - RETRY REQUIRED'}")
+        print(f"NEXT URL: {next_url}")
         print("="*60 + "\n")
 
-        logger.info(f"Phase 4 Step 2 Remedial B2 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, Total={total_score}, Passed={passed}")
+        logger.info(f"Phase 4 Step 3 Remedial B2 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, TaskC={task_c_score}, TaskD={task_d_score}, TaskE={task_e_score}, TaskF={task_f_score}, Total={total_score}, Passed={passed}")
 
         return {
             'success': True,
             'data': {
                 'task_a_score': task_a_score,
                 'task_b_score': task_b_score,
+                'task_c_score': task_c_score,
+                'task_d_score': task_d_score,
+                'task_e_score': task_e_score,
+                'task_f_score': task_f_score,
                 'total_score': total_score,
-                'max_score': 18,
+                'max_score': 44,
                 'passed': passed,
-                'pass_threshold': 15
+                'pass_threshold': 35,
+                'next_url': next_url
             }
         }
 
     except Exception as e:
-        logger.error(f"Error calculating Step 2 B2 final score: {e}")
+        logger.error(f"Error calculating Step 3 B2 final score: {e}")
         return JSONResponse({
             'success': False,
             'error': str(e)
@@ -1270,7 +1835,7 @@ async def calculate_step3_b2_final_score(request: Request, user: dict = Depends(
 @router.post("/step3/remedial/b1/final-score")
 async def calculate_step3_b1_final_score(request: Request, user: dict = Depends(get_current_user)):
     """
-    Calculate and log Phase 4 Step 2 Remedial B1 final score
+    Calculate and log Phase 4 Step 3 Remedial B1 final score
     Pass threshold: >= 22/27 (~81%)
     Required tasks: A (5), B (8), C (6), D (8)
     Bonus tasks: E (6), F (6)
@@ -1297,10 +1862,11 @@ async def calculate_step3_b1_final_score(request: Request, user: dict = Depends(
 
         # Pass based on required tasks only
         passed = required_total >= 22
+        next_url = "/app/phase4/step/4" if passed else "/app/phase4/step3/remedial/b1/retry"
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
-        print("PHASE 4 STEP 2 - REMEDIAL B1 - FINAL ASSESSMENT")
+        print("PHASE 4 STEP 3 - REMEDIAL B1 - FINAL ASSESSMENT")
         print("="*60)
         print(f"User ID: {user_id}")
         print(f"\nREQUIRED TASKS:")
@@ -1318,9 +1884,10 @@ async def calculate_step3_b1_final_score(request: Request, user: dict = Depends(
         print(f"REQUIRED TASKS SCORE:             {required_total}/27 points")
         print(f"PASS THRESHOLD:                   22/27 points (~81%)")
         print(f"RESULT: {'PASSED' if passed else 'FAILED - RETRY REQUIRED'}")
+        print(f"NEXT URL: {next_url}")
         print("="*60 + "\n")
 
-        logger.info(f"Phase 4 Step 2 Remedial B1 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, TaskC={task_c_score}, TaskD={task_d_score}, TaskE={task_e_score}, TaskF={task_f_score}, Required={required_total}, Bonus={bonus_total}, Total={total_score}, Passed={passed}")
+        logger.info(f"Phase 4 Step 3 Remedial B1 Final - User {user_id}: TaskA={task_a_score}, TaskB={task_b_score}, TaskC={task_c_score}, TaskD={task_d_score}, TaskE={task_e_score}, TaskF={task_f_score}, Required={required_total}, Bonus={bonus_total}, Total={total_score}, Passed={passed}")
 
         return {
             'success': True,
@@ -1338,12 +1905,83 @@ async def calculate_step3_b1_final_score(request: Request, user: dict = Depends(
                 'max_score_bonus': 12,
                 'max_score_total': 39,
                 'passed': passed,
-                'pass_threshold': 22
+                'pass_threshold': 22,
+                'next_url': next_url
             }
         }
 
     except Exception as e:
-        logger.error(f"Error calculating Step 2 B1 final score: {e}")
+        logger.error(f"Error calculating Step 3 B1 final score: {e}")
+        return JSONResponse({
+            'success': False,
+            'error': str(e)
+        }, status_code=500)
+
+
+@router.post("/step3/remedial/c1/final-score")
+async def calculate_step3_c1_final_score(request: Request, user: dict = Depends(get_current_user)):
+    """
+    Calculate and log Phase 4 Step 3 Remedial C1 final score
+    Pass threshold: >= 43/54 (~80%)
+    """
+    try:
+        user_id = user["user_id"]
+        data = await request.json()
+
+        task_a_score = data.get('task_a_score', 0)
+        task_b_score = data.get('task_b_score', 0)
+        task_c_score = data.get('task_c_score', 0)
+        task_d_score = data.get('task_d_score', 0)
+        task_e_score = data.get('task_e_score', 0)
+        task_f_score = data.get('task_f_score', 0)
+        task_g_score = data.get('task_g_score', 0)
+        task_h_score = data.get('task_h_score', 0)
+        total_score = task_a_score + task_b_score + task_c_score + task_d_score + task_e_score + task_f_score + task_g_score + task_h_score
+        passed = total_score >= 43
+        next_url = "/app/phase4/step/4" if passed else "/app/phase4/step3/remedial/c1/retry"
+
+        print("\n" + "="*60)
+        print("PHASE 4 STEP 3 - REMEDIAL C1 - FINAL ASSESSMENT")
+        print("="*60)
+        print(f"User ID: {user_id}")
+        print(f"\nTask A:                          {task_a_score}/10 points")
+        print(f"Task B:                          {task_b_score}/8 points")
+        print(f"Task C:                          {task_c_score}/6 points")
+        print(f"Task D:                          {task_d_score}/6 points")
+        print(f"Task E:                          {task_e_score}/6 points")
+        print(f"Task F:                          {task_f_score}/6 points")
+        print(f"Task G:                          {task_g_score}/6 points")
+        print(f"Task H:                          {task_h_score}/6 points")
+        print(f"\n" + "-"*60)
+        print(f"TOTAL SCORE: {total_score}/54 points")
+        print(f"PASS THRESHOLD: 43/54 points (~80%)")
+        print(f"RESULT: {'PASSED' if passed else 'FAILED - RETRY REQUIRED'}")
+        print(f"NEXT URL: {next_url}")
+        print("="*60 + "\n")
+
+        logger.info(f"Phase 4 Step 3 Remedial C1 Final - User {user_id}: A={task_a_score}, B={task_b_score}, C={task_c_score}, D={task_d_score}, E={task_e_score}, F={task_f_score}, G={task_g_score}, H={task_h_score}, Total={total_score}, Passed={passed}")
+
+        return {
+            'success': True,
+            'data': {
+                'task_a_score': task_a_score,
+                'task_b_score': task_b_score,
+                'task_c_score': task_c_score,
+                'task_d_score': task_d_score,
+                'task_e_score': task_e_score,
+                'task_f_score': task_f_score,
+                'task_g_score': task_g_score,
+                'task_h_score': task_h_score,
+                'total_score': total_score,
+                'max_score': 54,
+                'passed': passed,
+                'pass_threshold': 43,
+                'next_url': next_url
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error calculating Step 3 C1 final score: {e}")
         return JSONResponse({
             'success': False,
             'error': str(e)
@@ -2092,6 +2730,60 @@ async def evaluate_vocabulary_integration(request: Request):
 # STEP 4 REMEDIAL
 # ============================================================================
 
+@router.post("/step/4/calculate-score")
+async def calculate_step4_score(request: Request, user: dict = Depends(get_current_user)):
+    """Calculate Phase 4 Step 4 total score and route to the matching remedial level."""
+    try:
+        user_id = user["user_id"]
+        data = await request.json()
+
+        interaction1_score = data.get('interaction1_score', 0)
+        interaction2_score = data.get('interaction2_score', 0)
+        interaction3_score = data.get('interaction3_score', 0)
+
+        for index, score in enumerate([interaction1_score, interaction2_score, interaction3_score], start=1):
+            if not (1 <= score <= 5):
+                return JSONResponse(
+                    {'success': False, 'error': f'Interaction {index} score must be between 1 and 5'},
+                    status_code=400
+                )
+
+        total_score = interaction1_score + interaction2_score + interaction3_score
+        remedial_level = _phase4_total_to_level(total_score, [(4, 'A1'), (7, 'A2'), (10, 'B1'), (13, 'B2')])
+        next_url = _phase4_remedial_start_url(4, remedial_level)
+
+        print("\n" + "="*60)
+        print("PHASE 4 STEP 4 - SCORING RESULTS")
+        print("="*60)
+        print(f"User ID: {user_id}")
+        print(f"I1={interaction1_score}, I2={interaction2_score}, I3={interaction3_score}")
+        print(f"Total: {total_score}/15, Level: Remedial {remedial_level}")
+        print(f"ROUTING TO: {next_url}")
+        print("="*60 + "\n")
+
+        save_phase4_progress(
+            user_id, step=4, interaction=1, context=f'remedial_{remedial_level.lower()}', subphase=1,
+            score=total_score, item_id='step4_score', item_type='score',
+            prompt='Phase 4 Step 4 Score',
+            answer=json.dumps({'i1': interaction1_score, 'i2': interaction2_score, 'i3': interaction3_score}),
+            is_correct=False
+        )
+
+        return {
+            'success': True,
+            'data': _phase4_build_main_score_payload(
+                [interaction1_score, interaction2_score, interaction3_score],
+                [5, 5, 5],
+                total_score,
+                15,
+                remedial_level,
+                next_url
+            )
+        }
+    except Exception as e:
+        logger.error(f"Error calculating Phase 4 Step 4 score: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
 @router.post("/step4/remedial/log")
 async def log_step4_remedial_task(request: Request):
     """Log Phase 4 Step 4 remedial task completion"""
@@ -2113,18 +2805,37 @@ async def log_step4_remedial_task(request: Request):
 
 @router.post("/step4/remedial/a1/final-score")
 async def calculate_step4_a1_final_score(request: Request):
-    """Calculate Phase 4 Step 4 Remedial A1 final score. Pass: 70% = 16/22"""
+    """Calculate Phase 4 Step 4 Remedial A1 final score."""
     try:
         data = await request.json()
         task_a = data.get('task_a_score', 0)
         task_b = data.get('task_b_score', 0)
         task_c = data.get('task_c_score', 0)
         total = task_a + task_b + task_c
-        passed = total >= 16
-        print(f"\n{'='*60}\nPHASE 4 STEP 4 - REMEDIAL A1 - FINAL\n{'='*60}\nTask A: {task_a}/8 | Task B: {task_b}/8 | Task C: {task_c}/6\nTOTAL: {total}/22 | Pass: 16/22 | {'PASSED' if passed else 'FAILED'}\n{'='*60}\n")
-        return {'success': True, 'data': {'task_a': task_a, 'task_b': task_b, 'task_c': task_c, 'total': total, 'max_score': 22, 'threshold': 16, 'passed': passed}}
+        passed = total >= 18
+        next_url = _phase4_next_step_url(4) if passed else _phase4_retry_url(4, 'A1')
+        print(f"\n{'='*60}\nPHASE 4 STEP 4 - REMEDIAL A1 - FINAL\n{'='*60}\nTask A: {task_a}/8 | Task B: {task_b}/8 | Task C: {task_c}/6\nTOTAL: {total}/22 | Pass: 18/22 | {'PASSED' if passed else 'FAILED'}\nNEXT: {next_url}\n{'='*60}\n")
+        return {'success': True, 'data': {'task_a': task_a, 'task_b': task_b, 'task_c': task_c, 'total': total, 'max_score': 22, 'threshold': 18, 'passed': passed, 'next_url': next_url}}
     except Exception as e:
         logger.error(f"Error calculating Phase 4 Step 4 A1 final score: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/step4/remedial/a2/final-score")
+async def calculate_step4_a2_final_score(request: Request):
+    """Calculate Phase 4 Step 4 Remedial A2 final score."""
+    try:
+        data = await request.json()
+        task_a = data.get('task_a_score', 0)
+        task_b = data.get('task_b_score', 0)
+        task_c = data.get('task_c_score', 0)
+        total = task_a + task_b + task_c
+        passed = total >= 18
+        next_url = _phase4_next_step_url(4) if passed else _phase4_retry_url(4, 'A2')
+        print(f"\n{'='*60}\nPHASE 4 STEP 4 - REMEDIAL A2 - FINAL\n{'='*60}\nTask A: {task_a}/7 | Task B: {task_b}/8 | Task C: {task_c}/6\nTOTAL: {total}/21 | Pass: 18/21 | {'PASSED' if passed else 'FAILED'}\nNEXT: {next_url}\n{'='*60}\n")
+        return {'success': True, 'data': {'task_a': task_a, 'task_b': task_b, 'task_c': task_c, 'total': total, 'max_score': 21, 'threshold': 18, 'passed': passed, 'next_url': next_url}}
+    except Exception as e:
+        logger.error(f"Error calculating Phase 4 Step 4 A2 final score: {e}")
         return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
 
 
@@ -2187,7 +2898,7 @@ async def evaluate_step4_b1_definitions(request: Request, user: dict = Depends(g
 
 @router.post("/step4/remedial/b1/final-score")
 async def calculate_step4_b1_final_score(request: Request, user: dict = Depends(get_current_user)):
-    """Calculate Phase 4 Step 4 Remedial B1 final score. Pass: ~84% = 32/38"""
+    """Calculate Phase 4 Step 4 Remedial B1 final score."""
     try:
         data = await request.json()
         task_a = data.get('task_a_score', 0)
@@ -2197,9 +2908,10 @@ async def calculate_step4_b1_final_score(request: Request, user: dict = Depends(
         task_e = data.get('task_e_score', 0)
         task_f = data.get('task_f_score', 0)
         total = task_a + task_b + task_c + task_d + task_e + task_f
-        passed = total >= 32
+        passed = total >= 22
+        next_url = _phase4_next_step_url(4) if passed else _phase4_retry_url(4, 'B1')
         user_id = user["user_id"]
-        logger.info(f"Step 4 B1 Scores - A:{task_a}/4, B:{task_b}/8, C:{task_c}/6, D:{task_d}/8, E:{task_e}/6, F:{task_f}/6 = {total}/38 {'PASS' if passed else 'FAIL'}")
+        logger.info(f"Step 4 B1 Scores - A:{task_a}/4, B:{task_b}/8, C:{task_c}/6, D:{task_d}/8, E:{task_e}/6, F:{task_f}/6 = {total}/38 {'PASS' if passed else 'FAIL'} -> {next_url}")
         try:
             db = sqlite3.connect('fardi.db')
             cursor = db.cursor()
@@ -2207,15 +2919,312 @@ async def calculate_step4_b1_final_score(request: Request, user: dict = Depends(
             db.commit()
         except Exception as db_error:
             logger.error(f"Database error: {db_error}")
-        return {'success': True, 'data': {'task_a': task_a, 'task_b': task_b, 'task_c': task_c, 'task_d': task_d, 'task_e': task_e, 'task_f': task_f, 'total': total, 'max_score': 38, 'threshold': 32, 'passed': passed}}
+        return {'success': True, 'data': {'task_a': task_a, 'task_b': task_b, 'task_c': task_c, 'task_d': task_d, 'task_e': task_e, 'task_f': task_f, 'total': total, 'max_score': 38, 'threshold': 22, 'passed': passed, 'next_url': next_url}}
     except Exception as e:
         logger.error(f"Error calculating Phase 4 Step 4 B1 final score: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/step4/remedial/b2/final-score")
+async def calculate_step4_b2_final_score(request: Request):
+    """Calculate Phase 4 Step 4 Remedial B2 final score."""
+    try:
+        data = await request.json()
+        task_a = data.get('task_a_score', 0)
+        task_b = data.get('task_b_score', 0)
+        task_c = data.get('task_c_score', 0)
+        task_d = data.get('task_d_score', 0)
+        total = task_a + task_b + task_c + task_d
+        passed = total >= 20
+        next_url = _phase4_next_step_url(4) if passed else _phase4_retry_url(4, 'B2')
+        return {'success': True, 'data': {'task_a': task_a, 'task_b': task_b, 'task_c': task_c, 'task_d': task_d, 'total': total, 'max_score': 24, 'threshold': 20, 'passed': passed, 'next_url': next_url}}
+    except Exception as e:
+        logger.error(f"Error calculating Phase 4 Step 4 B2 final score: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/step4/remedial/c1/final-score")
+async def calculate_step4_c1_final_score(request: Request):
+    """Calculate Phase 4 Step 4 Remedial C1 final score."""
+    try:
+        data = await request.json()
+        task_a = data.get('task_a_score', 0)
+        task_b = data.get('task_b_score', 0)
+        task_c = data.get('task_c_score', 0)
+        task_d = data.get('task_d_score', 0)
+        total = task_a + task_b + task_c + task_d
+        passed = total >= 21
+        next_url = _phase4_next_step_url(4) if passed else _phase4_retry_url(4, 'C1')
+        return {'success': True, 'data': {'task_a': task_a, 'task_b': task_b, 'task_c': task_c, 'task_d': task_d, 'total': total, 'max_score': 26, 'threshold': 21, 'passed': passed, 'next_url': next_url}}
+    except Exception as e:
+        logger.error(f"Error calculating Phase 4 Step 4 C1 final score: {e}")
         return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
 
 
 # ============================================================================
 # STEP 5 REMEDIAL ENDPOINTS
 # ============================================================================
+
+@router.post("/step5/evaluate-spelling")
+async def evaluate_step5_spelling(request: Request, user: dict = Depends(get_current_user)):
+    """Evaluate Step 5 Interaction 1 and return a CEFR-band score from 1-5."""
+    try:
+        data = await request.json()
+        corrected_text = (data.get('correctedText') or data.get('corrected_text') or '').strip()
+        level = data.get('level', 'A1')
+        if not corrected_text:
+            return {'success': False, 'score': 0, 'level': 'Below A1', 'feedback': 'Please correct the spelling mistakes in the text.'}
+
+        level_keywords = {
+            'A1': ['has', 'title', 'festival', 'colours'],
+            'A2': ['gatefold', 'lettering', 'title', 'global', 'festival'],
+            'B1': ['features', 'gatefold', 'layout', 'lettering', 'slogan'],
+            'B2': ['employs', 'design', 'immersive', 'elegant', 'lettering'],
+            'C1': ['integrates', 'sophisticated', 'layout', 'precise', 'lettering', 'visual', 'hierarchy'],
+        }
+        keywords = level_keywords.get(level, level_keywords['A1'])
+        found = sum(1 for word in keywords if word.lower() in corrected_text.lower())
+        score = _phase4_normalize_to_cefr(found, len(keywords))
+        level_name = {1: 'A1', 2: 'A2', 3: 'B1', 4: 'B2', 5: 'C1'}[score]
+        return {
+            'success': True,
+            'score': score,
+            'level': level_name,
+            'feedback': f'Spelling score: {score}/5.',
+            'details': {'matched_words': found, 'target_words': len(keywords)}
+        }
+    except Exception as e:
+        logger.error(f"Error evaluating Phase 4 Step 5 spelling: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/step5/evaluate-grammar")
+async def evaluate_step5_grammar(request: Request, user: dict = Depends(get_current_user)):
+    """Evaluate Step 5 Interaction 2 and return a CEFR-band score from 1-5."""
+    try:
+        data = await request.json()
+        corrected_text = (data.get('correctedText') or data.get('grammar_corrected') or '').strip()
+        level = data.get('level', 'A1')
+        if not corrected_text:
+            return {'success': False, 'score': 0, 'level': 'Below A1', 'feedback': 'Please correct the grammar mistakes in the text.'}
+
+        grammar_targets = {
+            'A1': ['a title', 'are red'],
+            'A2': ['a gatefold', 'uses colours'],
+            'B1': ['includes colorful images', 'includes images'],
+            'B2': ['slogan is persuasive'],
+            'C1': ['encapsulates the ethos'],
+        }
+        targets = grammar_targets.get(level, grammar_targets['A1'])
+        lowered = corrected_text.lower()
+        found = sum(1 for phrase in targets if phrase.lower() in lowered)
+        score = _phase4_normalize_to_cefr(found, len(targets))
+        level_name = {1: 'A1', 2: 'A2', 3: 'B1', 4: 'B2', 5: 'C1'}[score]
+        return {
+            'success': True,
+            'score': score,
+            'level': level_name,
+            'feedback': f'Grammar score: {score}/5.',
+            'details': {'matched_targets': found, 'target_count': len(targets)}
+        }
+    except Exception as e:
+        logger.error(f"Error evaluating Phase 4 Step 5 grammar: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/step5/evaluate-enhancement")
+async def evaluate_step5_enhancement(request: Request, user: dict = Depends(get_current_user)):
+    """Evaluate Step 5 Interaction 3 and return a CEFR-band score from 1-5."""
+    try:
+        data = await request.json()
+        enhanced_text = (data.get('enhancedText') or data.get('enhanced_post') or '').strip()
+        if not enhanced_text:
+            return {'success': False, 'score': 0, 'level': 'Below A1', 'feedback': 'Please enhance the text with connectors and better vocabulary.'}
+
+        lowered = enhanced_text.lower()
+        word_count = len(enhanced_text.split())
+        connectors = sum(1 for word in ['and', 'because', 'first', 'then', 'while', 'furthermore', 'moreover'] if word in lowered)
+        advanced_vocab = sum(1 for word in ['eye-catching', 'persuasive', 'immersive', 'transitions', 'seamlessly', 'elevates', 'narrative'] if word in lowered)
+        richness = min(5, connectors + advanced_vocab + (1 if word_count >= 20 else 0) + (1 if word_count >= 35 else 0))
+        score = max(1, min(5, richness))
+        level_name = {1: 'A1', 2: 'A2', 3: 'B1', 4: 'B2', 5: 'C1'}[score]
+        return {
+            'success': True,
+            'score': score,
+            'level': level_name,
+            'feedback': f'Enhancement score: {score}/5.',
+            'details': {'word_count': word_count, 'connector_hits': connectors, 'vocabulary_hits': advanced_vocab}
+        }
+    except Exception as e:
+        logger.error(f"Error evaluating Phase 4 Step 5 enhancement: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/step/5/calculate-score")
+async def calculate_step5_score(request: Request, user: dict = Depends(get_current_user)):
+    """Calculate Phase 4 Step 5 total score and route to the matching remedial level."""
+    try:
+        user_id = user["user_id"]
+        data = await request.json()
+
+        interaction1_score = data.get('interaction1_score', 0)
+        interaction2_score = data.get('interaction2_score', 0)
+        interaction3_score = data.get('interaction3_score', 0)
+
+        for index, score in enumerate([interaction1_score, interaction2_score, interaction3_score], start=1):
+            if not (1 <= score <= 5):
+                return JSONResponse(
+                    {'success': False, 'error': f'Interaction {index} score must be between 1 and 5'},
+                    status_code=400
+                )
+
+        total_score = interaction1_score + interaction2_score + interaction3_score
+        remedial_level = _phase4_total_to_level(total_score, [(4, 'A1'), (7, 'A2'), (10, 'B1'), (13, 'B2')])
+        next_url = _phase4_remedial_start_url(5, remedial_level)
+
+        print("\n" + "="*60)
+        print("PHASE 4 STEP 5 - SCORING RESULTS")
+        print("="*60)
+        print(f"User ID: {user_id}")
+        print(f"I1={interaction1_score}, I2={interaction2_score}, I3={interaction3_score}")
+        print(f"Total: {total_score}/15, Level: Remedial {remedial_level}")
+        print(f"ROUTING TO: {next_url}")
+        print("="*60 + "\n")
+
+        save_phase4_progress(
+            user_id, step=5, interaction=1, context=f'remedial_{remedial_level.lower()}', subphase=1,
+            score=total_score, item_id='step5_score', item_type='score',
+            prompt='Phase 4 Step 5 Score',
+            answer=json.dumps({'i1': interaction1_score, 'i2': interaction2_score, 'i3': interaction3_score}),
+            is_correct=False
+        )
+
+        return {
+            'success': True,
+            'data': _phase4_build_main_score_payload(
+                [interaction1_score, interaction2_score, interaction3_score],
+                [5, 5, 5],
+                total_score,
+                15,
+                remedial_level,
+                next_url
+            )
+        }
+    except Exception as e:
+        logger.error(f"Error calculating Phase 4 Step 5 score: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/step5/remedial/log")
+async def log_step5_remedial_task(request: Request):
+    """Log Phase 4 Step 5 remedial task completion."""
+    try:
+        data = await request.json()
+        level = data.get('level', 'Unknown')
+        task = data.get('task', 'Unknown')
+        score = data.get('score', 0)
+        max_score = data.get('max_score', data.get('maxScore', 0))
+        print(f"\n{'='*60}\nPHASE 4 STEP 5 - REMEDIAL {level} - TASK {task}\n{'='*60}\nScore: {score}/{max_score}\n{'='*60}\n")
+        return {'success': True, 'message': 'Phase 4 Step 5 remedial task logged successfully'}
+    except Exception as e:
+        logger.error(f"Error logging Phase 4 Step 5 remedial task: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/step5/remedial/a1/final-score")
+async def calculate_step5_a1_final_score(request: Request):
+    """Calculate Phase 4 Step 5 Remedial A1 final score."""
+    try:
+        data = await request.json()
+        task_a = data.get('task_a_score', 0)
+        task_b = data.get('task_b_score', 0)
+        task_c = data.get('task_c_score', 0)
+        total = task_a + task_b + task_c
+        passed = total >= 17
+        next_url = _phase4_next_step_url(5) if passed else _phase4_retry_url(5, 'A1')
+        return {'success': True, 'data': {'task_a': task_a, 'task_b': task_b, 'task_c': task_c, 'total': total, 'max_score': 22, 'threshold': 17, 'passed': passed, 'next_url': next_url}}
+    except Exception as e:
+        logger.error(f"Error calculating Phase 4 Step 5 A1 final score: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/step5/remedial/a2/final-score")
+async def calculate_step5_a2_final_score(request: Request):
+    """Calculate Phase 4 Step 5 Remedial A2 final score."""
+    try:
+        data = await request.json()
+        task_a = data.get('task_a_score', 0)
+        task_b = data.get('task_b_score', 0)
+        task_c = data.get('task_c_score', 0)
+        total = task_a + task_b + task_c
+        passed = total >= 15
+        next_url = _phase4_next_step_url(5) if passed else _phase4_retry_url(5, 'A2')
+        return {'success': True, 'data': {'task_a': task_a, 'task_b': task_b, 'task_c': task_c, 'total': total, 'max_score': 18, 'threshold': 15, 'passed': passed, 'next_url': next_url}}
+    except Exception as e:
+        logger.error(f"Error calculating Phase 4 Step 5 A2 final score: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/step5/remedial/b1/final-score")
+async def calculate_step5_b1_final_score(request: Request):
+    """Calculate Phase 4 Step 5 Remedial B1 final score."""
+    try:
+        data = await request.json()
+        task_a = data.get('task_a_score', 0)
+        task_b = data.get('task_b_score', 0)
+        task_c = data.get('task_c_score', 0)
+        task_d = data.get('task_d_score', 0)
+        task_e = data.get('task_e_score', 0)
+        task_f = data.get('task_f_score', 0)
+        required_score = task_a + task_b + task_c + task_d
+        total = required_score + task_e + task_f
+        passed = required_score >= 22
+        next_url = _phase4_next_step_url(5) if passed else _phase4_retry_url(5, 'B1')
+        return {'success': True, 'data': {'task_a': task_a, 'task_b': task_b, 'task_c': task_c, 'task_d': task_d, 'task_e': task_e, 'task_f': task_f, 'required_score': required_score, 'required_threshold': 22, 'total': total, 'max_score': 39, 'passed': passed, 'next_url': next_url}}
+    except Exception as e:
+        logger.error(f"Error calculating Phase 4 Step 5 B1 final score: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/step5/remedial/b2/final-score")
+async def calculate_step5_b2_final_score(request: Request):
+    """Calculate Phase 4 Step 5 Remedial B2 final score."""
+    try:
+        data = await request.json()
+        task_a = data.get('task_a_score', 0)
+        task_b = data.get('task_b_score', 0)
+        task_c = data.get('task_c_score', 0)
+        task_d = data.get('task_d_score', 0)
+        task_e = data.get('task_e_score', 0)
+        task_f = data.get('task_f_score', 0)
+        total = task_a + task_b + task_c + task_d + task_e + task_f
+        passed = total >= 37
+        next_url = _phase4_next_step_url(5) if passed else _phase4_retry_url(5, 'B2')
+        return {'success': True, 'data': {'task_a': task_a, 'task_b': task_b, 'task_c': task_c, 'task_d': task_d, 'task_e': task_e, 'task_f': task_f, 'total': total, 'max_score': 46, 'threshold': 37, 'passed': passed, 'next_url': next_url}}
+    except Exception as e:
+        logger.error(f"Error calculating Phase 4 Step 5 B2 final score: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/step5/remedial/c1/final-score")
+async def calculate_step5_c1_final_score(request: Request):
+    """Calculate Phase 4 Step 5 Remedial C1 final score."""
+    try:
+        data = await request.json()
+        task_a = data.get('task_a_score', 0)
+        task_b = data.get('task_b_score', 0)
+        task_c = data.get('task_c_score', 0)
+        task_d = data.get('task_d_score', 0)
+        task_e = data.get('task_e_score', 0)
+        task_f = data.get('task_f_score', 0)
+        task_g = data.get('task_g_score', 0)
+        total = task_a + task_b + task_c + task_d + task_e + task_f + task_g
+        passed = total >= 34
+        next_url = _phase4_next_step_url(5) if passed else _phase4_retry_url(5, 'C1')
+        return {'success': True, 'data': {'task_a': task_a, 'task_b': task_b, 'task_c': task_c, 'task_d': task_d, 'task_e': task_e, 'task_f': task_f, 'task_g': task_g, 'total': total, 'max_score': 42, 'threshold': 34, 'passed': passed, 'next_url': next_url}}
+    except Exception as e:
+        logger.error(f"Error calculating Phase 4 Step 5 C1 final score: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
 
 @router.post("/step5/remedial/evaluate-expansion")
 async def evaluate_step5_remedial_expansion(request: Request, user: dict = Depends(get_current_user)):
@@ -2842,7 +3851,7 @@ async def log_phase4_2_interaction(request: Request, user: dict = Depends(get_cu
 
         # Save to DB
         save_phase4_progress(
-            user_id, step=step, interaction=interaction, context='main',
+            user_id, step=step, interaction=interaction, context='main', subphase=2,
             score=score, item_id=f'step{step}_i{interaction}_{game_type}', item_type=game_type,
             prompt=f'Phase 4.2 Step {step} Interaction {interaction}',
             answer=json.dumps({'score': score, 'max_score': max_score, 'time_taken': time_taken}),
@@ -2945,6 +3954,189 @@ Return a JSON object with:
 
     except Exception as e:
         logger.error(f"Error evaluating Phase 4.2 Step 1 response: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/4_2/step/{step}/calculate-score")
+async def calculate_phase4_2_step_score(step: int, request: Request, user: dict = Depends(get_current_user)):
+    """Route Phase 4.2 steps into the matching remedial path using CEFR-normalized totals."""
+    try:
+        config = _PHASE4_2_MAIN_CONFIG.get(step)
+        if not config:
+            return JSONResponse(status_code=404, content={'success': False, 'error': f'Unsupported Phase 4.2 step: {step}'})
+
+        data = await request.json()
+        raw_scores = []
+        normalized_scores = []
+        interaction_max_scores = []
+
+        for index, default_max in enumerate(config['max_scores'], start=1):
+            raw_score = float(data.get(f'interaction{index}_score', 0))
+            max_score = float(data.get(f'interaction{index}_max_score', default_max))
+            normalized_score = _phase4_normalize_to_cefr(raw_score, max_score)
+            raw_scores.append(raw_score)
+            interaction_max_scores.append(max_score)
+            normalized_scores.append(normalized_score)
+
+        total_score = sum(normalized_scores)
+        total_max_score = 15
+        remedial_level = _phase4_total_to_level(total_score, config['thresholds'])
+        next_url = _phase4_2_remedial_start_url(step, remedial_level)
+
+        logger.info(
+            f"Phase 4.2 Step {step} scoring - User {user['user_id']}: "
+            f"Raw={raw_scores}, Normalized={normalized_scores}, Total={total_score}, Level={remedial_level}, Next={next_url}"
+        )
+
+        save_phase4_progress(
+            user['user_id'],
+            step=step,
+            interaction=1,
+            context=f'remedial_{remedial_level.lower()}',
+            subphase=2,
+            score=total_score,
+            item_id=f'phase4_2_step{step}_score',
+            item_type='score',
+            prompt=f'Phase 4.2 Step {step} Score',
+            answer=json.dumps({'raw_scores': raw_scores, 'normalized_scores': normalized_scores}),
+            is_correct=False,
+        )
+
+        return {
+            'success': True,
+            'data': _phase4_build_main_score_payload(
+                normalized_scores,
+                [5, 5, 5],
+                total_score,
+                total_max_score,
+                remedial_level,
+                next_url,
+            )
+        }
+    except Exception as e:
+        logger.error(f"Error calculating Phase 4.2 Step {step} score: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/4_2/step/{step}/remedial/{level}/final-score")
+async def calculate_phase4_2_remedial_final_score(step: int, level: str, request: Request, user: dict = Depends(get_current_user)):
+    """Evaluate Phase 4.2 remedial completion and return the next route."""
+    try:
+        level_key = level.upper()
+        config = _PHASE4_2_FINAL_CONFIG.get(step, {}).get(level_key)
+        if not config:
+            return JSONResponse(
+                status_code=404,
+                content={'success': False, 'error': f'Unsupported Phase 4.2 remedial path: step {step} level {level_key}'}
+            )
+
+        data = await request.json()
+        total_score = float(data.get('total_score', 0))
+        passed = total_score >= config['threshold']
+        next_url = _phase4_2_main_next_step_url(step) if passed else _phase4_2_retry_url(step, level_key)
+
+        logger.info(
+            f"Phase 4.2 Step {step} remedial {level_key} - User {user['user_id']}: "
+            f"Total={total_score}/{config['max_score']}, Threshold={config['threshold']}, Passed={passed}, Next={next_url}"
+        )
+
+        return {
+            'success': True,
+            'data': {
+                'total': total_score,
+                'max_score': config['max_score'],
+                'threshold': config['threshold'],
+                'passed': passed,
+                'next_url': next_url,
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error calculating Phase 4.2 Step {step} remedial {level} final score: {e}")
+        return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
+
+
+@router.post("/4_2/step2/evaluate-caption")
+async def evaluate_phase4_2_step2_caption(request: Request, user: dict = Depends(get_current_user)):
+    """Evaluate Phase 4.2 Step 2 Interaction 1 caption writing."""
+    try:
+        data = await request.json()
+        caption = data.get('caption', '').strip()
+
+        if not caption:
+            return JSONResponse(status_code=400, content={'success': False, 'error': 'Caption cannot be empty'})
+
+        try:
+            system_prompt = """You are evaluating a student's Instagram caption for the Global Cultures Festival.
+
+The caption should mention the event, include at least some social-media style elements, and grow in sophistication by CEFR band.
+
+Score using:
+- A1 (1): Minimal attempt
+- A2 (2): Simple caption with basic event info
+- B1 (3): Clear caption with event details plus a hashtag or CTA
+- B2 (4): Engaging caption with multiple details, hashtags, and a stronger CTA
+- C1 (5): Sophisticated promotional caption with strategic, vivid language
+
+Return ONLY JSON:
+{
+  "score": <1-5>,
+  "level": "<A1|A2|B1|B2|C1>",
+  "feedback": "<constructive feedback>"
+}"""
+
+            ai_response = ai_service.client.chat.completions.create(
+                model="llama-3.1-70b-versatile",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": caption}
+                ],
+                max_tokens=250,
+                temperature=0.3
+            )
+            result_text = ai_response.choices[0].message.content.strip()
+            if '```json' in result_text:
+                result_text = result_text.split('```json')[1].split('```')[0]
+            elif '```' in result_text:
+                result_text = result_text.split('```')[1].split('```')[0]
+            result = json.loads(result_text.strip())
+
+            return {
+                'success': True,
+                'score': result.get('score', 1),
+                'level': result.get('level', 'A1'),
+                'feedback': result.get('feedback', 'Good work!'),
+                'details': {}
+            }
+        except Exception as ai_error:
+            logger.warning(f"Phase 4.2 Step 2 caption AI fallback: {ai_error}")
+            caption_lower = caption.lower()
+            word_count = len(caption.split())
+            sentence_count = len([sentence for sentence in re.split(r'[.!?]+', caption) if sentence.strip()])
+            has_hashtag = '#' in caption
+            has_cta = any(term in caption_lower for term in ['join', 'tag', 'come', 'save the date', 'don\'t miss'])
+            has_event_detail = any(term in caption_lower for term in ['festival', 'march', 'music', 'food', 'dance', 'culture'])
+            has_advanced_vocab = any(term in caption_lower for term in ['immersive', 'authentic', 'celebrate', 'experience', 'vibrant'])
+
+            if word_count >= 35 and sentence_count >= 4 and has_hashtag and has_cta and has_event_detail and has_advanced_vocab:
+                score, level = 5, 'C1'
+            elif word_count >= 25 and sentence_count >= 3 and has_hashtag and has_cta and has_event_detail:
+                score, level = 4, 'B2'
+            elif word_count >= 15 and sentence_count >= 2 and has_event_detail and (has_hashtag or has_cta):
+                score, level = 3, 'B1'
+            elif word_count >= 8 and has_event_detail:
+                score, level = 2, 'A2'
+            else:
+                score, level = 1, 'A1'
+
+            return {
+                'success': True,
+                'score': score,
+                'level': level,
+                'feedback': 'Good effort! Add clearer event details, a hashtag, and a stronger call-to-action to improve your caption.',
+                'details': {}
+            }
+    except Exception as e:
+        logger.error(f"Error evaluating Phase 4.2 Step 2 caption: {e}")
         return JSONResponse(status_code=500, content={'success': False, 'error': str(e)})
 
 

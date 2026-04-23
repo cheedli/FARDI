@@ -79,7 +79,7 @@ export default function Phase3RemedialA1TaskB() {
     }
   }
 
-  const handleNext = () => { navigate('/app/dashboard') }
+  const handleNext = () => { navigate('/phase3/step/1/interaction/1') }
 
   const correctCount = GAP_FILL_SENTENCES.filter(s => answers[s.id] === s.answer).length
   const isComplete = Object.keys(answers).length === GAP_FILL_SENTENCES.length
@@ -243,7 +243,7 @@ export default function Phase3RemedialA1TaskB() {
                   '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` },
                 }}
               >
-                Complete A1 Tasks
+                Retry Step 1
                 <ArrowForwardIcon fontSize="small" />
               </Box>
             </motion.div>

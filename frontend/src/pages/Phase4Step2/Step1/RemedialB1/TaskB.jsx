@@ -26,7 +26,7 @@ const PROMPTS = [
 
 export default function Phase4_2RemedialB1TaskB() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 2, context: 'remedial_b1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 2, context: 'remedial_b1' })
   const [proposals, setProposals] = useState(Array(8).fill(''))
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)

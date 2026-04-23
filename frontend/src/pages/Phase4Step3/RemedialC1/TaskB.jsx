@@ -135,8 +135,8 @@ export default function RemedialC1TaskB() {
               </Box>
             ))}
             <Box sx={{ textAlign: 'center', mt: 3 }}>
-              <Box component="button" onClick={() => navigate('/dashboard')} sx={{ px: 6, py: 2, fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', bgcolor: P.green.border, color: '#fff', border: `2px solid ${P.green.shadow}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${P.green.shadow}`, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` } }}>
-                Complete C1 Remedial Tasks →
+              <Box component="button" onClick={() => navigate('/phase4/step3/remedial/c1/taskC')} sx={{ px: 6, py: 2, fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', bgcolor: P.green.border, color: '#fff', border: `2px solid ${P.green.shadow}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${P.green.shadow}`, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` } }}>
+                Continue to Task C →
               </Box>
             </Box>
           </motion.div>

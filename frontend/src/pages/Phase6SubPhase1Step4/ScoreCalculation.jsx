@@ -5,6 +5,8 @@ import { useTheme } from '@mui/material/styles'
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { getSubphase1MainRouting } from '../Phase6SubPhase1/shared/routing.js'
+import { usePhase6ScoreResume } from '../Phase6/shared/useScoreResumeSave.js'
 
 const LIGHT = {
   pageBg: '#FFFDE7',
@@ -23,47 +25,48 @@ const DARK = {
   teal: { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
 }
 
-const determineRemedialLevel = (i2Score) => {
-  if (i2Score <= 1) return 'A1'
-  if (i2Score <= 2) return 'A2'
-  if (i2Score <= 3) return 'B1'
-  if (i2Score <= 4) return 'B2'
-  return 'C1'
-}
-
 export default function Phase6SP1Step4Score() {
   const navigate = useNavigate()
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const [loading, setLoading] = useState(true)
   const [scores, setScores] = useState({ i1: 0, i2: 0, i3: 0, total: 0 })
-  const [level, setLevel] = useState('A1')
+  const [level, setLevel] = useState('A2')
   const [shouldProceed, setShouldProceed] = useState(false)
+  const [nextUrl, setNextUrl] = useState('')
+  const routing = { remedialLevel: level, shouldProceed, totalScore: scores.total, nextUrl }
+
+  usePhase6ScoreResume({ subphase: 1, step: 4, scores, routing })
 
   useEffect(() => {
     const calc = async () => {
       const i1 = parseInt(sessionStorage.getItem('phase6_sp1_step4_interaction1_score') || '0')
-      const i2 = parseInt(sessionStorage.getItem('phase6_sp1_step4_interaction2_score') || '1')
+      const i2 = parseInt(sessionStorage.getItem('phase6_sp1_step4_interaction2_score') || '2')
       const i3 = parseInt(sessionStorage.getItem('phase6_sp1_step4_interaction3_score') || '0')
       const total = i1 + i2 + i3
       setScores({ i1, i2, i3, total })
 
-      let remedialLevel = determineRemedialLevel(i2)
-      let proceed = i2 >= 3
+      const fallbackRouting = getSubphase1MainRouting(4, i2)
+      let remedialLevel = fallbackRouting.remedialLevel
+      let proceed = fallbackRouting.shouldProceed
+      let resolvedNextUrl = fallbackRouting.nextUrl
+      let resolvedTotal = total
       try {
         const result = await phase6API.calculateStepScore(4, { interaction1_score: i1, interaction2_score: i2, interaction3_score: i3 }, 1)
         if (result?.data) {
           const data = result.data
-          remedialLevel = data.total?.remedial_level || data.interaction2?.level || determineRemedialLevel(i2)
-          proceed = data.total?.should_proceed ?? (i2 >= 3)
-        } else if (result?.remedial_level) {
-          remedialLevel = result.remedial_level
+          remedialLevel = data.total?.remedial_level || data.interaction2?.level || fallbackRouting.remedialLevel
+          proceed = data.total?.should_proceed ?? fallbackRouting.shouldProceed
+          resolvedNextUrl = data.total?.next_url || data.next_url || fallbackRouting.nextUrl
+          resolvedTotal = data.total?.score ?? data.total_score ?? total
         }
       } catch (e) { console.warn('Backend calc failed:', e) }
 
       setLevel(remedialLevel)
       setShouldProceed(proceed)
-      sessionStorage.setItem('phase6_sp1_step4_total_score', total.toString())
+      setNextUrl(resolvedNextUrl)
+      setScores({ i1, i2, i3, total: resolvedTotal })
+      sessionStorage.setItem('phase6_sp1_step4_total_score', resolvedTotal.toString())
       sessionStorage.setItem('phase6_sp1_step4_remedial_level', remedialLevel)
       setLoading(false)
     }
@@ -71,11 +74,7 @@ export default function Phase6SP1Step4Score() {
   }, [])
 
   const handleContinue = () => {
-    if (shouldProceed) {
-      navigate('/phase6/subphase/1/step/5')
-    } else {
-      navigate(`/phase6/subphase/1/step/4/remedial/${level.toLowerCase()}/task/a`)
-    }
+    navigate(nextUrl)
   }
 
   const cardSx = (color) => ({
@@ -97,7 +96,7 @@ export default function Phase6SP1Step4Score() {
 
   const ITEMS = [
     { label: 'Interaction 1', score: scores.i1, max: 1 },
-    { label: 'Interaction 2 (Successes & Challenges)', score: scores.i2, max: 4 },
+    { label: 'Interaction 2 (Successes & Challenges)', score: scores.i2, max: 5 },
     { label: 'Interaction 3', score: scores.i3, max: 1 },
   ]
 
@@ -142,10 +141,10 @@ export default function Phase6SP1Step4Score() {
                 p: 2
               }}>
                 <Typography variant="h5" fontWeight="bold" sx={{ color: P.green.border }}>
-                  Total: {scores.total} / 6
+                  Total: {scores.total} / 7
                 </Typography>
                 <Box sx={{ mt: 1, height: 12, borderRadius: 6, bgcolor: 'rgba(0,0,0,0.08)', overflow: 'hidden' }}>
-                  <Box sx={{ height: '100%', width: `${(scores.total / 6) * 100}%`, bgcolor: P.green.border, borderRadius: 6 }} />
+                  <Box sx={{ height: '100%', width: `${(scores.total / 7) * 100}%`, bgcolor: P.green.border, borderRadius: 6 }} />
                 </Box>
               </Box>
             </Stack>
@@ -158,7 +157,7 @@ export default function Phase6SP1Step4Score() {
               <CheckCircleIcon sx={{ fontSize: 50, color: shouldProceed ? P.green.border : P.orange.border, mr: 2 }} />
               <Box>
                 <Typography variant="h5" sx={{ color: shouldProceed ? P.green.border : P.orange.border }}>
-                  Practice Activities Ready
+                  {shouldProceed ? 'Ready for Step 5' : 'Practice Activities Ready'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Assigned Level: <strong>{level}</strong>

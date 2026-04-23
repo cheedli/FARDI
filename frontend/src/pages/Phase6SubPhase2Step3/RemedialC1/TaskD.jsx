@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LightbulbIcon from '@mui/icons-material/Lightbulb'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { resolveSubphase2RemedialNextUrl } from '../../Phase6SubPhase2/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const LIGHT = {
@@ -243,10 +244,10 @@ export default function Phase6SP2Step3RemC1TaskD() {
 
               <Box
                 component="button"
-                onClick={() => navigate('/phase6/subphase/2/step/4')}
+                onClick={async () => navigate(await resolveSubphase2RemedialNextUrl(3, 'C1'))}
                 sx={{ ...cardSx('blue'), cursor: 'pointer', fontWeight: 700, display: 'inline-block', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.blue.shadow}` } }}
               >
-                Continue to Step 4
+                Continue
               </Box>
             </Box>
           )}

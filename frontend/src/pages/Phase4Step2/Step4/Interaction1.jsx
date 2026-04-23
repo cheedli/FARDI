@@ -72,6 +72,7 @@ function Phase4_2Step4Interaction1() {
 
         sessionStorage.setItem('phase4_2_step4_instagram_caption', caption)
         sessionStorage.setItem('phase4_2_step4_instagram_hashtags', hashtags)
+        sessionStorage.setItem('phase4_2_step4_int1_score', data.score.toString())
         const currentScore = parseInt(sessionStorage.getItem('phase4_2_step4_score') || '0')
         sessionStorage.setItem('phase4_2_step4_score', (currentScore + data.score).toString())
       } else {

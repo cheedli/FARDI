@@ -8,7 +8,7 @@ import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 const TaskC = () => {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 3, context: 'remedial_b1' });
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 5, interaction: 3, context: 'remedial_b1' });
 
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'

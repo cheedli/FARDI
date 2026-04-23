@@ -28,8 +28,7 @@ const DARK = {
 /**
  * Phase 4 Step 3 - Remedial B1 - Results Page
  * Shows final scores and pass/fail status
- * All 6 tasks required: A-F = 39 points total
- * Pass threshold: 32/39 (~82%)
+ * Required tasks A-D determine pass: 22/27 required points.
  */
 
 export default function RemedialB1Results() {
@@ -60,8 +59,10 @@ export default function RemedialB1Results() {
     const taskDScore = parseInt(sessionStorage.getItem('remedial_step3_b1_taskD_score') || '0')
     const taskEScore = parseInt(sessionStorage.getItem('remedial_step3_b1_taskE_score') || '0')
     const taskFScore = parseInt(sessionStorage.getItem('remedial_step3_b1_taskF_score') || '0')
-    const total = taskAScore + taskBScore + taskCScore + taskDScore + taskEScore + taskFScore
-    const passed = total >= 32
+    const requiredTotal = taskAScore + taskBScore + taskCScore + taskDScore
+    const bonusTotal = taskEScore + taskFScore
+    const total = requiredTotal + bonusTotal
+    const passed = requiredTotal >= 22
 
     setScores({ taskA: taskAScore, taskB: taskBScore, taskC: taskCScore, taskD: taskDScore, taskE: taskEScore, taskF: taskFScore, total, passed })
 
@@ -84,7 +85,7 @@ export default function RemedialB1Results() {
     sessionStorage.removeItem('remedial_step3_b1_taskD_score')
     sessionStorage.removeItem('remedial_step3_b1_taskE_score')
     sessionStorage.removeItem('remedial_step3_b1_taskF_score')
-    if (scores.passed) navigate('/dashboard')
+    if (scores.passed) navigate('/phase4/step/4')
     else navigate('/phase4/step3/remedial/b1/taskA')
   }
 
@@ -144,7 +145,7 @@ export default function RemedialB1Results() {
               </Typography>
               <Typography variant="body1" color="text.secondary">Total Points</Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                Pass Threshold: 32/39 (~82%)
+                Pass Threshold: 22/27 required points (~81%)
               </Typography>
             </Box>
             <Box sx={{ ...cardSx(scores.passed ? 'green' : 'red'), mt: 2 }}>

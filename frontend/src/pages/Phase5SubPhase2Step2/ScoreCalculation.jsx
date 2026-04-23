@@ -5,6 +5,8 @@ import { useTheme } from '@mui/material/styles'
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { getSubphase2MainRouting } from '../Phase5SubPhase2/shared/routing.js'
+import { usePhase5ScoreResume } from '../Phase5/shared/useScoreResumeSave.js'
 
 const LIGHT = { pageBg: '#FFFDE7', blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' }, yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' }, orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' } }
 const DARK  = { pageBg: '#0F0F1A', blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' }, green: { bg: '#14532D', border: '#4ADE80', shadow: '#166534' }, yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' }, orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' } }
@@ -20,15 +22,9 @@ export default function Phase5SubPhase2Step2ScoreCalculation() {
   const [scores, setScores] = useState({ interaction1: 0, interaction2: 0, interaction3: 0, total: 0 })
   const [routing, setRouting] = useState(null)
 
-  useEffect(() => { calculateScore() }, [])
+  usePhase5ScoreResume({ subphase: 2, step: 2, scores, routing })
 
-  const determineRemedialLevel = (i2Score) => {
-    if (i2Score <= 1) return 'A1'
-    if (i2Score <= 2) return 'A2'
-    if (i2Score <= 3) return 'B1'
-    if (i2Score <= 4) return 'B2'
-    return 'C1'
-  }
+  useEffect(() => { calculateScore() }, [])
 
   const calculateScore = async () => {
     setCalculating(true)
@@ -37,12 +33,14 @@ export default function Phase5SubPhase2Step2ScoreCalculation() {
       const i2 = parseInt(sessionStorage.getItem('phase5_subphase2_step2_interaction2_score') || '0')
       const i3 = parseInt(sessionStorage.getItem('phase5_subphase2_step2_interaction3_score') || '0')
       const total = i1 + i2 + i3
+      const localRouting = getSubphase2MainRouting(2, { interaction1: i1, interaction2: i2, interaction3: i3, total })
       setScores({ interaction1: i1, interaction2: i2, interaction3: i3, total })
       const result = await phase5API.calculateStepScore(2, { interaction1_score: i1, interaction2_score: i2, interaction3_score: i3 }, 2)
-      const remedialLevel = result.success && result.data ? (result.data.total?.remedial_level || result.data.interaction2?.level || determineRemedialLevel(i2)) : determineRemedialLevel(i2)
-      const shouldProceed = result.success && result.data ? (result.data.total?.should_proceed ?? (i2 >= 3)) : (i2 >= 3)
+      const remedialLevel = result.success && result.data ? (result.data.total?.remedial_level || localRouting.remedialLevel) : localRouting.remedialLevel
+      const shouldProceed = result.success && result.data ? (result.data.total?.should_proceed ?? localRouting.shouldProceed) : localRouting.shouldProceed
       const finalTotal = result.success && result.data ? (result.data.total?.score || total) : total
-      setRouting({ remedialLevel, shouldProceed, totalScore: finalTotal })
+      const nextUrl = result.success && result.data ? (result.data.total?.next_url || result.data.next_url || localRouting.nextUrl) : localRouting.nextUrl
+      setRouting({ remedialLevel, shouldProceed, totalScore: finalTotal, nextUrl })
       sessionStorage.setItem('phase5_subphase2_step2_total_score', total.toString())
       sessionStorage.setItem('phase5_subphase2_step2_remedial_level', remedialLevel)
     } catch (error) {
@@ -51,18 +49,17 @@ export default function Phase5SubPhase2Step2ScoreCalculation() {
       const i2 = parseInt(sessionStorage.getItem('phase5_subphase2_step2_interaction2_score') || '0')
       const i3 = parseInt(sessionStorage.getItem('phase5_subphase2_step2_interaction3_score') || '0')
       const total = i1 + i2 + i3
-      const remedialLevel = determineRemedialLevel(i2)
+      const localRouting = getSubphase2MainRouting(2, { interaction1: i1, interaction2: i2, interaction3: i3, total })
       setScores({ interaction1: i1, interaction2: i2, interaction3: i3, total })
-      setRouting({ remedialLevel, shouldProceed: i2 >= 3, totalScore: total })
+      setRouting({ ...localRouting, totalScore: total })
       sessionStorage.setItem('phase5_subphase2_step2_total_score', total.toString())
-      sessionStorage.setItem('phase5_subphase2_step2_remedial_level', remedialLevel)
+      sessionStorage.setItem('phase5_subphase2_step2_remedial_level', localRouting.remedialLevel)
     } finally { setCalculating(false); setLoading(false) }
   }
 
   const handleContinue = () => {
-    if (!routing) return
-    if (routing.shouldProceed) navigate('/phase5/subphase/2/step/3')
-    else navigate(`/phase5/subphase/2/step/2/remedial/${routing.remedialLevel.toLowerCase()}/task/a`)
+    if (!routing?.nextUrl) return
+    navigate(routing.nextUrl)
   }
 
   if (loading || calculating) {
@@ -123,7 +120,7 @@ export default function Phase5SubPhase2Step2ScoreCalculation() {
               </Box>
               <Box sx={{ bgcolor: routing.shouldProceed ? P.green.bg : P.orange.bg, border: `1px solid ${routing.shouldProceed ? P.green.border : P.orange.border}`, borderRadius: '10px', p: 2, mb: 2 }}>
                 {routing.shouldProceed ? (
-                  <Typography variant="body1">Great work! You've demonstrated strong understanding. You can proceed to Step 3 or complete remedial activities for extra practice.</Typography>
+                  <Typography variant="body1">Great work! You've demonstrated strong understanding. You can proceed to Step 3.</Typography>
                 ) : (
                   <Typography variant="body1">Based on your performance, we recommend completing remedial activities at the <strong>{routing.remedialLevel}</strong> level to strengthen your skills before continuing.</Typography>
                 )}

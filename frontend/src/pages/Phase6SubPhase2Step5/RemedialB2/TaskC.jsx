@@ -4,6 +4,7 @@ import { Box, Container, Typography, FormControl, Select, MenuItem, useTheme } f
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { resolveSubphase2RemedialNextUrl } from '../../Phase6SubPhase2/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const LIGHT = { pageBg: '#FFFDE7', orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' }, blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' }, yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' }, red: { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' }, purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' } }
@@ -117,7 +118,7 @@ export default function Phase6SP2Step5RemB2TaskC() {
               <CheckCircleIcon sx={{ fontSize: 50, color: P.green.border, mb: 1 }} />
               <Typography variant="h5" sx={{ color: P.green.shadow }}>Task C Complete! Score: {score}/6</Typography>
               <Typography variant="body1" sx={{ mt: 1, mb: 2 }}>{score === 6 ? 'Perfect! You matched all flawed sentences to their correct formal versions.' : score >= 4 ? 'Good work! Review the mismatched pairs above to consolidate your understanding.' : 'Keep practising — focus on identifying spelling errors, vague language, and informal register.'}</Typography>
-              <Box component="button" onClick={() => navigate('/phase6/subphase/2/complete')} sx={{ bgcolor: P.green.border, color: 'white', border: `2px solid ${P.green.shadow}`, borderRadius: '14px', boxShadow: `4px 4px 0 ${P.green.shadow}`, py: 1.5, px: 4, fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }, transition: 'all 0.15s' }}>
+              <Box component="button" onClick={async () => navigate(await resolveSubphase2RemedialNextUrl(5, 'B2'))} sx={{ bgcolor: P.green.border, color: 'white', border: `2px solid ${P.green.shadow}`, borderRadius: '14px', boxShadow: `4px 4px 0 ${P.green.shadow}`, py: 1.5, px: 4, fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }, transition: 'all 0.15s' }}>
                 Complete SubPhase 2
               </Box>
             </Box>

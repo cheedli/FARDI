@@ -110,17 +110,22 @@ export default function RemedialA2TaskC() {
     const taskCScore = parseInt(sessionStorage.getItem('remedial_step3_a2_taskC_score') || '0')
     const totalScore = taskAScore + taskBScore + taskCScore
     const passed = totalScore >= 18
+    let nextUrl = passed ? '/phase4/step/4' : '/phase4/step3/remedial/a2/taskA'
 
     console.log('PHASE 4 STEP 2 - REMEDIAL A2 - FINAL RESULTS')
     console.log('Total:', totalScore, '/22')
 
     try {
-      await fetch('/api/phase4/step3/remedial/a2/final-score', {
+      const response = await fetch('/api/phase4/step3/remedial/a2/final-score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore })
       })
+      const data = await response.json()
+      if (data?.success && data?.data?.next_url) {
+        nextUrl = data.data.next_url.replace(/^\/app/, '')
+      }
     } catch (error) {
       console.error('Failed to log final score:', error)
     }
@@ -132,8 +137,7 @@ export default function RemedialA2TaskC() {
       sessionStorage.removeItem('remedial_step3_a2_taskA_score')
       sessionStorage.removeItem('remedial_step3_a2_taskB_score')
       sessionStorage.removeItem('remedial_step3_a2_taskC_score')
-      if (passed) navigate('/dashboard')
-      else navigate('/phase4/step3/remedial/a2/taskA')
+      navigate(nextUrl)
     }, 5000)
   }
 

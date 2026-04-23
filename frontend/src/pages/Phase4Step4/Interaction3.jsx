@@ -61,7 +61,7 @@ export default function Phase4Step4Interaction3() {
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
-
+ 
   const handleGameComplete = (result) => {
     saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: result })
     console.log('Sushi Spell game completed:', result)
@@ -195,50 +195,35 @@ export default function Phase4Step4Interaction3() {
   }
 
   const handleContinue = () => {
-    // Calculate total score from all 3 interactions
     const interaction1Score = parseInt(sessionStorage.getItem('phase4_step4_interaction1_score') || '0')
     const interaction2Score = parseInt(sessionStorage.getItem('phase4_step4_interaction2_score') || '0')
     const interaction3Score = parseInt(sessionStorage.getItem('phase4_step4_interaction3_score') || '0')
-
-    const totalScore = interaction1Score + interaction2Score + interaction3Score
-
-    console.log('\n' + '='.repeat(60))
-    console.log('PHASE 4 STEP 4 - INTERACTION SUMMARY')
-    console.log('='.repeat(60))
-    console.log('Interaction 1 Score:', interaction1Score, '/5')
-    console.log('Interaction 2 Score:', interaction2Score, '/5')
-    console.log('Interaction 3 Score:', interaction3Score, '/5')
-    console.log('-'.repeat(60))
-    console.log('TOTAL SCORE:', totalScore, '/15')
-    console.log('='.repeat(60))
-
-    // Check if student should proceed: I3 (sentence production) score >= 3 means B1+ level
-    const shouldProceed = interaction3Score >= 3
-    if (shouldProceed) {
-      console.log(`→ I3 score ${interaction3Score}/5 >= 3 (B1+). Proceeding to Step 5.`)
-      console.log('='.repeat(60) + '\n')
-      navigate('/phase4/step/5')
-      return
-    }
-
-    // Route based on total score
-    if (totalScore <= 3) {
-      console.log('→ Routing to Remedial A1 (0-3 points)')
-      navigate('/phase4/step/4/remedial/a1/taskA')
-    } else if (totalScore <= 6) {
-      console.log('→ Routing to Remedial A2 (4-6 points)')
-      navigate('/phase4/step/4/remedial/a2/taskA')
-    } else if (totalScore <= 9) {
-      console.log('→ Routing to Remedial B1 (7-9 points)')
-      navigate('/phase4/step/4/remedial/b1/taskA')
-    } else if (totalScore <= 12) {
-      console.log('→ Routing to Remedial B2 (10-12 points)')
-      navigate('/phase4/step/4/remedial/b2/taskA')
-    } else {
-      console.log('→ Routing to Remedial C1 (13-15 points)')
-      navigate('/phase4/step/4/remedial/c1/taskA')
-    }
-    console.log('='.repeat(60) + '\n')
+    fetch('/api/phase4/step/4/calculate-score', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        interaction1_score: interaction1Score,
+        interaction2_score: interaction2Score,
+        interaction3_score: interaction3Score
+      })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to calculate Step 4 score')
+        }
+        const nextUrl = data.data.total.next_url
+        sessionStorage.setItem('phase4_step4_next_url', nextUrl)
+        sessionStorage.setItem('student_cefr_level', data.data.total.remedial_level.replace('Remedial ', ''))
+        navigate(nextUrl)
+      })
+      .catch(error => {
+        console.error('Failed to calculate Step 4 score:', error)
+        alert('Error calculating your Step 4 route. Please try again.')
+      })
   }
 
   return (

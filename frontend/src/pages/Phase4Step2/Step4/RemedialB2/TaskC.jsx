@@ -44,7 +44,7 @@ const TERMS = [
 
 export default function RemedialB2TaskC() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 3, context: 'remedial_b2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 4, interaction: 3, context: 'remedial_b2' })
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
 
@@ -215,7 +215,7 @@ export default function RemedialB2TaskC() {
             </Stack>
 
             <Box sx={{ textAlign: 'center' }}>
-              <Box component="button" onClick={() => navigate('/phase4_2/step4/remedial/b2/taskD')} sx={{
+              <Box component="button" onClick={() => navigate('/phase4_2/step/4/remedial/b2/taskD')} sx={{
                 bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
                 borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
                 px: 6, py: 1.5, fontWeight: 700, fontSize: '1rem', cursor: 'pointer', color: P.green.shadow,

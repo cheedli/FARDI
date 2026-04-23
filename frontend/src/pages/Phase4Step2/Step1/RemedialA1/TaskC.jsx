@@ -23,7 +23,7 @@ const SENTENCE_PROMPTS = [
 
 export default function Phase4_2RemedialA1TaskC() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 3, context: 'remedial_a1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 3, context: 'remedial_a1' })
   const [sentences, setSentences] = useState({})
   const [showResults, setShowResults] = useState(false)
   const [evaluation, setEvaluation] = useState({})

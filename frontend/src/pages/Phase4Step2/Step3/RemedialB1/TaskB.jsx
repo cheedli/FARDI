@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { useProgressSave } from '../../../../hooks/useProgressSave'
+import { requestPhase42TaskBScore } from '../../shared/routing.js'
 
 /**
  * Phase 4.2 Step 3 - Level B1 - Task B: Definition Duel
@@ -25,7 +26,7 @@ const TERMS = [
 
 export default function Phase4_2Step3RemedialB1TaskB() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 2, context: 'remedial_b1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 3, interaction: 2, context: 'remedial_b1' })
   const [definitions, setDefinitions] = useState(Array(8).fill(''))
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
@@ -65,25 +66,15 @@ export default function Phase4_2Step3RemedialB1TaskB() {
   const handleSubmit = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/phase4/4_2/step3/remedial/evaluate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          level: 'B1', task: 'B',
-          definitions: definitions.map((def, idx) => ({ term: TERMS[idx].term, definition: def }))
-        })
+      const result = await requestPhase42TaskBScore(3, 'B1', {
+        definitions: definitions.map((def, idx) => ({ term: TERMS[idx].term, definition: def })),
       })
-      const result = await response.json()
-      if (result.success) {
-        setScore(result.score)
-        setFeedback(result.feedback || [])
-        setShowResults(true)
-        sessionStorage.setItem('phase4_2_step3_b1_taskB', result.score.toString())
-        logTaskCompletion(result.score, 8)
-      } else {
-        alert('Evaluation failed. Please try again.')
-      }
+
+      setScore(result.score)
+      setFeedback(result.feedback || [])
+      setShowResults(true)
+      sessionStorage.setItem('phase4_2_step3_b1_taskB', result.score.toString())
+      logTaskCompletion(result.score, 8)
     } catch (error) {
       console.error('Failed to evaluate:', error)
       alert('Failed to evaluate. Please try again.')

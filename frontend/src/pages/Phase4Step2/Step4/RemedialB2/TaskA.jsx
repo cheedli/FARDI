@@ -28,7 +28,7 @@ const DIALOGUE_MESSAGES = [
 
 export default function RemedialB2TaskA() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 1, context: 'remedial_b2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 4, interaction: 1, context: 'remedial_b2' })
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {
@@ -211,7 +211,7 @@ export default function RemedialB2TaskA() {
               <Typography variant="body1" sx={{ mt: 1, color: passed ? P.green.shadow : P.red.shadow }}>{passed ? 'Great work! You passed this task.' : 'Keep practicing to improve your score!'}</Typography>
             </Box>
             <Box sx={{ textAlign: 'center' }}>
-              <Box component="button" onClick={() => navigate('/phase4_2/step4/remedial/b2/taskB')} sx={{
+              <Box component="button" onClick={() => navigate('/phase4_2/step/4/remedial/b2/taskB')} sx={{
                 bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
                 px: 6, py: 1.5, fontWeight: 700, fontSize: '1rem', cursor: 'pointer', color: P.green.shadow,
                 '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },

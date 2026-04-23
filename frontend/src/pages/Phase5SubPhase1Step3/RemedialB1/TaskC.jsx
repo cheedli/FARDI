@@ -57,10 +57,18 @@ export default function Phase5Step3RemedialB1TaskC() {
     const taskAScore = parseInt(sessionStorage.getItem('phase5_step3_remedial_b1_taskA_score') || '0')
     const taskBScore = parseInt(sessionStorage.getItem('phase5_step3_remedial_b1_taskB_score') || '0')
     const taskCScore = parseInt(sessionStorage.getItem('phase5_step3_remedial_b1_taskC_score') || '0')
-    const totalScore = taskAScore + taskBScore + taskCScore
-    const passed = totalScore >= Math.ceil((5 + 8 + 6) * 0.8)
-    try { await phase5API.calculateRemedialScore(3, 'B1', { task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore }) } catch (e) { console.error(e) }
-    navigate(passed ? '/dashboard' : '/phase5/subphase/1/step/3/remedial/b1/task/a')
+    let nextUrl = '/phase5/subphase/1/step/3/remedial/b1/task/a'
+    try {
+      const result = await phase5API.calculateRemedialScore(3, 'B1', {
+        task_a_score: taskAScore,
+        task_b_score: taskBScore,
+        task_c_score: taskCScore
+      })
+      nextUrl = result?.data?.next_url || nextUrl
+    } catch (e) {
+      console.error(e)
+    }
+    navigate(nextUrl)
   }
 
   const allAnswered = QUESTIONS.every(q => answers[q.id] !== undefined)

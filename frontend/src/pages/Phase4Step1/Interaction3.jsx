@@ -84,12 +84,13 @@ export default function Phase4Step1Interaction3() {
                 console.log('Backend scoring response:', data.data)
                 console.log('Total Score:', data.data.total.score, '/', data.data.total.max_score)
                 console.log('Remedial Level:', data.data.total.remedial_level)
-                console.log('Should Proceed:', data.data.total.should_proceed)
+                console.log('Next URL:', data.data.total.next_url)
 
                 const remedialLevel = data.data.total.remedial_level
-                const shouldProceed = data.data.total.should_proceed
+                const nextUrl = data.data.total.next_url
                 sessionStorage.setItem('phase4_remedial_level', remedialLevel)
-                sessionStorage.setItem('phase4_step1_should_proceed', shouldProceed ? 'true' : 'false')
+                sessionStorage.setItem('phase4_step1_next_url', nextUrl)
+                sessionStorage.setItem('student_cefr_level', remedialLevel.replace('Remedial ', ''))
 
                 sessionStorage.removeItem('phase4_step1_interaction1_score')
                 sessionStorage.removeItem('phase4_step1_interaction2_score')
@@ -108,25 +109,12 @@ export default function Phase4Step1Interaction3() {
     }
 
     const handleContinue = () => {
-        const shouldProceed = sessionStorage.getItem('phase4_step1_should_proceed') === 'true'
-
-        if (shouldProceed) {
-            navigate('/phase4/step/3')
-        } else {
-            const remedialLevel = sessionStorage.getItem('phase4_remedial_level')
-            if (!remedialLevel) {
-                alert('Error: Remedial level not calculated. Please try again.')
-                return
-            }
-            const levelMap = {
-                'Remedial A1': '/phase4/remedial/a1/taskA',
-                'Remedial A2': '/phase4/remedial/a2/taskA',
-                'Remedial B1': '/phase4/remedial/b1/taskA',
-                'Remedial B2': '/phase4/remedial/b2/taskA',
-                'Remedial C1': '/phase4/remedial/c1/taskA'
-            }
-            navigate(levelMap[remedialLevel] || '/dashboard')
+        const nextUrl = sessionStorage.getItem('phase4_step1_next_url')
+        if (!nextUrl) {
+            alert('Error: next step not calculated. Please try again.')
+            return
         }
+        navigate(nextUrl)
     }
 
     return (

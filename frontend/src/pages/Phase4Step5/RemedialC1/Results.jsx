@@ -6,8 +6,8 @@ import { motion } from 'framer-motion'
 
 /**
  * Phase 4 Step 5 - Remedial C1 - Results Page
- * Total: 42 points (4+8+6+6+6+6+6)
- * Pass threshold: 34/42 (80%)
+ * Total: 42 points
+ * Pass threshold: 34/42
  */
 
 const LIGHT = {
@@ -71,22 +71,30 @@ export default function Phase4Step5RemedialC1Results() {
     })
     const passed = total >= PASS_THRESHOLD
     try {
-      await fetch('/api/phase4/step5/remedial/log', {
+      const response = await fetch('/api/phase4/step5/remedial/c1/final-score', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ level: 'C1', task: 'Results', score: total, maxScore: MAX_TOTAL, passed })
+        body: JSON.stringify({
+          task_a_score: taskScores.taskA,
+          task_b_score: taskScores.taskB,
+          task_c_score: taskScores.taskC,
+          task_d_score: taskScores.taskD,
+          task_e_score: taskScores.taskE,
+          task_f_score: taskScores.taskF,
+          task_g_score: taskScores.taskG
+        })
       })
+      const data = await response.json()
+      if (data.success) {
+        sessionStorage.setItem('phase4_step5_c1_next_url', data.data.next_url || (passed ? '/phase4_2/step/1' : '/phase4/step/5/remedial/c1/taskA'))
+      }
     } catch (e) { console.error(e) }
     setScores({ ...taskScores, total, passed }); setLoading(false)
   }
 
   const handleRedirect = () => {
     if (!scores) return
-    if (scores.passed) {
-      navigate('/phase4/complete')
-    } else {
-      TASKS.forEach(t => sessionStorage.removeItem(`phase4_step5_remedial_c1_${t.key}_score`))
-      navigate('/phase4/step/5/remedial/c1/taskA')
-    }
+    TASKS.forEach(t => sessionStorage.removeItem(`phase4_step5_remedial_c1_${t.key}_score`))
+    navigate(sessionStorage.getItem('phase4_step5_c1_next_url') || (scores.passed ? '/phase4_2/step/1' : '/phase4/step/5/remedial/c1/taskA'))
   }
 
   if (loading) {
@@ -153,7 +161,7 @@ export default function Phase4Step5RemedialC1Results() {
           </Box>
 
           <Box component="button" onClick={handleRedirect} sx={{ display: 'block', width: '100%', bgcolor: passed ? P.green.bg : P.orange.bg, border: `2px solid ${passed ? P.green.border : P.orange.border}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${passed ? P.green.shadow : P.orange.shadow}`, p: 2, cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold', color: passed ? P.green.shadow : P.orange.shadow, textAlign: 'center', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${passed ? P.green.shadow : P.orange.shadow}` } }}>
-            {passed ? '🏆 Go to Dashboard Now' : '🔄 Restart Now'}
+            {passed ? '🏆 Continue to Phase 4.2' : '🔄 Restart Now'}
           </Box>
 
         </motion.div>

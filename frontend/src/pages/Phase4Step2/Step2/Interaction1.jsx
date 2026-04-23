@@ -18,7 +18,7 @@ const TARGET_WORDS = ['hashtag', 'caption', 'emoji', 'tag', 'call-to-action']
 
 export default function Phase4_2Step2Interaction1() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 1, context: 'main' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 2, interaction: 1, context: 'main' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
   const [caption, setCaption] = useState('')

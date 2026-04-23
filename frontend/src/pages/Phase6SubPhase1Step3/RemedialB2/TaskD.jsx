@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material/styles'
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { resolveSubphase1RemedialNextUrl } from '../../Phase6SubPhase1/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const LIGHT = { pageBg: '#FFFDE7', purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' }, teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' }, red: { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' } }
@@ -108,8 +109,8 @@ export default function Phase6SP1Step3RemedialB2TaskD() {
               <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary' }}>
                 {score === 6 ? 'Perfect! You spelled and explained all 6 terms correctly.' : score >= 4 ? 'Well done! You got most of the terms right.' : 'Keep practising — spelling and clear explanations will strengthen your reports.'}
               </Typography>
-              <Box component="button" onClick={() => navigate('/phase6/subphase/1/step/3/remedial/c1/task/a')} sx={{ ...cardSx(P.purple), p: 1.5, cursor: 'pointer', fontWeight: 'bold', color: P.purple.border, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.purple.shadow}` }, transition: 'all 0.15s ease' }}>
-                Continue to C1 Task A →
+              <Box component="button" onClick={async () => navigate(await resolveSubphase1RemedialNextUrl(3, 'B2'))} sx={{ ...cardSx(P.purple), p: 1.5, cursor: 'pointer', fontWeight: 'bold', color: P.purple.border, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.purple.shadow}` }, transition: 'all 0.15s ease' }}>
+                Continue →
               </Box>
             </Box>
           </motion.div>

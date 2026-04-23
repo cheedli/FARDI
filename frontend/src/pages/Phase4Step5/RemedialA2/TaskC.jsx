@@ -108,8 +108,8 @@ export default function Phase4Step5RemedialA2TaskC() {
     const taskBScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_a2_taskB_score') || '0')
     const taskCScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_a2_taskC_score') || '0')
     const totalScore = taskAScore + taskBScore + taskCScore
-    const maxScore = 4 + 8 + 6 // 18 total
-    const threshold = Math.ceil(maxScore * 0.8) // 80% = 15
+    const maxScore = 18
+    const threshold = 15
     const passed = totalScore >= threshold
 
     try {
@@ -120,7 +120,10 @@ export default function Phase4Step5RemedialA2TaskC() {
         body: JSON.stringify({ task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore })
       })
       const data = await response.json()
-      if (data.success) console.log('Final A2 score logged to backend:', data.data)
+      if (data.success) {
+        console.log('Final A2 score logged to backend:', data.data)
+        sessionStorage.setItem('phase4_step5_a2_next_url', data.data.next_url || (passed ? '/phase4_2/step/1' : '/phase4/step/5/remedial/a2/taskA'))
+      }
     } catch (error) {
       console.error('Failed to log final score:', error)
     }
@@ -132,8 +135,7 @@ export default function Phase4Step5RemedialA2TaskC() {
       sessionStorage.removeItem('phase4_step5_remedial_a2_taskA_score')
       sessionStorage.removeItem('phase4_step5_remedial_a2_taskB_score')
       sessionStorage.removeItem('phase4_step5_remedial_a2_taskC_score')
-      if (passed) navigate('/phase4/complete')
-      else navigate('/phase4/step/5/remedial/a2/taskA')
+      navigate(sessionStorage.getItem('phase4_step5_a2_next_url') || (passed ? '/phase4_2/step/1' : '/phase4/step/5/remedial/a2/taskA'))
     }, 5000)
   }
 

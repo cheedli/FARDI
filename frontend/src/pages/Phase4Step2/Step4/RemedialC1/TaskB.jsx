@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { useProgressSave } from '../../../../hooks/useProgressSave'
+import { requestPhase42TaskBScore } from '../../shared/routing.js'
 
 /**
  * Phase 4.2 Step 4 - Level C1 - Task B: Analysis Writing (8 sentences)
@@ -46,7 +47,7 @@ const DARK = {
 
 export default function Phase4_2Step4RemedialC1TaskB() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 2, context: 'remedial_c1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 4, interaction: 2, context: 'remedial_c1' })
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
 
@@ -71,39 +72,28 @@ export default function Phase4_2Step4RemedialC1TaskB() {
     setEvaluating(true)
 
     try {
-      const response = await fetch('/api/phase4/evaluate-writing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          phase: '4.2',
-          step: 4,
-          level: 'C1',
-          task: 'B',
-          text: analysis,
-          criteria: 'sophisticated analytical paragraph on post effectiveness with cohesive argumentation'
-        })
+      const data = await requestPhase42TaskBScore(4, 'C1', {
+        text: analysis,
+        criteria: 'sophisticated analytical paragraph on post effectiveness with cohesive argumentation',
       })
 
-      const data = await response.json()
       setAiScore(data.score || 0)
       setAiFeedback(data.feedback || 'Analysis evaluated.')
       sessionStorage.setItem('phase4_2_step4_c1_taskB_score', data.score || 0)
+      await logTaskCompletion(data.score || 0)
     } catch (error) {
       console.error('AI evaluation failed:', error)
-      const fallbackScore = Math.min((sentenceCount / 8) * 8, 8)
-      setAiScore(fallbackScore)
-      setAiFeedback('Evaluated based on sentence count.')
-      sessionStorage.setItem('phase4_2_step4_c1_taskB_score', fallbackScore)
+      alert('Evaluation failed. Please try again.')
+      setEvaluating(false)
+      return
     }
 
     setEvaluating(false)
     setShowResults(true)
-    logTaskCompletion()
   }
 
-  const logTaskCompletion = async () => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score: aiScore })
+  const logTaskCompletion = async (score) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score })
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST',
@@ -114,7 +104,7 @@ export default function Phase4_2Step4RemedialC1TaskB() {
           step: 4,
           level: 'C1',
           task: 'B',
-          score: aiScore,
+          score,
           max_score: 8,
           content: analysis
         })

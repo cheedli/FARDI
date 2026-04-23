@@ -158,7 +158,7 @@ export default function Phase4Step4RemedialA2TaskC() {
     const taskCScore = parseInt(sessionStorage.getItem('phase4_step4_remedial_a2_taskC_score') || '0')
     const totalScore = taskAScore + taskBScore + taskCScore
     const maxScore = 7 + 8 + 6 // 21 total (Task A now worth 7, not 12)
-    const threshold = Math.ceil(maxScore * 0.8) // 80% = 17
+    const threshold = 18
     const passed = totalScore >= threshold
 
     console.log('\n' + '='.repeat(60))
@@ -196,6 +196,7 @@ export default function Phase4Step4RemedialA2TaskC() {
       const data = await response.json()
       if (data.success) {
         console.log('Final A2 score logged to backend:', data.data)
+        sessionStorage.setItem('phase4_step4_a2_next_url', data.data.next_url || (passed ? '/phase4/step/5' : '/phase4/step/4/remedial/a2/taskA'))
       }
     } catch (error) {
       console.error('Failed to log final score:', error)
@@ -212,13 +213,7 @@ export default function Phase4Step4RemedialA2TaskC() {
       sessionStorage.removeItem('phase4_step4_remedial_a2_taskB_score')
       sessionStorage.removeItem('phase4_step4_remedial_a2_taskC_score')
 
-      if (passed) {
-        // Navigate to dashboard or next phase
-        navigate('/dashboard')
-      } else {
-        // Restart from Task A
-        navigate('/phase4/step/4/remedial/a2/taskA')
-      }
+      navigate(sessionStorage.getItem('phase4_step4_a2_next_url') || (passed ? '/phase4/step/5' : '/phase4/step/4/remedial/a2/taskA'))
     }, 5000) // 5 second delay
   }
 

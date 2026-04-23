@@ -30,7 +30,7 @@ const TERMS = [
 
 export default function RemedialB2TaskC() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 3, context: 'remedial_b2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 3, interaction: 3, context: 'remedial_b2' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
   const [matches, setMatches] = useState({})
@@ -135,7 +135,7 @@ export default function RemedialB2TaskC() {
   }
 
   const handleStartGame = () => setGameStarted(true)
-  const handleContinue = () => navigate('/phase4_2/step3/remedial/b2/taskD')
+  const handleContinue = () => navigate('/phase4_2/step/3/remedial/b2/taskD')
   const allMatched = Object.keys(matches).length === 8
   const getTermById = (id) => TERMS.find(t => t.id === id)
 

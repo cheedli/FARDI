@@ -62,6 +62,25 @@ export default function RemedialC1Results() {
     console.log('Total:', total, '/26 — Passed:', passed)
     console.log('='.repeat(60) + '\n')
 
+    fetch('/api/phase4/step4/remedial/c1/final-score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        task_a_score: scoreA,
+        task_b_score: scoreB,
+        task_c_score: scoreC,
+        task_d_score: scoreD
+      })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          sessionStorage.setItem('phase4_step4_c1_next_url', data.data.next_url || (passed ? '/phase4/step/5' : '/phase4/step/4/remedial/c1/taskA'))
+        }
+      })
+      .catch(err => console.error('Failed to log Step 4 C1 final score:', err))
+
     const timer = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
@@ -70,7 +89,7 @@ export default function RemedialC1Results() {
           sessionStorage.removeItem('remedial_step4_c1_taskB_score')
           sessionStorage.removeItem('remedial_step4_c1_taskC_score')
           sessionStorage.removeItem('remedial_step4_c1_taskD_score')
-          navigate(passed ? '/dashboard' : '/phase4/step/4/remedial/c1/taskA')
+          navigate(sessionStorage.getItem('phase4_step4_c1_next_url') || (passed ? '/phase4/step/5' : '/phase4/step/4/remedial/c1/taskA'))
           return 0
         }
         return prev - 1

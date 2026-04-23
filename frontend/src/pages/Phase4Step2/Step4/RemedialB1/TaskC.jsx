@@ -25,7 +25,7 @@ const QUESTIONS = [
 
 export default function Phase4_2Step4RemedialB1TaskC() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 3, context: 'remedial_b1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 4, interaction: 3, context: 'remedial_b1' })
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

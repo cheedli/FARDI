@@ -19,7 +19,7 @@ const ANSWERS_PART2 = { 'g_4_0': 'like', 'g_5_0': 'share', 'g_6_0': 'post', 'g_7
 
 export default function Phase4_2RemedialA1TaskB() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 2, context: 'remedial_a1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 2, context: 'remedial_a1' })
   const [phase, setPhase] = useState(1)
   const [part1Score, setPart1Score] = useState(null)
   const [totalScore, setTotalScore] = useState(0)

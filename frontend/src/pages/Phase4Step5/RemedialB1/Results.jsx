@@ -5,8 +5,7 @@ import { motion } from 'framer-motion'
 
 /**
  * Phase 4 Step 5 - Remedial B1 - Results Page
- * Total: 38 points (4+8+6+8+6+6)
- * Pass threshold: 31/38 (80%)
+ * Total: 39 points with a required-task threshold of 22/27
  */
 
 const LIGHT = {
@@ -38,8 +37,8 @@ const TASKS = [
   { key: 'taskE', label: 'Task E - Tense Time Travel', icon: '⏰', max: 6 },
   { key: 'taskF', label: 'Task F - Grammar Kahoot', icon: '🎯', max: 6 },
 ]
-const MAX_TOTAL = 38
-const PASS_THRESHOLD = 31
+const MAX_TOTAL = 39
+const PASS_THRESHOLD = 22
 
 export default function Phase4Step5RemedialB1Results() {
   const navigate = useNavigate()
@@ -59,21 +58,26 @@ export default function Phase4Step5RemedialB1Results() {
       const s = parseInt(sessionStorage.getItem(`phase4_step5_remedial_b1_${t.key}_score`) || '0')
       taskScores[t.key] = s; total += s
     })
-    const passed = total >= PASS_THRESHOLD
+    const requiredScore = taskScores.taskA + taskScores.taskB + taskScores.taskC + taskScores.taskD
+    const passed = requiredScore >= PASS_THRESHOLD
 
     try {
-      await fetch('/api/phase4/step5/remedial/b1/final-score', {
+      const response = await fetch('/api/phase4/step5/remedial/b1/final-score', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
         body: JSON.stringify({ task_a_score: taskScores.taskA, task_b_score: taskScores.taskB, task_c_score: taskScores.taskC, task_d_score: taskScores.taskD, task_e_score: taskScores.taskE, task_f_score: taskScores.taskF })
       })
+      const data = await response.json()
+      if (data.success) {
+        sessionStorage.setItem('phase4_step5_b1_next_url', data.data.next_url || (passed ? '/phase4_2/step/1' : '/phase4/step/5/remedial/b1/taskA'))
+      }
     } catch (err) { console.error('Failed to log final score:', err) }
 
-    setScores({ ...taskScores, total, passed }); setLoading(false)
+    setScores({ ...taskScores, total, requiredScore, passed }); setLoading(false)
   }
 
   const handleContinue = () => {
     TASKS.forEach(t => sessionStorage.removeItem(`phase4_step5_remedial_b1_${t.key}_score`))
-    navigate(scores.passed ? '/phase4/complete' : '/phase4/step/5/remedial/b1/taskA')
+    navigate(sessionStorage.getItem('phase4_step5_b1_next_url') || (scores.passed ? '/phase4_2/step/1' : '/phase4/step/5/remedial/b1/taskA'))
   }
 
   if (loading) {
@@ -102,9 +106,9 @@ export default function Phase4Step5RemedialB1Results() {
             <Typography variant="h2" fontWeight="bold" sx={{ color: passed ? P.green.shadow : P.orange.shadow, mt: 2 }}>{scores.total} <Typography component="span" variant="h4" sx={{ color: passed ? P.green.border : P.orange.border }}>/ {MAX_TOTAL}</Typography></Typography>
             <Typography variant="h5" sx={{ color: passed ? P.green.border : P.orange.border }}>({percentage}%) — {passed ? 'PASSED' : 'NOT PASSED'}</Typography>
             <Typography variant="body1" sx={{ mt: 2, color: passed ? P.green.shadow : P.orange.shadow }}>
-              {passed ? "Excellent work! You've mastered B1 spelling and grammar evaluation." : `You need ${PASS_THRESHOLD} points to pass (${PASS_THRESHOLD - scores.total} more needed).`}
+              {passed ? "Excellent work! You've cleared the required B1 tasks." : `You need ${PASS_THRESHOLD} points on required tasks A-D (${Math.max(0, PASS_THRESHOLD - scores.requiredScore)} more needed).`}
             </Typography>
-            <Typography variant="body1" sx={{ mt: 1, color: passed ? P.green.shadow : P.orange.shadow }}>Pass Threshold: {PASS_THRESHOLD} / {MAX_TOTAL} (80%)</Typography>
+            <Typography variant="body1" sx={{ mt: 1, color: passed ? P.green.shadow : P.orange.shadow }}>Required Threshold: {PASS_THRESHOLD} / 27 on tasks A-D</Typography>
           </Box>
 
           <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
@@ -137,7 +141,7 @@ export default function Phase4Step5RemedialB1Results() {
           </Box>
 
           <Box component="button" onClick={handleContinue} sx={{ display: 'block', width: '100%', bgcolor: passed ? P.green.bg : P.orange.bg, border: `2px solid ${passed ? P.green.border : P.orange.border}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${passed ? P.green.shadow : P.orange.shadow}`, p: 2, cursor: 'pointer', fontSize: '1.1rem', fontWeight: 'bold', color: passed ? P.green.shadow : P.orange.shadow, textAlign: 'center', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${passed ? P.green.shadow : P.orange.shadow}` } }}>
-            {passed ? '🏆 Go to Dashboard' : '🔄 Try Again from Task A'}
+            {passed ? '🏆 Continue to Phase 4.2' : '🔄 Try Again from Task A'}
           </Box>
 
         </motion.div>

@@ -7,6 +7,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { resolveSubphase1RemedialNextUrl } from '../../Phase6SubPhase1/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
@@ -223,7 +224,7 @@ export default function Phase6SP1Step1RemB2TaskD() {
               </Typography>
               <Box
                 component="button"
-                onClick={() => navigate('/phase6/subphase/1/step/2')}
+                onClick={async () => navigate(await resolveSubphase1RemedialNextUrl(1, 'B2'))}
                 sx={{
                   cursor: 'pointer', mt: 2, px: 4, py: 1.5,
                   bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
@@ -233,7 +234,7 @@ export default function Phase6SP1Step1RemB2TaskD() {
                   transition: 'all 0.15s'
                 }}
               >
-                Continue to Step 2 →
+                Continue →
               </Box>
             </Box>
           </motion.div>

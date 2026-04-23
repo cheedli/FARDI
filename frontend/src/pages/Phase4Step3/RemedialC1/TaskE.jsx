@@ -198,9 +198,9 @@ export default function RemedialC1TaskE() {
               </Stack>
             </Box>
             <Box sx={{ textAlign: 'center' }}>
-              <Box component="button" onClick={() => navigate('/dashboard')}
+              <Box component="button" onClick={() => navigate('/phase4/step3/remedial/c1/taskF')}
                 sx={{ px: 6, py: 2, fontSize: '1.2rem', fontWeight: 'bold', cursor: 'pointer', bgcolor: P.green.border, color: '#fff', border: `2px solid ${P.green.shadow}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${P.green.shadow}`, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` } }}>
-                Complete C1 Remedial →
+                Continue to Task F →
               </Box>
             </Box>
           </motion.div>

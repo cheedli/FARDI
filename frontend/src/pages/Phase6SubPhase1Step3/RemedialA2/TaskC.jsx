@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { resolveSubphase1RemedialNextUrl } from '../../Phase6SubPhase1/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const LIGHT = { pageBg: '#FFFDE7', blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' }, orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' }, teal: { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' } }
@@ -84,8 +85,8 @@ export default function Phase6SP1Step3RemedialA2TaskC() {
               <CheckCircleIcon sx={{ fontSize: 50, color: P.green.border, mb: 1 }} />
               <Typography variant="h5" gutterBottom sx={{ color: P.green.border }}>Task C Complete! Score: {score}/{PROMPTS.length}</Typography>
               <Typography variant="body1" sx={{ mb: 2 }}>Great work! You have completed all A2 remedial tasks for Step 3.</Typography>
-              <Box component="button" onClick={() => navigate('/phase6/subphase/2/step/1')} sx={{ ...cardSx(P.orange), p: 1.5, cursor: 'pointer', fontWeight: 'bold', color: P.orange.border, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` }, transition: 'all 0.15s ease' }}>
-                Continue to Next Phase →
+              <Box component="button" onClick={async () => navigate(await resolveSubphase1RemedialNextUrl(3, 'A2'))} sx={{ ...cardSx(P.orange), p: 1.5, cursor: 'pointer', fontWeight: 'bold', color: P.orange.border, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` }, transition: 'all 0.15s ease' }}>
+                Continue →
               </Box>
             </Box>
           </motion.div>

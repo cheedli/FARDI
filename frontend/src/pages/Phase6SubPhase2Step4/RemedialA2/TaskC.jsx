@@ -4,6 +4,7 @@ import { Box, Container, Typography, TextField, Stack, useTheme } from '@mui/mat
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { resolveSubphase2RemedialNextUrl } from '../../Phase6SubPhase2/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const LIGHT = {
@@ -132,7 +133,7 @@ export default function Phase6SP2Step4RemA2TaskC() {
                 <Typography variant="h5" sx={{ color: P.green.shadow }}>Task C Complete! Score: {score}/{PROMPTS.length}</Typography>
                 <Box
                   component="button"
-                  onClick={() => navigate('/phase6/subphase/2/step/4/remedial/b1/task/a')}
+                  onClick={async () => navigate(await resolveSubphase2RemedialNextUrl(4, 'A2'))}
                   sx={{
                     mt: 2, bgcolor: P.green.border, color: 'white',
                     border: `2px solid ${P.green.shadow}`, borderRadius: '14px',
@@ -142,7 +143,7 @@ export default function Phase6SP2Step4RemA2TaskC() {
                     transition: 'all 0.15s',
                   }}
                 >
-                  Continue to Remedial B1
+                  Continue
                 </Box>
               </Box>
             </motion.div>

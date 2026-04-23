@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material/styles'
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { resolveSubphase2RemedialNextUrl } from '../../Phase6SubPhase2/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const LIGHT = { pageBg: '#FFFDE7', orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' }, blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' }, red: { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' } }
@@ -71,9 +72,9 @@ export default function Phase6SP2Step2RemC1TaskC() {
               <Box sx={{ ...cardSx(P.green), textAlign: 'center', mt: 2 }}>
                 <CheckCircleIcon sx={{ fontSize: 50, color: P.green.border, mb: 1 }} />
                 <Typography variant="h5" fontWeight="bold" sx={{ color: P.green.shadow }}>Score: {score}/{QUESTIONS.length}</Typography>
-                <Box component="button" onClick={() => navigate('/phase6/subphase/2/step/3')}
+                <Box component="button" onClick={async () => navigate(await resolveSubphase2RemedialNextUrl(2, 'C1'))}
                   sx={{ mt: 2, px: 5, py: 1.5, borderRadius: '16px', border: `2px solid ${P.green.border}`, bgcolor: P.green.bg, boxShadow: `4px 4px 0 ${P.green.shadow}`, fontWeight: 'bold', fontSize: '1rem', fontFamily: 'inherit', cursor: 'pointer', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }, transition: 'all 0.15s' }}>
-                  Continue to Step 3
+                  Continue
                 </Box>
               </Box>
             </motion.div>

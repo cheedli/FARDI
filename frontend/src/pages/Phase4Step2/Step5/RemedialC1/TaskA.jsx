@@ -35,7 +35,7 @@ const DIALOGUE_MESSAGES = [
 
 export default function Phase4_2Step5RemedialC1TaskA() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 1, context: 'remedial_c1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 5, interaction: 1, context: 'remedial_c1' })
 
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'

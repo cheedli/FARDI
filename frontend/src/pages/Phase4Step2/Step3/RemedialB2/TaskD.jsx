@@ -54,7 +54,7 @@ export default function RemedialB2TaskD() {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const P = isDark ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 4, context: 'remedial_b2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 3, interaction: 4, context: 'remedial_b2' })
   const [currentTermIndex, setCurrentTermIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState([])
   const [currentSpelling, setCurrentSpelling] = useState('')
@@ -123,7 +123,7 @@ export default function RemedialB2TaskD() {
   }
 
   const handleContinue = () => {
-    navigate('/phase4_2/step3/remedial/b2/results')
+    navigate('/phase4_2/step/3/remedial/b2/results')
   }
 
   const canSubmit = currentSpelling.trim().length > 0 && currentExplanation.trim().length >= 10

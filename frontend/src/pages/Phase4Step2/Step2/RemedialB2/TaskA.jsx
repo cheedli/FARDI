@@ -63,7 +63,7 @@ export default function RemedialB2TaskA() {
   }
   const P = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 1, context: 'remedial_b2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 2, interaction: 1, context: 'remedial_b2' })
   const [wordBank] = useState(() => [...WORD_BANK_ORIGINAL].sort(() => Math.random() - 0.5))
   const [selectedWord, setSelectedWord] = useState(null)
   const [answers, setAnswers] = useState({})
@@ -241,7 +241,7 @@ export default function RemedialB2TaskA() {
               <Typography variant="body2" sx={{ mt: 1, color: isDark ? '#aaa' : '#666' }}>Raw score: {score} / 6 blanks</Typography>
             </Box>
             <Box sx={{ textAlign: 'center' }}>
-              <Box component="button" onClick={() => navigate('/phase4_2/step2/remedial/b2/taskB')} sx={{
+              <Box component="button" onClick={() => navigate('/phase4_2/step/2/remedial/b2/taskB')} sx={{
                 bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
                 borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
                 px: 6, py: 2, fontWeight: 700, fontSize: '1.1rem',

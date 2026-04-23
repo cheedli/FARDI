@@ -4,6 +4,8 @@ import { Box, Container, Typography, CircularProgress, LinearProgress, Stack, us
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../lib/phase6_api.jsx'
+import { getSubphase2MainRouting } from '../Phase6SubPhase2/shared/routing.js'
+import { usePhase6ScoreResume } from '../Phase6/shared/useScoreResumeSave.js'
 
 const LIGHT = {
   pageBg: '#FFFDE7',
@@ -20,22 +22,18 @@ const DARK = {
   blue: { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
 }
 
-const determineRemedialLevel = (i2Score) => {
-  if (i2Score <= 1) return 'A1'
-  if (i2Score <= 2) return 'A2'
-  if (i2Score <= 3) return 'B1'
-  if (i2Score <= 4) return 'B2'
-  return 'C1'
-}
-
 export default function Phase6SP2Step4Score() {
   const navigate = useNavigate()
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const [loading, setLoading] = useState(true)
   const [scores, setScores] = useState({ i1: 0, i2: 0, i3: 0, total: 0 })
-  const [level, setLevel] = useState('A1')
+  const [level, setLevel] = useState('A2')
   const [shouldProceed, setShouldProceed] = useState(false)
+  const [nextUrl, setNextUrl] = useState('')
+  const routing = { remedialLevel: level, shouldProceed, totalScore: scores.total, nextUrl }
+
+  usePhase6ScoreResume({ subphase: 2, step: 4, scores, routing })
 
   const cardSx = (color) => ({
     bgcolor: color.bg,
@@ -48,23 +46,30 @@ export default function Phase6SP2Step4Score() {
   useEffect(() => {
     const calc = async () => {
       const i1 = parseInt(sessionStorage.getItem('phase6_sp2_step4_interaction1_score') || '0')
-      const i2 = parseInt(sessionStorage.getItem('phase6_sp2_step4_interaction2_score') || '1')
+      const i2 = parseInt(sessionStorage.getItem('phase6_sp2_step4_interaction2_score') || '2')
       const i3 = parseInt(sessionStorage.getItem('phase6_sp2_step4_interaction3_score') || '0')
       const total = i1 + i2 + i3
       setScores({ i1, i2, i3, total })
 
-      let remedialLevel = determineRemedialLevel(i2)
-      let proceed = i2 >= 3
+      const fallbackRouting = getSubphase2MainRouting(4, i2)
+      let remedialLevel = fallbackRouting.remedialLevel
+      let proceed = fallbackRouting.shouldProceed
+      let resolvedNextUrl = fallbackRouting.nextUrl
+      let resolvedTotal = total
       try {
         const result = await phase6API.calculateStepScore(4, { interaction1_score: i1, interaction2_score: i2, interaction3_score: i3 }, 2)
         const data = result?.data || result || {}
-        remedialLevel = data.total?.remedial_level || data.interaction2?.level || determineRemedialLevel(i2)
-        proceed = data.total?.should_proceed ?? (i2 >= 3)
+        remedialLevel = data.total?.remedial_level || data.interaction2?.level || fallbackRouting.remedialLevel
+        proceed = data.total?.should_proceed ?? fallbackRouting.shouldProceed
+        resolvedNextUrl = data.total?.next_url || data.next_url || fallbackRouting.nextUrl
+        resolvedTotal = data.total?.score ?? data.total_score ?? total
       } catch (e) { console.warn('Backend calc failed:', e) }
 
       setLevel(remedialLevel)
       setShouldProceed(proceed)
-      sessionStorage.setItem('phase6_sp2_step4_total_score', total.toString())
+      setNextUrl(resolvedNextUrl)
+      setScores({ i1, i2, i3, total: resolvedTotal })
+      sessionStorage.setItem('phase6_sp2_step4_total_score', resolvedTotal.toString())
       sessionStorage.setItem('phase6_sp2_step4_remedial_level', remedialLevel)
       setLoading(false)
     }
@@ -72,11 +77,7 @@ export default function Phase6SP2Step4Score() {
   }, [])
 
   const handleContinue = () => {
-    if (shouldProceed) {
-      navigate('/phase6/subphase/2/step/5')
-    } else {
-      navigate(`/phase6/subphase/2/step/4/remedial/${level.toLowerCase()}/task/a`)
-    }
+    navigate(nextUrl)
   }
 
   if (loading) return (
@@ -102,15 +103,15 @@ export default function Phase6SP2Step4Score() {
           <Box sx={{ ...cardSx(P.yellow), mb: 3 }}>
             <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.yellow.border }}>Performance Summary</Typography>
             <Stack spacing={2} sx={{ mt: 2 }}>
-              {[{ label: 'Interaction 1', score: scores.i1, max: 1 }, { label: 'Interaction 2 (Feedback Response)', score: scores.i2, max: 4 }, { label: 'Interaction 3', score: scores.i3, max: 1 }].map((item, idx) => (
+              {[{ label: 'Interaction 1', score: scores.i1, max: 1 }, { label: 'Interaction 2 (Feedback Response)', score: scores.i2, max: 5 }, { label: 'Interaction 3', score: scores.i3, max: 1 }].map((item, idx) => (
                 <Box key={idx} sx={{ ...cardSx(P.yellow), p: 2 }}>
                   <Typography variant="body1"><strong>{item.label}:</strong> {item.score} / {item.max}</Typography>
                   <LinearProgress variant="determinate" value={(item.score / item.max) * 100} sx={{ mt: 1, height: 8, borderRadius: 1, bgcolor: `${P.yellow.border}30`, '& .MuiLinearProgress-bar': { bgcolor: P.yellow.border } }} />
                 </Box>
               ))}
               <Box sx={{ ...cardSx(P.green), p: 2 }}>
-                <Typography variant="h5" fontWeight="bold" sx={{ color: P.green.border }}>Total: {scores.total} / 6</Typography>
-                <LinearProgress variant="determinate" value={(scores.total / 6) * 100} sx={{ mt: 1, height: 12, borderRadius: 1, bgcolor: `${P.green.border}30`, '& .MuiLinearProgress-bar': { bgcolor: P.green.border } }} />
+                <Typography variant="h5" fontWeight="bold" sx={{ color: P.green.border }}>Total: {scores.total} / 7</Typography>
+                <LinearProgress variant="determinate" value={(scores.total / 7) * 100} sx={{ mt: 1, height: 12, borderRadius: 1, bgcolor: `${P.green.border}30`, '& .MuiLinearProgress-bar': { bgcolor: P.green.border } }} />
               </Box>
             </Stack>
           </Box>

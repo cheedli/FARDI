@@ -81,6 +81,7 @@ function Phase4_2Step5Interaction1() {
         setSubmitted(true)
 
         sessionStorage.setItem('phase4_2_step5_spelling_corrected', correctedPost)
+        sessionStorage.setItem('phase4_2_step5_int1_score', data.score.toString())
         const currentScore = parseInt(sessionStorage.getItem('phase4_2_step5_score') || '0')
         sessionStorage.setItem('phase4_2_step5_score', (currentScore + data.score).toString())
       } else {

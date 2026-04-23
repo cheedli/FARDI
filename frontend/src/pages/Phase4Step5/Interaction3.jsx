@@ -103,7 +103,7 @@ export default function Phase4Step5Interaction3() {
       setSubmitted(true)
 
       sessionStorage.setItem('phase4_step5_interaction3_score', data.score || 0)
-      calculateFinalScore(data.score || 0)
+      await calculateFinalScore(data.score || 0)
     } catch (error) {
       console.error('Evaluation error:', error)
 
@@ -147,14 +147,14 @@ export default function Phase4Step5Interaction3() {
       setEvaluation({ success: true, score, level, feedback })
       setSubmitted(true)
       sessionStorage.setItem('phase4_step5_interaction3_score', score)
-      calculateFinalScore(score)
+      await calculateFinalScore(score)
       console.log(`[Phase 4 Step 5 - Interaction 3] Score: ${score}/5 | Level: ${level}`)
     } finally {
       setLoading(false)
     }
   }
 
-  const calculateFinalScore = (interaction3Score) => {
+  const calculateFinalScore = async (interaction3Score) => {
     const interaction1Score = parseInt(sessionStorage.getItem('phase4_step5_interaction1_score') || '0')
     const interaction2Score = parseInt(sessionStorage.getItem('phase4_step5_interaction2_score') || '0')
     const total = interaction1Score + interaction2Score + interaction3Score
@@ -167,45 +167,54 @@ export default function Phase4Step5Interaction3() {
     console.log('Interaction 3 (Enhancement):', interaction3Score)
     console.log('-'.repeat(60))
     console.log('TOTAL SCORE:', total)
-    console.log('Max possible: 18 (for C1: 7+6+5)')
+    console.log('Max possible: 15')
 
-    let remedialLevel = ''
-    if (total <= 7) remedialLevel = 'A1'
-    else if (total <= 10) remedialLevel = 'A2'
-    else if (total <= 12) remedialLevel = 'B1'
-    else if (total <= 14) remedialLevel = 'B2'
-    else if (total <= 18) remedialLevel = 'C1'
-    else remedialLevel = 'Dashboard (Excellent!)'
+    const response = await fetch('/api/phase4/step/5/calculate-score', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        interaction1_score: interaction1Score,
+        interaction2_score: interaction2Score,
+        interaction3_score: interaction3Score
+      })
+    })
 
-    console.log('Routing to: Remedial', remedialLevel)
+    const data = await response.json()
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to calculate Step 5 score')
+    }
+
+    sessionStorage.setItem('phase4_step5_next_url', data.data.total.next_url)
+    sessionStorage.setItem('student_cefr_level', data.data.total.remedial_level.replace('Remedial ', ''))
+
+    console.log('Routing to:', data.data.total.next_url)
     console.log('='.repeat(60) + '\n')
 
-    setFinalScore({ interaction1: interaction1Score, interaction2: interaction2Score, interaction3: interaction3Score, total })
+    setFinalScore({
+      interaction1: interaction1Score,
+      interaction2: interaction2Score,
+      interaction3: interaction3Score,
+      total,
+      nextUrl: data.data.total.next_url
+    })
   }
 
   const handleContinue = () => {
-    const total = finalScore.total
-    const interaction3Score = finalScore.interaction3
+    const nextUrl = finalScore?.nextUrl || sessionStorage.getItem('phase4_step5_next_url')
+    if (!nextUrl) {
+      alert('Error: next step not calculated. Please try again.')
+      return
+    }
 
     sessionStorage.removeItem('phase4_step5_interaction1_score')
     sessionStorage.removeItem('phase4_step5_interaction2_score')
     sessionStorage.removeItem('phase4_step5_interaction3_score')
     sessionStorage.removeItem('phase4_step5_spelling_corrected')
     sessionStorage.removeItem('phase4_step5_grammar_corrected')
-
-    const shouldProceed = interaction3Score >= 3
-    if (shouldProceed) {
-      console.log(`[Phase 4 Step 5] I3 score ${interaction3Score}/5 >= 3 (B1+). Proceeding to Phase 4 Complete.`)
-      navigate('/phase4/complete')
-      return
-    }
-
-    if (total <= 7) navigate('/phase4/step/5/remedial/a1/taskA')
-    else if (total <= 10) navigate('/phase4/step/5/remedial/a2/taskA')
-    else if (total <= 12) navigate('/phase4/step/5/remedial/b1/taskA')
-    else if (total <= 14) navigate('/phase4/step/5/remedial/b2/taskA')
-    else if (total <= 18) navigate('/phase4/step/5/remedial/c1/taskA')
-    else navigate('/phase4/complete')
+    navigate(nextUrl)
   }
 
   return (

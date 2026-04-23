@@ -5,6 +5,8 @@ import { useTheme } from '@mui/material/styles'
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { getSubphase2MainRouting } from '../Phase5SubPhase2/shared/routing.js'
+import { usePhase5ScoreResume } from '../Phase5/shared/useScoreResumeSave.js'
 
 const LIGHT = {
   pageBg: '#FFFDE7',
@@ -31,6 +33,8 @@ export default function Phase5SubPhase2Step5ScoreCalculation() {
   const [routing, setRouting] = useState(null)
   const [overall, setOverall] = useState(null)
 
+  usePhase5ScoreResume({ subphase: 2, step: 5, scores, routing, overall })
+
   useEffect(() => { calculateScore() }, [])
 
   const calculateScore = async () => {
@@ -40,6 +44,17 @@ export default function Phase5SubPhase2Step5ScoreCalculation() {
       const interaction2Score = parseInt(sessionStorage.getItem('phase5_subphase2_step5_interaction2_score') || '0')
       const interaction3Score = parseInt(sessionStorage.getItem('phase5_subphase2_step5_interaction3_score') || '0')
       const totalScore = interaction1Score + interaction2Score + interaction3Score
+      const fallbackOverallTotal =
+        parseInt(sessionStorage.getItem('phase5_subphase2_step1_total_score') || '0') +
+        parseInt(sessionStorage.getItem('phase5_subphase2_step2_total_score') || '0') +
+        parseInt(sessionStorage.getItem('phase5_subphase2_step3_total_score') || '0') +
+        parseInt(sessionStorage.getItem('phase5_subphase2_step4_total_score') || '0') +
+        totalScore
+      const localRouting = getSubphase2MainRouting(
+        5,
+        { interaction1: interaction1Score, interaction2: interaction2Score, interaction3: interaction3Score, total: totalScore },
+        fallbackOverallTotal
+      )
 
       setScores({ interaction1: interaction1Score, interaction2: interaction2Score, interaction3: interaction3Score, total: totalScore })
 
@@ -51,31 +66,31 @@ export default function Phase5SubPhase2Step5ScoreCalculation() {
 
       if (result.success && result.data) {
         const data = result.data
-        const remedialLevel = data.total?.remedial_level || data.interaction2?.level || determineRemedialLevel(interaction2Score)
-        const shouldProceed = data.total?.should_proceed ?? (interaction2Score >= 3)
-
-        const overallTotal = data.overall?.total_score || (() => {
-          const step1Score = parseInt(sessionStorage.getItem('phase5_subphase2_step1_total_score') || '0')
-          const step2Score = parseInt(sessionStorage.getItem('phase5_subphase2_step2_total_score') || '0')
-          const step3Score = parseInt(sessionStorage.getItem('phase5_subphase2_step3_total_score') || '0')
-          const step4Score = parseInt(sessionStorage.getItem('phase5_subphase2_step4_total_score') || '0')
-          return step1Score + step2Score + step3Score + step4Score + totalScore
-        })()
+        const remedialLevel = data.total?.remedial_level || localRouting.remedialLevel
+        const overallTotal = data.overall?.total_score || fallbackOverallTotal
+        const shouldProceed = data.overall?.should_proceed ?? localRouting.shouldProceed
+        const nextUrl = data.overall?.next_url || data.next_url || localRouting.nextUrl
 
         setOverall({
           total_score: overallTotal,
           required_score: data.overall?.required_score || 12,
-          should_proceed: data.overall?.should_proceed ?? (overallTotal >= 12)
+          should_proceed: shouldProceed,
+          next_url: nextUrl
         })
-        setRouting({ remedialLevel, shouldProceed, totalScore: data.total?.score || totalScore })
+        setRouting({ remedialLevel, shouldProceed, totalScore: data.total?.score || totalScore, nextUrl })
         sessionStorage.setItem('phase5_subphase2_step5_total_score', totalScore.toString())
         sessionStorage.setItem('phase5_subphase2_step5_remedial_level', remedialLevel)
         sessionStorage.setItem('phase5_subphase2_overall_total', overallTotal.toString())
       } else {
-        const remedialLevel = determineRemedialLevel(interaction2Score)
-        setRouting({ remedialLevel, shouldProceed: interaction2Score >= 3, totalScore })
+        setOverall({
+          total_score: fallbackOverallTotal,
+          required_score: 12,
+          should_proceed: localRouting.shouldProceed,
+          next_url: localRouting.nextUrl
+        })
+        setRouting({ ...localRouting, totalScore })
         sessionStorage.setItem('phase5_subphase2_step5_total_score', totalScore.toString())
-        sessionStorage.setItem('phase5_subphase2_step5_remedial_level', remedialLevel)
+        sessionStorage.setItem('phase5_subphase2_step5_remedial_level', localRouting.remedialLevel)
       }
     } catch (error) {
       console.error('Error calculating score:', error)
@@ -83,33 +98,36 @@ export default function Phase5SubPhase2Step5ScoreCalculation() {
       const interaction2Score = parseInt(sessionStorage.getItem('phase5_subphase2_step5_interaction2_score') || '0')
       const interaction3Score = parseInt(sessionStorage.getItem('phase5_subphase2_step5_interaction3_score') || '0')
       const totalScore = interaction1Score + interaction2Score + interaction3Score
-      const remedialLevel = determineRemedialLevel(interaction2Score)
+      const fallbackOverallTotal =
+        parseInt(sessionStorage.getItem('phase5_subphase2_step1_total_score') || '0') +
+        parseInt(sessionStorage.getItem('phase5_subphase2_step2_total_score') || '0') +
+        parseInt(sessionStorage.getItem('phase5_subphase2_step3_total_score') || '0') +
+        parseInt(sessionStorage.getItem('phase5_subphase2_step4_total_score') || '0') +
+        totalScore
+      const localRouting = getSubphase2MainRouting(
+        5,
+        { interaction1: interaction1Score, interaction2: interaction2Score, interaction3: interaction3Score, total: totalScore },
+        fallbackOverallTotal
+      )
       setScores({ interaction1: interaction1Score, interaction2: interaction2Score, interaction3: interaction3Score, total: totalScore })
-      setRouting({ remedialLevel, shouldProceed: interaction2Score >= 3, totalScore })
+      setOverall({
+        total_score: fallbackOverallTotal,
+        required_score: 12,
+        should_proceed: localRouting.shouldProceed,
+        next_url: localRouting.nextUrl
+      })
+      setRouting({ ...localRouting, totalScore })
       sessionStorage.setItem('phase5_subphase2_step5_total_score', totalScore.toString())
-      sessionStorage.setItem('phase5_subphase2_step5_remedial_level', remedialLevel)
+      sessionStorage.setItem('phase5_subphase2_step5_remedial_level', localRouting.remedialLevel)
     } finally {
       setCalculating(false)
       setLoading(false)
     }
   }
 
-  const determineRemedialLevel = (i2Score) => {
-    if (i2Score <= 1) return 'A1'
-    if (i2Score <= 2) return 'A2'
-    if (i2Score <= 3) return 'B1'
-    if (i2Score <= 4) return 'B2'
-    return 'C1'
-  }
-
   const handleContinue = () => {
-    if (!routing) return
-    if (routing.shouldProceed) {
-      navigate('/phase5/complete')
-    } else {
-      const levelLower = routing.remedialLevel.toLowerCase()
-      navigate(`/phase5/subphase/2/step/5/remedial/${levelLower}/task/a`)
-    }
+    if (!routing?.nextUrl) return
+    navigate(routing.nextUrl)
   }
 
   if (loading || calculating) {

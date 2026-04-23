@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../../components/Avatar.jsx'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import { requestPhase42FinalScore } from '../../shared/routing.js'
 
 /**
  * Phase 4.2 Step 1 - Remedial B2 - Results Page
@@ -70,12 +71,9 @@ export default function RemedialB2Results() {
     setScores({ taskA: taskAScore, taskB: taskBScore, taskC: taskCScore, taskD: taskDScore, taskE: taskEScore, taskF: taskFScore, average, passed })
 
     try {
-      const response = await fetch('/api/phase4/remedial/final-score', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ phase: '4.2', step: 1, level: 'B2', task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore, task_d_score: taskDScore, task_e_score: taskEScore, task_f_score: taskFScore, average_score: average, passed })
-      })
-      const data = await response.json()
-      if (data.success) console.log('Phase 4.2 Step 1 B2 Final score logged:', data.data)
+      const data = await requestPhase42FinalScore(1, 'b2', { total_score: average })
+      if (data.passed) sessionStorage.setItem('phase4_2_redirect_url', data.next_url)
+      else sessionStorage.removeItem('phase4_2_redirect_url')
     } catch (error) { console.error('Failed to log final score:', error) }
 
     setLoading(false)
@@ -84,7 +82,7 @@ export default function RemedialB2Results() {
   const handleRedirect = () => {
     TASKS.forEach(t => sessionStorage.removeItem(t.storage))
     if (scores.passed) navigate('/dashboard')
-    else navigate('/phase4_2/step1/remedial/b2/taskA')
+    else navigate('/phase4_2/step/1/remedial/b2/taskA')
   }
 
   if (loading) {

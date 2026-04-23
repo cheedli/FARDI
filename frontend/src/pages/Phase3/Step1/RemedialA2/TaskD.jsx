@@ -215,7 +215,7 @@ export default function Phase3RemedialA2TaskD() {
             <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={8}>
               <Box
                 component="button"
-                onClick={() => navigate('/app/dashboard')}
+                onClick={() => navigate('/phase3/step/1/interaction/1')}
                 sx={{
                   display: 'flex', alignItems: 'center', gap: 1,
                   px: 3, py: 1.25,
@@ -228,7 +228,7 @@ export default function Phase3RemedialA2TaskD() {
                   '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` },
                 }}
               >
-                Complete A2 Tasks
+                Retry Step 1
                 <ArrowForwardIcon fontSize="small" />
               </Box>
             </motion.div>

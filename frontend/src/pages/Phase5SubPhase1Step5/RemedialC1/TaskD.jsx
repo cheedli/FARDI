@@ -51,9 +51,14 @@ export default function Phase5Step5RemedialC1TaskD() {
     const b = parseInt(sessionStorage.getItem('phase5_step5_remedial_c1_taskB_score') || '0')
     const c = parseInt(sessionStorage.getItem('phase5_step5_remedial_c1_taskC_score') || '0')
     const d = parseInt(sessionStorage.getItem('phase5_step5_remedial_c1_taskD_score') || '0')
-    const total = a + b + c + d; const passed = total >= Math.ceil(21 * 0.8)
-    try { await phase5API.calculateRemedialScore(5, 'C1', { task_a_score: a, task_b_score: b, task_c_score: c, task_d_score: d }) } catch (e) { console.error(e) }
-    if (passed) navigate('/dashboard'); else navigate('/phase5/subphase/1/step/5/remedial/c1/task/a')
+    let nextUrl = '/phase5/subphase/1/step/5/remedial/c1/task/a'
+    try {
+      const result = await phase5API.calculateRemedialScore(5, 'C1', { task_a_score: a, task_b_score: b, task_c_score: c, task_d_score: d })
+      nextUrl = result?.data?.next_url || nextUrl
+    } catch (e) {
+      console.error(e)
+    }
+    navigate(nextUrl)
   }
 
   const progress = ((currentIndex + 1) / 6) * 100

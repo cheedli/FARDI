@@ -155,6 +155,8 @@ export default function RemedialA2TaskB() {
       const data = await response.json()
       if (data.success) {
         console.log('Final A2 score logged to backend:', data.data)
+        const nextUrl = data.data.next_url || (passed ? '/phase4/step/3' : '/phase4/remedial/a2/taskA')
+        sessionStorage.setItem('phase4_step1_a2_next_url', nextUrl)
       }
     } catch (error) {
       console.error('Failed to log final score:', error)
@@ -167,11 +169,7 @@ export default function RemedialA2TaskB() {
       sessionStorage.removeItem('remedial_a2_taskA_score')
       sessionStorage.removeItem('remedial_a2_taskB_score')
 
-      if (passed) {
-        navigate('/phase4/step/2')
-      } else {
-        navigate('/phase4/remedial/a2/taskA')
-      }
+      navigate(sessionStorage.getItem('phase4_step1_a2_next_url') || (passed ? '/phase4/step/3' : '/phase4/remedial/a2/taskA'))
     }, 5000)
   }
 

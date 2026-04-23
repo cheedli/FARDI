@@ -24,7 +24,7 @@ const QUESTIONS = [
 
 export default function Phase4_2RemedialC1TaskC() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 3, context: 'remedial_c1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 3, context: 'remedial_c1' })
   const [answers, setAnswers] = useState({})
   const [justifications, setJustifications] = useState({})
   const [showResults, setShowResults] = useState(false)

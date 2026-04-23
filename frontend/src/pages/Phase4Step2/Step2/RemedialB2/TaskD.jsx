@@ -58,7 +58,7 @@ export default function RemedialB2TaskD() {
   }
   const P = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 2, interaction: 4, context: 'remedial_b2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 2, interaction: 4, context: 'remedial_b2' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)
   const [currentTermIndex, setCurrentTermIndex] = useState(0)
@@ -224,7 +224,7 @@ export default function RemedialB2TaskD() {
   }
 
   const handleStartGame = () => { setGameStarted(true) }
-  const handleContinue = () => { navigate('/phase4_2/step2/remedial/b2/results') }
+  const handleContinue = () => { navigate('/phase4_2/step/2/remedial/b2/results') }
 
   const formatTime = (seconds) => `0:${seconds.toString().padStart(2, '0')}`
 

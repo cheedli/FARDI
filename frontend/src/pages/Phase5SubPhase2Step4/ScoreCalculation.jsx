@@ -5,6 +5,8 @@ import { useTheme } from '@mui/material/styles'
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { getSubphase2MainRouting } from '../Phase5SubPhase2/shared/routing.js'
+import { usePhase5ScoreResume } from '../Phase5/shared/useScoreResumeSave.js'
 
 const LIGHT = {
   pageBg: '#FFFDE7',
@@ -30,6 +32,8 @@ export default function Phase5SubPhase2Step4ScoreCalculation() {
   const [scores, setScores] = useState({ interaction1: 0, interaction2: 0, interaction3: 0, total: 0 })
   const [routing, setRouting] = useState(null)
 
+  usePhase5ScoreResume({ subphase: 2, step: 4, scores, routing })
+
   useEffect(() => { calculateScore() }, [])
 
   const calculateScore = async () => {
@@ -39,6 +43,7 @@ export default function Phase5SubPhase2Step4ScoreCalculation() {
       const interaction2Score = parseInt(sessionStorage.getItem('phase5_subphase2_step4_interaction2_score') || '0')
       const interaction3Score = parseInt(sessionStorage.getItem('phase5_subphase2_step4_interaction3_score') || '0')
       const totalScore = interaction1Score + interaction2Score + interaction3Score
+      const localRouting = getSubphase2MainRouting(4, { interaction1: interaction1Score, interaction2: interaction2Score, interaction3: interaction3Score, total: totalScore })
 
       setScores({ interaction1: interaction1Score, interaction2: interaction2Score, interaction3: interaction3Score, total: totalScore })
 
@@ -50,16 +55,16 @@ export default function Phase5SubPhase2Step4ScoreCalculation() {
 
       if (result.success && result.data) {
         const data = result.data
-        const remedialLevel = data.total?.remedial_level || data.interaction2?.level || determineRemedialLevel(interaction2Score)
-        const shouldProceed = data.total?.should_proceed ?? (interaction2Score >= 3)
-        setRouting({ remedialLevel, shouldProceed, totalScore: data.total?.score || totalScore })
+        const remedialLevel = data.total?.remedial_level || localRouting.remedialLevel
+        const shouldProceed = data.total?.should_proceed ?? localRouting.shouldProceed
+        const nextUrl = data.total?.next_url || data.next_url || localRouting.nextUrl
+        setRouting({ remedialLevel, shouldProceed, totalScore: data.total?.score || totalScore, nextUrl })
         sessionStorage.setItem('phase5_subphase2_step4_total_score', totalScore.toString())
         sessionStorage.setItem('phase5_subphase2_step4_remedial_level', remedialLevel)
       } else {
-        const remedialLevel = determineRemedialLevel(interaction2Score)
-        setRouting({ remedialLevel, shouldProceed: interaction2Score >= 3, totalScore })
+        setRouting({ ...localRouting, totalScore })
         sessionStorage.setItem('phase5_subphase2_step4_total_score', totalScore.toString())
-        sessionStorage.setItem('phase5_subphase2_step4_remedial_level', remedialLevel)
+        sessionStorage.setItem('phase5_subphase2_step4_remedial_level', localRouting.remedialLevel)
       }
     } catch (error) {
       console.error('Error calculating score:', error)
@@ -67,33 +72,20 @@ export default function Phase5SubPhase2Step4ScoreCalculation() {
       const interaction2Score = parseInt(sessionStorage.getItem('phase5_subphase2_step4_interaction2_score') || '0')
       const interaction3Score = parseInt(sessionStorage.getItem('phase5_subphase2_step4_interaction3_score') || '0')
       const totalScore = interaction1Score + interaction2Score + interaction3Score
-      const remedialLevel = determineRemedialLevel(interaction2Score)
+      const localRouting = getSubphase2MainRouting(4, { interaction1: interaction1Score, interaction2: interaction2Score, interaction3: interaction3Score, total: totalScore })
       setScores({ interaction1: interaction1Score, interaction2: interaction2Score, interaction3: interaction3Score, total: totalScore })
-      setRouting({ remedialLevel, shouldProceed: interaction2Score >= 3, totalScore })
+      setRouting({ ...localRouting, totalScore })
       sessionStorage.setItem('phase5_subphase2_step4_total_score', totalScore.toString())
-      sessionStorage.setItem('phase5_subphase2_step4_remedial_level', remedialLevel)
+      sessionStorage.setItem('phase5_subphase2_step4_remedial_level', localRouting.remedialLevel)
     } finally {
       setCalculating(false)
       setLoading(false)
     }
   }
 
-  const determineRemedialLevel = (i2Score) => {
-    if (i2Score <= 1) return 'A1'
-    if (i2Score <= 2) return 'A2'
-    if (i2Score <= 3) return 'B1'
-    if (i2Score <= 4) return 'B2'
-    return 'C1'
-  }
-
   const handleContinue = () => {
-    if (!routing) return
-    if (routing.shouldProceed) {
-      navigate('/phase5/subphase/2/step/5')
-    } else {
-      const levelLower = routing.remedialLevel.toLowerCase()
-      navigate(`/phase5/subphase/2/step/4/remedial/${levelLower}/task/a`)
-    }
+    if (!routing?.nextUrl) return
+    navigate(routing.nextUrl)
   }
 
   if (loading || calculating) {
@@ -192,7 +184,7 @@ export default function Phase5SubPhase2Step4ScoreCalculation() {
               }}>
                 {routing.shouldProceed ? (
                   <Typography variant="body1">
-                    Great work! You've demonstrated strong understanding. You can proceed to Step 5 or complete remedial activities for extra practice.
+                    Great work! You've demonstrated strong understanding. You can proceed to Step 5.
                   </Typography>
                 ) : (
                   <Typography variant="body1">

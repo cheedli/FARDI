@@ -171,6 +171,7 @@ export default function RemedialA1TaskC() {
     const taskCScore = parseInt(sessionStorage.getItem('remedial_step3_a1_taskC_score') || '0')
     const totalScore = taskAScore + taskBScore + taskCScore
     const passed = totalScore >= 18
+    let nextUrl = passed ? '/phase4/step/4' : '/phase4/step3/remedial/a1/taskA'
 
     console.log('\n' + '='.repeat(60))
     console.log('PHASE 4 STEP 2 - REMEDIAL A1 - FINAL RESULTS')
@@ -181,12 +182,16 @@ export default function RemedialA1TaskC() {
     console.log('='.repeat(60) + '\n')
 
     try {
-      await fetch('/api/phase4/step3/remedial/a1/final-score', {
+      const response = await fetch('/api/phase4/step3/remedial/a1/final-score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore })
       })
+      const data = await response.json()
+      if (data?.success && data?.data?.next_url) {
+        nextUrl = data.data.next_url.replace(/^\/app/, '')
+      }
     } catch (error) {
       console.error('Failed to log final score:', error)
     }
@@ -198,8 +203,7 @@ export default function RemedialA1TaskC() {
       sessionStorage.removeItem('remedial_step3_a1_taskA_score')
       sessionStorage.removeItem('remedial_step3_a1_taskB_score')
       sessionStorage.removeItem('remedial_step3_a1_taskC_score')
-      if (passed) navigate('/dashboard')
-      else navigate('/phase4/step3/remedial/a1/taskA')
+      navigate(nextUrl)
     }, 5000)
   }
 

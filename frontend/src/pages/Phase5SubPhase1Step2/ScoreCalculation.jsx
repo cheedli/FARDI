@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material/styles'
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase5API } from '../../lib/phase5_api.jsx'
+import { usePhase5ScoreResume } from '../Phase5/shared/useScoreResumeSave.js'
 
 const LIGHT = {
   pageBg: '#FFFDE7',
@@ -38,6 +39,8 @@ export default function Phase5Step2ScoreCalculation() {
     total: 0
   })
   const [routing, setRouting] = useState(null)
+
+  usePhase5ScoreResume({ subphase: 1, step: 2, scores, routing })
 
   const cardSx = (color) => ({
     bgcolor: color.bg,
@@ -75,12 +78,23 @@ export default function Phase5Step2ScoreCalculation() {
         const data = result.data
         const remedialLevel = data.total?.remedial_level || data.interaction2?.level || determineRemedialLevel(interaction2Score)
         const shouldProceed = data.total?.should_proceed ?? (interaction2Score >= 3)
-        setRouting({ remedialLevel, shouldProceed, totalScore: data.total_score || totalScore })
+        const nextUrl = data.total?.next_url || data.next_url || (shouldProceed
+          ? '/phase5/subphase/1/step/3'
+          : `/phase5/subphase/1/step/2/remedial/${remedialLevel.toLowerCase()}/task/a`)
+        setRouting({ remedialLevel, shouldProceed, totalScore: data.total?.score || data.total_score || totalScore, nextUrl })
         sessionStorage.setItem('phase5_step2_total_score', totalScore.toString())
         sessionStorage.setItem('phase5_step2_remedial_level', remedialLevel)
       } else {
         const remedialLevel = determineRemedialLevel(interaction2Score)
-        setRouting({ remedialLevel, shouldProceed: interaction2Score >= 3, totalScore })
+        const shouldProceed = interaction2Score >= 3
+        setRouting({
+          remedialLevel,
+          shouldProceed,
+          totalScore,
+          nextUrl: shouldProceed
+            ? '/phase5/subphase/1/step/3'
+            : `/phase5/subphase/1/step/2/remedial/${remedialLevel.toLowerCase()}/task/a`
+        })
         sessionStorage.setItem('phase5_step2_total_score', totalScore.toString())
         sessionStorage.setItem('phase5_step2_remedial_level', remedialLevel)
       }
@@ -88,7 +102,15 @@ export default function Phase5Step2ScoreCalculation() {
       console.error('Error calculating score:', error)
       const interaction2Score = parseInt(sessionStorage.getItem('phase5_step2_interaction2_score') || '2')
       const remedialLevel = determineRemedialLevel(interaction2Score)
-      setRouting({ remedialLevel, shouldProceed: interaction2Score >= 3, totalScore: scores.total })
+      const shouldProceed = interaction2Score >= 3
+      setRouting({
+        remedialLevel,
+        shouldProceed,
+        totalScore,
+        nextUrl: shouldProceed
+          ? '/phase5/subphase/1/step/3'
+          : `/phase5/subphase/1/step/2/remedial/${remedialLevel.toLowerCase()}/task/a`
+      })
     } finally {
       setCalculating(false)
       setLoading(false)
@@ -104,13 +126,8 @@ export default function Phase5Step2ScoreCalculation() {
   }
 
   const handleContinue = () => {
-    if (!routing) return
-    if (routing.shouldProceed) {
-      navigate('/phase5/subphase/1/step/3')
-    } else {
-      const levelLower = routing.remedialLevel.toLowerCase()
-      navigate(`/phase5/subphase/1/step/2/remedial/${levelLower}/task/a`)
-    }
+    if (!routing?.nextUrl) return
+    navigate(routing.nextUrl)
   }
 
   if (loading || calculating) {
@@ -174,11 +191,15 @@ export default function Phase5Step2ScoreCalculation() {
               </Box>
               <Typography variant="body1" sx={{ mb: 2 }} color="text.secondary">
                 {routing.shouldProceed
-                  ? `You've scored ${routing.totalScore} points! You'll proceed to remedial activities at ${routing.remedialLevel} level.`
+                  ? `You've scored ${routing.totalScore} points! You'll proceed directly to Step 3.`
                   : `You've scored ${routing.totalScore} points. You'll complete remedial activities at ${routing.remedialLevel} level.`}
               </Typography>
               <Box sx={{ ...cardSx(P.teal), mb: 2 }}>
-                <Typography variant="body2" sx={{ color: P.teal.border }}><strong>Next Steps:</strong> You'll complete remedial activities designed for {routing.remedialLevel} level.</Typography>
+                <Typography variant="body2" sx={{ color: P.teal.border }}>
+                  <strong>Next Steps:</strong> {routing.shouldProceed
+                    ? 'You will continue to Step 3.'
+                    : `You'll complete remedial activities designed for ${routing.remedialLevel} level.`}
+                </Typography>
               </Box>
               <Box
                 component="button"
@@ -199,7 +220,7 @@ export default function Phase5Step2ScoreCalculation() {
                   transition: 'all 0.15s ease',
                 }}
               >
-                Continue to {routing.remedialLevel} Remedial Activities
+                {routing.shouldProceed ? 'Continue to Step 3' : `Continue to ${routing.remedialLevel} Remedial Activities`}
               </Box>
             </Box>
           </motion.div>

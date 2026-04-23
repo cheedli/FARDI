@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import SushiSpellGame from '../../../components/SushiSpellGame.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
+import { requestPhase42StepScore } from '../shared/routing.js'
 
 /**
  * Phase 4.2 Step 1 - Interaction 3: Sushi Spell Game
@@ -18,7 +19,7 @@ const TARGET_WORDS = [
 
 export default function Phase4_2Step1Interaction3() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 3, context: 'main' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 3, context: 'main' })
   const [gameResult, setGameResult] = useState(null)
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
@@ -71,24 +72,27 @@ export default function Phase4_2Step1Interaction3() {
     }
   }
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const int1Score = parseInt(sessionStorage.getItem('phase4_2_step1_interaction1_score') || '0')
     const int2Score = parseInt(sessionStorage.getItem('phase4_2_step1_int2_score') || '0')
     const int3Score = parseInt(sessionStorage.getItem('phase4_2_step1_int3_score') || '0')
-    const totalScore = int1Score + int2Score + int3Score
-    const totalMax = int1Score + 5 + TARGET_WORDS.length
-    const percentage = (totalScore / totalMax) * 100
-    sessionStorage.setItem('phase4_2_step1_total_score', totalScore.toString())
-    sessionStorage.setItem('phase4_2_step1_total_max', totalMax.toString())
-    sessionStorage.setItem('phase4_2_step1_percentage', percentage.toFixed(2))
-    console.log(`[Phase 4.2 Step 1 - TOTAL] Score: ${totalScore}/${totalMax} (${percentage.toFixed(1)}%)`)
-    if (percentage >= 80) {
-      console.log('[Phase 4.2 Step 1] ≥80% → Proceeding to Step 2')
-      navigate('/app/phase4_2/step/2/interaction/1')
-    } else {
-      console.log('[Phase 4.2 Step 1] <80% → Need to retry')
-      alert(`Your score was ${percentage.toFixed(1)}%. You need 80% or higher to proceed to Step 2. Please review the material and try again.`)
-      navigate('/app/phase4_2/step/1/interaction/1')
+    try {
+      const data = await requestPhase42StepScore(1, {
+        interaction1_score: int1Score,
+        interaction1_max_score: 8,
+        interaction2_score: int2Score,
+        interaction2_max_score: 5,
+        interaction3_score: int3Score,
+        interaction3_max_score: TARGET_WORDS.length,
+      })
+      sessionStorage.setItem('phase4_2_step1_total_score', data.total.score.toString())
+      sessionStorage.setItem('phase4_2_step1_total_max', data.total.max_score.toString())
+      sessionStorage.setItem('phase4_2_step1_next_url', data.total.next_url)
+      sessionStorage.setItem('phase4_2_step1_remedial_level', data.total.remedial_level)
+      navigate(data.total.next_url)
+    } catch (error) {
+      console.error('Failed to calculate Phase 4.2 Step 1 routing:', error)
+      alert('Unable to calculate the next route right now. Please try again.')
     }
   }
 

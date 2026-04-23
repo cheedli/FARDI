@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material/styles'
 import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import { phase5API } from '../../../lib/phase5_api.jsx'
+import { resolveSubphase2RemedialNextUrl } from '../../Phase5SubPhase2/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const LIGHT = { pageBg: '#FFFDE7', orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' }, green: { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' }, blue: { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' } }
@@ -36,7 +37,7 @@ export default function Phase5SubPhase2Step2RemedialB1TaskC() {
     sessionStorage.setItem('phase5_subphase2_step2_remedial_b1_taskC_score', c.toString())
     try { await phase5API.logRemedialActivity(2, 'B1', 'C', c, 6, 2) } catch (e) { console.error(e) }
   }
-  const handleContinue = () => navigate('/phase5/subphase/2/step/3')
+  const handleContinue = async () => navigate(await resolveSubphase2RemedialNextUrl(2, 'B1'))
   const allAnswered = QUESTIONS.every(q => answers[q.id] !== undefined)
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>

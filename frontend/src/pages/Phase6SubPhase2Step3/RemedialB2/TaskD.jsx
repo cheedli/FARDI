@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material/styles'
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { resolveSubphase2RemedialNextUrl } from '../../Phase6SubPhase2/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
@@ -169,10 +170,10 @@ export default function Phase6SP2Step3RemB2TaskD() {
               <Typography sx={{ mb: 2 }}>{score >= 5 ? 'Excellent! You know these peer feedback terms well.' : 'Good effort! Review the example uses above and keep practising.'}</Typography>
               <Box
                 component="button"
-                onClick={() => navigate('/phase6/subphase/2/step/4')}
+                onClick={async () => navigate(await resolveSubphase2RemedialNextUrl(3, 'B2'))}
                 sx={{ ...cardSx('blue'), cursor: 'pointer', fontWeight: 700, display: 'inline-block', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.blue.shadow}` } }}
               >
-                Continue to Step 4 →
+                Continue →
               </Box>
             </Box>
           )}

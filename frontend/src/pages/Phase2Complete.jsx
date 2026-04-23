@@ -164,7 +164,7 @@ export default function Phase2Complete() {
                   credentials: 'include',
                   body: JSON.stringify({ phase_number: 2, overall_score: total_score || 0, final_level: overall_level || '' })
                 }).catch(() => {})
-                navigate('/phase4/step/1')
+                navigate('/phase3/step/1')
               }}
               sx={{
                 display: 'inline-flex', alignItems: 'center', gap: 1,
@@ -176,7 +176,7 @@ export default function Phase2Complete() {
                 '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.orange.shadow}` },
               }}
             >
-              Continue to Phase 4: Marketing & Promotion <ArrowForwardIcon sx={{ fontSize: 18 }} />
+              Continue to Phase 3 <ArrowForwardIcon sx={{ fontSize: 18 }} />
             </Box>
             <Box component="button" onClick={() => navigate('/dashboard')} sx={{
               display: 'inline-flex', alignItems: 'center', gap: 0.75,

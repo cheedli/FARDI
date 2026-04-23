@@ -73,6 +73,7 @@ function Phase4_2Step4Interaction2() {
         setSubmitted(true)
 
         sessionStorage.setItem('phase4_2_step4_twitter_thread', JSON.stringify(tweets))
+        sessionStorage.setItem('phase4_2_step4_int2_score', data.score.toString())
         const currentScore = parseInt(sessionStorage.getItem('phase4_2_step4_score') || '0')
         sessionStorage.setItem('phase4_2_step4_score', (currentScore + data.score).toString())
       } else {

@@ -201,6 +201,8 @@ export default function RemedialB2TaskD() {
       const data = await response.json()
       if (data.success) {
         console.log('Final B2 score logged to backend:', data.data)
+        const nextUrl = data.data.next_url || (passed ? '/phase4/step/3' : '/phase4/remedial/b2/taskA')
+        sessionStorage.setItem('phase4_step1_b2_next_url', nextUrl)
       }
     } catch (error) {
       console.error('Failed to log final score:', error)
@@ -215,11 +217,7 @@ export default function RemedialB2TaskD() {
       sessionStorage.removeItem('remedial_b2_taskC_score')
       sessionStorage.removeItem('remedial_b2_taskD_score')
 
-      if (passed) {
-        navigate('/phase4/step/2')
-      } else {
-        navigate('/phase4/remedial/b2/taskA')
-      }
+      navigate(sessionStorage.getItem('phase4_step1_b2_next_url') || (passed ? '/phase4/step/3' : '/phase4/remedial/b2/taskA'))
     }, 5000)
   }
 

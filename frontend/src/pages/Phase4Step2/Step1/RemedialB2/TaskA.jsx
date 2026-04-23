@@ -38,7 +38,7 @@ const DIALOGUE_MESSAGES = [
 
 export default function RemedialB2TaskA() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 1, context: 'remedial_b2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 1, context: 'remedial_b2' })
   const [wordBank] = useState(() => [...WORD_BANK_ORIGINAL].sort(() => Math.random() - 0.5))
   const [selectedWord, setSelectedWord] = useState(null)
   const [answers, setAnswers] = useState({})
@@ -232,7 +232,7 @@ export default function RemedialB2TaskA() {
               <Typography variant="body1" sx={{ mt: 2, color: P.green.shadow }}>Dialogue Progress: {((score / 8) * 100).toFixed(0)}% Complete</Typography>
             </Box>
             <Box sx={{ textAlign: 'center' }}>
-              <Box component="button" onClick={() => navigate('/phase4_2/step1/remedial/b2/taskB')} sx={{
+              <Box component="button" onClick={() => navigate('/phase4_2/step/1/remedial/b2/taskB')} sx={{
                 bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '12px', boxShadow: `3px 3px 0 ${P.blue.shadow}`,
                 px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem', cursor: 'pointer', color: P.blue.shadow,
                 display: 'inline-flex', alignItems: 'center', gap: 1,

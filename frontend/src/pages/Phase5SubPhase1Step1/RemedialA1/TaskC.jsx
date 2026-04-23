@@ -149,7 +149,6 @@ export default function Phase5Step1RemedialA1TaskC() {
     const totalScore = taskAScore + taskBScore + taskCScore
     const maxScore = 8 + 8 + 6 // 22 total
     const threshold = Math.ceil(maxScore * 0.8) // 80% = 18
-    const passed = totalScore >= threshold
 
     console.log('\n' + '='.repeat(60))
     console.log('PHASE 5 STEP 1 - REMEDIAL A1 - FINAL RESULTS')
@@ -161,29 +160,24 @@ export default function Phase5Step1RemedialA1TaskC() {
     console.log('TOTAL SCORE:', totalScore, '/', maxScore)
     console.log('PASS THRESHOLD:', threshold, '/', maxScore, '(80%)')
     console.log('-'.repeat(60))
-    if (passed) {
-      console.log('✅ PASSED - Student will proceed to Dashboard/Next Phase')
-    } else {
-      console.log('❌ FAILED - Student will repeat Remedial Level A1')
-    }
+    console.log(totalScore >= threshold
+      ? '✅ PASSED - Student will proceed to the next step'
+      : '❌ FAILED - Student will repeat Remedial Level A1')
     console.log('='.repeat(60) + '\n')
 
     // Log final score to backend
+    let nextUrl = '/phase5/subphase/1/step/1/remedial/a1/task/a'
     try {
-      await phase5API.calculateRemedialScore(1, 'A1', {
+      const result = await phase5API.calculateRemedialScore(1, 'A1', {
         task_a_score: taskAScore,
         task_b_score: taskBScore,
         task_c_score: taskCScore
       })
+      nextUrl = result?.data?.next_url || nextUrl
     } catch (error) {
       console.error('Failed to log final score:', error)
     }
-
-    if (passed) {
-      navigate('/dashboard')
-    } else {
-      navigate('/phase5/subphase/1/step/1/remedial/a1/task/a')
-    }
+    navigate(nextUrl)
   }
 
   const progress = ((currentIndex + 1) / SENTENCE_PROMPTS.length) * 100

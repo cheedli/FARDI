@@ -37,6 +37,103 @@ def get_db_connection():
     return conn
 
 
+def _phase5_subphase1_step_path(step: int) -> str:
+    return f"/phase5/subphase/1/step/{step}"
+
+
+def _phase5_subphase1_next_step_url(step: int) -> str:
+    return '/phase5/subphase/2/step/1' if step == 5 else _phase5_subphase1_step_path(step + 1)
+
+
+def _phase5_subphase1_remedial_start_url(step: int, level: str) -> str:
+    return f"/phase5/subphase/1/step/{step}/remedial/{level.lower()}/task/a"
+
+
+def _phase5_subphase1_main_next_url(step: int, remedial_level: str, should_proceed: bool) -> str:
+    if should_proceed:
+        return _phase5_subphase1_next_step_url(step)
+    return _phase5_subphase1_remedial_start_url(step, remedial_level)
+
+
+def _phase5_subphase2_step_path(step: int) -> str:
+    return f"/phase5/subphase/2/step/{step}"
+
+
+def _phase5_subphase2_next_step_url(step: int) -> str:
+    return '/phase5/complete' if step == 5 else _phase5_subphase2_step_path(step + 1)
+
+
+def _phase5_subphase2_remedial_start_url(step: int, level: str) -> str:
+    return f"/phase5/subphase/2/step/{step}/remedial/{level.lower()}/task/a"
+
+
+def _phase5_subphase2_main_next_url(step: int, remedial_level: str, should_proceed: bool) -> str:
+    if should_proceed:
+        return _phase5_subphase2_next_step_url(step)
+    return _phase5_subphase2_remedial_start_url(step, remedial_level)
+
+
+def _phase5_extract_task_scores(data: dict) -> dict:
+    task_scores = data.get('task_scores')
+    if isinstance(task_scores, dict) and task_scores:
+        return {
+            key: int(value or 0)
+            for key, value in task_scores.items()
+            if key.startswith('task_') and key.endswith('_score')
+        }
+    return {
+        key: int(value or 0)
+        for key, value in data.items()
+        if key.startswith('task_') and key.endswith('_score')
+    }
+
+
+_PHASE5_SUBPHASE1_FINAL_CONFIG = {
+    1: {
+        'A1': {'max_score': 22, 'pass_threshold': 18},
+        'A2': {'max_score': 21, 'pass_threshold': 17},
+        'B1': {'max_score': 37, 'pass_threshold': 30},
+        'B2': {'max_score': 37, 'pass_threshold': 30},
+        'C1': {'max_score': 51, 'pass_threshold': 41},
+    },
+    2: {
+        'A2': {'max_score': 18, 'pass_threshold': 15},
+        'B1': {'max_score': 15, 'pass_threshold': 12},
+        'B2': {'max_score': 26, 'pass_threshold': 21},
+        'C1': {'max_score': 23, 'pass_threshold': 19},
+    },
+    3: {
+        'A2': {'max_score': 22, 'pass_threshold': 18},
+        'B1': {'max_score': 19, 'pass_threshold': 16},
+        'B2': {'max_score': 28, 'pass_threshold': 23},
+        'C1': {'max_score': 26, 'pass_threshold': 21},
+    },
+    4: {
+        'A2': {'max_score': 22, 'pass_threshold': 18},
+        'B1': {'max_score': 17, 'pass_threshold': 14},
+        'B2': {'max_score': 27, 'pass_threshold': 22},
+        'C1': {'max_score': 25, 'pass_threshold': 20},
+    },
+    5: {
+        'A2': {'max_score': 22, 'pass_threshold': 18},
+        'B1': {'max_score': 19, 'pass_threshold': 16},
+        'B2': {'max_score': 15, 'pass_threshold': 12},
+        'C1': {'max_score': 21, 'pass_threshold': 17},
+    },
+}
+
+
+_PHASE5_SUBPHASE2_FINAL_CONFIG = {
+    step: {
+        'A2': {'max_score': 24, 'pass_threshold': 18},
+        'B1': {'max_score': 24, 'pass_threshold': 18},
+        'B2': {'max_score': 32, 'pass_threshold': 24},
+        'C1': {'max_score': 32, 'pass_threshold': 24},
+    }
+    for step in range(1, 6)
+}
+
+
 # ============================================================
 # POWER-UPS ENDPOINTS
 # ============================================================
@@ -448,6 +545,7 @@ async def calculate_step1_score(request: Request, user: dict = Depends(get_curre
         else:
             remedial_level = 'C1'
         should_proceed = interaction2_score >= 3
+        next_url = _phase5_subphase1_main_next_url(1, remedial_level, should_proceed)
         print("\n" + "="*60)
         print("PHASE 5 STEP 1 - SCORING RESULTS")
         print("="*60)
@@ -468,10 +566,15 @@ async def calculate_step1_score(request: Request, user: dict = Depends(get_curre
         return {
             'success': True,
             'data': {
+                'total_score': total_score,
+                'max_score': max_score,
+                'remedial_level': remedial_level,
+                'should_proceed': should_proceed,
+                'next_url': next_url,
                 'interaction1': {'score': interaction1_score, 'max_score': 1, 'type': 'completion'},
                 'interaction2': {'score': interaction2_score, 'max_score': 5, 'level': remedial_level},
                 'interaction3': {'score': interaction3_score, 'max_score': 1, 'type': 'completion'},
-                'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level, 'should_proceed': should_proceed}
+                'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level, 'should_proceed': should_proceed, 'next_url': next_url}
             }
         }
     except Exception as e:
@@ -833,6 +936,7 @@ async def calculate_step2_score(request: Request, user: dict = Depends(get_curre
         else:
             remedial_level = 'C1'
         should_proceed = main_score >= 3
+        next_url = _phase5_subphase1_main_next_url(2, remedial_level, should_proceed)
         logger.info(f"Phase 5 Step 2 scoring - User {user_id}: I1={interaction1_score}+{interaction1_writing_score}, I2={interaction2_score}, I3={interaction3_score}+{interaction3_revision_score}, Total={total_score}, Level={remedial_level}, Proceed={should_proceed}")
         return {
             'success': True,
@@ -841,9 +945,11 @@ async def calculate_step2_score(request: Request, user: dict = Depends(get_curre
                 'max_score': max_score,
                 'remedial_level': remedial_level,
                 'should_proceed': should_proceed,
+                'next_url': next_url,
                 'interaction1': {'game_score': interaction1_score, 'writing_score': interaction1_writing_score},
                 'interaction2': {'score': interaction2_score},
-                'interaction3': {'game_score': interaction3_score, 'revision_score': interaction3_revision_score}
+                'interaction3': {'game_score': interaction3_score, 'revision_score': interaction3_revision_score},
+                'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level, 'should_proceed': should_proceed, 'next_url': next_url}
             }
         }
     except Exception as e:
@@ -1244,6 +1350,7 @@ async def calculate_step3_score(request: Request, user: dict = Depends(get_curre
         else:
             remedial_level = 'C1'
         should_proceed = main_score >= 3
+        next_url = _phase5_subphase1_main_next_url(3, remedial_level, should_proceed)
         logger.info(f"Phase 5 Step 3 scoring - User {user_id}: I1={interaction1_score}+{interaction1_definition_score}, I2={interaction2_score}, I3={interaction3_score}+{interaction3_term_score}, Total={total_score}, Level={remedial_level}, Proceed={should_proceed}")
         return {
             'success': True,
@@ -1252,9 +1359,11 @@ async def calculate_step3_score(request: Request, user: dict = Depends(get_curre
                 'max_score': max_score,
                 'remedial_level': remedial_level,
                 'should_proceed': should_proceed,
+                'next_url': next_url,
                 'interaction1': {'game_score': interaction1_score, 'definition_score': interaction1_definition_score},
                 'interaction2': {'score': interaction2_score},
-                'interaction3': {'game_score': interaction3_score, 'term_score': interaction3_term_score}
+                'interaction3': {'game_score': interaction3_score, 'term_score': interaction3_term_score},
+                'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level, 'should_proceed': should_proceed, 'next_url': next_url}
             }
         }
     except Exception as e:
@@ -1628,6 +1737,7 @@ async def calculate_step4_score(request: Request, user: dict = Depends(get_curre
         else:
             remedial_level = 'C1'
         should_proceed = main_score >= 3
+        next_url = _phase5_subphase1_main_next_url(4, remedial_level, should_proceed)
         logger.info(f"Phase 5 Step 4 scoring - User {user_id}: Total={total_score}, Level={remedial_level}, Proceed={should_proceed}")
         return {
             'success': True,
@@ -1636,9 +1746,11 @@ async def calculate_step4_score(request: Request, user: dict = Depends(get_curre
                 'max_score': max_score,
                 'remedial_level': remedial_level,
                 'should_proceed': should_proceed,
+                'next_url': next_url,
                 'interaction1': {'score': interaction1_score},
                 'interaction2': {'score': interaction2_score},
-                'interaction3': {'game_score': interaction3_score, 'revision_score': interaction3_revision_score}
+                'interaction3': {'game_score': interaction3_score, 'revision_score': interaction3_revision_score},
+                'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level, 'should_proceed': should_proceed, 'next_url': next_url}
             }
         }
     except Exception as e:
@@ -1939,8 +2051,9 @@ async def calculate_step5_score(request: Request, user: dict = Depends(get_curre
         elif main_score == 4: remedial_level = 'B2'
         else: remedial_level = 'C1'
         should_proceed = main_score >= 3
+        next_url = _phase5_subphase1_main_next_url(5, remedial_level, should_proceed)
         logger.info(f"Phase 5 Step 5 scoring - User {user_id}: Total={total_score}, Level={remedial_level}")
-        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'remedial_level': remedial_level, 'should_proceed': should_proceed, 'interaction1': {'score': interaction1_score}, 'interaction2': {'score': interaction2_score}, 'interaction3': {'game_score': interaction3_score, 'enhancement_score': interaction3_enhancement_score}}}
+        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'remedial_level': remedial_level, 'should_proceed': should_proceed, 'next_url': next_url, 'interaction1': {'score': interaction1_score}, 'interaction2': {'score': interaction2_score}, 'interaction3': {'game_score': interaction3_score, 'enhancement_score': interaction3_enhancement_score}, 'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level, 'should_proceed': should_proceed, 'next_url': next_url}}}
     except Exception as e:
         logger.error(f"Error calculating Phase 5 Step 5 score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1973,14 +2086,21 @@ async def calculate_step5_remedial_final_score(level: str, request: Request, use
     """Calculate final remedial score for Step 5"""
     try:
         user_id = user["user_id"]; data = await request.json()
-        task_scores = data.get('task_scores', {}); total_score = sum(task_scores.values())
-        max_scores = {'A2': 22, 'B1': 19, 'B2': 24, 'C1': 25}
-        max_score = max_scores.get(level.upper(), 20); threshold = math.ceil(max_score * 0.8); passed = total_score >= threshold
+        level_key = level.upper()
+        config = _PHASE5_SUBPHASE1_FINAL_CONFIG[5].get(level_key)
+        if not config:
+            return {'success': False, 'error': f'Invalid level: {level}'}
+        task_scores = _phase5_extract_task_scores(data)
+        total_score = sum(task_scores.values())
+        max_score = config['max_score']
+        threshold = config['pass_threshold']
+        passed = total_score >= threshold
+        next_url = _phase5_subphase1_next_step_url(5) if passed else _phase5_subphase1_remedial_start_url(5, level_key)
         conn = get_db_connection(); cursor = conn.cursor()
-        cursor.execute('UPDATE phase5_remedial SET total_score = ?, max_score = ?, passed = ? WHERE user_id = ? AND step_id = 5 AND level = ?', (total_score, max_score, passed, user_id, level.upper()))
+        cursor.execute('UPDATE phase5_remedial SET total_score = ?, max_score = ?, passed = ? WHERE user_id = ? AND step_id = 5 AND level = ?', (total_score, max_score, passed, user_id, level_key))
         conn.commit(); conn.close()
         logger.info(f"Phase 5 Step 5 Remedial final - User {user_id}: Level={level}, Score={total_score}/{max_score}, Passed={passed}")
-        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'passed': passed, 'threshold': threshold}}
+        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'passed': passed, 'threshold': threshold, 'next_url': next_url}}
     except Exception as e:
         logger.error(f"Error calculating Step 5 remedial final score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1991,14 +2111,21 @@ async def calculate_step4_remedial_final_score(level: str, request: Request, use
     """Calculate final remedial score for Step 4"""
     try:
         user_id = user["user_id"]; data = await request.json()
-        task_scores = data.get('task_scores', {}); total_score = sum(task_scores.values())
-        max_scores = {'A2': 22, 'B1': 19, 'B2': 28, 'C1': 28}
-        max_score = max_scores.get(level.upper(), 20); threshold = math.ceil(max_score * 0.8); passed = total_score >= threshold
+        level_key = level.upper()
+        config = _PHASE5_SUBPHASE1_FINAL_CONFIG[4].get(level_key)
+        if not config:
+            return {'success': False, 'error': f'Invalid level: {level}'}
+        task_scores = _phase5_extract_task_scores(data)
+        total_score = sum(task_scores.values())
+        max_score = config['max_score']
+        threshold = config['pass_threshold']
+        passed = total_score >= threshold
+        next_url = _phase5_subphase1_next_step_url(4) if passed else _phase5_subphase1_remedial_start_url(4, level_key)
         conn = get_db_connection(); cursor = conn.cursor()
-        cursor.execute('UPDATE phase5_remedial SET total_score = ?, max_score = ?, passed = ? WHERE user_id = ? AND step_id = 4 AND level = ?', (total_score, max_score, passed, user_id, level.upper()))
+        cursor.execute('UPDATE phase5_remedial SET total_score = ?, max_score = ?, passed = ? WHERE user_id = ? AND step_id = 4 AND level = ?', (total_score, max_score, passed, user_id, level_key))
         conn.commit(); conn.close()
         logger.info(f"Phase 5 Step 4 Remedial final - User {user_id}: Level={level}, Score={total_score}/{max_score}, Passed={passed}")
-        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'passed': passed, 'threshold': threshold}}
+        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'passed': passed, 'threshold': threshold, 'next_url': next_url}}
     except Exception as e:
         logger.error(f"Error calculating Step 4 remedial final score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -2009,14 +2136,21 @@ async def calculate_step3_remedial_final_score(level: str, request: Request, use
     """Calculate final remedial score for Step 3"""
     try:
         user_id = user["user_id"]; data = await request.json()
-        task_scores = data.get('task_scores', {}); total_score = sum(task_scores.values())
-        max_scores = {'A2': 22, 'B1': 22, 'B2': 28, 'C1': 28}
-        max_score = max_scores.get(level.upper(), 20); threshold = math.ceil(max_score * 0.8); passed = total_score >= threshold
+        level_key = level.upper()
+        config = _PHASE5_SUBPHASE1_FINAL_CONFIG[3].get(level_key)
+        if not config:
+            return {'success': False, 'error': f'Invalid level: {level}'}
+        task_scores = _phase5_extract_task_scores(data)
+        total_score = sum(task_scores.values())
+        max_score = config['max_score']
+        threshold = config['pass_threshold']
+        passed = total_score >= threshold
+        next_url = _phase5_subphase1_next_step_url(3) if passed else _phase5_subphase1_remedial_start_url(3, level_key)
         conn = get_db_connection(); cursor = conn.cursor()
-        cursor.execute('UPDATE phase5_remedial SET total_score = ?, max_score = ?, passed = ? WHERE user_id = ? AND step_id = 3 AND level = ?', (total_score, max_score, passed, user_id, level.upper()))
+        cursor.execute('UPDATE phase5_remedial SET total_score = ?, max_score = ?, passed = ? WHERE user_id = ? AND step_id = 3 AND level = ?', (total_score, max_score, passed, user_id, level_key))
         conn.commit(); conn.close()
         logger.info(f"Phase 5 Step 3 Remedial final - User {user_id}: Level={level}, Score={total_score}/{max_score}, Passed={passed}")
-        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'passed': passed, 'threshold': threshold}}
+        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'passed': passed, 'threshold': threshold, 'next_url': next_url}}
     except Exception as e:
         logger.error(f"Error calculating Step 3 remedial final score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -2027,14 +2161,21 @@ async def calculate_step2_remedial_final_score(level: str, request: Request, use
     """Calculate final remedial score for Step 2"""
     try:
         user_id = user["user_id"]; data = await request.json()
-        task_scores = data.get('task_scores', {}); total_score = sum(task_scores.values())
-        max_scores = {'A2': 18, 'B1': 18, 'B2': 28, 'C1': 28}
-        max_score = max_scores.get(level.upper(), 20); threshold = math.ceil(max_score * 0.8); passed = total_score >= threshold
+        level_key = level.upper()
+        config = _PHASE5_SUBPHASE1_FINAL_CONFIG[2].get(level_key)
+        if not config:
+            return {'success': False, 'error': f'Invalid level: {level}'}
+        task_scores = _phase5_extract_task_scores(data)
+        total_score = sum(task_scores.values())
+        max_score = config['max_score']
+        threshold = config['pass_threshold']
+        passed = total_score >= threshold
+        next_url = _phase5_subphase1_next_step_url(2) if passed else _phase5_subphase1_remedial_start_url(2, level_key)
         conn = get_db_connection(); cursor = conn.cursor()
-        cursor.execute('UPDATE phase5_remedial SET total_score = ?, max_score = ?, passed = ? WHERE user_id = ? AND step_id = 2 AND level = ?', (total_score, max_score, passed, user_id, level.upper()))
+        cursor.execute('UPDATE phase5_remedial SET total_score = ?, max_score = ?, passed = ? WHERE user_id = ? AND step_id = 2 AND level = ?', (total_score, max_score, passed, user_id, level_key))
         conn.commit(); conn.close()
         logger.info(f"Phase 5 Step 2 Remedial final - User {user_id}: Level={level}, Score={total_score}/{max_score}, Passed={passed}")
-        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'passed': passed, 'threshold': threshold}}
+        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'passed': passed, 'threshold': threshold, 'next_url': next_url}}
     except Exception as e:
         logger.error(f"Error calculating Step 2 remedial final score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -2066,24 +2207,16 @@ async def calculate_step1_remedial_final_score(level: str, request: Request, use
     """Calculate final remedial score for Step 1"""
     try:
         user_id = user["user_id"]; data = await request.json()
-        if level == 'a1':
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0)
-            max_score = 24; pass_threshold = 19
-        elif level == 'a2':
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0)
-            max_score = 24; pass_threshold = 19
-        elif level == 'b1':
-            total_score = sum(data.get(f'task_{k}_score', 0) for k in ['a', 'b', 'c', 'd', 'e', 'f'])
-            max_score = 60; pass_threshold = 48
-        elif level == 'b2':
-            total_score = sum(data.get(f'task_{k}_score', 0) for k in ['a', 'b', 'c', 'd', 'e', 'f'])
-            max_score = 60; pass_threshold = 48
-        elif level == 'c1':
-            total_score = sum(data.get(f'task_{k}_score', 0) for k in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'])
-            max_score = 80; pass_threshold = 64
-        else:
+        level_key = level.upper()
+        config = _PHASE5_SUBPHASE1_FINAL_CONFIG[1].get(level_key)
+        if not config:
             return {'success': False, 'error': f'Invalid level: {level}'}
+        task_scores = _phase5_extract_task_scores(data)
+        total_score = sum(task_scores.values())
+        max_score = config['max_score']
+        pass_threshold = config['pass_threshold']
         passed = total_score >= pass_threshold
+        next_url = _phase5_subphase1_next_step_url(1) if passed else _phase5_subphase1_remedial_start_url(1, level_key)
         print("\n" + "="*60)
         print(f"PHASE 5 STEP 1 - REMEDIAL {level.upper()} - FINAL ASSESSMENT")
         print("="*60)
@@ -2093,7 +2226,7 @@ async def calculate_step1_remedial_final_score(level: str, request: Request, use
         print(f"Result: {'PASSED' if passed else 'FAILED - RETRY REQUIRED'}")
         print("="*60 + "\n")
         logger.info(f"Phase 5 Step 1 Remedial {level} Final - User {user_id}: Total={total_score}/{max_score}, Passed={passed}")
-        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'pass_threshold': pass_threshold, 'passed': passed, 'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0}}
+        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'pass_threshold': pass_threshold, 'passed': passed, 'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0, 'next_url': next_url}}
     except Exception as e:
         logger.error(f"Error calculating Step 1 Remedial {level} final score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -2211,13 +2344,15 @@ async def calculate_subphase2_step1_score(request: Request, user: dict = Depends
         elif interaction2_score == 2: remedial_level = 'B1'
         elif interaction2_score == 3: remedial_level = 'B2'
         else: remedial_level = 'C1'
+        should_proceed = interaction2_score >= 3
+        next_url = _phase5_subphase2_main_next_url(1, remedial_level, should_proceed)
         conn = get_db_connection(); cursor = conn.cursor()
-        cursor.execute('''INSERT INTO phase5_progress (user_id, subphase, step_id, interaction_scores, total_score, remedial_level, should_proceed) VALUES (?, 2, 1, ?, ?, ?, ?) ON CONFLICT(user_id, subphase, step_id) DO UPDATE SET interaction_scores = ?, total_score = ?, remedial_level = ?, updated_at = CURRENT_TIMESTAMP''',
-            (user_id, json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, False,
-             json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level))
+        cursor.execute('''INSERT INTO phase5_progress (user_id, subphase, step_id, interaction_scores, total_score, remedial_level, should_proceed) VALUES (?, 2, 1, ?, ?, ?, ?) ON CONFLICT(user_id, subphase, step_id) DO UPDATE SET interaction_scores = ?, total_score = ?, remedial_level = ?, should_proceed = ?, updated_at = CURRENT_TIMESTAMP''',
+            (user_id, json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, should_proceed,
+             json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, should_proceed))
         conn.commit(); conn.close()
-        logger.info(f"Phase 5 SubPhase 2 Step 1 scoring - User {user_id}: Total={total_score}, Level={remedial_level}")
-        return {'success': True, 'data': {'interaction1': {'score': interaction1_score, 'max_score': 1}, 'interaction2': {'score': interaction2_score, 'max_score': 4, 'level': remedial_level}, 'interaction3': {'score': interaction3_score, 'max_score': 1}, 'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level}}}
+        logger.info(f"Phase 5 SubPhase 2 Step 1 scoring - User {user_id}: Total={total_score}, Level={remedial_level}, Proceed={should_proceed}")
+        return {'success': True, 'data': {'next_url': next_url, 'interaction1': {'score': interaction1_score, 'max_score': 1}, 'interaction2': {'score': interaction2_score, 'max_score': 4, 'level': remedial_level}, 'interaction3': {'score': interaction3_score, 'max_score': 1}, 'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level, 'should_proceed': should_proceed, 'next_url': next_url}}}
     except Exception as e:
         logger.error(f"Error calculating SubPhase 2 Step 1 score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -2245,20 +2380,17 @@ async def log_subphase2_step1_remedial(request: Request, user: dict = Depends(ge
 async def calculate_subphase2_step1_remedial_final_score(level: str, request: Request, user: dict = Depends(get_current_user)):
     """Calculate final remedial score for SubPhase 2 Step 1"""
     try:
-        user_id = user["user_id"]; data = await request.json(); level_lower = level.lower()
-        if level_lower == 'a2':
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0); max_score = 24; pass_threshold = 18
-        elif level_lower == 'b1':
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0); max_score = 24; pass_threshold = 18
-        elif level_lower == 'b2':
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0) + data.get('task_d_score', 0); max_score = 32; pass_threshold = 24
-        elif level_lower == 'c1':
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0) + data.get('task_d_score', 0); max_score = 32; pass_threshold = 24
-        else:
+        user_id = user["user_id"]; data = await request.json(); level_key = level.upper()
+        config = _PHASE5_SUBPHASE2_FINAL_CONFIG[1].get(level_key)
+        if not config:
             return {'success': False, 'error': f'Invalid level: {level}'}
+        task_scores = _phase5_extract_task_scores(data)
+        total_score = sum(task_scores.values())
+        max_score = config['max_score']; pass_threshold = config['pass_threshold']
         passed = total_score >= pass_threshold
+        next_url = _phase5_subphase2_next_step_url(1) if passed else _phase5_subphase2_remedial_start_url(1, level_key)
         logger.info(f"Phase 5 SubPhase 2 Step 1 Remedial {level} Final - User {user_id}: Total={total_score}/{max_score}, Passed={passed}")
-        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'pass_threshold': pass_threshold, 'passed': passed, 'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0}}
+        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'pass_threshold': pass_threshold, 'passed': passed, 'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0, 'next_url': next_url}}
     except Exception as e:
         logger.error(f"Error calculating SubPhase 2 Step 1 Remedial {level} final score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -2342,13 +2474,15 @@ async def calculate_subphase2_step2_score(request: Request, user: dict = Depends
         elif avg_score <= 2.5: remedial_level = 'B1'
         elif avg_score <= 3.5: remedial_level = 'B2'
         else: remedial_level = 'C1'
+        should_proceed = interaction2_score >= 3
+        next_url = _phase5_subphase2_main_next_url(2, remedial_level, should_proceed)
         conn = get_db_connection(); cursor = conn.cursor()
-        cursor.execute('''INSERT INTO phase5_progress (user_id, subphase, step_id, interaction_scores, total_score, remedial_level, should_proceed) VALUES (?, 2, 2, ?, ?, ?, ?) ON CONFLICT(user_id, subphase, step_id) DO UPDATE SET interaction_scores = ?, total_score = ?, remedial_level = ?, updated_at = CURRENT_TIMESTAMP''',
-            (user_id, json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, False,
-             json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level))
+        cursor.execute('''INSERT INTO phase5_progress (user_id, subphase, step_id, interaction_scores, total_score, remedial_level, should_proceed) VALUES (?, 2, 2, ?, ?, ?, ?) ON CONFLICT(user_id, subphase, step_id) DO UPDATE SET interaction_scores = ?, total_score = ?, remedial_level = ?, should_proceed = ?, updated_at = CURRENT_TIMESTAMP''',
+            (user_id, json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, should_proceed,
+             json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, should_proceed))
         conn.commit(); conn.close()
-        logger.info(f"Phase 5 SubPhase 2 Step 2 scoring - User {user_id}: Total={total_score}, Level={remedial_level}")
-        return {'success': True, 'data': {'interaction1': {'score': interaction1_score, 'max_score': 4}, 'interaction2': {'score': interaction2_score, 'max_score': 4}, 'interaction3': {'score': interaction3_score, 'max_score': 4}, 'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level}}}
+        logger.info(f"Phase 5 SubPhase 2 Step 2 scoring - User {user_id}: Total={total_score}, Level={remedial_level}, Proceed={should_proceed}")
+        return {'success': True, 'data': {'next_url': next_url, 'interaction1': {'score': interaction1_score, 'max_score': 4}, 'interaction2': {'score': interaction2_score, 'max_score': 4}, 'interaction3': {'score': interaction3_score, 'max_score': 4}, 'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level, 'should_proceed': should_proceed, 'next_url': next_url}}}
     except Exception as e:
         logger.error(f"Error calculating SubPhase 2 Step 2 score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -2375,20 +2509,17 @@ async def log_subphase2_step2_remedial(request: Request, user: dict = Depends(ge
 async def calculate_subphase2_step2_remedial_final_score(level: str, request: Request, user: dict = Depends(get_current_user)):
     """Calculate final remedial score for SubPhase 2 Step 2"""
     try:
-        user_id = user["user_id"]; data = await request.json(); level_lower = level.lower()
-        if level_lower == 'a2':
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0); max_score = 24; pass_threshold = 18
-        elif level_lower == 'b1':
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0); max_score = 24; pass_threshold = 18
-        elif level_lower == 'b2':
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0) + data.get('task_d_score', 0); max_score = 32; pass_threshold = 24
-        elif level_lower == 'c1':
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0) + data.get('task_d_score', 0); max_score = 32; pass_threshold = 24
-        else:
+        user_id = user["user_id"]; data = await request.json(); level_key = level.upper()
+        config = _PHASE5_SUBPHASE2_FINAL_CONFIG[2].get(level_key)
+        if not config:
             return {'success': False, 'error': f'Invalid level: {level}'}
+        task_scores = _phase5_extract_task_scores(data)
+        total_score = sum(task_scores.values())
+        max_score = config['max_score']; pass_threshold = config['pass_threshold']
         passed = total_score >= pass_threshold
+        next_url = _phase5_subphase2_next_step_url(2) if passed else _phase5_subphase2_remedial_start_url(2, level_key)
         logger.info(f"Phase 5 SubPhase 2 Step 2 Remedial {level} Final - User {user_id}: Total={total_score}/{max_score}, Passed={passed}")
-        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'pass_threshold': pass_threshold, 'passed': passed, 'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0}}
+        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'pass_threshold': pass_threshold, 'passed': passed, 'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0, 'next_url': next_url}}
     except Exception as e:
         logger.error(f"Error calculating SubPhase 2 Step 2 Remedial {level} final score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -2467,13 +2598,15 @@ async def calculate_subphase2_step3_score(request: Request, user: dict = Depends
         elif avg_score <= 2.5: remedial_level = 'B1'
         elif avg_score <= 3.5: remedial_level = 'B2'
         else: remedial_level = 'C1'
+        should_proceed = interaction2_score >= 3
+        next_url = _phase5_subphase2_main_next_url(3, remedial_level, should_proceed)
         conn = get_db_connection(); cursor = conn.cursor()
-        cursor.execute('''INSERT INTO phase5_progress (user_id, subphase, step_id, interaction_scores, total_score, remedial_level, should_proceed) VALUES (?, 2, 3, ?, ?, ?, ?) ON CONFLICT(user_id, subphase, step_id) DO UPDATE SET interaction_scores = ?, total_score = ?, remedial_level = ?, updated_at = CURRENT_TIMESTAMP''',
-            (user_id, json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, False,
-             json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level))
+        cursor.execute('''INSERT INTO phase5_progress (user_id, subphase, step_id, interaction_scores, total_score, remedial_level, should_proceed) VALUES (?, 2, 3, ?, ?, ?, ?) ON CONFLICT(user_id, subphase, step_id) DO UPDATE SET interaction_scores = ?, total_score = ?, remedial_level = ?, should_proceed = ?, updated_at = CURRENT_TIMESTAMP''',
+            (user_id, json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, should_proceed,
+             json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, should_proceed))
         conn.commit(); conn.close()
-        logger.info(f"Phase 5 SubPhase 2 Step 3 scoring - User {user_id}: Total={total_score}, Level={remedial_level}")
-        return {'success': True, 'data': {'interaction1': {'score': interaction1_score, 'max_score': 4}, 'interaction2': {'score': interaction2_score, 'max_score': 4}, 'interaction3': {'score': interaction3_score, 'max_score': 1}, 'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level}}}
+        logger.info(f"Phase 5 SubPhase 2 Step 3 scoring - User {user_id}: Total={total_score}, Level={remedial_level}, Proceed={should_proceed}")
+        return {'success': True, 'data': {'next_url': next_url, 'interaction1': {'score': interaction1_score, 'max_score': 4}, 'interaction2': {'score': interaction2_score, 'max_score': 4}, 'interaction3': {'score': interaction3_score, 'max_score': 1}, 'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level, 'should_proceed': should_proceed, 'next_url': next_url}}}
     except Exception as e:
         logger.error(f"Error calculating SubPhase 2 Step 3 score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -2500,16 +2633,17 @@ async def log_subphase2_step3_remedial(request: Request, user: dict = Depends(ge
 async def calculate_subphase2_step3_remedial_final_score(level: str, request: Request, user: dict = Depends(get_current_user)):
     """Calculate final remedial score for SubPhase 2 Step 3"""
     try:
-        user_id = user["user_id"]; data = await request.json(); level_lower = level.lower()
-        if level_lower in ('a2', 'b1'):
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0); max_score = 24; pass_threshold = 18
-        elif level_lower in ('b2', 'c1'):
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0) + data.get('task_d_score', 0); max_score = 32; pass_threshold = 24
-        else:
+        user_id = user["user_id"]; data = await request.json(); level_key = level.upper()
+        config = _PHASE5_SUBPHASE2_FINAL_CONFIG[3].get(level_key)
+        if not config:
             return {'success': False, 'error': f'Invalid level: {level}'}
+        task_scores = _phase5_extract_task_scores(data)
+        total_score = sum(task_scores.values())
+        max_score = config['max_score']; pass_threshold = config['pass_threshold']
         passed = total_score >= pass_threshold
+        next_url = _phase5_subphase2_next_step_url(3) if passed else _phase5_subphase2_remedial_start_url(3, level_key)
         logger.info(f"Phase 5 SubPhase 2 Step 3 Remedial {level} Final - User {user_id}: Total={total_score}/{max_score}, Passed={passed}")
-        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'pass_threshold': pass_threshold, 'passed': passed, 'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0}}
+        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'pass_threshold': pass_threshold, 'passed': passed, 'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0, 'next_url': next_url}}
     except Exception as e:
         logger.error(f"Error calculating SubPhase 2 Step 3 Remedial {level} final score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -2589,13 +2723,15 @@ async def calculate_subphase2_step4_score(request: Request, user: dict = Depends
         elif avg_score <= 2.5: remedial_level = 'B1'
         elif avg_score <= 3.5: remedial_level = 'B2'
         else: remedial_level = 'C1'
+        should_proceed = interaction2_score >= 3
+        next_url = _phase5_subphase2_main_next_url(4, remedial_level, should_proceed)
         conn = get_db_connection(); cursor = conn.cursor()
-        cursor.execute('''INSERT INTO phase5_progress (user_id, subphase, step_id, interaction_scores, total_score, remedial_level, should_proceed) VALUES (?, 2, 4, ?, ?, ?, ?) ON CONFLICT(user_id, subphase, step_id) DO UPDATE SET interaction_scores = ?, total_score = ?, remedial_level = ?, updated_at = CURRENT_TIMESTAMP''',
-            (user_id, json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, False,
-             json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level))
+        cursor.execute('''INSERT INTO phase5_progress (user_id, subphase, step_id, interaction_scores, total_score, remedial_level, should_proceed) VALUES (?, 2, 4, ?, ?, ?, ?) ON CONFLICT(user_id, subphase, step_id) DO UPDATE SET interaction_scores = ?, total_score = ?, remedial_level = ?, should_proceed = ?, updated_at = CURRENT_TIMESTAMP''',
+            (user_id, json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, should_proceed,
+             json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, should_proceed))
         conn.commit(); conn.close()
-        logger.info(f"Phase 5 SubPhase 2 Step 4 scoring - User {user_id}: Total={total_score}, Level={remedial_level}")
-        return {'success': True, 'data': {'interaction1': {'score': interaction1_score, 'max_score': 4}, 'interaction2': {'score': interaction2_score, 'max_score': 4}, 'interaction3': {'score': interaction3_score, 'max_score': 4}, 'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level}}}
+        logger.info(f"Phase 5 SubPhase 2 Step 4 scoring - User {user_id}: Total={total_score}, Level={remedial_level}, Proceed={should_proceed}")
+        return {'success': True, 'data': {'next_url': next_url, 'interaction1': {'score': interaction1_score, 'max_score': 4}, 'interaction2': {'score': interaction2_score, 'max_score': 4}, 'interaction3': {'score': interaction3_score, 'max_score': 4}, 'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level, 'should_proceed': should_proceed, 'next_url': next_url}}}
     except Exception as e:
         logger.error(f"Error calculating SubPhase 2 Step 4 score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -2622,16 +2758,17 @@ async def log_subphase2_step4_remedial(request: Request, user: dict = Depends(ge
 async def calculate_subphase2_step4_remedial_final_score(level: str, request: Request, user: dict = Depends(get_current_user)):
     """Calculate final remedial score for SubPhase 2 Step 4"""
     try:
-        user_id = user["user_id"]; data = await request.json(); level_lower = level.lower()
-        if level_lower in ('a2', 'b1'):
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0); max_score = 24; pass_threshold = 18
-        elif level_lower in ('b2', 'c1'):
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0) + data.get('task_d_score', 0); max_score = 32; pass_threshold = 24
-        else:
+        user_id = user["user_id"]; data = await request.json(); level_key = level.upper()
+        config = _PHASE5_SUBPHASE2_FINAL_CONFIG[4].get(level_key)
+        if not config:
             return {'success': False, 'error': f'Invalid level: {level}'}
+        task_scores = _phase5_extract_task_scores(data)
+        total_score = sum(task_scores.values())
+        max_score = config['max_score']; pass_threshold = config['pass_threshold']
         passed = total_score >= pass_threshold
+        next_url = _phase5_subphase2_next_step_url(4) if passed else _phase5_subphase2_remedial_start_url(4, level_key)
         logger.info(f"Phase 5 SubPhase 2 Step 4 Remedial {level} Final - User {user_id}: Total={total_score}/{max_score}, Passed={passed}")
-        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'pass_threshold': pass_threshold, 'passed': passed, 'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0}}
+        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'pass_threshold': pass_threshold, 'passed': passed, 'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0, 'next_url': next_url}}
     except Exception as e:
         logger.error(f"Error calculating SubPhase 2 Step 4 Remedial {level} final score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -2727,15 +2864,17 @@ async def calculate_subphase2_step5_score(request: Request, user: dict = Depends
         elif avg_score <= 3.5: remedial_level = 'B2'
         else: remedial_level = 'C1'
         conn = get_db_connection(); cursor = conn.cursor()
-        cursor.execute('SELECT total_score FROM phase5_progress WHERE user_id = ? AND subphase = 2 AND step_id IN (1, 2, 3, 4, 5)', (user_id,))
+        cursor.execute('SELECT total_score FROM phase5_progress WHERE user_id = ? AND subphase = 2 AND step_id IN (1, 2, 3, 4)', (user_id,))
         step_scores = [row[0] for row in cursor.fetchall()]
-        overall_total = sum(step_scores) if step_scores else total_score
+        overall_total = sum(step_scores) + total_score
+        should_proceed = overall_total >= 12
+        next_url = _phase5_subphase2_main_next_url(5, remedial_level, should_proceed)
         cursor.execute('''INSERT INTO phase5_progress (user_id, subphase, step_id, interaction_scores, total_score, remedial_level, should_proceed) VALUES (?, 2, 5, ?, ?, ?, ?) ON CONFLICT(user_id, subphase, step_id) DO UPDATE SET interaction_scores = ?, total_score = ?, remedial_level = ?, should_proceed = ?, updated_at = CURRENT_TIMESTAMP''',
-            (user_id, json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, overall_total >= 12,
-             json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, overall_total >= 12))
+            (user_id, json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, should_proceed,
+             json.dumps({'interaction1': interaction1_score, 'interaction2': interaction2_score, 'interaction3': interaction3_score}), total_score, remedial_level, should_proceed))
         conn.commit(); conn.close()
-        logger.info(f"Phase 5 SubPhase 2 Step 5 scoring - User {user_id}: Total={total_score}, Overall={overall_total}, Proceed={overall_total >= 12}")
-        return {'success': True, 'data': {'interaction1': {'score': interaction1_score, 'max_score': 4}, 'interaction2': {'score': interaction2_score, 'max_score': 4}, 'interaction3': {'score': interaction3_score, 'max_score': 4}, 'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level}, 'overall': {'total_score': overall_total, 'required_score': 12, 'should_proceed': overall_total >= 12}}}
+        logger.info(f"Phase 5 SubPhase 2 Step 5 scoring - User {user_id}: Total={total_score}, Overall={overall_total}, Proceed={should_proceed}")
+        return {'success': True, 'data': {'next_url': next_url, 'interaction1': {'score': interaction1_score, 'max_score': 4}, 'interaction2': {'score': interaction2_score, 'max_score': 4}, 'interaction3': {'score': interaction3_score, 'max_score': 4}, 'total': {'score': total_score, 'max_score': max_score, 'remedial_level': remedial_level}, 'overall': {'total_score': overall_total, 'required_score': 12, 'should_proceed': should_proceed, 'next_url': next_url}}}
     except Exception as e:
         logger.error(f"Error calculating SubPhase 2 Step 5 score: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -2762,16 +2901,17 @@ async def log_subphase2_step5_remedial(request: Request, user: dict = Depends(ge
 async def calculate_subphase2_step5_remedial_final_score(level: str, request: Request, user: dict = Depends(get_current_user)):
     """Calculate final remedial score for SubPhase 2 Step 5"""
     try:
-        user_id = user["user_id"]; data = await request.json(); level_lower = level.lower()
-        if level_lower in ('a2', 'b1'):
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0); max_score = 24; pass_threshold = 18
-        elif level_lower in ('b2', 'c1'):
-            total_score = data.get('task_a_score', 0) + data.get('task_b_score', 0) + data.get('task_c_score', 0) + data.get('task_d_score', 0); max_score = 32; pass_threshold = 24
-        else:
+        user_id = user["user_id"]; data = await request.json(); level_key = level.upper()
+        config = _PHASE5_SUBPHASE2_FINAL_CONFIG[5].get(level_key)
+        if not config:
             return {'success': False, 'error': f'Invalid level: {level}'}
+        task_scores = _phase5_extract_task_scores(data)
+        total_score = sum(task_scores.values())
+        max_score = config['max_score']; pass_threshold = config['pass_threshold']
         passed = total_score >= pass_threshold
+        next_url = '/phase5/subphase/2/step/5/score' if passed else _phase5_subphase2_remedial_start_url(5, level_key)
         logger.info(f"Phase 5 SubPhase 2 Step 5 Remedial {level} Final - User {user_id}: Total={total_score}/{max_score}, Passed={passed}")
-        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'pass_threshold': pass_threshold, 'passed': passed, 'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0}}
+        return {'success': True, 'data': {'total_score': total_score, 'max_score': max_score, 'pass_threshold': pass_threshold, 'passed': passed, 'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0, 'next_url': next_url}}
     except Exception as e:
         logger.error(f"Error calculating SubPhase 2 Step 5 Remedial {level} final score: {e}")
         raise HTTPException(status_code=500, detail=str(e))

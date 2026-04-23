@@ -146,9 +146,20 @@ async def resume_progress(phase: int = Query(...), user: dict = Depends(get_curr
                     SELECT item_index, item_type, item_id, prompt, answer, is_correct, score
                     FROM student_responses
                     WHERE user_id = ? AND phase = ? AND session_id = ? AND interaction = ?
+                      AND COALESCE(subphase, -1) = COALESCE(?, -1)
+                      AND COALESCE(step, -1) = COALESCE(?, -1)
+                      AND COALESCE(context, '') = COALESCE(?, '')
                     ORDER BY item_index ASC
                     """,
-                    (user_id, phase, data["session_id"], data["interaction"])
+                    (
+                        user_id,
+                        phase,
+                        data["session_id"],
+                        data["interaction"],
+                        data.get("subphase"),
+                        data.get("step"),
+                        data.get("context"),
+                    )
                 ).fetchall()
 
                 for r in rows:

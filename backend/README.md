@@ -1,6 +1,6 @@
 # FARDI - CEFR Language Assessment Platform
 
-A comprehensive Flask-based language learning platform that assesses English proficiency using the Common European Framework of Reference for Languages (CEFR) standards through interactive cultural event planning scenarios.
+A comprehensive FastAPI-based language learning platform that assesses English proficiency using the Common European Framework of Reference for Languages (CEFR) standards through interactive cultural event planning scenarios.
 
 ## 🌟 Features
 

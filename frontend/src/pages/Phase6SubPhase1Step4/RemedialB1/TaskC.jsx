@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material/styles'
 import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import { phase6API } from '../../../lib/phase6_api.jsx'
+import { resolveSubphase1RemedialNextUrl } from '../../Phase6SubPhase1/shared/routing.js'
 import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const LIGHT = {
@@ -174,7 +175,7 @@ export default function Phase6SP1Step4RemB1TaskC() {
               </Typography>
               <Box
                 component="button"
-                onClick={() => navigate('/phase6/subphase/1/step/4/remedial/b2/task/a')}
+                onClick={async () => navigate(await resolveSubphase1RemedialNextUrl(4, 'B1'))}
                 sx={{
                   px: 6, py: 1.5,
                   bgcolor: P.purple.bg,

@@ -6,8 +6,8 @@ import { motion } from 'framer-motion'
 /**
  * Phase 4 Step 4 - Remedial B2 - Results Page
  * Shows scores from all 4 tasks (A, B, C, D)
- * Total: 24 points (6+6+6+6)
- * Pass threshold: 20/24 (80%)
+ * Total: 24 points
+ * Pass threshold: 20/24
  */
 
 const LIGHT = {
@@ -63,6 +63,25 @@ export default function RemedialB2Results() {
     console.log('Total:', total, '/24 — Passed:', passed)
     console.log('='.repeat(60) + '\n')
 
+    fetch('/api/phase4/step4/remedial/b2/final-score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        task_a_score: scoreA,
+        task_b_score: scoreB,
+        task_c_score: scoreC,
+        task_d_score: scoreD
+      })
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          sessionStorage.setItem('phase4_step4_b2_next_url', data.data.next_url || (passed ? '/phase4/step/5' : '/phase4/step/4/remedial/b2/taskA'))
+        }
+      })
+      .catch(err => console.error('Failed to log Step 4 B2 final score:', err))
+
     const timer = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
@@ -71,7 +90,7 @@ export default function RemedialB2Results() {
           sessionStorage.removeItem('remedial_step4_b2_taskB_score')
           sessionStorage.removeItem('remedial_step4_b2_taskC_score')
           sessionStorage.removeItem('remedial_step4_b2_taskD_score')
-          navigate(passed ? '/dashboard' : '/phase4/step/4/remedial/b2/taskA')
+          navigate(sessionStorage.getItem('phase4_step4_b2_next_url') || (passed ? '/phase4/step/5' : '/phase4/step/4/remedial/b2/taskA'))
           return 0
         }
         return prev - 1
@@ -122,7 +141,7 @@ export default function RemedialB2Results() {
               <Typography variant="h4" fontWeight="bold" sx={{ color: passed ? P.green.shadow : P.orange.shadow }}>Total Score</Typography>
               <Typography variant="h2" fontWeight="bold" sx={{ color: passed ? P.green.shadow : P.orange.shadow }}>{total} / 24</Typography>
               <Typography variant="h5" sx={{ color: passed ? P.green.border : P.orange.border }}>({percentage}%)</Typography>
-              <Typography variant="body1" sx={{ mt: 1, color: passed ? P.green.shadow : P.orange.shadow }}>Pass Threshold: 20 / 24 (80%)</Typography>
+              <Typography variant="body1" sx={{ mt: 1, color: passed ? P.green.shadow : P.orange.shadow }}>Pass Threshold: 20 / 24</Typography>
             </Box>
 
             <Typography variant="h6" sx={{ color: passed ? P.green.shadow : P.orange.shadow }}>

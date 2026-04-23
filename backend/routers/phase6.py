@@ -38,6 +38,329 @@ def get_db_connection():
     return conn
 
 
+def _phase6_subphase1_step_path(step: int) -> str:
+    return f"/phase6/subphase/1/step/{step}"
+
+
+def _phase6_subphase1_next_step_url(step: int) -> str:
+    return '/phase6/subphase/2/step/1' if step == 5 else _phase6_subphase1_step_path(step + 1)
+
+
+def _phase6_subphase1_remedial_start_url(step: int, level: str) -> str:
+    return f"/phase6/subphase/1/step/{step}/remedial/{level.lower()}/task/a"
+
+
+def _phase6_subphase1_main_next_url(step: int, remedial_level: str, should_proceed: bool) -> str:
+    if should_proceed:
+        return _phase6_subphase1_next_step_url(step)
+    return _phase6_subphase1_remedial_start_url(step, remedial_level)
+
+
+def _phase6_subphase2_step_path(step: int) -> str:
+    return f"/phase6/subphase/2/step/{step}"
+
+
+def _phase6_subphase2_next_step_url(step: int) -> str:
+    return '/phase6/complete' if step == 5 else _phase6_subphase2_step_path(step + 1)
+
+
+def _phase6_subphase2_remedial_start_url(step: int, level: str) -> str:
+    return f"/phase6/subphase/2/step/{step}/remedial/{level.lower()}/task/a"
+
+
+def _phase6_subphase2_main_next_url(step: int, remedial_level: str, should_proceed: bool) -> str:
+    if should_proceed:
+        return _phase6_subphase2_next_step_url(step)
+    return _phase6_subphase2_remedial_start_url(step, remedial_level)
+
+
+_PHASE6_SUBPHASE1_FINAL_CONFIG = {
+    1: {
+        'A2': {'max_score': 18, 'pass_threshold': 15},
+        'B1': {'max_score': 14, 'pass_threshold': 12},
+        'B2': {'max_score': 28, 'pass_threshold': 23},
+        'C1': {'max_score': 26, 'pass_threshold': 21},
+    },
+    2: {
+        'A2': {'max_score': 18, 'pass_threshold': 15},
+        'B1': {'max_score': 13, 'pass_threshold': 11},
+        'B2': {'max_score': 27, 'pass_threshold': 22},
+        'C1': {'max_score': 16, 'pass_threshold': 13},
+    },
+    3: {
+        'A2': {'max_score': 22, 'pass_threshold': 18},
+        'B1': {'max_score': 16, 'pass_threshold': 13},
+        'B2': {'max_score': 27, 'pass_threshold': 22},
+        'C1': {'max_score': 22, 'pass_threshold': 18},
+    },
+    4: {
+        'A2': {'max_score': 18, 'pass_threshold': 15},
+        'B1': {'max_score': 13, 'pass_threshold': 11},
+        'B2': {'max_score': 25, 'pass_threshold': 20},
+        'C1': {'max_score': 23, 'pass_threshold': 19},
+    },
+    5: {
+        'A2': {'max_score': 18, 'pass_threshold': 15},
+        'B1': {'max_score': 16, 'pass_threshold': 13},
+        'B2': {'max_score': 19, 'pass_threshold': 16},
+        'C1': {'max_score': 23, 'pass_threshold': 19},
+    },
+}
+
+
+_PHASE6_SUBPHASE2_FINAL_CONFIG = {
+    1: {
+        'A2': {'max_score': 21, 'pass_threshold': 17},
+        'B1': {'max_score': 16, 'pass_threshold': 13},
+        'B2': {'max_score': 27, 'pass_threshold': 22},
+        'C1': {'max_score': 19, 'pass_threshold': 16},
+    },
+    2: {
+        'A2': {'max_score': 21, 'pass_threshold': 17},
+        'B1': {'max_score': 16, 'pass_threshold': 13},
+        'B2': {'max_score': 27, 'pass_threshold': 22},
+        'C1': {'max_score': 19, 'pass_threshold': 16},
+    },
+    3: {
+        'A2': {'max_score': 22, 'pass_threshold': 18},
+        'B1': {'max_score': 17, 'pass_threshold': 14},
+        'B2': {'max_score': 27, 'pass_threshold': 22},
+        'C1': {'max_score': 23, 'pass_threshold': 19},
+    },
+    4: {
+        'A2': {'max_score': 18, 'pass_threshold': 15},
+        'B1': {'max_score': 15, 'pass_threshold': 12},
+        'B2': {'max_score': 26, 'pass_threshold': 21},
+        'C1': {'max_score': 23, 'pass_threshold': 19},
+    },
+    5: {
+        'A2': {'max_score': 22, 'pass_threshold': 18},
+        'B1': {'max_score': 16, 'pass_threshold': 13},
+        'B2': {'max_score': 18, 'pass_threshold': 15},
+        'C1': {'max_score': 23, 'pass_threshold': 19},
+    },
+}
+
+
+def _phase6_extract_task_scores(data: dict) -> dict:
+    task_scores = data.get('task_scores')
+    source = task_scores if isinstance(task_scores, dict) and task_scores else data
+    return {
+        key: int(value or 0)
+        for key, value in source.items()
+        if key.startswith('task_') and key.endswith('_score')
+    }
+
+
+def _phase6_subphase1_remedial_level(interaction2_score: int) -> str:
+    if interaction2_score <= 2:
+        return 'A2'
+    if interaction2_score == 3:
+        return 'B1'
+    if interaction2_score == 4:
+        return 'B2'
+    return 'C1'
+
+
+def _store_phase6_progress(user_id: int, subphase: int, step: int, interaction_scores: dict, total_score: int,
+                           remedial_level: str, should_proceed: bool):
+    try:
+        payload = json.dumps(interaction_scores)
+        conn = get_db_connection()
+        conn.execute(
+            '''
+            INSERT INTO phase6_progress (
+                user_id, subphase, step_id, interaction_scores, total_score, completed, remedial_level, should_proceed
+            ) VALUES (?, ?, ?, ?, ?, 1, ?, ?)
+            ON CONFLICT(user_id, subphase, step_id) DO UPDATE SET
+                interaction_scores = ?,
+                total_score = ?,
+                completed = 1,
+                remedial_level = ?,
+                should_proceed = ?,
+                updated_at = CURRENT_TIMESTAMP
+            ''',
+            (
+                user_id, subphase, step, payload, total_score, remedial_level, int(should_proceed),
+                payload, total_score, remedial_level, int(should_proceed)
+            )
+        )
+        conn.commit()
+        conn.close()
+    except Exception as exc:
+        logger.warning(f"Failed to store Phase 6 progress for user {user_id}, subphase {subphase}, step {step}: {exc}")
+
+
+def _build_subphase1_score_response(user_id, step, interaction1_score, interaction2_score, interaction3_score):
+    """Build Phase 6.1 calculate-score response with canonical routing."""
+    interaction1_score = int(interaction1_score or 0)
+    interaction2_score = int(interaction2_score or 2)
+    interaction3_score = int(interaction3_score or 0)
+
+    if not (0 <= interaction1_score <= 1):
+        return {'success': False, 'error': 'Interaction 1 score must be 0 or 1'}
+    if not (2 <= interaction2_score <= 5):
+        return {'success': False, 'error': 'Interaction 2 score must be between 2 and 5'}
+    if not (0 <= interaction3_score <= 1):
+        return {'success': False, 'error': 'Interaction 3 score must be 0 or 1'}
+
+    total_score = interaction1_score + interaction2_score + interaction3_score
+    max_score = 7
+    remedial_level = _phase6_subphase1_remedial_level(interaction2_score)
+    should_proceed = interaction2_score >= 3
+    next_url = _phase6_subphase1_main_next_url(step, remedial_level, should_proceed)
+
+    _store_phase6_progress(
+        user_id,
+        1,
+        step,
+        {
+            'interaction1': interaction1_score,
+            'interaction2': interaction2_score,
+            'interaction3': interaction3_score,
+        },
+        total_score,
+        remedial_level,
+        should_proceed,
+    )
+
+    print(f"\n{'='*60}")
+    print(f"PHASE 6 SP1 STEP {step} - SCORING")
+    print(f"User: {user_id}  I1={interaction1_score} I2={interaction2_score} I3={interaction3_score}")
+    print(f"Total={total_score}/{max_score}  Level={remedial_level}  Proceed={should_proceed}")
+    print(f"Next URL={next_url}")
+    print(f"{'='*60}\n")
+
+    return {'success': True, 'data': {
+        'total_score': total_score,
+        'max_score': max_score,
+        'remedial_level': remedial_level,
+        'should_proceed': should_proceed,
+        'next_url': next_url,
+        'interaction1': {'score': interaction1_score, 'max_score': 1, 'type': 'completion'},
+        'interaction2': {'score': interaction2_score, 'max_score': 5, 'level': remedial_level},
+        'interaction3': {'score': interaction3_score, 'max_score': 1, 'type': 'completion'},
+        'total': {
+            'score': total_score,
+            'max_score': max_score,
+            'remedial_level': remedial_level,
+            'should_proceed': should_proceed,
+            'next_url': next_url,
+        }
+    }}
+
+
+def _build_subphase1_final_score_response(step: int, level: str, data: dict):
+    """Build Phase 6.1 remedial final-score response with canonical routing."""
+    level_key = level.upper()
+    config = _PHASE6_SUBPHASE1_FINAL_CONFIG.get(step, {}).get(level_key)
+    if not config:
+        return {'success': False, 'error': f'Invalid level for step {step}: {level}'}
+
+    task_scores = _phase6_extract_task_scores(data)
+    total_score = sum(task_scores.values())
+    max_score = config['max_score']
+    pass_threshold = config['pass_threshold']
+    passed = total_score >= pass_threshold
+    next_url = _phase6_subphase1_next_step_url(step) if passed else _phase6_subphase1_remedial_start_url(step, level_key)
+
+    return {'success': True, 'data': {
+        'level': level_key,
+        'total_score': total_score,
+        'max_score': max_score,
+        'pass_threshold': pass_threshold,
+        'passed': passed,
+        'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0,
+        'next_url': next_url,
+        'task_scores': task_scores
+    }}
+
+
+def _build_subphase2_score_response(user_id, step, interaction1_score, interaction2_score, interaction3_score):
+    """Build Phase 6.2 calculate-score response with canonical routing."""
+    interaction1_score = int(interaction1_score or 0)
+    interaction2_score = int(interaction2_score or 2)
+    interaction3_score = int(interaction3_score or 0)
+
+    if not (0 <= interaction1_score <= 1):
+        return {'success': False, 'error': 'Interaction 1 score must be 0 or 1'}
+    if not (2 <= interaction2_score <= 5):
+        return {'success': False, 'error': 'Interaction 2 score must be between 2 and 5'}
+    if not (0 <= interaction3_score <= 1):
+        return {'success': False, 'error': 'Interaction 3 score must be 0 or 1'}
+
+    total_score = interaction1_score + interaction2_score + interaction3_score
+    max_score = 7
+    remedial_level = _phase6_subphase1_remedial_level(interaction2_score)
+    should_proceed = interaction2_score >= 3
+    next_url = _phase6_subphase2_main_next_url(step, remedial_level, should_proceed)
+
+    _store_phase6_progress(
+        user_id,
+        2,
+        step,
+        {
+            'interaction1': interaction1_score,
+            'interaction2': interaction2_score,
+            'interaction3': interaction3_score,
+        },
+        total_score,
+        remedial_level,
+        should_proceed,
+    )
+
+    print(f"\n{'='*60}")
+    print(f"PHASE 6 SP2 STEP {step} - SCORING")
+    print(f"User: {user_id}  I1={interaction1_score} I2={interaction2_score} I3={interaction3_score}")
+    print(f"Total={total_score}/{max_score}  Level={remedial_level}  Proceed={should_proceed}")
+    print(f"Next URL={next_url}")
+    print(f"{'='*60}\n")
+
+    return {'success': True, 'data': {
+        'total_score': total_score,
+        'max_score': max_score,
+        'remedial_level': remedial_level,
+        'should_proceed': should_proceed,
+        'next_url': next_url,
+        'interaction1': {'score': interaction1_score, 'max_score': 1, 'type': 'completion'},
+        'interaction2': {'score': interaction2_score, 'max_score': 5, 'level': remedial_level},
+        'interaction3': {'score': interaction3_score, 'max_score': 1, 'type': 'completion'},
+        'total': {
+            'score': total_score,
+            'max_score': max_score,
+            'remedial_level': remedial_level,
+            'should_proceed': should_proceed,
+            'next_url': next_url,
+        }
+    }}
+
+
+def _build_subphase2_final_score_response(step: int, level: str, data: dict):
+    """Build Phase 6.2 remedial final-score response with canonical routing."""
+    level_key = level.upper()
+    config = _PHASE6_SUBPHASE2_FINAL_CONFIG.get(step, {}).get(level_key)
+    if not config:
+        return {'success': False, 'error': f'Invalid level for step {step}: {level}'}
+
+    task_scores = _phase6_extract_task_scores(data)
+    total_score = sum(task_scores.values())
+    max_score = config['max_score']
+    pass_threshold = config['pass_threshold']
+    passed = total_score >= pass_threshold
+    next_url = _phase6_subphase2_next_step_url(step) if passed else _phase6_subphase2_remedial_start_url(step, level_key)
+
+    return {'success': True, 'data': {
+        'level': level_key,
+        'total_score': total_score,
+        'max_score': max_score,
+        'pass_threshold': pass_threshold,
+        'passed': passed,
+        'percentage': round((total_score / max_score) * 100, 1) if max_score > 0 else 0,
+        'next_url': next_url,
+        'task_scores': task_scores
+    }}
+
+
 # ============================================================
 # SHARED HELPERS
 # ============================================================
@@ -249,7 +572,7 @@ async def calculate_61_step1_score(request: Request, user: dict = Depends(get_cu
         i1 = data.get('interaction1_score', 0)
         i2 = data.get('interaction2_score', 2)
         i3 = data.get('interaction3_score', 0)
-        return _build_score_response(user_id, 1, 1, i1, i2, i3)
+        return _build_subphase1_score_response(user_id, 1, i1, i2, i3)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -269,8 +592,7 @@ async def final_score_61_step1(level: str, request: Request, user: dict = Depend
     """Calculate remedial final score - Step 1"""
     try:
         data = await request.json()
-        task_scores = {k: v for k, v in data.items() if k.startswith('task_')}
-        return _build_final_score_response(level, task_scores)
+        return _build_subphase1_final_score_response(1, level, data)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -362,7 +684,7 @@ async def calculate_61_step2_score(request: Request, user: dict = Depends(get_cu
         i1 = data.get('interaction1_score', 0)
         i2 = data.get('interaction2_score', 2)
         i3 = data.get('interaction3_score', 0)
-        return _build_score_response(user_id, 2, 1, i1, i2, i3)
+        return _build_subphase1_score_response(user_id, 2, i1, i2, i3)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -382,8 +704,7 @@ async def final_score_61_step2(level: str, request: Request, user: dict = Depend
     """Calculate remedial final score - Step 2"""
     try:
         data = await request.json()
-        task_scores = {k: v for k, v in data.items() if k.startswith('task_')}
-        return _build_final_score_response(level, task_scores)
+        return _build_subphase1_final_score_response(2, level, data)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -475,7 +796,7 @@ async def calculate_61_step3_score(request: Request, user: dict = Depends(get_cu
         i1 = data.get('interaction1_score', 0)
         i2 = data.get('interaction2_score', 2)
         i3 = data.get('interaction3_score', 0)
-        return _build_score_response(user_id, 3, 1, i1, i2, i3)
+        return _build_subphase1_score_response(user_id, 3, i1, i2, i3)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -495,8 +816,7 @@ async def final_score_61_step3(level: str, request: Request, user: dict = Depend
     """Calculate remedial final score - Step 3"""
     try:
         data = await request.json()
-        task_scores = {k: v for k, v in data.items() if k.startswith('task_')}
-        return _build_final_score_response(level, task_scores)
+        return _build_subphase1_final_score_response(3, level, data)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -588,7 +908,7 @@ async def calculate_61_step4_score(request: Request, user: dict = Depends(get_cu
         i1 = data.get('interaction1_score', 0)
         i2 = data.get('interaction2_score', 2)
         i3 = data.get('interaction3_score', 0)
-        return _build_score_response(user_id, 4, 1, i1, i2, i3)
+        return _build_subphase1_score_response(user_id, 4, i1, i2, i3)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -608,8 +928,7 @@ async def final_score_61_step4(level: str, request: Request, user: dict = Depend
     """Calculate remedial final score - Step 4"""
     try:
         data = await request.json()
-        task_scores = {k: v for k, v in data.items() if k.startswith('task_')}
-        return _build_final_score_response(level, task_scores)
+        return _build_subphase1_final_score_response(4, level, data)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -802,7 +1121,7 @@ async def calculate_61_step5_score(request: Request, user: dict = Depends(get_cu
         i1 = data.get('interaction1_score', 0)
         i2 = data.get('interaction2_score', 2)
         i3 = data.get('interaction3_score', 0)
-        return _build_score_response(user_id, 5, 1, i1, i2, i3)
+        return _build_subphase1_score_response(user_id, 5, i1, i2, i3)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -822,8 +1141,7 @@ async def final_score_61_step5(level: str, request: Request, user: dict = Depend
     """Calculate remedial final score - Step 5"""
     try:
         data = await request.json()
-        task_scores = {k: v for k, v in data.items() if k.startswith('task_')}
-        return _build_final_score_response(level, task_scores)
+        return _build_subphase1_final_score_response(5, level, data)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -989,7 +1307,7 @@ async def calculate_62_step1_score(request: Request, user: dict = Depends(get_cu
         i1 = data.get('interaction1_score', 0)
         i2 = data.get('interaction2_score', 2)
         i3 = data.get('interaction3_score', 0)
-        return _build_score_response(user_id, 1, 2, i1, i2, i3)
+        return _build_subphase2_score_response(user_id, 1, i1, i2, i3)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -1009,8 +1327,7 @@ async def final_score_62_step1(level: str, request: Request, user: dict = Depend
     """Calculate remedial final score - SP2 Step 1"""
     try:
         data = await request.json()
-        task_scores = {k: v for k, v in data.items() if k.startswith('task_')}
-        return _build_final_score_response(level, task_scores)
+        return _build_subphase2_final_score_response(1, level, data)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -1102,7 +1419,7 @@ async def calculate_62_step2_score(request: Request, user: dict = Depends(get_cu
         i1 = data.get('interaction1_score', 0)
         i2 = data.get('interaction2_score', 2)
         i3 = data.get('interaction3_score', 0)
-        return _build_score_response(user_id, 2, 2, i1, i2, i3)
+        return _build_subphase2_score_response(user_id, 2, i1, i2, i3)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -1122,8 +1439,7 @@ async def final_score_62_step2(level: str, request: Request, user: dict = Depend
     """Calculate remedial final score - SP2 Step 2"""
     try:
         data = await request.json()
-        task_scores = {k: v for k, v in data.items() if k.startswith('task_')}
-        return _build_final_score_response(level, task_scores)
+        return _build_subphase2_final_score_response(2, level, data)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -1215,7 +1531,7 @@ async def calculate_62_step3_score(request: Request, user: dict = Depends(get_cu
         i1 = data.get('interaction1_score', 0)
         i2 = data.get('interaction2_score', 2)
         i3 = data.get('interaction3_score', 0)
-        return _build_score_response(user_id, 3, 2, i1, i2, i3)
+        return _build_subphase2_score_response(user_id, 3, i1, i2, i3)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -1235,8 +1551,7 @@ async def final_score_62_step3(level: str, request: Request, user: dict = Depend
     """Calculate remedial final score - SP2 Step 3"""
     try:
         data = await request.json()
-        task_scores = {k: v for k, v in data.items() if k.startswith('task_')}
-        return _build_final_score_response(level, task_scores)
+        return _build_subphase2_final_score_response(3, level, data)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -1329,7 +1644,7 @@ async def calculate_62_step4_score(request: Request, user: dict = Depends(get_cu
         i1 = data.get('interaction1_score', 0)
         i2 = data.get('interaction2_score', 2)
         i3 = data.get('interaction3_score', 0)
-        return _build_score_response(user_id, 4, 2, i1, i2, i3)
+        return _build_subphase2_score_response(user_id, 4, i1, i2, i3)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -1349,8 +1664,7 @@ async def final_score_62_step4(level: str, request: Request, user: dict = Depend
     """Calculate remedial final score - SP2 Step 4"""
     try:
         data = await request.json()
-        task_scores = {k: v for k, v in data.items() if k.startswith('task_')}
-        return _build_final_score_response(level, task_scores)
+        return _build_subphase2_final_score_response(4, level, data)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -1543,7 +1857,7 @@ async def calculate_62_step5_score(request: Request, user: dict = Depends(get_cu
         i1 = data.get('interaction1_score', 0)
         i2 = data.get('interaction2_score', 2)
         i3 = data.get('interaction3_score', 0)
-        return _build_score_response(user_id, 5, 2, i1, i2, i3)
+        return _build_subphase2_score_response(user_id, 5, i1, i2, i3)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
@@ -1563,8 +1877,7 @@ async def final_score_62_step5(level: str, request: Request, user: dict = Depend
     """Calculate remedial final score - SP2 Step 5"""
     try:
         data = await request.json()
-        task_scores = {k: v for k, v in data.items() if k.startswith('task_')}
-        return _build_final_score_response(level, task_scores)
+        return _build_subphase2_final_score_response(5, level, data)
     except Exception as e:
         return {'success': False, 'error': str(e)}
 

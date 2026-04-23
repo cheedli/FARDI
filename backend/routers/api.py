@@ -164,8 +164,10 @@ def determine_phase2_user_level(total_score):
         return 'A1'
     elif total_score < 15:
         return 'A2'
-    else:
+    elif total_score < 20:
         return 'B1'
+    else:
+        return 'B2'
 
 
 def get_next_remedial_level(current_level):
@@ -216,6 +218,36 @@ def set_current_level_for_step(user_id, gs, step_id, level):
     current_level_map[step_id] = level
     update_game_session(user_id, phase2_current_level=current_level_map)
     logger.info(f"Set current level for step {step_id} to {level}")
+
+
+def get_phase2_step_progress_record(user_id, step_id):
+    """Return the stored Phase 2 progress row for a specific step if it exists."""
+    try:
+        progress = assessment_history.get_phase2_progress(user_id) or {}
+        for step in progress.get('steps', []):
+            if step.get('step_id') == step_id:
+                return step
+    except Exception as e:
+        logger.error(f"Error loading Phase 2 progress record for {step_id}: {str(e)}")
+    return {}
+
+
+def sync_phase2_step_progress(user_id, session_id, step_id, **updates):
+    """Merge resume-critical Phase 2 step state into the dedicated progress table."""
+    existing = get_phase2_step_progress_record(user_id, step_id)
+    action_items = PHASE_2_STEPS.get(step_id, {}).get('action_items', [])
+    progress_data = {
+        'current_item': existing.get('current_item', 0),
+        'total_items': existing.get('total_items', len(action_items) or 5),
+        'step_score': existing.get('step_score', 0),
+        'step_completed': bool(existing.get('step_completed', False)),
+        'needs_remedial': bool(existing.get('needs_remedial', False)),
+        'remedial_level': existing.get('remedial_level'),
+        'remedial_progress': existing.get('remedial_progress', {}) or {},
+        'completed_at': existing.get('completed_at'),
+    }
+    progress_data.update(updates)
+    return user_manager.save_phase2_progress(user_id, session_id, step_id, progress_data)
 
 
 def get_phase2_overall_assessment(gs):
@@ -760,6 +792,19 @@ async def submit_phase2_response(request: Request, user: dict = Depends(get_curr
         if not is_last_item:
             next_action_item = action_items[current_index + 1]
 
+        try:
+            sync_phase2_step_progress(
+                user_id,
+                phase2_session_id,
+                step_id,
+                current_item=min(current_index + 1, len(action_items)),
+                total_items=len(action_items),
+                step_completed=False,
+                completed_at=None,
+            )
+        except Exception as db_error:
+            logger.error(f"Failed to sync Phase 2 current item for user {user_id}: {str(db_error)}")
+
         if is_last_item:
             total_items = len(action_items)
             completed_items = 0
@@ -906,13 +951,21 @@ async def check_phase2_step_completion(request: Request, user: dict = Depends(ge
         # Save step completion to database
         try:
             phase2_session_id = gs.get('phase2_session_id') or str(uuid.uuid4())
+            if not gs.get('phase2_session_id'):
+                update_game_session(user_id, phase2_session_id=phase2_session_id)
+            remedial_level = determine_phase2_user_level(total_score) if needs_remedial else None
             progress_data = {
                 'current_item': completed_items,
                 'total_items': total_items,
                 'step_score': total_score,
                 'step_completed': True,
                 'needs_remedial': needs_remedial,
-                'remedial_level': determine_phase2_user_level(total_score) if needs_remedial else None,
+                'remedial_level': remedial_level,
+                'remedial_progress': ({
+                    'status': 'in_progress',
+                    'level': remedial_level,
+                    'activity_index': 0,
+                } if needs_remedial else {}),
                 'completed_at': datetime.now().isoformat(),
             }
             user_manager.save_phase2_progress(user_id, phase2_session_id, step_id, progress_data)
@@ -1038,11 +1091,33 @@ async def submit_remedial_activity(request: Request, user: dict = Depends(get_cu
 
         current_level = get_current_level_for_step(user_id, gs, step_id, level)
 
+        def update_remedial_resume_state(next_level, next_activity_index, status='in_progress'):
+            try:
+                sync_phase2_step_progress(
+                    user_id,
+                    session_id,
+                    step_id,
+                    needs_remedial=(status != 'completed'),
+                    remedial_level=next_level if status != 'completed' else current_level,
+                    remedial_progress={
+                        'status': status,
+                        'level': next_level,
+                        'activity_index': next_activity_index,
+                    } if status != 'completed' else {
+                        'status': 'completed',
+                        'level': next_level,
+                        'activity_index': None,
+                    },
+                )
+            except Exception as db_error:
+                logger.error(f"Failed to sync Phase 2 remedial resume state for user {user_id}: {str(db_error)}")
+
         next_activity_index = activity_index + 1
         is_last_activity_in_level = activity_index >= len(remedial_activities) - 1
 
         # Case 1: Score too low -> Retry
         if not activity_passed:
+            update_remedial_resume_state(current_level, activity_index)
             return {
                 "success": False,
                 "activity_passed": False,
@@ -1092,6 +1167,7 @@ async def submit_remedial_activity(request: Request, user: dict = Depends(get_cu
             gs = get_game_session(user_id)
             lc = get_session_json(gs, 'phase2_level_completed', {})
             completed_count = len(lc.get(f"{step_id}_{current_level}_completed", []))
+            update_remedial_resume_state(current_level, next_activity_index)
 
             resp = {
                 "success": True,
@@ -1136,6 +1212,7 @@ async def submit_remedial_activity(request: Request, user: dict = Depends(get_cu
         if overall_percentage < 50 and not has_been_warned:
             remedial_completed_data[revisit_warning_key] = True
             update_game_session(user_id, remedial_completed=remedial_completed_data)
+            update_remedial_resume_state(current_level, 0)
 
             return {
                 "success": True,
@@ -1195,6 +1272,7 @@ async def submit_remedial_activity(request: Request, user: dict = Depends(get_cu
                 next_level_activities = PHASE_2_REMEDIAL_ACTIVITIES.get(step_id, {}).get(next_level, [])
                 if next_level_activities:
                     set_current_level_for_step(user_id, gs, step_id, next_level)
+                    update_remedial_resume_state(next_level, 0)
                     return {
                         "success": True,
                         "activity_passed": True,
@@ -1228,6 +1306,8 @@ async def submit_remedial_activity(request: Request, user: dict = Depends(get_cu
                 message = "Congratulations! You've completed all remedial activities and Phase 2!"
                 next_action = "phase2_complete"
 
+            update_remedial_resume_state(current_level, None, status='completed')
+
             return {
                 "success": True,
                 "activity_passed": True,
@@ -1248,6 +1328,7 @@ async def submit_remedial_activity(request: Request, user: dict = Depends(get_cu
 
         # Fallback
         logger.error(f"FALLBACK HIT! level_complete was False for {step_id}/{current_level}")
+        update_remedial_resume_state(current_level, activity_index)
         return {
             "success": True,
             "activity_passed": True,
