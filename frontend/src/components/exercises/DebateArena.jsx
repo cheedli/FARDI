@@ -130,6 +130,8 @@ export default function DebateArena({ exercise, onComplete, onProgress }) {
     const [showHint, setShowHint] = useState(false);
     const [totalScore, setTotalScore] = useState(0);
     const [shakeCharacter, setShakeCharacter] = useState(null);
+    const [correctCount, setCorrectCount] = useState(0);
+    const [submittedAnswers, setSubmittedAnswers] = useState({});
 
     const inputRefs = useRef({});
     const dialogueRef = useRef(null);
@@ -159,18 +161,24 @@ export default function DebateArena({ exercise, onComplete, onProgress }) {
         if (dialogueRef.current) dialogueRef.current.scrollTop = dialogueRef.current.scrollHeight;
     }, [currentDialogueIndex]);
 
-    useEffect(() => {
-        if (gameState !== 'playing') return;
-        if (persuasion >= 85) { setGameState('victory'); handleGameEnd(true); }
-        else if (persuasion <= 15) { setGameState('defeat'); handleGameEnd(false); }
-    }, [persuasion, gameState]);
+    // Win/loss is checked inside handleAnswerSubmit after each answer
 
-    const handleGameEnd = (isVictory) => {
+    const handleGameEnd = (isVictory, finalCorrectCount, finalAnswers) => {
         const xpEarned = isVictory ? 100 + (combo * 10) + totalScore : 25;
         window.dispatchEvent(new CustomEvent('xp-awarded', {
             detail: { xp_amount: xpEarned, reason: isVictory ? 'debate_victory' : 'debate_attempt', new_total: xpEarned }
         }));
-        if (onComplete) onComplete({ score: persuasion, isVictory, xpEarned, comboMax: combo, totalScore });
+        const totalUserLines = dialogueLines.filter(l => l.speaker === 'You').length;
+        if (onComplete) onComplete({
+            isVictory,
+            correctCount: finalCorrectCount ?? correctCount,
+            totalCount: totalUserLines,
+            isPerfect: false,
+            answers: finalAnswers ?? submittedAnswers,
+            xpEarned,
+            comboMax: combo,
+            totalScore,
+        });
     };
 
     const getExpectedWords = (answerIndex) => {
@@ -188,18 +196,28 @@ export default function DebateArena({ exercise, onComplete, onProgress }) {
         const isCorrect = matchPercentage >= 0.5;
         const isPartiallyCorrect = matchPercentage >= 0.3;
 
+        // Track submitted answers for backend
+        const newSubmitted = { ...submittedAnswers, [`answer_${currentAnswerIndex}`]: userAnswer };
+        setSubmittedAnswers(newSubmitted);
+        const newCorrectCount = correctCount + (isCorrect ? 1 : 0);
+        setCorrectCount(newCorrectCount);
+
         let points = 0;
+        let newPersuasion = persuasion;
         if (isCorrect) {
             points = doublePointsActive ? 20 : 10;
-            setPersuasion(prev => Math.min(100, prev + (doublePointsActive ? 12 : 8)));
+            newPersuasion = Math.min(100, persuasion + (doublePointsActive ? 12 : 8));
+            setPersuasion(newPersuasion);
             setCombo(prev => prev + 1);
             setShakeCharacter('skander');
         } else if (isPartiallyCorrect) {
             points = 5;
-            setPersuasion(prev => Math.min(100, prev + 3));
+            newPersuasion = Math.min(100, persuasion + 3);
+            setPersuasion(newPersuasion);
             setCombo(0);
         } else {
-            setPersuasion(prev => Math.max(0, prev - 8));
+            newPersuasion = Math.max(0, persuasion - 8);
+            setPersuasion(newPersuasion);
             setCombo(0);
             setShakeCharacter('student');
         }
@@ -213,8 +231,17 @@ export default function DebateArena({ exercise, onComplete, onProgress }) {
         });
 
         setTimeout(() => setShakeCharacter(null), 500);
-        setTimeout(() => { setFeedback(null); setAnswers({}); setShowHint(false); moveToNextDialogue(); }, 2000);
-        if (onProgress) onProgress({ correct: isCorrect, points });
+
+        // Check if this answer tips us into win/loss before moveToNextDialogue
+        const isLastUserLine = currentAnswerIndex === dialogueLines.filter(l => l.speaker === 'You').length - 1;
+        setTimeout(() => {
+            setFeedback(null); setAnswers({}); setShowHint(false);
+            if (newPersuasion >= 85) { setGameState('victory'); handleGameEnd(true, newCorrectCount, newSubmitted); }
+            else if (newPersuasion <= 15) { setGameState('defeat'); handleGameEnd(false, newCorrectCount, newSubmitted); }
+            else moveToNextDialogue();
+        }, 2000);
+
+        if (onProgress) onProgress({ correct: isCorrect, points, answers: newSubmitted });
     };
 
     const moveToNextDialogue = () => {

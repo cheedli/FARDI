@@ -35,6 +35,7 @@ export default function Phase5SubPhase2Step5RemedialB2TaskB() {
     try { await phase5API.logRemedialActivity(5, 'B2', 'B', correctCount, 3, 2) } catch (error) { console.error('Failed to log task completion:', error) }
   }
   const handleContinue = () => navigate('/phase5/subphase/2/step/5/remedial/b2/task/c')
+  window.__remedialSkip = handleContinue
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>

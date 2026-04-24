@@ -1,16 +1,44 @@
 import React, { useState } from 'react'
-import { Box, Paper, Typography, Chip, Stack, Button, LinearProgress } from '@mui/material'
+import { Box, Typography, LinearProgress, useTheme } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import CancelIcon from '@mui/icons-material/Cancel'
 import LockIcon from '@mui/icons-material/Lock'
 import PersonIcon from '@mui/icons-material/Person'
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 
-/**
- * Chat Challenge Game Component
- * Complete dialogue lines by selecting words from a word bank
- * Unlock next dialogue level by completing current one
- */
+const LIGHT = {
+  cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', divider: '#E0E0E0',
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#2E7D32' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1565C0' },
+  teal:   { bg: '#B2EBF2', border: '#0097A7', shadow: '#006064' },
+  orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#E65100' },
+  purple: { bg: '#E8EAF6', border: '#3949AB', shadow: '#283593' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#B71C1C' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F57F17' },
+}
+const DARK = {
+  cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', divider: '#2A2A4A',
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  teal:   { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+  orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+  purple: { bg: '#0D0D2B', border: '#7986CB', shadow: '#283593' },
+  red:    { bg: '#2A0A0A', border: '#E57373', shadow: '#B71C1C' },
+  yellow: { bg: '#2A2200', border: '#FFD54F', shadow: '#F57F17' },
+}
+
+const clay = (c, extra = {}) => ({
+  bgcolor: c.bg,
+  border: `2px solid ${c.border}`,
+  borderRadius: '20px',
+  boxShadow: `4px 4px 0 ${c.shadow}`,
+  ...extra,
+})
 
 const ChatChallengeGame = ({ dialogueLines = [], wordBank = [], onComplete }) => {
+  const muiTheme = useTheme()
+  const D = muiTheme.palette.mode === 'dark' ? DARK : LIGHT
+
   const [currentLineIndex, setCurrentLineIndex] = useState(0)
   const [selectedWords, setSelectedWords] = useState([])
   const [completedLines, setCompletedLines] = useState([])
@@ -18,231 +46,121 @@ const ChatChallengeGame = ({ dialogueLines = [], wordBank = [], onComplete }) =>
   const [score, setScore] = useState(0)
   const [showError, setShowError] = useState(false)
   const [hasRetried, setHasRetried] = useState(false)
-  const [wordValidation, setWordValidation] = useState([]) // Track which words are correct/incorrect
+  const [wordValidation, setWordValidation] = useState([])
 
   const currentLine = dialogueLines[currentLineIndex]
   const totalBlanks = currentLine?.blanks?.length || 0
 
-  // Auto-complete lines with no blanks
   React.useEffect(() => {
     if (currentLine && totalBlanks === 0 && !gameComplete) {
-      // Check if this line is already completed to avoid infinite loop
-      const alreadyCompleted = completedLines.some(line =>
-        line.speaker === currentLine.speaker &&
-        line.template === currentLine.template
-      )
-
-      if (!alreadyCompleted) {
-        const newCompletedLines = [...completedLines, {
-          ...currentLine,
-          userAnswer: []
-        }]
-        setCompletedLines(newCompletedLines)
-
-        // Move to next line or complete game
+      const already = completedLines.some(l => l.speaker === currentLine.speaker && l.template === currentLine.template)
+      if (!already) {
+        const newDone = [...completedLines, { ...currentLine, userAnswer: [] }]
+        setCompletedLines(newDone)
         if (currentLineIndex + 1 < dialogueLines.length) {
-          setTimeout(() => {
-            setCurrentLineIndex(currentLineIndex + 1)
-          }, 500)
+          setTimeout(() => setCurrentLineIndex(currentLineIndex + 1), 500)
         } else {
-          // Game complete!
-          setTimeout(() => {
-            setGameComplete(true)
-            if (onComplete) {
-              onComplete({
-                score: score,
-                totalLines: dialogueLines.length,
-                completed: true
-              })
-            }
-          }, 500)
+          setTimeout(() => { setGameComplete(true); onComplete?.({ score, totalLines: dialogueLines.length, completed: true }) }, 500)
         }
       }
     }
   }, [currentLineIndex, currentLine, totalBlanks, completedLines, dialogueLines.length, gameComplete, onComplete, score])
 
   const handleWordClick = (word) => {
-    // Add word to selected words
-    if (selectedWords.length < totalBlanks) {
-      setSelectedWords([...selectedWords, word])
-    }
+    if (selectedWords.length < totalBlanks) setSelectedWords([...selectedWords, word])
   }
-
-  const handleRemoveWord = (index) => {
-    setSelectedWords(selectedWords.filter((_, i) => i !== index))
-  }
+  const handleRemoveWord = (index) => setSelectedWords(selectedWords.filter((_, i) => i !== index))
+  const handleClear = () => setSelectedWords([])
 
   const handleSubmit = () => {
-    // Validate each word individually
-    const validation = selectedWords.map((word, index) =>
-      word.toLowerCase() === currentLine.blanks[index].toLowerCase()
-    )
+    const validation = selectedWords.map((word, i) => word.toLowerCase() === currentLine.blanks[i].toLowerCase())
     setWordValidation(validation)
+    const allCorrect = validation.every(v => v)
+    const correctCount = validation.filter(v => v).length
 
-    // Check if all words are correct
-    const isCorrect = validation.every(v => v)
-
-    if (isCorrect) {
-      // Correct! Add to completed lines
-      setShowError(false)
-      setHasRetried(false)
-
-      // Count each correct word as +1 point
-      const correctWordCount = validation.filter(v => v).length
-
-      const newCompletedLines = [...completedLines, {
-        ...currentLine,
-        userAnswer: selectedWords,
-        validation: validation,
-        isCorrect: true
-      }]
-      setCompletedLines(newCompletedLines)
-      setScore(score + correctWordCount)
-
-      // Move to next line or complete game
+    if (allCorrect) {
+      setShowError(false); setHasRetried(false)
+      const newDone = [...completedLines, { ...currentLine, userAnswer: selectedWords, validation, isCorrect: true }]
+      setCompletedLines(newDone)
+      setScore(s => s + correctCount)
       if (currentLineIndex + 1 < dialogueLines.length) {
-        setTimeout(() => {
-          setCurrentLineIndex(currentLineIndex + 1)
-          setSelectedWords([])
-          setWordValidation([])
-        }, 1000)
+        setTimeout(() => { setCurrentLineIndex(i => i + 1); setSelectedWords([]); setWordValidation([]) }, 1000)
       } else {
-        // Game complete!
-        setTimeout(() => {
-          setGameComplete(true)
-          if (onComplete) {
-            // Calculate total blanks for accurate max score
-            const totalBlanksCount = dialogueLines.reduce((sum, line) => sum + (line.blanks?.length || 0), 0)
-            const correctWordCount = validation.filter(v => v).length
-
-            onComplete({
-              score: score + correctWordCount,
-              totalBlanks: totalBlanksCount,
-              completed: true
-            })
-          }
-        }, 1000)
+        const totalBlanksCount = dialogueLines.reduce((s, l) => s + (l.blanks?.length || 0), 0)
+        setTimeout(() => { setGameComplete(true); onComplete?.({ score: score + correctCount, totalBlanks: totalBlanksCount, completed: true }) }, 1000)
       }
     } else {
-      // Wrong answer - show which words are incorrect
       if (!hasRetried) {
-        // First try failed - allow one retry
-        setShowError(true)
-        setHasRetried(true)
-        setTimeout(() => {
-          setShowError(false)
-          setSelectedWords([])
-          setWordValidation([])
-        }, 1500)
+        setShowError(true); setHasRetried(true)
+        setTimeout(() => { setShowError(false); setSelectedWords([]); setWordValidation([]) }, 1500)
       } else {
-        // Second try also failed - move to next line with score 0
         setShowError(true)
-        const newCompletedLines = [...completedLines, {
-          ...currentLine,
-          userAnswer: selectedWords,
-          validation: validation,
-          isCorrect: false
-        }]
-        setCompletedLines(newCompletedLines)
-
+        const newDone = [...completedLines, { ...currentLine, userAnswer: selectedWords, validation, isCorrect: false }]
+        setCompletedLines(newDone)
         setTimeout(() => {
-          setShowError(false)
-          setHasRetried(false)
-
-          // Move to next line or complete game
+          setShowError(false); setHasRetried(false)
           if (currentLineIndex + 1 < dialogueLines.length) {
-            setCurrentLineIndex(currentLineIndex + 1)
-            setSelectedWords([])
-            setWordValidation([])
+            setCurrentLineIndex(i => i + 1); setSelectedWords([]); setWordValidation([])
           } else {
-            // Game complete!
-            setGameComplete(true)
-            if (onComplete) {
-              onComplete({
-                score: score,
-                totalLines: dialogueLines.length - 1,
-                completed: true
-              })
-            }
+            setGameComplete(true); onComplete?.({ score, totalLines: dialogueLines.length - 1, completed: true })
           }
         }, 1500)
       }
     }
-  }
-
-  const handleClear = () => {
-    setSelectedWords([])
   }
 
   if (gameComplete) {
-    const totalBlanksCount = dialogueLines.reduce((sum, line) => sum + (line.blanks?.length || 0), 0)
+    const totalBlanksCount = dialogueLines.reduce((s, l) => s + (l.blanks?.length || 0), 0)
     return (
-      <Paper elevation={6} sx={{ p: 6, textAlign: 'center', backgroundColor: 'success.light' }}>
-        <Typography variant="h3" gutterBottom fontWeight="bold" color="success.dark">
-          🎉 Chat Challenge Complete!
-        </Typography>
-        <Typography variant="h5" sx={{ mb: 2 }}>
-          You completed the dialogue!
-        </Typography>
-        <Typography variant="h4" color="success.dark" sx={{ mb: 2 }}>
+      <Box sx={{ ...clay(D.green), p: { xs: 3, md: 5 }, textAlign: 'center' }}>
+        <EmojiEventsIcon sx={{ fontSize: 72, color: D.yellow.border, mb: 2 }} />
+        <Typography variant="h4" fontWeight={900} sx={{ color: D.heading, mb: 1 }}>Chat Challenge Complete!</Typography>
+        <Typography fontWeight={700} sx={{ color: D.body, mb: 1 }}>You completed the dialogue!</Typography>
+        <Typography fontWeight={800} sx={{ color: D.green.border, fontSize: '1.2rem' }}>
           Score: {score} / {totalBlanksCount} words correct
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mt: 3 }}>
-          Moving to Task B...
-        </Typography>
-      </Paper>
+      </Box>
     )
   }
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 1000, mx: 'auto' }}>
-      {/* Progress */}
-      <Paper elevation={3} sx={{ p: 2, mb: 3, backgroundColor: 'primary.light' }}>
-        <Stack direction="row" alignItems="center" spacing={2}>
-          <Typography variant="body1" fontWeight="bold" color="primary.dark">
-            Dialogue Progress: {completedLines.length} / {dialogueLines.length}
-          </Typography>
-          <LinearProgress
-            variant="determinate"
-            value={(completedLines.length / dialogueLines.length) * 100}
-            sx={{ flexGrow: 1, height: 10, borderRadius: 1 }}
-          />
-        </Stack>
-      </Paper>
+    <Box sx={{ width: '100%', maxWidth: 900, mx: 'auto' }}>
 
-      {/* Completed Lines (Chat History) */}
-      <Stack spacing={2} sx={{ mb: 3 }}>
-        {completedLines.map((line, index) => (
-          <Paper
-            key={index}
-            elevation={2}
-            sx={{
-              p: 2,
-              backgroundColor: line.speaker === 'You' ? 'info.light' : 'grey.100',
-              border: '2px solid',
-              borderColor: line.isCorrect === false ? 'error.main' : 'success.main'
-            }}
-          >
-            <Stack direction="row" spacing={2} alignItems="flex-start">
-              <PersonIcon sx={{ color: line.speaker === 'You' ? 'info.dark' : 'text.secondary' }} />
-              <Box>
-                <Typography variant="subtitle2" fontWeight="bold" color="text.primary">
-                  {line.speaker}:
-                </Typography>
-                <Typography variant="body1">
-                  {line.blanks.length === 0 ? (
-                    line.template
-                  ) : (
+      {/* Progress */}
+      <Box sx={{ ...clay(D.blue), p: 2, mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Typography fontWeight={800} sx={{ color: D.heading, whiteSpace: 'nowrap' }}>
+          {completedLines.length} / {dialogueLines.length}
+        </Typography>
+        <LinearProgress
+          variant="determinate"
+          value={dialogueLines.length > 0 ? (completedLines.length / dialogueLines.length) * 100 : 0}
+          sx={{ flex: 1, height: 8, borderRadius: '6px', bgcolor: D.divider, '& .MuiLinearProgress-bar': { bgcolor: D.blue.border, borderRadius: '6px' } }}
+        />
+        <Typography fontWeight={700} sx={{ color: D.blue.border, whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
+          Dialogue Progress
+        </Typography>
+      </Box>
+
+      {/* Completed lines */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2.5 }}>
+        {completedLines.map((line, idx) => {
+          const isYou = line.speaker === 'You'
+          const c = line.isCorrect === false ? D.red : D.green
+          return (
+            <Box key={idx} sx={{ ...clay(c), p: 2, display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+              <PersonIcon sx={{ color: isYou ? D.blue.border : D.muted, flexShrink: 0, mt: 0.5 }} />
+              <Box sx={{ flex: 1 }}>
+                <Typography fontWeight={800} sx={{ color: D.heading, fontSize: '0.85rem', mb: 0.5 }}>{line.speaker}:</Typography>
+                <Typography sx={{ color: D.body }}>
+                  {line.blanks.length === 0 ? line.template : (
                     line.template.split('[____]').map((part, i) => (
                       <React.Fragment key={i}>
                         {part}
                         {i < line.userAnswer.length && (
                           <span style={{
-                            backgroundColor: line.validation && line.validation[i] === false ? '#f44336' : '#4caf50',
-                            color: 'white',
-                            padding: '2px 8px',
-                            borderRadius: '4px',
-                            fontWeight: 'bold'
+                            display: 'inline-block', padding: '2px 8px', margin: '0 3px',
+                            backgroundColor: line.validation?.[i] === false ? '#C62828' : '#388E3C',
+                            color: '#fff', borderRadius: '6px', fontWeight: 800, fontSize: '0.9em',
                           }}>
                             {line.userAnswer[i]}
                           </span>
@@ -252,52 +170,38 @@ const ChatChallengeGame = ({ dialogueLines = [], wordBank = [], onComplete }) =>
                   )}
                 </Typography>
               </Box>
-              <CheckCircleIcon sx={{ color: line.isCorrect === false ? 'error.main' : 'success.main', ml: 'auto' }} />
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
+              {line.isCorrect === false
+                ? <CancelIcon sx={{ color: D.red.border, flexShrink: 0 }} />
+                : <CheckCircleIcon sx={{ color: D.green.border, flexShrink: 0 }} />}
+            </Box>
+          )
+        })}
+      </Box>
 
-      {/* Current Line */}
-      <Paper
-        elevation={4}
-        sx={{
-          p: 3,
-          mb: 3,
-          backgroundColor: showError ? '#ffebee' : (currentLine?.speaker === 'You' ? 'info.light' : 'grey.50'),
-          border: '3px solid',
-          borderColor: showError ? 'error.main' : 'primary.main',
-          transition: 'all 0.3s ease'
-        }}
-      >
-        <Stack direction="row" spacing={2} alignItems="flex-start">
-          <PersonIcon sx={{ color: currentLine?.speaker === 'You' ? 'info.dark' : 'text.secondary', fontSize: 30 }} />
-          <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom color={showError ? 'error.main' : 'primary.dark'}>
-              {currentLine?.speaker}:
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 2, fontSize: '1.1rem' }}>
+      {/* Current line */}
+      <Box sx={{ ...clay(showError ? D.red : { bg: D.cardBg, border: D.divider, shadow: D.divider }), p: 3, mb: 2.5, transition: 'all 0.2s' }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+          <PersonIcon sx={{ color: currentLine?.speaker === 'You' ? D.blue.border : D.muted, flexShrink: 0, mt: 0.5 }} />
+          <Box sx={{ flex: 1 }}>
+            <Typography fontWeight={800} sx={{ color: showError ? D.red.border : D.heading, mb: 1 }}>{currentLine?.speaker}:</Typography>
+            <Typography sx={{ color: D.body, fontSize: '1.05rem', lineHeight: 2.2 }}>
               {currentLine?.template.split('[____]').map((part, i) => (
                 <React.Fragment key={i}>
                   {part}
                   {i < totalBlanks && (
-                    <span style={{
-                      display: 'inline-block',
-                      minWidth: '100px',
-                      padding: '4px 12px',
-                      margin: '0 4px',
-                      backgroundColor: showError
-                        ? (wordValidation[i] === false ? '#f44336' : (wordValidation[i] === true ? '#4caf50' : '#e0e0e0'))
-                        : (selectedWords[i] ? '#1976d2' : '#e0e0e0'),
-                      color: selectedWords[i] || showError ? 'white' : '#666',
-                      borderRadius: '8px',
-                      border: showError && wordValidation[i] === false ? '2px solid #d32f2f' : '2px dashed #999',
-                      fontWeight: 'bold',
-                      textAlign: 'center',
-                      cursor: selectedWords[i] ? 'pointer' : 'default',
-                      transition: 'all 0.3s ease'
-                    }}
-                    onClick={() => selectedWords[i] && !showError && handleRemoveWord(i)}
+                    <span
+                      onClick={() => selectedWords[i] && !showError && handleRemoveWord(i)}
+                      style={{
+                        display: 'inline-block', minWidth: 90, padding: '3px 12px', margin: '0 4px',
+                        backgroundColor: showError
+                          ? (wordValidation[i] === false ? '#C62828' : wordValidation[i] === true ? '#388E3C' : '#BDBDBD')
+                          : (selectedWords[i] ? '#1976D2' : 'transparent'),
+                        color: selectedWords[i] || showError ? '#fff' : '#9E9E9E',
+                        borderRadius: '8px',
+                        border: `2px ${selectedWords[i] ? 'solid' : 'dashed'} ${showError && wordValidation[i] === false ? '#C62828' : '#9E9E9E'}`,
+                        fontWeight: 800, textAlign: 'center', cursor: selectedWords[i] && !showError ? 'pointer' : 'default',
+                        transition: 'all 0.2s',
+                      }}
                     >
                       {selectedWords[i] || '____'}
                     </span>
@@ -306,90 +210,97 @@ const ChatChallengeGame = ({ dialogueLines = [], wordBank = [], onComplete }) =>
               ))}
             </Typography>
             {showError && (
-              <Typography variant="body2" color="error.main" sx={{ mt: 1, fontWeight: 'bold' }}>
-                {!hasRetried ? '❌ Incorrect! Score: 0. Try again!' : '❌ Incorrect again! Score: 0. Moving to next question...'}
+              <Typography variant="body2" fontWeight={800} sx={{ color: D.red.border, mt: 1 }}>
+                {!hasRetried ? 'Incorrect! Try again.' : 'Incorrect again. Moving on…'}
               </Typography>
             )}
           </Box>
-        </Stack>
-      </Paper>
+        </Box>
+      </Box>
 
-      {/* Word Bank */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: 'grey.50' }}>
-        <Typography variant="h6" gutterBottom>
-          Word Bank - Click to fill blanks
-        </Typography>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {wordBank.map((word, index) => (
-            <Chip
-              key={index}
-              label={word}
-              onClick={() => handleWordClick(word)}
-              sx={{
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                px: 2,
-                py: 1,
-                '&:hover': {
-                  backgroundColor: 'primary.main',
-                  color: 'white'
-                }
-              }}
-              color={selectedWords.includes(word) ? 'primary' : 'default'}
-            />
-          ))}
-        </Stack>
-      </Paper>
+      {/* Word bank */}
+      <Box sx={{ ...clay(D.teal), p: 2.5, mb: 2.5 }}>
+        <Typography fontWeight={800} sx={{ color: D.heading, mb: 1.5 }}>Word Bank — click to fill blanks:</Typography>
+        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+          {wordBank.map((word, i) => {
+            const used = selectedWords.includes(word)
+            return (
+              <Box
+                key={i}
+                onClick={() => !used && handleWordClick(word)}
+                sx={{
+                  px: 2, py: 0.75, borderRadius: '12px',
+                  bgcolor: used ? D.divider : D.cardBg,
+                  border: `2px solid ${used ? D.divider : D.teal.border}`,
+                  boxShadow: used ? 'none' : `3px 3px 0 ${D.teal.shadow}`,
+                  fontWeight: 800, fontSize: '0.9rem',
+                  color: used ? D.muted : D.teal.border,
+                  cursor: used ? 'not-allowed' : 'pointer',
+                  opacity: used ? 0.45 : 1,
+                  transition: 'all 0.15s',
+                  '&:hover': !used ? { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${D.teal.shadow}` } : {},
+                }}
+              >
+                {word}
+              </Box>
+            )
+          })}
+        </Box>
+      </Box>
 
-      {/* Action Buttons */}
-      <Stack direction="row" spacing={2} justifyContent="flex-end">
-        <Button
-          variant="outlined"
-          color="error"
+      {/* Actions */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+        <Box
+          component="button"
           onClick={handleClear}
           disabled={selectedWords.length === 0}
+          sx={{
+            ...clay(selectedWords.length === 0 ? { bg: D.divider, border: D.divider, shadow: D.divider } : D.red),
+            px: 3, py: 1, cursor: selectedWords.length === 0 ? 'not-allowed' : 'pointer',
+            fontWeight: 800, fontSize: '0.9rem',
+            color: selectedWords.length === 0 ? D.muted : D.red.border,
+            transition: 'all 0.15s',
+            '&:hover': selectedWords.length > 0 ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.red.shadow}` } : {},
+          }}
         >
           Clear
-        </Button>
-        <Button
-          variant="contained"
-          color="primary"
+        </Box>
+        <Box
+          component="button"
           onClick={handleSubmit}
           disabled={selectedWords.length !== totalBlanks}
-          size="large"
+          sx={{
+            ...clay(selectedWords.length !== totalBlanks ? { bg: D.divider, border: D.divider, shadow: D.divider } : D.blue),
+            px: 3.5, py: 1, cursor: selectedWords.length !== totalBlanks ? 'not-allowed' : 'pointer',
+            fontWeight: 800, fontSize: '0.95rem',
+            color: selectedWords.length !== totalBlanks ? D.muted : D.blue.border,
+            transition: 'all 0.15s',
+            '&:hover': selectedWords.length === totalBlanks ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.blue.shadow}` } : {},
+          }}
         >
           {selectedWords.length === totalBlanks ? 'Submit Answer' : `Fill ${totalBlanks - selectedWords.length} more blank(s)`}
-        </Button>
-      </Stack>
+        </Box>
+      </Box>
 
-      {/* Locked Future Lines Preview */}
+      {/* Locked future lines */}
       {currentLineIndex < dialogueLines.length - 1 && (
         <Box sx={{ mt: 4 }}>
-          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-            Locked - Complete current line to unlock:
+          <Typography variant="body2" fontWeight={700} sx={{ color: D.muted, mb: 1.5 }}>
+            Locked — complete current line to unlock:
           </Typography>
-          {dialogueLines.slice(currentLineIndex + 1).map((line, index) => (
-            <Paper
-              key={index}
-              elevation={1}
-              sx={{
-                p: 2,
-                mb: 1,
-                backgroundColor: 'grey.200',
-                opacity: 0.5
-              }}
-            >
-              <Stack direction="row" spacing={2} alignItems="center">
-                <LockIcon sx={{ color: 'grey.500' }} />
-                <Typography variant="body2" color="text.secondary">
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {dialogueLines.slice(currentLineIndex + 1).map((line, i) => (
+              <Box key={i} sx={{ ...clay({ bg: D.cardBg, border: D.divider, shadow: D.divider }), px: 2, py: 1.5, display: 'flex', gap: 2, alignItems: 'center', opacity: 0.45 }}>
+                <LockIcon sx={{ color: D.muted, fontSize: 18, flexShrink: 0 }} />
+                <Typography variant="body2" sx={{ color: D.muted }}>
                   {line.speaker}: {line.template.replace(/\[____\]/g, '____')}
                 </Typography>
-              </Stack>
-            </Paper>
-          ))}
+              </Box>
+            ))}
+          </Box>
         </Box>
       )}
+
     </Box>
   )
 }

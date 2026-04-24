@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Box, Paper, Typography, Button, Stack, LinearProgress, Chip } from '@mui/material'
+import { Box, Typography, Button, Stack, LinearProgress, useTheme } from '@mui/material'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import StarIcon from '@mui/icons-material/Star'
 
@@ -9,7 +9,38 @@ import StarIcon from '@mui/icons-material/Star'
  * A1 Level - Simple gap-fill with moving words
  */
 
+const LIGHT = {
+  pageBg: '#FFFDE7', cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', divider: '#E0E0E0',
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#2E7D32' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1565C0' },
+  teal:   { bg: '#B2EBF2', border: '#0097A7', shadow: '#006064' },
+  orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#E65100' },
+  purple: { bg: '#E8EAF6', border: '#3949AB', shadow: '#283593' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#B71C1C' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F57F17' },
+}
+const DARK = {
+  pageBg: '#0F0F1A', cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', divider: '#2A2A4A',
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  teal:   { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+  orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+  purple: { bg: '#0D0D2B', border: '#7986CB', shadow: '#283593' },
+  red:    { bg: '#2A0A0A', border: '#E57373', shadow: '#B71C1C' },
+  yellow: { bg: '#2A2200', border: '#FFD54F', shadow: '#F57F17' },
+}
+const clay = (c, extra = {}) => ({
+  bgcolor: c.bg,
+  border: `2px solid ${c.border}`,
+  borderRadius: '16px',
+  boxShadow: `4px 4px 0 ${c.shadow}`,
+  ...extra,
+})
+
 const WordDashGame = ({ sentences = [], onComplete }) => {
+  const muiTheme = useTheme()
+  const D = muiTheme.palette.mode === 'dark' ? DARK : LIGHT
+
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [lives, setLives] = useState(3)
@@ -202,25 +233,25 @@ const WordDashGame = ({ sentences = [], onComplete }) => {
   // Start screen
   if (!gameStarted && !gameOver) {
     return (
-      <Paper elevation={3} sx={{ p: 6, textAlign: 'center', backgroundColor: 'primary.light' }}>
-        <Typography variant="h3" gutterBottom fontWeight="bold" color="primary.dark">
+      <Box sx={{ ...clay(D.blue), p: 6, textAlign: 'center' }}>
+        <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: D.heading }}>
           Word Dash!
         </Typography>
-        <Typography variant="h6" gutterBottom color="text.secondary" sx={{ mb: 4 }}>
+        <Typography variant="h6" gutterBottom sx={{ color: D.muted, mb: 4 }}>
           Click the correct word as it dashes across the screen!
         </Typography>
 
         <Stack spacing={2} sx={{ mb: 4, textAlign: 'left', maxWidth: 400, mx: 'auto' }}>
-          <Typography variant="body1">
+          <Typography variant="body1" sx={{ color: D.body }}>
             📝 Fill in {sentences.length} sentences
           </Typography>
-          <Typography variant="body1">
+          <Typography variant="body1" sx={{ color: D.body }}>
             ❤️ You have 3 lives
           </Typography>
-          <Typography variant="body1">
+          <Typography variant="body1" sx={{ color: D.body }}>
             ⭐ Get +1 point for each correct word
           </Typography>
-          <Typography variant="body1">
+          <Typography variant="body1" sx={{ color: D.body }}>
             ⚠️ Lose a life if you click wrong or miss the correct word
           </Typography>
         </Stack>
@@ -230,59 +261,63 @@ const WordDashGame = ({ sentences = [], onComplete }) => {
           color="primary"
           size="large"
           onClick={handleStart}
-          sx={{ px: 6, py: 2, fontSize: '1.2rem' }}
+          sx={{
+            px: 6, py: 2, fontSize: '1.2rem',
+            borderRadius: '12px',
+            boxShadow: `4px 4px 0 ${D.blue.shadow}`,
+            '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.blue.shadow}` }
+          }}
         >
           Start Game
         </Button>
-      </Paper>
+      </Box>
     )
   }
 
   // Game over screen
   if (gameOver) {
+    const perfect = score === sentences.length
     return (
-      <Paper
-        elevation={6}
-        sx={{
-          p: 6,
-          textAlign: 'center',
-          backgroundColor: score === sentences.length ? 'success.light' : 'error.light'
-        }}
-      >
-        <Typography variant="h3" gutterBottom fontWeight="bold">
-          {score === sentences.length ? '🎉 Perfect Score!' : '⏱️ Game Over!'}
+      <Box sx={{ ...clay(perfect ? D.green : D.red), p: 6, textAlign: 'center' }}>
+        <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: D.heading }}>
+          {perfect ? '🎉 Perfect Score!' : '⏱️ Game Over!'}
         </Typography>
-        <Typography variant="h4" sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ mb: 4, color: D.body }}>
           Final Score: {score} / {sentences.length}
         </Typography>
         <Button
           variant="contained"
-          color={score === sentences.length ? 'success' : 'primary'}
+          color={perfect ? 'success' : 'primary'}
           size="large"
           onClick={handleRestart}
-          sx={{ px: 6, py: 2 }}
+          sx={{
+            px: 6, py: 2,
+            borderRadius: '12px',
+            boxShadow: `4px 4px 0 ${perfect ? D.green.shadow : D.blue.shadow}`,
+            '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${perfect ? D.green.shadow : D.blue.shadow}` }
+          }}
         >
           Play Again
         </Button>
-      </Paper>
+      </Box>
     )
   }
 
   return (
     <Box sx={{ width: '100%' }}>
       {/* Score and Lives Header */}
-      <Paper elevation={2} sx={{ p: 2, mb: 2 }}>
+      <Box sx={{ ...clay(D.yellow), p: 2, mb: 2 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           {/* Score */}
           <Stack direction="row" alignItems="center" spacing={1}>
             <StarIcon sx={{ color: 'warning.main', fontSize: 30 }} />
-            <Typography variant="h5" fontWeight="bold" color="success.main">
+            <Typography variant="h5" fontWeight="bold" sx={{ color: D.green.border }}>
               Score: {score}
             </Typography>
           </Stack>
 
           {/* Progress */}
-          <Typography variant="body1" color="text.secondary">
+          <Typography variant="body1" sx={{ color: D.muted }}>
             Sentence {currentSentenceIndex + 1} / {sentences.length}
           </Typography>
 
@@ -299,16 +334,15 @@ const WordDashGame = ({ sentences = [], onComplete }) => {
             ))}
           </Stack>
         </Stack>
-      </Paper>
+      </Box>
 
       {/* Current Sentence */}
-      <Paper
-        elevation={3}
+      <Box
         sx={{
+          ...clay(correctAnswer ? D.green : wrongAnswer ? D.red : D.blue),
           p: 3,
           mb: 2,
           textAlign: 'center',
-          backgroundColor: correctAnswer ? 'success.light' : wrongAnswer ? 'error.light' : 'info.light',
           transition: 'background-color 0.3s',
           animation: wrongAnswer ? 'shake 0.5s' : 'none',
           '@keyframes shake': {
@@ -318,10 +352,10 @@ const WordDashGame = ({ sentences = [], onComplete }) => {
           }
         }}
       >
-        <Typography variant="h4" fontWeight="medium" color="text.primary">
+        <Typography variant="h4" fontWeight="medium" sx={{ color: D.body }}>
           {currentSentence?.sentence.split('[____]')[0]}
           <span style={{
-            backgroundColor: correctAnswer ? '#4caf50' : '#1976d2',
+            backgroundColor: correctAnswer ? D.green.border : D.blue.border,
             color: 'white',
             padding: '4px 16px',
             borderRadius: '8px',
@@ -332,20 +366,19 @@ const WordDashGame = ({ sentences = [], onComplete }) => {
           </span>
           {currentSentence?.sentence.split('[____]')[1]}
         </Typography>
-      </Paper>
+      </Box>
 
       {/* Game Lane - where words move */}
-      <Paper
+      <Box
         ref={gameAreaRef}
-        elevation={4}
         sx={{
           position: 'relative',
           height: 300,
-          backgroundColor: 'grey.100',
+          bgcolor: D.cardBg,
           overflow: 'hidden',
-          border: '3px solid',
-          borderColor: 'primary.main',
-          borderRadius: 2
+          border: `3px solid ${D.blue.border}`,
+          borderRadius: '16px',
+          boxShadow: `4px 4px 0 ${D.blue.shadow}`,
         }}
       >
         <Typography
@@ -354,7 +387,7 @@ const WordDashGame = ({ sentences = [], onComplete }) => {
             position: 'absolute',
             top: 10,
             left: 10,
-            color: 'text.secondary',
+            color: D.muted,
             fontStyle: 'italic'
           }}
         >
@@ -363,37 +396,44 @@ const WordDashGame = ({ sentences = [], onComplete }) => {
 
         {/* Moving Words */}
         {movingWords.map(word => (
-          <Chip
+          <Box
             key={word.id}
-            label={word.text}
             onClick={() => handleWordClick(word)}
             sx={{
               position: 'absolute',
               left: `${word.position}px`,
               top: `${word.top}%`,
-              fontSize: '1.2rem',
-              fontWeight: 'bold',
-              px: 3,
-              py: 2,
+              px: 2,
+              py: 0.75,
+              borderRadius: '50px',
+              bgcolor: word.isCorrect ? D.teal.bg : D.orange.bg,
+              border: `2px solid ${word.isCorrect ? D.teal.border : D.orange.border}`,
+              boxShadow: `3px 3px 0 ${word.isCorrect ? D.teal.shadow : D.orange.shadow}`,
+              fontWeight: 700,
+              fontSize: '1.1rem',
+              color: word.isCorrect ? D.teal.border : D.orange.border,
               cursor: 'pointer',
+              userSelect: 'none',
+              whiteSpace: 'nowrap',
+              display: 'inline-flex',
+              alignItems: 'center',
               transition: 'transform 0.1s',
-              backgroundColor: 'primary.main',
-              color: 'white',
               '&:hover': {
                 transform: 'scale(1.1)',
-                backgroundColor: 'primary.dark'
               }
             }}
-          />
+          >
+            {word.text}
+          </Box>
         ))}
-      </Paper>
+      </Box>
 
       {/* Instructions */}
-      <Paper elevation={1} sx={{ p: 2, mt: 2, backgroundColor: 'grey.50' }}>
-        <Typography variant="body2" color="text.secondary" textAlign="center">
+      <Box sx={{ ...clay(D.purple), p: 2, mt: 2 }}>
+        <Typography variant="body2" sx={{ color: D.purple.border, textAlign: 'center' }}>
           💡 Click the moving word that correctly fills the gap. Be careful - wrong clicks cost lives!
         </Typography>
-      </Paper>
+      </Box>
     </Box>
   )
 }

@@ -20,6 +20,7 @@ const EXTRACTS = [
 
 export default function Phase6SP2Step4RemC1TaskD() {
   const navigate = useNavigate()
+  React.useEffect(() => { resolveSubphase2RemedialNextUrl(4, 'C1').then(url => { window.__remedialSkip = () => navigate(url) }) }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 4, interaction: 4, context: 'remedial_c1' })

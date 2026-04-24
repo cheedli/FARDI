@@ -149,7 +149,7 @@ def replace_player_placeholders(text, player_name=None):
 # ======================================================================
 
 def get_next_phase2_step(current_step):
-    steps = ['step_1', 'step_2', 'step_3', 'final_writing']
+    steps = sorted(PHASE_2_STEPS.keys())
     try:
         idx = steps.index(current_step)
         if idx + 1 < len(steps):
@@ -232,6 +232,140 @@ def get_phase2_step_progress_record(user_id, step_id):
     return {}
 
 
+WRITING_TASK_TYPES = {
+    'writing',
+    'sentence_expansion', 'reflection_gap_fill', 'negotiation_gap_fill',
+    'listening_negotiation', 'listening_role_play',
+    'listening_proposal_writing', 'listening_proposal', 'listening_expansion',
+    'listening_research', 'listening_team_plan', 'listening_assignment',
+}
+
+def score_dialogue_completion(activity, responses):
+    """Exact word-match scoring for dialogue_completion.
+    Extracts expected words from correct_answer sentences by splitting on template fixed parts,
+    then compares case-insensitively to the submitted words per blank."""
+    import re as _re
+    dialogue_lines = activity.get('dialogue_lines', [])
+    correct_answers = activity.get('correct_answers', [])
+    if not dialogue_lines or not correct_answers:
+        return 0, 0
+
+    user_lines = [(i, l) for i, l in enumerate(dialogue_lines)
+                  if l.get('template') and '___' in l['template']]
+
+    total_blanks = 0
+    correct_count = 0
+
+    for li, (orig_idx, line) in enumerate(user_lines):
+        if li >= len(correct_answers):
+            break
+        template = line['template']
+        correct_sentence = _re.sub(r'^\d+\.\s*', '', correct_answers[li])
+
+        # Extract expected words by splitting template on blank sequences
+        parts = _re.split(r'_{3,}', template)
+        expected_words = []
+        remaining = correct_sentence
+        for i, part in enumerate(parts[:-1]):
+            stripped = part.strip()
+            if stripped:
+                idx = remaining.lower().find(stripped.lower())
+                if idx >= 0:
+                    remaining = remaining[idx + len(stripped):].lstrip()
+            next_part = parts[i + 1].strip() if parts[i + 1].strip() else None
+            if next_part:
+                idx = remaining.lower().find(next_part.lower())
+                expected_words.append(remaining[:idx].strip() if idx >= 0 else remaining.strip())
+                remaining = remaining[idx:] if idx >= 0 else ''
+            else:
+                expected_words.append(remaining.strip())
+
+        # Get submitted words for this line
+        line_key = f'line_{orig_idx}'
+        submitted = responses.get(line_key, [])
+        if isinstance(submitted, str):
+            submitted = submitted.split()
+
+        for j, expected in enumerate(expected_words):
+            total_blanks += 1
+            submitted_word = submitted[j] if j < len(submitted) else ''
+            if submitted_word.strip().lower() == expected.strip().lower():
+                correct_count += 1
+            else:
+                logger.info(f"Blank {j} line {li}: got '{submitted_word}' expected '{expected}'")
+
+    logger.info(f"Dialogue scoring: {correct_count}/{total_blanks} correct")
+    return correct_count, total_blanks
+
+
+def ai_score_writing(activity, responses, max_score):
+    """Call Groq to score a writing/dialogue exercise. Returns an int 0..max_score."""
+    try:
+        if not ai_service.client:
+            return None
+
+        learner_text = ' '.join(str(v) for v in responses.values() if v)
+        if not learner_text.strip():
+            return 0
+
+        ai_eval = activity.get('ai_evaluation') or {}
+        prompt_template = ai_eval.get('prompt', '')
+        guided = activity.get('guided_questions', [])
+        examples = activity.get('example_of_answers', []) or activity.get('correct_answers', [])
+
+        if prompt_template:
+            prompt = (prompt_template
+                      .replace('{{TASK_INSTRUCTION}}', activity.get('instruction', ''))
+                      .replace('{{GUIDED_QUESTIONS}}', '\n'.join(f'- {q}' for q in guided))
+                      .replace('{{EXAMPLE_ANSWERS}}', '\n'.join(f'- {e}' for e in examples))
+                      .replace('{{LEARNER_RESPONSE}}', learner_text))
+        else:
+            # Generic prompt for dialogue_completion and similar types
+            examples_text = '\n'.join(f'- {e}' for e in examples) if examples else 'N/A'
+            prompt = f"""You are a CEFR language evaluator.
+
+Task: {activity.get('instruction', '')}
+Example correct answers:
+{examples_text}
+
+Learner response:
+{learner_text}
+
+Evaluate whether the learner's response correctly completes the task. Consider meaning, grammar, and relevance. Minor spelling/grammar errors are acceptable if the meaning is clear.
+
+Return JSON only:
+{{
+  "score": 0-100,
+  "level_alignment": "below" | "meets" | "above",
+  "strengths": ["..."],
+  "improvements": ["..."],
+  "feedback": "Short, encouraging, level-appropriate feedback."
+}}"""
+
+        completion = ai_service.client.chat.completions.create(
+            model=ai_service.model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=300,
+            temperature=0.2,
+        )
+        import re
+        raw = completion.choices[0].message.content.strip()
+        logger.info(f"AI writing raw response: {raw[:300]}")
+        # Extract the first JSON object from the response regardless of fences or preamble
+        match = re.search(r'\{[\s\S]*\}', raw)
+        if not match:
+            logger.error(f"No JSON object found in AI response: {raw[:200]}")
+            return None
+        result = json.loads(match.group())
+        pct = float(result.get('score', 0)) / 100.0
+        score = round(pct * max_score)
+        logger.info(f"AI writing score: {result.get('score')}/100 → {score}/{max_score} | {result.get('level_alignment')}")
+        return score
+    except Exception as e:
+        logger.error(f"AI writing scoring failed: {e}")
+        return None
+
+
 def sync_phase2_step_progress(user_id, session_id, step_id, **updates):
     """Merge resume-critical Phase 2 step state into the dedicated progress table."""
     existing = get_phase2_step_progress_record(user_id, step_id)
@@ -247,7 +381,7 @@ def sync_phase2_step_progress(user_id, session_id, step_id, **updates):
         'completed_at': existing.get('completed_at'),
     }
     progress_data.update(updates)
-    return user_manager.save_phase2_progress(user_id, session_id, step_id, progress_data)
+    return assessment_history.save_phase2_progress(user_id, session_id, step_id, progress_data)
 
 
 def get_phase2_overall_assessment(gs):
@@ -773,7 +907,7 @@ async def submit_phase2_response(request: Request, user: dict = Depends(get_curr
                 'ai_detected': is_ai,
                 'ai_score': ai_score,
             }
-            user_manager.save_phase2_response(user_id, phase2_session_id, step_id, action_item_id, response_data)
+            assessment_history.save_phase2_response(user_id, phase2_session_id, step_id, action_item_id, response_data)
             logger.info(f"Phase 2 response saved to database for user {user_id}")
         except Exception as db_error:
             logger.error(f"Failed to save Phase 2 response to database: {str(db_error)}")
@@ -968,7 +1102,7 @@ async def check_phase2_step_completion(request: Request, user: dict = Depends(ge
                 } if needs_remedial else {}),
                 'completed_at': datetime.now().isoformat(),
             }
-            user_manager.save_phase2_progress(user_id, phase2_session_id, step_id, progress_data)
+            assessment_history.save_phase2_progress(user_id, phase2_session_id, step_id, progress_data)
             logger.info(f"Phase 2 step {step_id} completion saved to database for user {user_id}")
         except Exception as db_error:
             logger.error(f"Failed to save Phase 2 step completion to database: {str(db_error)}")
@@ -1012,8 +1146,9 @@ async def submit_remedial_activity(request: Request, user: dict = Depends(get_cu
         activity_id = data.get('activity_id')
         responses = data.get('responses', {})
         score = data.get('score', 0)
+        is_skip = data.get('skip', False)
 
-        logger.info(f"Remedial submission - Step: {step_id}, Level: {level}, Activity: {activity_id}")
+        logger.info(f"Remedial submission - Step: {step_id}, Level: {level}, Activity: {activity_id}, Skip: {is_skip}")
 
         if not all([step_id, level, activity_id]):
             raise HTTPException(status_code=400, detail="Missing required fields")
@@ -1049,6 +1184,19 @@ async def submit_remedial_activity(request: Request, user: dict = Depends(get_cu
             session_id = str(uuid.uuid4())
             update_game_session(user_id, phase2_session_id=session_id)
 
+        # Override score based on task type (skipped activities bypass scoring)
+        task_type = current_activity.get('task_type') or current_activity.get('type', '')
+        if not is_skip and task_type == 'dialogue_completion':
+            correct, total = score_dialogue_completion(current_activity, responses)
+            score = correct
+            logger.info(f"Dialogue completion — exact match score: {score}/{total}")
+        elif not is_skip and task_type in WRITING_TASK_TYPES:
+            max_score_for_ai = current_activity.get('success_threshold', 6)
+            ai_score = ai_score_writing(current_activity, responses, max_score_for_ai)
+            if ai_score is not None:
+                score = ai_score
+                logger.info(f"Writing exercise — AI score used: {score}/{max_score_for_ai}")
+
         activity_data = {
             'activity_id': activity_id,
             'activity_index': activity_index,
@@ -1079,7 +1227,7 @@ async def submit_remedial_activity(request: Request, user: dict = Depends(get_cu
 
         # Sequential level progression
         max_score = current_activity.get('success_threshold', 6)
-        passing_threshold = int(max_score * 0.50)
+        passing_threshold = max(1, round(max_score * 0.60))
         activity_passed = score >= passing_threshold
 
         logger.info(f"=== SEQUENTIAL PROGRESSION LOGIC ===")
@@ -1116,24 +1264,32 @@ async def submit_remedial_activity(request: Request, user: dict = Depends(get_cu
         is_last_activity_in_level = activity_index >= len(remedial_activities) - 1
 
         # Case 1: Score too low -> Retry
+        retryable = task_type not in WRITING_TASK_TYPES
         if not activity_passed:
             update_remedial_resume_state(current_level, activity_index)
             return {
                 "success": False,
                 "activity_passed": False,
+                "retryable": retryable,
                 "score": score,
                 "threshold": max_score,
                 "passing_score": passing_threshold,
-                "message": f"You scored {score}/{max_score}. You need at least {passing_threshold} to pass. Let's try again!",
+                "message": f"You scored {score}/{max_score}. You need at least {passing_threshold} to pass.",
                 "next_action": "retry",
                 "next_url": f"/app/phase2/remedial/{step_id}/{current_level}?activity={activity_index}",
-                "score_feedback": f"You need {passing_threshold - score} more correct answers to pass this exercise.",
-                "encouragement": "Don't worry - learning takes practice. Review the instructions and try again!",
             }
 
         # Activity passed - mark completed
         gs = get_game_session(user_id)  # Refresh
-        gs = mark_activity_completed(user_id, gs, step_id, current_level, activity_index)
+        # When skipping last activity, force-mark all activities in this level as done
+        # so check_level_completion returns True regardless of session state
+        if is_skip and is_last_activity_in_level:
+            for i in range(len(remedial_activities)):
+                gs = mark_activity_completed(user_id, gs, step_id, level, i)
+            current_level = level  # ensure current_level matches submitted level
+            set_current_level_for_step(user_id, gs, step_id, level)
+        else:
+            gs = mark_activity_completed(user_id, gs, step_id, current_level, activity_index)
 
         # Award XP
         try:
@@ -1204,12 +1360,12 @@ async def submit_remedial_activity(request: Request, user: dict = Depends(get_cu
         overall_percentage = (overall_score / overall_max_score * 100) if overall_max_score > 0 else 0
         logger.info(f"Overall performance: {overall_score}/{overall_max_score} ({overall_percentage:.1f}%)")
 
-        # Check revisit warning
+        # Check revisit warning (skipped activities bypass this entirely)
         remedial_completed_data = get_session_json(gs, 'remedial_completed', {})
         revisit_warning_key = f"revisit_warning_{step_id}_{level}"
         has_been_warned = remedial_completed_data.get(revisit_warning_key, False)
 
-        if overall_percentage < 50 and not has_been_warned:
+        if not is_skip and overall_percentage < 50 and not has_been_warned:
             remedial_completed_data[revisit_warning_key] = True
             update_game_session(user_id, remedial_completed=remedial_completed_data)
             update_remedial_resume_state(current_level, 0)
@@ -1675,7 +1831,7 @@ async def get_phase2_step_metadata(request: Request, user: dict = Depends(get_cu
                 phase2_session_id = str(uuid.uuid4())
                 update_game_session(user_id, phase2_session_id=phase2_session_id)
 
-            existing_progress = user_manager.get_phase2_progress(user_id)
+            existing_progress = assessment_history.get_phase2_progress(user_id)
             step_exists = any(s.get('step_id') == step_id for s in existing_progress.get('steps', []))
             if not step_exists:
                 progress_data = {
@@ -1686,7 +1842,7 @@ async def get_phase2_step_metadata(request: Request, user: dict = Depends(get_cu
                     'needs_remedial': False,
                     'started_at': datetime.now().isoformat(),
                 }
-                user_manager.save_phase2_progress(user_id, phase2_session_id, step_id, progress_data)
+                assessment_history.save_phase2_progress(user_id, phase2_session_id, step_id, progress_data)
                 logger.info(f"Phase 2 step {step_id} initialized for user {user_id}")
         except Exception as db_error:
             logger.error(f"Failed to initialize Phase 2 step progress: {str(db_error)}")

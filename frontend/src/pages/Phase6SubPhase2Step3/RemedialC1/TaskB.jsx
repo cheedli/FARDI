@@ -50,6 +50,7 @@ function scorePromptResponse(text, prompt) {
 
 export default function Phase6SP2Step3RemC1TaskB() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase6/subphase/2/step/3/remedial/c1/task/c') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 3, interaction: 2, context: 'remedial_c1' })

@@ -102,6 +102,7 @@ export default function Phase2Remedial() {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
+  const isTesting = searchParams.get('testing') === '1'
 
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -115,6 +116,8 @@ export default function Phase2Remedial() {
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [exerciseCompleted, setExerciseCompleted] = useState(false)
   const [exerciseResult, setExerciseResult] = useState(null)
+  const [exerciseKey, setExerciseKey] = useState(0)
+  const [retryCount, setRetryCount] = useState(0)
 
   const card = (c, extra = {}) => ({
     bgcolor: c.bg,
@@ -130,6 +133,8 @@ export default function Phase2Remedial() {
     setExerciseCompleted(false)
     setExerciseResult(null)
     setAudioPlayed(false)
+    setExerciseKey(k => k + 1)
+    setRetryCount(0)
 
     try {
       const idx = searchParams.get('activity')
@@ -237,7 +242,16 @@ export default function Phase2Remedial() {
     setSubmitting(true)
 
     try {
-      const score = exerciseResult?.correctCount || computeScore()
+      const threshold = data.activity?.success_threshold || 6
+      const score = exerciseResult?.correctCount !== undefined
+        ? exerciseResult.correctCount
+        : exerciseResult?.isPerfect
+          ? threshold
+          : computeScore()
+      // Some exercises (DebateArena) pass their answers through onComplete result
+      const responsesToSend = (exerciseResult?.answers && Object.keys(exerciseResult.answers).length > 0)
+        ? exerciseResult.answers
+        : answers
       const r = await fetch('/api/phase2/submit-remedial', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -246,7 +260,7 @@ export default function Phase2Remedial() {
           step_id: data.step_id,
           level: data.level,
           activity_id: data.activity.id,
-          responses: answers,
+          responses: responsesToSend,
           score
         })
       })
@@ -271,6 +285,7 @@ export default function Phase2Remedial() {
           isOverallPerformance: true
         })
       } else {
+        const actualScore = res.score ?? score
         try {
           const fbRes = await fetch('/api/phase2/remedial/feedback', {
             method: 'POST',
@@ -280,7 +295,7 @@ export default function Phase2Remedial() {
               step_id: data.step_id,
               level: data.level,
               activity_id: data.activity.id,
-              score
+              score: actualScore
             })
           })
           const fb = await fbRes.json()
@@ -288,16 +303,18 @@ export default function Phase2Remedial() {
             title: res.activity_passed ? 'Great Job!' : 'Keep Practicing!',
             message: fb.feedback || res.message,
             success: res.activity_passed,
-            score: score,
-            threshold: data.activity?.success_threshold || 6
+            retryable: res.retryable ?? true,
+            score: actualScore,
+            threshold: res.threshold ?? data.activity?.success_threshold ?? 6
           })
         } catch (fbErr) {
           setFeedback({
             title: res.activity_passed ? 'Great Job!' : 'Keep Practicing!',
             message: res.message,
             success: res.activity_passed,
-            score: score,
-            threshold: data.activity?.success_threshold || 6
+            retryable: res.retryable ?? true,
+            score: actualScore,
+            threshold: res.threshold ?? data.activity?.success_threshold ?? 6
           })
         }
       }
@@ -317,32 +334,107 @@ export default function Phase2Remedial() {
     }
   }
 
-  const handleFeedbackClose = (proceed = false) => {
-    setShowFeedback(false)
-
-    if (proceed && feedback) {
-      const lastResult = window.lastRemedialResult
-      if (lastResult) {
-        if (lastResult.remedial_complete) {
-          navigate(`/phase2/step/${data.step_id}`)
-        } else if (lastResult.next_url) {
-          try {
-            const u = new URL(lastResult.next_url, window.location.origin)
-            const segs = u.pathname.split('/').filter(Boolean)
-            const step = segs[3]
-            const lvl = segs[4]
-            const idx = u.searchParams.get('activity')
-            navigate(`/phase2/remedial/${step}/${lvl}${idx ? `?activity=${idx}` : ''}`)
-          } catch {
-            load()
-          }
-        } else {
-          load()
-        }
+  const handleSkip = async () => {
+    if (!data?.activity) return
+    setSubmitting(true)
+    try {
+      const threshold = data.activity?.success_threshold || 6
+      const r = await fetch('/api/phase2/submit-remedial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          step_id: data.step_id,
+          level: data.level,
+          activity_id: data.activity.id,
+          responses: {},
+          score: threshold,
+          skip: true,
+        })
+      })
+      const res = await r.json()
+      window.lastRemedialResult = res
+      handleFeedbackClose('proceed')
+    } catch {
+      // Fallback: navigate forward manually
+      const nextIndex = data.current_index + 1
+      if (nextIndex < data.total) {
+        navigate(`/phase2/remedial/${data.step_id}/${data.level}?activity=${nextIndex}`)
+      } else {
+        navigate(`/phase2/step/${data.step_id}`)
       }
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  // Register for AppLayout floating skip button
+  React.useEffect(() => {
+    window.__remedialSkip = handleSkip
+    return () => { window.__remedialSkip = null }
+  })
+
+  const handleFeedbackClose = (action = 'proceed') => {
+    // action: 'retry' | 'proceed'
+    setShowFeedback(false)
+    setFeedback(null)
+
+    if (action === 'retry') {
+      setRetryCount(c => c + 1)
+      setExerciseCompleted(false)
+      setExerciseResult(null)
+      setAnswers({})
+      setExerciseKey(k => k + 1)
+      return
     }
 
-    setFeedback(null)
+    // proceed → navigate forward
+    const lastResult = window.lastRemedialResult
+    if (!lastResult) return
+
+    if (lastResult.remedial_complete) {
+      if (lastResult.next_url) {
+        try {
+          const u = new URL(lastResult.next_url, window.location.origin)
+          const segs = u.pathname.split('/').filter(Boolean)
+          // backend returns /app/phase2/step/{id} or /app/phase2/complete
+          // strip leading 'app' segment if present
+          const pathSegs = segs[0] === 'app' ? segs.slice(1) : segs
+          navigate('/' + pathSegs.join('/'))
+        } catch {
+          navigate(`/phase2/step/${data.step_id}`)
+        }
+      } else {
+        navigate(`/phase2/step/${data.step_id}`)
+      }
+      return
+    }
+
+    if (lastResult.next_url) {
+      try {
+        const u = new URL(lastResult.next_url, window.location.origin)
+        const segs = u.pathname.split('/').filter(Boolean)
+        const step = segs[3]
+        const lvl = segs[4]
+        const idx = u.searchParams.get('activity')
+        const targetPath = `/phase2/remedial/${step}/${lvl}`
+        const targetActivity = idx || null
+
+        const currentActivity = searchParams.get('activity')
+        const isSameActivity = targetPath === `/phase2/remedial/${data.step_id}/${data.level}` &&
+          targetActivity === currentActivity
+
+        if (isSameActivity) {
+          load()
+        } else {
+          navigate(`${targetPath}${targetActivity ? `?activity=${targetActivity}` : ''}`)
+        }
+      } catch {
+        load()
+      }
+    } else {
+      load()
+    }
   }
 
   const renderExerciseComponent = () => {
@@ -464,11 +556,11 @@ export default function Phase2Remedial() {
       case 'GapFillStory':
         return <GapFillStory templates={exerciseData.templates} wordBank={exerciseData.word_bank} answers={answers} onChange={(key, value) => setAnswer(key, value)} />
       case 'DebateArena':
-        return <DebateArena exercise={exerciseData} onComplete={(result) => { handleExerciseComplete(result); if (result.isVictory) onSubmit() }} onProgress={handleProgress} />
+        return <DebateArena exercise={exerciseData} onComplete={(result) => { handleExerciseComplete(result); setTimeout(() => onSubmit(), 500) }} onProgress={handleProgress} />
       case 'ConversationTetris':
         return <ConversationTetris exercise={exerciseData} onComplete={handleExerciseComplete} onProgress={handleProgress} />
       case 'PhoneCallSim':
-        return <PhoneCallSim exercise={exerciseData} onComplete={handleExerciseComplete} onProgress={handleProgress} />
+        return <PhoneCallSim exercise={exerciseData} onComplete={(result) => { handleExerciseComplete(result); setTimeout(() => onSubmit(), 500) }} onProgress={handleProgress} />
       case 'SignalDecoder':
         return <SignalDecoder exercise={exerciseData} onComplete={handleExerciseComplete} onProgress={handleProgress} />
       case 'SocialPostMaker':
@@ -626,7 +718,7 @@ export default function Phase2Remedial() {
 
         {/* ── Exercise Component ──────────────────────────────────────────────── */}
         <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={2}>
-          <Box sx={{ mb: 3 }}>
+          <Box key={exerciseKey} sx={{ mb: 3 }}>
             {renderExerciseComponent()}
           </Box>
         </motion.div>
@@ -714,23 +806,45 @@ export default function Phase2Remedial() {
             </Stack>
           )}
         </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
-          <Box
-            component="button"
-            onClick={() => handleFeedbackClose(true)}
-            sx={{
-              display: 'inline-flex', alignItems: 'center', gap: 1,
-              px: 3, py: 1.25, borderRadius: '14px', cursor: 'pointer',
-              bgcolor: D.blue.border, color: '#fff',
-              fontWeight: 800, fontSize: '0.95rem', fontFamily: 'inherit',
-              border: `2px solid ${D.blue.border}`,
-              boxShadow: `4px 4px 0 ${D.blue.shadow}`,
-              transition: 'transform 0.12s, box-shadow 0.12s',
-              '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.blue.shadow}` },
-            }}
-          >
-            Continue
-          </Box>
+        <DialogActions sx={{ justifyContent: 'center', pb: 3, gap: 1.5 }}>
+          {/* Show Try Again up to 3 times for retryable failed exercises */}
+          {!feedback?.success && feedback?.retryable && retryCount < 3 && (
+            <Box
+              component="button"
+              onClick={() => handleFeedbackClose('retry')}
+              sx={{
+                display: 'inline-flex', alignItems: 'center', gap: 1,
+                px: 3, py: 1.25, borderRadius: '14px', cursor: 'pointer',
+                bgcolor: D.orange.border, color: '#fff',
+                fontWeight: 800, fontSize: '0.95rem', fontFamily: 'inherit',
+                border: `2px solid ${D.orange.border}`,
+                boxShadow: `4px 4px 0 ${D.orange.shadow}`,
+                transition: 'transform 0.12s, box-shadow 0.12s',
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.orange.shadow}` },
+              }}
+            >
+              Try Again ({3 - retryCount} left)
+            </Box>
+          )}
+          {/* Always show Continue — after 3 retries or on pass or non-retryable */}
+          {(feedback?.success || !feedback?.retryable || retryCount >= 3) && (
+            <Box
+              component="button"
+              onClick={() => handleFeedbackClose('proceed')}
+              sx={{
+                display: 'inline-flex', alignItems: 'center', gap: 1,
+                px: 3, py: 1.25, borderRadius: '14px', cursor: 'pointer',
+                bgcolor: D.blue.border, color: '#fff',
+                fontWeight: 800, fontSize: '0.95rem', fontFamily: 'inherit',
+                border: `2px solid ${D.blue.border}`,
+                boxShadow: `4px 4px 0 ${D.blue.shadow}`,
+                transition: 'transform 0.12s, box-shadow 0.12s',
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.blue.shadow}` },
+              }}
+            >
+              Continue
+            </Box>
+          )}
         </DialogActions>
       </Dialog>
 

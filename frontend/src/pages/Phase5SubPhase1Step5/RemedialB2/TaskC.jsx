@@ -23,6 +23,7 @@ const ERROR_PAIRS = [
 
 export default function Phase5Step5RemedialB2TaskC() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase5/subphase/1/step/5/remedial/b2/task/a') }, [])
   const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 5, interaction: 3, context: 'remedial_b2' })
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT

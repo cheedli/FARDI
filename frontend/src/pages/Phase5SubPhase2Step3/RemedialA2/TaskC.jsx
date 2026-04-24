@@ -39,6 +39,7 @@ export default function Phase5SubPhase2Step3RemedialA2TaskC() {
     try { await phase5API.logRemedialActivity(3, 'A2', 'C', finalScore, 6, 2) } catch (e) { console.error(e) }
   }
   const handleContinue = async () => navigate(await resolveSubphase2RemedialNextUrl(3, 'A2'))
+  window.__remedialSkip = handleContinue
   const allFilled = sentences.every(s => s.trim().length > 0)
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>

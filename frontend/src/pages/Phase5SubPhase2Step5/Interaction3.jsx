@@ -51,6 +51,7 @@ export default function Phase5SubPhase2Step5Interaction3() {
   }
 
   const handleContinue = () => navigate('/phase5/subphase/2/step/5/score')
+  window.__remedialSkip = handleContinue
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>

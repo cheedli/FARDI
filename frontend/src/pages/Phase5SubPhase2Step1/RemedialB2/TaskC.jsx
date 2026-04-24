@@ -50,6 +50,7 @@ export default function Phase5SubPhase2Step1RemedialB2TaskC() {
   }
 
   const handleContinue = () => navigate('/phase5/subphase/2/step/1/remedial/b2/task/d')
+  window.__remedialSkip = handleContinue
   const allMatched = MATCHING_PAIRS.every(pair => matches[pair.id])
 
   return (

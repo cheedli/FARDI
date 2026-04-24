@@ -15,8 +15,8 @@ class AIService:
         self.groq_api_key = os.getenv("GROQ_API_KEY")
         self.sapling_api_key = os.getenv("SAPLING_API_KEY")
         self.sapling_api_url = "https://api.sapling.ai/api/v1/aidetect"
-        self.model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
-        self.max_tokens = 10000
+        self.model = os.getenv("GROQ_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
+        self.max_tokens = 500
         self.temperature = 0.7
         
         if self.groq_api_key:

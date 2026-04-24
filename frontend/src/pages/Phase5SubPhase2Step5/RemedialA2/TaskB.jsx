@@ -38,6 +38,7 @@ export default function Phase5SubPhase2Step5RemedialA2TaskB() {
     try { await phase5API.logRemedialActivity(5, 'A2', 'B', finalScore, 8, 2) } catch (error) { console.error('Failed to log task completion:', error) }
   }
   const handleContinue = () => navigate('/phase5/subphase/2/step/5/remedial/a2/task/c')
+  window.__remedialSkip = handleContinue
   const allFilled = Object.keys(CORRECT_ANSWERS).every(key => answers[key])
 
   return (

@@ -768,7 +768,7 @@ async def admin_user_detail(
     """Get detailed information about a specific user for modal popup"""
     try:
         # Get comprehensive user details
-        user_details = assessment_history.get_user_details(user_id)
+        user_details = assessment_history.get_user_detailed_progress(user_id)
 
         if not user_details.get('user_info'):
             raise HTTPException(status_code=404, detail='User not found')
@@ -917,7 +917,7 @@ async def get_all_users_blueprint(user: dict = Depends(get_current_admin)):
             uid = u.get('user_id')
 
             # Get Phase 1 progress
-            phase1_history = assessment_history.get_user_history(uid)
+            phase1_history = assessment_history.get_user_assessments(uid)
             latest_phase1 = phase1_history[0] if phase1_history else None
 
             # Get Phase 2 progress
@@ -995,7 +995,7 @@ async def get_student_progress(
             raise HTTPException(status_code=404, detail="User not found")
 
         # Phase 1 history
-        phase1_history = assessment_history.get_user_history(user_id)
+        phase1_history = assessment_history.get_user_assessments(user_id)
 
         # Phase 2 detailed progress
         phase2_progress = assessment_history.get_phase2_progress(user_id)

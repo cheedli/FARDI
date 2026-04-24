@@ -45,6 +45,7 @@ const SHUFFLED_CORRECT = [
 
 export default function Phase6SP1Step4RemB2TaskC() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase6/subphase/1/step/4/remedial/b2/task/d') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 4, interaction: 3, context: 'remedial_b2' })

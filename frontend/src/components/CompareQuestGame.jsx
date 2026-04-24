@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Box, Paper, Typography, TextField, Button, Stack, LinearProgress, Card, CardContent, Chip } from '@mui/material'
+import { Box, Typography, TextField, Button, Stack, LinearProgress, useTheme } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import StarIcon from '@mui/icons-material/Star'
@@ -11,12 +11,43 @@ import LockIcon from '@mui/icons-material/Lock'
  * Students answer questions to build a complete comparison paragraph
  */
 
+const LIGHT = {
+  pageBg: '#FFFDE7', cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', divider: '#E0E0E0',
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#2E7D32' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1565C0' },
+  teal:   { bg: '#B2EBF2', border: '#0097A7', shadow: '#006064' },
+  orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#E65100' },
+  purple: { bg: '#E8EAF6', border: '#3949AB', shadow: '#283593' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#B71C1C' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F57F17' },
+}
+const DARK = {
+  pageBg: '#0F0F1A', cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', divider: '#2A2A4A',
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  teal:   { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+  orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+  purple: { bg: '#0D0D2B', border: '#7986CB', shadow: '#283593' },
+  red:    { bg: '#2A0A0A', border: '#E57373', shadow: '#B71C1C' },
+  yellow: { bg: '#2A2200', border: '#FFD54F', shadow: '#F57F17' },
+}
+const clay = (c, extra = {}) => ({
+  bgcolor: c.bg,
+  border: `2px solid ${c.border}`,
+  borderRadius: '16px',
+  boxShadow: `4px 4px 0 ${c.shadow}`,
+  ...extra,
+})
+
 const CompareQuestGame = ({
   questions = [],
   glossaryTerms = [],
   onComplete,
   evaluationCriteria = {}
 }) => {
+  const muiTheme = useTheme()
+  const D = muiTheme.palette.mode === 'dark' ? DARK : LIGHT
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState({})
   const [skippedQuestions, setSkippedQuestions] = useState(new Set())
@@ -181,67 +212,63 @@ const CompareQuestGame = ({
     const correctAnswers = answeredQuestions.filter(a => a.isCorrect).length
 
     return (
-      <Paper elevation={6} sx={{ p: 6, textAlign: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        <Box sx={{ color: 'white' }}>
-          <StarIcon sx={{ fontSize: 80, mb: 2, color: '#ffd700' }} />
-          <Typography variant="h3" gutterBottom fontWeight="bold">
-            Quest Complete!
-          </Typography>
-          <Typography variant="h5" sx={{ mb: 3 }}>
-            You've mastered comparison writing!
-          </Typography>
+      <Box sx={{ ...clay(D.purple), p: 6, textAlign: 'center' }}>
+        <StarIcon sx={{ fontSize: 80, mb: 2, color: '#ffd700' }} />
+        <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: D.heading }}>
+          Quest Complete!
+        </Typography>
+        <Typography variant="h5" sx={{ mb: 3, color: D.body }}>
+          You've mastered comparison writing!
+        </Typography>
 
-          <Card sx={{ maxWidth: 600, mx: 'auto', mb: 3, backgroundColor: 'rgba(255,255,255,0.95)' }}>
-            <CardContent>
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant="h6" color="primary" gutterBottom>
-                    Vocabulary Level Achieved
-                  </Typography>
-                  <Stack direction="row" spacing={1} justifyContent="center">
-                    {[...Array(vocabularyLevel)].map((_, i) => (
-                      <StarIcon key={i} sx={{ color: '#ffd700', fontSize: 40 }} />
-                    ))}
-                  </Stack>
-                  <Typography variant="h4" color="primary.dark" fontWeight="bold">
-                    Level {vocabularyLevel}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography variant="h6" color="text.secondary">
-                    Correct Answers
-                  </Typography>
-                  <Typography variant="h3" color="success.dark" fontWeight="bold">
-                    {correctAnswers} / {answeredQuestions.length}
-                  </Typography>
-                </Box>
-
-                {skippedQuestions.size > 0 && (
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Skipped: {skippedQuestions.size}
-                    </Typography>
-                  </Box>
-                )}
+        <Box sx={{ ...clay(D.blue), maxWidth: 600, mx: 'auto', mb: 3, p: 3 }}>
+          <Stack spacing={2}>
+            <Box>
+              <Typography variant="h6" sx={{ color: D.heading }} gutterBottom>
+                Vocabulary Level Achieved
+              </Typography>
+              <Stack direction="row" spacing={1} justifyContent="center">
+                {[...Array(vocabularyLevel)].map((_, i) => (
+                  <StarIcon key={i} sx={{ color: '#ffd700', fontSize: 40 }} />
+                ))}
               </Stack>
-            </CardContent>
-          </Card>
+              <Typography variant="h4" sx={{ color: D.heading }} fontWeight="bold">
+                Level {vocabularyLevel}
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant="h6" sx={{ color: D.muted }}>
+                Correct Answers
+              </Typography>
+              <Typography variant="h3" sx={{ color: D.green.border }} fontWeight="bold">
+                {correctAnswers} / {answeredQuestions.length}
+              </Typography>
+            </Box>
+
+            {skippedQuestions.size > 0 && (
+              <Box>
+                <Typography variant="body2" sx={{ color: D.muted }}>
+                  Skipped: {skippedQuestions.size}
+                </Typography>
+              </Box>
+            )}
+          </Stack>
         </Box>
-      </Paper>
+      </Box>
     )
   }
 
   return (
     <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto' }}>
       {/* Progress Header */}
-      <Paper elevation={4} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+      <Box sx={{ ...clay(D.yellow), p: 3, mb: 3 }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="h5" fontWeight="bold" sx={{ color: '#ffd700' }}>
+            <Typography variant="h5" fontWeight="bold" sx={{ color: D.yellow.border }}>
               Vocabulary Level {vocabularyLevel}
             </Typography>
-            <Typography variant="h6" sx={{ color: 'white' }}>
+            <Typography variant="h6" sx={{ color: D.heading }}>
               Question {currentQuestionIndex + 1} / {totalQuestions}
             </Typography>
           </Stack>
@@ -252,7 +279,7 @@ const CompareQuestGame = ({
                 <StarIcon
                   key={i}
                   sx={{
-                    color: i < vocabularyLevel ? '#ffd700' : 'rgba(255,255,255,0.3)',
+                    color: i < vocabularyLevel ? '#ffd700' : D.muted,
                     fontSize: 28
                   }}
                 />
@@ -264,20 +291,20 @@ const CompareQuestGame = ({
               sx={{
                 height: 10,
                 borderRadius: 1,
-                backgroundColor: 'rgba(255,255,255,0.3)',
+                backgroundColor: D.divider,
                 '& .MuiLinearProgress-bar': {
-                  backgroundColor: '#4caf50'
+                  backgroundColor: D.green.border
                 }
               }}
             />
           </Box>
         </Stack>
-      </Paper>
+      </Box>
 
       {/* Completed Questions Summary */}
       {answeredCount > 0 && (
-        <Paper elevation={2} sx={{ p: 2, mb: 3, backgroundColor: 'grey.50' }}>
-          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+        <Box sx={{ ...clay(D.blue), p: 2, mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ color: D.muted }} gutterBottom>
             Your Progress:
           </Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -285,45 +312,48 @@ const CompareQuestGame = ({
               const answer = answers[index]
               const isSkipped = skippedQuestions.has(index)
               const isAnswered = answer !== undefined
+              const color = isAnswered
+                ? (answer.isCorrect ? D.green : D.red)
+                : D.blue
 
               return (
-                <Chip
+                <Box
                   key={index}
-                  label={`Q${index + 1}`}
-                  size="small"
-                  icon={
-                    isAnswered ? (
-                      answer.isCorrect ? <CheckCircleIcon /> : <CancelIcon />
-                    ) : isSkipped ? (
-                      <CancelIcon />
-                    ) : (
-                      <LockIcon />
-                    )
-                  }
-                  color={
-                    isAnswered ? (answer.isCorrect ? 'success' : 'error') : isSkipped ? 'default' : 'default'
-                  }
-                  sx={{ opacity: isAnswered || isSkipped ? 1 : 0.4 }}
-                />
+                  component="span"
+                  sx={{
+                    px: 1.5, py: 0.4, borderRadius: '50px',
+                    bgcolor: color.bg,
+                    border: `2px solid ${color.border}`,
+                    fontWeight: 700, fontSize: '0.8rem', color: color.border,
+                    opacity: isAnswered || isSkipped ? 1 : 0.4,
+                    display: 'inline-flex', alignItems: 'center', gap: 0.5
+                  }}
+                >
+                  {isAnswered ? (
+                    answer.isCorrect ? <CheckCircleIcon sx={{ fontSize: 14 }} /> : <CancelIcon sx={{ fontSize: 14 }} />
+                  ) : isSkipped ? (
+                    <CancelIcon sx={{ fontSize: 14 }} />
+                  ) : (
+                    <LockIcon sx={{ fontSize: 14 }} />
+                  )}
+                  Q{index + 1}
+                </Box>
               )
             })}
           </Stack>
-        </Paper>
+        </Box>
       )}
 
       {/* Current Question */}
-      <Paper
-        elevation={6}
+      <Box
         sx={{
+          ...clay(evaluationResult ? (evaluationResult.score === 1 ? D.green : D.red) : D.blue),
           p: 4,
           mb: 3,
-          backgroundColor: evaluationResult ? (evaluationResult.score === 1 ? '#e8f5e9' : '#ffebee') : 'white',
-          border: '3px solid',
-          borderColor: evaluationResult ? (evaluationResult.score === 1 ? 'success.main' : 'error.main') : 'primary.main',
           transition: 'all 0.3s ease'
         }}
       >
-        <Typography variant="h6" gutterBottom fontWeight="bold" color="primary.dark">
+        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: D.heading }}>
           {currentQuestion.question}
         </Typography>
 
@@ -348,7 +378,7 @@ const CompareQuestGame = ({
             '& .MuiOutlinedInput-root': {
               backgroundColor: 'white',
               '& fieldset': {
-                borderColor: 'primary.main',
+                borderColor: D.blue.border,
                 borderWidth: 2
               }
             },
@@ -368,30 +398,27 @@ const CompareQuestGame = ({
             sx={{
               mt: 2,
               p: 2,
-              backgroundColor: evaluationResult.score === 1 ? 'success.light' : 'error.light',
-              borderRadius: 2,
-              border: '2px solid',
-              borderColor: evaluationResult.score === 1 ? 'success.main' : 'error.main'
+              ...clay(evaluationResult.score === 1 ? D.green : D.red),
             }}
           >
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
               {evaluationResult.score === 1 ? (
                 <>
-                  <CheckCircleIcon sx={{ color: 'success.dark' }} />
-                  <Typography variant="h6" fontWeight="bold" color="success.dark">
+                  <CheckCircleIcon sx={{ color: D.green.border }} />
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: D.green.border }}>
                     Excellent! ✓
                   </Typography>
                 </>
               ) : (
                 <>
-                  <CancelIcon sx={{ color: 'error.dark' }} />
-                  <Typography variant="h6" fontWeight="bold" color="error.dark">
+                  <CancelIcon sx={{ color: D.red.border }} />
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: D.red.border }}>
                     Not quite ✕
                   </Typography>
                 </>
               )}
             </Stack>
-            <Typography variant="body2" color="text.primary">
+            <Typography variant="body2" sx={{ color: D.body }}>
               {evaluationResult.feedback}
             </Typography>
           </Box>
@@ -412,10 +439,14 @@ const CompareQuestGame = ({
               </Button>
               <Button
                 variant="contained"
-                color="warning"
                 onClick={handleRetry}
                 disabled={isSubmitting}
-                sx={{ px: 4 }}
+                sx={{
+                  px: 4,
+                  bgcolor: D.orange.border, color: '#fff', borderRadius: '12px',
+                  boxShadow: '4px 4px 0 ' + D.orange.shadow, fontWeight: 800,
+                  '&:hover': { bgcolor: D.orange.border, transform: 'translate(-2px,-2px)', boxShadow: '6px 6px 0 ' + D.orange.shadow }
+                }}
               >
                 Retry
               </Button>
@@ -434,38 +465,44 @@ const CompareQuestGame = ({
               </Button>
               <Button
                 variant="contained"
-                color="primary"
                 onClick={handleSubmit}
                 disabled={!currentAnswer.trim() || isSubmitting || (evaluationResult !== null && evaluationResult.score === 1)}
-                sx={{ px: 4 }}
+                sx={{
+                  px: 4,
+                  bgcolor: D.blue.border, color: '#fff', borderRadius: '12px',
+                  boxShadow: '4px 4px 0 ' + D.blue.shadow, fontWeight: 800,
+                  '&:hover': { bgcolor: D.blue.border, transform: 'translate(-2px,-2px)', boxShadow: '6px 6px 0 ' + D.blue.shadow }
+                }}
               >
                 {isSubmitting ? 'Evaluating...' : 'Submit'}
               </Button>
             </>
           )}
         </Stack>
-      </Paper>
+      </Box>
 
       {/* Glossary Terms Reference */}
-      <Paper elevation={2} sx={{ p: 3, backgroundColor: 'info.light' }}>
-        <Typography variant="subtitle1" fontWeight="bold" color="info.dark" gutterBottom>
+      <Box sx={{ ...clay(D.teal), p: 3 }}>
+        <Typography variant="subtitle1" fontWeight="bold" sx={{ color: D.teal.border }} gutterBottom>
           Suggested Terms to Use:
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           {glossaryTerms.map((term, index) => (
-            <Chip
+            <Box
               key={index}
-              label={term}
-              size="small"
+              component="span"
               sx={{
-                backgroundColor: 'white',
-                fontWeight: 'bold',
-                fontSize: '0.9rem'
+                px: 1.5, py: 0.4, borderRadius: '50px',
+                bgcolor: D.teal.bg,
+                border: `2px solid ${D.teal.border}`,
+                fontWeight: 700, fontSize: '0.8rem', color: D.teal.border
               }}
-            />
+            >
+              {term}
+            </Box>
           ))}
         </Stack>
-      </Paper>
+      </Box>
     </Box>
   )
 }

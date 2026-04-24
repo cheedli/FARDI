@@ -34,6 +34,7 @@ export default function Phase5SubPhase2Step3RemedialB1TaskA() {
     try { await phase5API.logRemedialActivity(3, 'B1', 'A', finalScore, 4, 2) } catch (e) { console.error(e) }
   }
   const handleContinue = () => navigate('/phase5/subphase/2/step/3/remedial/b1/task/b')
+  window.__remedialSkip = handleContinue
   const allFilled = Object.keys(CORRECT_ANSWERS).every(key => answers[key])
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>

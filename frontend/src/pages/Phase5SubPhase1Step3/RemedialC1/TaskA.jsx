@@ -73,6 +73,7 @@ export default function Phase5Step3RemedialC1TaskA() {
   }
 
   const handleContinue = () => { navigate('/phase5/subphase/1/step/3/remedial/c1/task/b') }
+  window.__remedialSkip = handleContinue
 
   const allFilled = Object.keys(CORRECT_ANSWERS).every(key => answers[key])
 

@@ -1,186 +1,130 @@
 import { useState, useEffect } from 'react'
-import { Box, Paper, Typography, Button, Stack } from '@mui/material'
+import { Box, Typography, useTheme } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 
-/**
- * Drag and Drop Gap Fill Component
- * Students drag words from a word bank to fill in gaps
- */
+const LIGHT = {
+  cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', divider: '#E0E0E0',
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#2E7D32' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1565C0' },
+  teal:   { bg: '#B2EBF2', border: '#0097A7', shadow: '#006064' },
+  purple: { bg: '#E8EAF6', border: '#3949AB', shadow: '#283593' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#B71C1C' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F57F17' },
+}
+const DARK = {
+  cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', divider: '#2A2A4A',
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  teal:   { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+  purple: { bg: '#0D0D2B', border: '#7986CB', shadow: '#283593' },
+  red:    { bg: '#2A0A0A', border: '#E57373', shadow: '#B71C1C' },
+  yellow: { bg: '#2A2200', border: '#FFD54F', shadow: '#F57F17' },
+}
+
+const clay = (c, extra = {}) => ({
+  bgcolor: c.bg,
+  border: `2px solid ${c.border}`,
+  borderRadius: '20px',
+  boxShadow: `4px 4px 0 ${c.shadow}`,
+  ...extra,
+})
 
 const DragDropGapFill = ({ wordBank = [], sentences = [], answers = {}, onComplete, startIndex = 0 }) => {
-  const [placedWords, setPlacedWords] = useState({}) // { gapId: word }
+  const muiTheme = useTheme()
+  const D = muiTheme.palette.mode === 'dark' ? DARK : LIGHT
+
+  const [placedWords, setPlacedWords] = useState({})
   const [draggedWord, setDraggedWord] = useState(null)
   const [submitted, setSubmitted] = useState(false)
   const [correctAnswers, setCorrectAnswers] = useState(new Set())
   const [shuffledWordBank, setShuffledWordBank] = useState([])
 
-  // Shuffle word bank on mount
   useEffect(() => {
-    const shuffled = [...wordBank].sort(() => Math.random() - 0.5)
-    setShuffledWordBank(shuffled)
+    setShuffledWordBank([...wordBank].sort(() => Math.random() - 0.5))
   }, [wordBank])
 
   const handleDragStart = (e, word) => {
     setDraggedWord(word)
     e.dataTransfer.effectAllowed = 'move'
   }
-
-  const handleDragOver = (e) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-  }
-
+  const handleDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }
   const handleDrop = (e, gapId) => {
     e.preventDefault()
-
-    if (!draggedWord || submitted) {
-      return
-    }
-
-    // Place the word in the gap
-    setPlacedWords(prev => ({
-      ...prev,
-      [gapId]: draggedWord
-    }))
-
+    if (!draggedWord || submitted) return
+    setPlacedWords(prev => ({ ...prev, [gapId]: draggedWord }))
     setDraggedWord(null)
   }
-
   const handleRemoveWord = (gapId) => {
     if (submitted) return
-
-    setPlacedWords(prev => {
-      const updated = { ...prev }
-      delete updated[gapId]
-      return updated
-    })
+    setPlacedWords(prev => { const u = { ...prev }; delete u[gapId]; return u })
   }
-
   const handleSubmit = () => {
-    // Calculate score and mark correct/incorrect
     const correct = new Set()
     let score = 0
-
     Object.entries(placedWords).forEach(([gapId, word]) => {
-      const correctAnswer = answers[gapId]
-      if (word.toLowerCase() === correctAnswer.toLowerCase()) {
-        correct.add(gapId)
-        score++
-      }
+      if (word.toLowerCase() === (answers[gapId] || '').toLowerCase()) { correct.add(gapId); score++ }
     })
-
     setCorrectAnswers(correct)
     setSubmitted(true)
-
-    if (onComplete) {
-      onComplete({
-        score,
-        total: Object.keys(answers).length,
-        placedWords,
-        correctAnswers: correct
-      })
-    }
+    onComplete?.({ score, total: Object.keys(answers).length, placedWords, correctAnswers: correct })
   }
 
-  const isWordUsed = (word) => {
-    return Object.values(placedWords).includes(word)
-  }
-
-  const isCorrect = (gapId) => {
-    return submitted && correctAnswers.has(gapId)
-  }
-
-  const isIncorrect = (gapId) => {
-    return submitted && placedWords[gapId] && !correctAnswers.has(gapId)
-  }
-
-  const allGapsFilled = Object.keys(answers).every(gapId => {
-    return placedWords[gapId] !== undefined && placedWords[gapId] !== null && placedWords[gapId] !== ''
-  })
+  const isWordUsed = (word) => Object.values(placedWords).includes(word)
+  const isCorrect = (gapId) => submitted && correctAnswers.has(gapId)
+  const isIncorrect = (gapId) => submitted && placedWords[gapId] && !correctAnswers.has(gapId)
+  const allGapsFilled = Object.keys(answers).every(gapId => placedWords[gapId])
 
   const renderSentence = (sentence, index) => {
     const gapId = `g_${startIndex + index}_0`
     const placedWord = placedWords[gapId]
     const correct = isCorrect(gapId)
     const incorrect = isIncorrect(gapId)
-
     const parts = sentence.split('___')
+    const rowC = submitted ? (correct ? D.green : incorrect ? D.red : { bg: D.cardBg, border: D.divider, shadow: D.divider }) : { bg: D.cardBg, border: D.divider, shadow: D.divider }
 
     return (
-      <Box
-        key={gapId}
-        sx={{
-          mb: 3,
-          p: 2,
-          backgroundColor: submitted ? (correct ? 'success.lighter' : incorrect ? 'error.lighter' : 'grey.50') : 'grey.50',
-          borderRadius: 2,
-          border: submitted ? '2px solid' : '1px solid',
-          borderColor: submitted ? (correct ? 'success.main' : incorrect ? 'error.main' : 'grey.300') : 'grey.300',
-          transition: 'all 0.3s'
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-          {parts[0] && <Typography variant="h6" sx={{ color: 'text.primary' }}>{parts[0]}</Typography>}
+      <Box key={gapId} sx={{ ...clay(rowC), p: 2.5, mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+          {parts[0] && <Typography variant="h6" sx={{ color: D.body }}>{parts[0]}</Typography>}
 
-          {/* Drop Zone */}
-          <Paper
+          {/* Drop zone */}
+          <Box
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, gapId)}
             onClick={() => placedWord && handleRemoveWord(gapId)}
-            elevation={placedWord ? 3 : 1}
             sx={{
-              minWidth: 150,
-              px: 2,
-              py: 1,
-              backgroundColor: placedWord
-                ? (submitted ? (correct ? 'success.light' : 'error.light') : 'primary.light')
-                : 'white',
-              border: '2px dashed',
-              borderColor: submitted
-                ? (correct ? 'success.main' : incorrect ? 'error.main' : 'grey.400')
-                : placedWord ? 'primary.main' : 'grey.400',
+              minWidth: 140, minHeight: 44, px: 2, py: 0.75,
+              borderRadius: '12px',
+              bgcolor: placedWord ? (submitted ? (correct ? D.green.bg : D.red.bg) : D.blue.bg) : 'transparent',
+              border: `2px ${placedWord ? 'solid' : 'dashed'}`,
+              borderColor: submitted ? (correct ? D.green.border : incorrect ? D.red.border : D.muted) : placedWord ? D.blue.border : D.muted,
+              boxShadow: placedWord ? `3px 3px 0 ${submitted ? (correct ? D.green.shadow : D.red.shadow) : D.blue.shadow}` : 'none',
               cursor: placedWord && !submitted ? 'pointer' : 'default',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: 40,
-              transition: 'all 0.3s',
-              '&:hover': {
-                backgroundColor: placedWord && !submitted ? 'primary.lighter' : undefined,
-                borderColor: !submitted && !placedWord ? 'primary.light' : undefined
-              }
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.15s',
+              '&:hover': placedWord && !submitted ? { transform: 'translate(-1px,-1px)', boxShadow: `4px 4px 0 ${D.blue.shadow}` } : {},
             }}
           >
             {placedWord ? (
-              <Typography variant="body1" fontWeight="bold" sx={{ color: '#000000' }}>
+              <Typography fontWeight={800} sx={{ color: submitted ? (correct ? D.green.border : D.red.border) : D.blue.border }}>
                 {placedWord}
               </Typography>
             ) : (
-              <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#666666' }}>
-                Drop word here
-              </Typography>
+              <Typography sx={{ fontStyle: 'italic', fontSize: '0.85rem', color: D.muted }}>Drop here</Typography>
             )}
-          </Paper>
+          </Box>
 
-          {parts[1] && <Typography variant="h6" sx={{ color: 'text.primary' }}>{parts[1]}</Typography>}
+          {parts[1] && <Typography variant="h6" sx={{ color: D.body }}>{parts[1]}</Typography>}
 
-          {/* Feedback Icon */}
-          {submitted && (
-            <Box sx={{ ml: 2 }}>
-              {correct ? (
-                <CheckCircleIcon sx={{ color: 'success.main', fontSize: 30 }} />
-              ) : incorrect ? (
-                <CancelIcon sx={{ color: 'error.main', fontSize: 30 }} />
-              ) : null}
-            </Box>
-          )}
+          {submitted && (correct
+            ? <CheckCircleIcon sx={{ color: D.green.border, fontSize: 28 }} />
+            : incorrect ? <CancelIcon sx={{ color: D.red.border, fontSize: 28 }} /> : null)}
         </Box>
 
-        {/* Show correct answer if wrong */}
         {submitted && incorrect && (
-          <Box sx={{ mt: 2, p: 1, backgroundColor: 'error.lighter', borderRadius: 1 }}>
-            <Typography variant="body2" color="error.dark">
+          <Box sx={{ ...clay(D.red), p: 1.5, mt: 1.5 }}>
+            <Typography variant="body2" sx={{ color: D.red.border }}>
               Correct answer: <strong>{answers[gapId]}</strong>
             </Typography>
           </Box>
@@ -190,79 +134,72 @@ const DragDropGapFill = ({ wordBank = [], sentences = [], answers = {}, onComple
   }
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto' }}>
-      {/* Word Bank */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3, backgroundColor: 'info.lighter' }}>
-        <Typography variant="subtitle1" fontWeight="bold" gutterBottom color="primary">
-          Word Bank - Drag words to fill the gaps:
+    <Box sx={{ width: '100%' }}>
+
+      {/* Word bank */}
+      <Box sx={{ ...clay(D.blue), p: 2.5, mb: 2.5 }}>
+        <Typography fontWeight={800} sx={{ color: D.heading, mb: 1.5 }}>
+          Word Bank — Drag words to fill the gaps:
         </Typography>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
-          {shuffledWordBank.map((word, index) => {
+        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+          {shuffledWordBank.map((word, i) => {
             const used = isWordUsed(word)
             return (
-              <Paper
-                key={index}
+              <Box
+                key={i}
                 draggable={!used && !submitted}
                 onDragStart={(e) => handleDragStart(e, word)}
-                elevation={used ? 1 : 3}
                 sx={{
-                  px: 3,
-                  py: 1.5,
-                  backgroundColor: used ? 'grey.300' : 'white',
-                  border: '2px solid',
-                  borderColor: used ? 'grey.400' : 'primary.main',
-                  borderRadius: 2,
+                  px: 2, py: 0.75, borderRadius: '12px',
+                  bgcolor: used ? D.divider : D.cardBg,
+                  border: `2px solid ${used ? D.divider : D.blue.border}`,
+                  boxShadow: used ? 'none' : `3px 3px 0 ${D.blue.shadow}`,
+                  fontWeight: 800, fontSize: '0.9rem',
+                  color: used ? D.muted : D.blue.border,
                   cursor: used || submitted ? 'not-allowed' : 'grab',
-                  opacity: used ? 0.4 : 1,
-                  transition: 'all 0.3s',
-                  pointerEvents: used || submitted ? 'none' : 'auto',
-                  '&:hover': {
-                    transform: used || submitted ? 'none' : 'scale(1.05)',
-                    boxShadow: used || submitted ? 1 : 6
-                  },
-                  '&:active': {
-                    cursor: used || submitted ? 'not-allowed' : 'grabbing'
-                  }
+                  opacity: used ? 0.45 : 1,
+                  transition: 'all 0.15s',
+                  '&:hover': !used && !submitted ? { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${D.blue.shadow}` } : {},
+                  '&:active': !used && !submitted ? { cursor: 'grabbing' } : {},
                 }}
               >
-                <Typography variant="body1" fontWeight="bold" sx={{ color: used ? '#999999' : '#000000' }}>
-                  {word}
-                </Typography>
-              </Paper>
+                {word}
+              </Box>
             )
           })}
         </Box>
-      </Paper>
-
-      {/* Instructions */}
-      <Paper elevation={1} sx={{ p: 2, mb: 3, backgroundColor: 'info.light' }}>
-        <Typography variant="body1" textAlign="center" fontWeight="medium" color="info.dark">
-          🖱️ Drag words from the word bank above to the gaps in the sentences. Click a placed word to remove it.
-        </Typography>
-      </Paper>
-
-      {/* Sentences */}
-      <Box>
-        {sentences.map((sentence, index) => renderSentence(sentence, index))}
       </Box>
 
-      {/* Submit Button */}
+      {/* Instructions */}
+      <Box sx={{ ...clay(D.teal), px: 2.5, py: 1.25, mb: 2.5, textAlign: 'center' }}>
+        <Typography fontWeight={700} sx={{ color: D.heading, fontSize: '0.9rem' }}>
+          🖱️ Drag words from the word bank to the gaps. Click a placed word to remove it.
+        </Typography>
+      </Box>
+
+      {/* Sentences */}
+      <Box>{sentences.map((s, i) => renderSentence(s, i))}</Box>
+
+      {/* Submit */}
       {!submitted && (
-        <Box sx={{ mt: 4, textAlign: 'center' }}>
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
+        <Box sx={{ mt: 3, textAlign: 'center' }}>
+          <Box
+            component="button"
             onClick={handleSubmit}
             disabled={!allGapsFilled}
-            sx={{ px: 6 }}
+            sx={{
+              ...clay(allGapsFilled ? D.green : { bg: D.divider, border: D.divider, shadow: D.divider }),
+              px: 4, py: 1.25, cursor: allGapsFilled ? 'pointer' : 'not-allowed',
+              fontWeight: 800, fontSize: '0.95rem',
+              color: allGapsFilled ? D.green.border : D.muted,
+              transition: 'all 0.15s',
+              '&:hover': allGapsFilled ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` } : {},
+            }}
           >
             Submit Answers
-          </Button>
+          </Box>
           {!allGapsFilled && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Fill all gaps before submitting
-            </Typography>
+            <Typography variant="body2" sx={{ color: D.muted, mt: 1 }}>Fill all gaps before submitting</Typography>
           )}
         </Box>
       )}

@@ -43,6 +43,7 @@ const GUIDED_STRUCTURE = [
 
 export default function Phase6SP1Step1RemB2TaskB() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase6/subphase/1/step/1/remedial/b2/task/c') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 1, interaction: 2, context: 'remedial_b2' })

@@ -4,6 +4,7 @@ Loads Phase 4 data from phase4.json
 """
 import json
 import os
+import sys
 from pathlib import Path
 import logging
 
@@ -15,13 +16,16 @@ _phase4_data = None
 def load_phase4_json():
     """Load Phase 4 data from JSON file"""
     global _phase4_data
-    
+
     if _phase4_data is not None:
         return _phase4_data
-    
-    # Find phase4.json (in project root, one level up from backend)
-    current_dir = Path(__file__).parent.parent.parent
-    json_path = current_dir / 'phase4.json'
+
+    if getattr(sys, 'frozen', False):
+        base = Path(sys._MEIPASS)
+    else:
+        base = Path(__file__).parent.parent.parent
+
+    json_path = base / 'phase4.json'
     
     if not json_path.exists():
         logger.warning(f"phase4.json not found at {json_path}")

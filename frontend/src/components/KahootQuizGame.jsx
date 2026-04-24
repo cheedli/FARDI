@@ -1,25 +1,56 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Paper, Typography, Button, Stack, LinearProgress, Grid, Avatar } from '@mui/material'
+import { Box, Typography, LinearProgress, useTheme } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import TimerIcon from '@mui/icons-material/Timer'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 
-/**
- * Kahoot-Inspired Quiz Game Component
- * Competitive quiz with AI peers, colorful answers, timer, and leaderboard
- * Inspired by Kahoot's engaging quiz format
- */
+const LIGHT = {
+  cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', divider: '#E0E0E0',
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#2E7D32' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1565C0' },
+  teal:   { bg: '#B2EBF2', border: '#0097A7', shadow: '#006064' },
+  orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#E65100' },
+  purple: { bg: '#E8EAF6', border: '#3949AB', shadow: '#283593' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#B71C1C' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F57F17' },
+}
+const DARK = {
+  cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', divider: '#2A2A4A',
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  teal:   { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+  orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+  purple: { bg: '#0D0D2B', border: '#7986CB', shadow: '#283593' },
+  red:    { bg: '#2A0A0A', border: '#E57373', shadow: '#B71C1C' },
+  yellow: { bg: '#2A2200', border: '#FFD54F', shadow: '#F57F17' },
+}
 
-const KahootQuizGame = ({
-  questions = [],
-  onComplete
-}) => {
+const clay = (c, extra = {}) => ({
+  bgcolor: c.bg,
+  border: `2px solid ${c.border}`,
+  borderRadius: '20px',
+  boxShadow: `4px 4px 0 ${c.shadow}`,
+  ...extra,
+})
+
+// Distinct answer tile palettes
+const ANSWER_PALETTES = [
+  { bg: '#FFCDD2', border: '#C62828', shadow: '#B71C1C', text: '#B71C1C' },
+  { bg: '#BBDEFB', border: '#1565C0', shadow: '#0D47A1', text: '#0D47A1' },
+  { bg: '#FFF9C4', border: '#F57F17', shadow: '#E65100', text: '#E65100' },
+  { bg: '#C8E6C9', border: '#2E7D32', shadow: '#1B5E20', text: '#1B5E20' },
+]
+
+const KahootQuizGame = ({ questions = [], onComplete }) => {
+  const muiTheme = useTheme()
+  const D = muiTheme.palette.mode === 'dark' ? DARK : LIGHT
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState(null)
   const [showResult, setShowResult] = useState(false)
   const [score, setScore] = useState(0)
-  const [timeLeft, setTimeLeft] = useState(20) // 20 seconds per question
+  const [timeLeft, setTimeLeft] = useState(20)
   const [userPoints, setUserPoints] = useState(0)
   const [aiPeers, setAiPeers] = useState([])
   const [gameComplete, setGameComplete] = useState(false)
@@ -28,343 +59,179 @@ const KahootQuizGame = ({
   const currentQuestion = questions[currentQuestionIndex]
   const totalQuestions = questions.length
 
-  // Kahoot-style answer colors
-  const answerColors = [
-    { bg: '#e21b3c', hover: '#c41230' }, // Red
-    { bg: '#1368ce', hover: '#0f5ab0' }, // Blue
-    { bg: '#d89e00', hover: '#b88400' }, // Yellow
-    { bg: '#26890c', hover: '#1e6d0a' }  // Green
-  ]
-
-  // Generate AI peers with random names
   useEffect(() => {
     const names = ['Alex', 'Sarah', 'Mike', 'Emma', 'David', 'Lisa']
-    const peers = names.map(name => ({
-      name,
-      points: 0,
-      avatar: name[0]
-    }))
-    setAiPeers(peers)
+    setAiPeers(names.map(name => ({ name, points: 0, avatar: name[0] })))
   }, [])
 
-  // Timer countdown
   useEffect(() => {
     if (!showResult && !gameComplete && currentQuestion) {
-      setTimeLeft(20) // Reset timer for new question
-
+      setTimeLeft(20)
       const timer = setInterval(() => {
         setTimeLeft(prev => {
-          if (prev <= 1) {
-            // Time's up! Auto-submit wrong answer
-            clearInterval(timer)
-            handleTimeUp()
-            return 0
-          }
+          if (prev <= 1) { clearInterval(timer); handleTimeUp(); return 0 }
           return prev - 1
         })
       }, 1000)
-
       return () => clearInterval(timer)
     }
   }, [currentQuestionIndex, showResult, gameComplete])
 
-  const handleTimeUp = () => {
-    // Time ran out - mark as incorrect
-    setShowResult(true)
-    simulateAiAnswers(false)
-
-    setTimeout(() => {
-      moveToNextQuestion()
-    }, 3000)
+  const simulateAiAnswers = () => {
+    setAiPeers(peers => peers.map(peer => {
+      const correct = Math.random() < 0.6
+      return { ...peer, points: peer.points + (correct ? 1000 + Math.floor(Math.random() * 500) : 0), lastCorrect: correct }
+    }))
   }
 
-  const handleAnswerClick = (answerIndex) => {
-    if (showResult || selectedAnswer !== null) return
-
-    setSelectedAnswer(answerIndex)
-    const isCorrect = answerIndex === currentQuestion.correctIndex
-
-    // Calculate points based on speed (Kahoot-style)
-    const speedBonus = Math.floor((timeLeft / 20) * 500)
-    const points = isCorrect ? 1000 + speedBonus : 0
-
-    if (isCorrect) {
-      setScore(score + 1)
-      setUserPoints(userPoints + points)
-    }
-
-    setShowResult(true)
-
-    // Add to answered questions
-    setAnsweredQuestions([...answeredQuestions, {
-      question: currentQuestion.question,
-      selectedAnswer: currentQuestion.answers[answerIndex],
-      correctAnswer: currentQuestion.answers[currentQuestion.correctIndex],
-      isCorrect: isCorrect,
-      explanation: currentQuestion.explanation,
-      points: points
-    }])
-
-    // Simulate AI peer answers
-    simulateAiAnswers(isCorrect)
-
-    setTimeout(() => {
-      moveToNextQuestion()
-    }, 3000)
-  }
-
-  const simulateAiAnswers = (userWasCorrect) => {
-    // Make AI peers answer with varying success
-    const updatedPeers = aiPeers.map(peer => {
-      const correctChance = 0.6 // 60% chance AI gets it right
-      const aiCorrect = Math.random() < correctChance
-      const aiSpeed = Math.random() * 20
-      const aiPoints = aiCorrect ? 1000 + Math.floor((aiSpeed / 20) * 500) : 0
-
-      return {
-        ...peer,
-        points: peer.points + aiPoints,
-        lastCorrect: aiCorrect
-      }
-    })
-
-    setAiPeers(updatedPeers)
-  }
-
-  const moveToNextQuestion = () => {
+  const moveToNext = (newScore, newPoints, newAnswered) => {
     if (currentQuestionIndex + 1 < totalQuestions) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1)
+      setCurrentQuestionIndex(i => i + 1)
       setSelectedAnswer(null)
       setShowResult(false)
     } else {
-      // Game complete
       setGameComplete(true)
-      if (onComplete) {
-        onComplete({
-          score: score,
-          totalQuestions: totalQuestions,
-          points: userPoints,
-          answeredQuestions: answeredQuestions,
-          completed: true
-        })
-      }
+      onComplete?.({ score: newScore, totalQuestions, points: newPoints, answeredQuestions: newAnswered, completed: true })
     }
   }
 
-  // Leaderboard (sorted by points)
-  const getLeaderboard = () => {
-    const allPlayers = [
-      { name: 'You', points: userPoints, avatar: '👤', isUser: true },
-      ...aiPeers
-    ]
-    return allPlayers.sort((a, b) => b.points - a.points)
+  const handleTimeUp = () => {
+    setShowResult(true)
+    simulateAiAnswers()
+    setTimeout(() => moveToNext(score, userPoints, answeredQuestions), 3000)
   }
+
+  const handleAnswerClick = (index) => {
+    if (showResult || selectedAnswer !== null) return
+    setSelectedAnswer(index)
+    const correct = index === currentQuestion.correctIndex
+    const speedBonus = Math.floor((timeLeft / 20) * 500)
+    const points = correct ? 1000 + speedBonus : 0
+    const newScore = correct ? score + 1 : score
+    const newPoints = userPoints + points
+    if (correct) setScore(newScore)
+    setUserPoints(newPoints)
+    setShowResult(true)
+    simulateAiAnswers()
+    const newAnswered = [...answeredQuestions, {
+      question: currentQuestion.question,
+      selectedAnswer: currentQuestion.answers[index],
+      correctAnswer: currentQuestion.answers[currentQuestion.correctIndex],
+      isCorrect: correct, explanation: currentQuestion.explanation, points,
+    }]
+    setAnsweredQuestions(newAnswered)
+    setTimeout(() => moveToNext(newScore, newPoints, newAnswered), 3000)
+  }
+
+  const getLeaderboard = () => [
+    { name: 'You', points: userPoints, avatar: '👤', isUser: true },
+    ...aiPeers
+  ].sort((a, b) => b.points - a.points)
 
   if (gameComplete) {
     const leaderboard = getLeaderboard()
     const userRank = leaderboard.findIndex(p => p.isUser) + 1
-
     return (
-      <Paper elevation={6} sx={{ p: 6, textAlign: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        <Box sx={{ color: 'white' }}>
-          <EmojiEventsIcon sx={{ fontSize: 100, mb: 2, color: '#ffd700' }} />
-          <Typography variant="h3" gutterBottom fontWeight="bold">
-            Quiz Complete!
-          </Typography>
-          <Typography variant="h5" sx={{ mb: 1 }}>
-            You scored {score} / {totalQuestions}
-          </Typography>
-          <Typography variant="h6" sx={{ mb: 3 }}>
-            Total Points: {userPoints.toLocaleString()}
-          </Typography>
-          <Typography variant="h4" sx={{ mb: 4 }}>
-            You placed #{userRank} out of {leaderboard.length}!
-          </Typography>
-
-          {/* Final Leaderboard */}
-          <Paper elevation={4} sx={{ p: 3, backgroundColor: 'white', maxWidth: 400, mx: 'auto' }}>
-            <Typography variant="h6" gutterBottom fontWeight="bold" color="primary">
-              Final Leaderboard
-            </Typography>
-            <Stack spacing={1}>
-              {leaderboard.map((player, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    p: 1.5,
-                    backgroundColor: player.isUser ? '#e3f2fd' : '#f5f5f5',
-                    borderRadius: 1,
-                    border: player.isUser ? '2px solid #1976d2' : 'none'
-                  }}
-                >
-                  <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography variant="h6" fontWeight="bold" color={index < 3 ? '#ffd700' : 'text.secondary'}>
-                        #{index + 1}
-                      </Typography>
-                      <Typography variant="body1" fontWeight={player.isUser ? 'bold' : 'normal'}>
-                        {player.avatar} {player.name}
-                      </Typography>
-                    </Stack>
-                    <Typography variant="body1" fontWeight="bold" color="primary">
-                      {player.points.toLocaleString()}
-                    </Typography>
-                  </Stack>
-                </Box>
-              ))}
-            </Stack>
-          </Paper>
+      <Box sx={{ ...clay(D.purple), p: { xs: 3, md: 5 } }}>
+        <Box sx={{ textAlign: 'center', mb: 3 }}>
+          <EmojiEventsIcon sx={{ fontSize: 72, color: D.yellow.border, mb: 1 }} />
+          <Typography variant="h4" fontWeight={900} sx={{ color: D.heading, mb: 0.5 }}>Quiz Complete!</Typography>
+          <Typography fontWeight={700} sx={{ color: D.body }}>Score: {score} / {totalQuestions} · Points: {userPoints.toLocaleString()}</Typography>
+          <Typography fontWeight={700} sx={{ color: D.purple.border, mt: 0.5 }}>You placed #{userRank} of {leaderboard.length}!</Typography>
         </Box>
-      </Paper>
+        <Box sx={{ ...clay(D.blue), p: 2 }}>
+          <Typography fontWeight={800} sx={{ color: D.blue.border, mb: 1.5, textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: 1 }}>Final Leaderboard</Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {leaderboard.map((player, i) => (
+              <Box key={i} sx={{ ...clay(player.isUser ? D.blue : { bg: D.cardBg, border: D.divider, shadow: D.divider }), px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography fontWeight={900} sx={{ color: i < 3 ? D.yellow.border : D.muted, minWidth: 28 }}>#{i + 1}</Typography>
+                  <Typography fontWeight={player.isUser ? 800 : 500} sx={{ color: D.body }}>{player.avatar} {player.name}</Typography>
+                </Box>
+                <Typography fontWeight={800} sx={{ color: D.blue.border }}>{player.points.toLocaleString()}</Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      </Box>
     )
   }
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 1400, mx: 'auto' }}>
-      {/* Kahoot-style Header */}
-      <Paper
-        elevation={4}
-        sx={{
-          p: 3,
-          mb: 3,
-          background: 'linear-gradient(135deg, #46178f 0%, #e21b3c 100%)',
-          color: 'white'
-        }}
-      >
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems="center">
-          <Typography variant="h5" fontWeight="bold">
+    <Box sx={{ width: '100%' }}>
+
+      {/* Header */}
+      <Box sx={{ ...clay(D.purple), p: 2.5, mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
+          <Typography fontWeight={800} sx={{ color: D.heading }}>
             Question {currentQuestionIndex + 1} / {totalQuestions}
           </Typography>
-
-          {/* Timer */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
-              <TimerIcon sx={{ fontSize: 30 }} />
-              <Typography
-                variant="h3"
-                fontWeight="bold"
-                sx={{
-                  color: timeLeft <= 5 ? '#ff5252' : 'white',
-                  animation: timeLeft <= 5 ? 'pulse 1s infinite' : 'none',
-                  '@keyframes pulse': {
-                    '0%, 100%': { transform: 'scale(1)' },
-                    '50%': { transform: 'scale(1.15)' }
-                  }
-                }}
-              >
-                {timeLeft}
-              </Typography>
-            </Stack>
-            <LinearProgress
-              variant="determinate"
-              value={(timeLeft / 20) * 100}
-              sx={{
-                height: 8,
-                borderRadius: 1,
-                backgroundColor: 'rgba(255,255,255,0.3)',
-                '& .MuiLinearProgress-bar': {
-                  backgroundColor: timeLeft <= 5 ? '#ff5252' : '#4caf50'
-                }
-              }}
-            />
-          </Box>
-
-          <Typography variant="h6" fontWeight="bold">
-            Points: {userPoints.toLocaleString()}
-          </Typography>
-        </Stack>
-      </Paper>
-
-      {/* Main Question Area */}
-      <Box>
-          {/* Question Display */}
-          <Paper
-            elevation={6}
-            sx={{
-              p: 4,
-              mb: 3,
-              minHeight: 150,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#46178f',
-              color: 'white'
-            }}
-          >
-            <Typography variant="h4" fontWeight="bold" align="center">
-              {currentQuestion?.question}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <TimerIcon sx={{ color: timeLeft <= 5 ? D.red.border : D.purple.border, fontSize: 22 }} />
+            <Typography fontWeight={900} sx={{ color: timeLeft <= 5 ? D.red.border : D.heading, fontSize: '1.3rem', animation: timeLeft <= 5 ? 'pulse 1s infinite' : 'none', '@keyframes pulse': { '0%,100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.2)' } } }}>
+              {timeLeft}
             </Typography>
-          </Paper>
+          </Box>
+          <Box sx={{ px: 1.75, py: 0.4, borderRadius: '50px', bgcolor: D.yellow.bg, border: `2px solid ${D.yellow.border}`, fontWeight: 800, fontSize: '0.85rem', color: D.yellow.border }}>
+            {userPoints.toLocaleString()} pts
+          </Box>
+        </Box>
+        <LinearProgress variant="determinate" value={(timeLeft / 20) * 100} sx={{ height: 8, borderRadius: '6px', bgcolor: D.divider, '& .MuiLinearProgress-bar': { bgcolor: timeLeft <= 5 ? D.red.border : D.green.border, borderRadius: '6px' } }} />
+      </Box>
 
-          {/* Answer Options - Kahoot Style */}
-          <Grid container spacing={2}>
-            {currentQuestion?.answers.map((answer, index) => {
-              const isSelected = selectedAnswer === index
-              const isCorrect = index === currentQuestion.correctIndex
-              const showCorrect = showResult && isCorrect
-              const showIncorrect = showResult && isSelected && !isCorrect
+      {/* Question */}
+      <Box sx={{ ...clay(D.teal), p: 3, mb: 3, minHeight: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography variant="h5" fontWeight={800} sx={{ color: D.heading, textAlign: 'center' }}>
+          {currentQuestion?.question}
+        </Typography>
+      </Box>
 
-              return (
-                <Grid item xs={12} sm={6} key={index}>
-                  <Button
-                    fullWidth
-                    onClick={() => handleAnswerClick(index)}
-                    disabled={showResult}
-                    sx={{
-                      py: 4,
-                      fontSize: '1.2rem',
-                      fontWeight: 'bold',
-                      backgroundColor: showCorrect
-                        ? '#4caf50'
-                        : showIncorrect
-                        ? '#f44336'
-                        : answerColors[index].bg,
-                      color: 'white',
-                      border: '4px solid white',
-                      borderRadius: 2,
-                      '&:hover': {
-                        backgroundColor: showResult
-                          ? undefined
-                          : answerColors[index].hover,
-                        transform: showResult ? 'none' : 'scale(1.02)'
-                      },
-                      transition: 'all 0.2s ease',
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}
-                  >
-                    <Stack spacing={1} alignItems="center">
-                      {showCorrect && <CheckCircleIcon sx={{ fontSize: 40 }} />}
-                      {showIncorrect && <CancelIcon sx={{ fontSize: 40 }} />}
-                      <Typography variant="h6" fontWeight="bold">
-                        {answer}
-                      </Typography>
-                    </Stack>
-                  </Button>
-                </Grid>
-              )
-            })}
-          </Grid>
+      {/* Answer grid */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 3 }}>
+        {currentQuestion?.answers.map((answer, i) => {
+          const isCorrect = i === currentQuestion.correctIndex
+          const isSelected = selectedAnswer === i
+          const showCorrect = showResult && isCorrect
+          const showWrong = showResult && isSelected && !isCorrect
+          const p = ANSWER_PALETTES[i % ANSWER_PALETTES.length]
+          const activeBg = showCorrect ? D.green.bg : showWrong ? D.red.bg : p.bg
+          const activeBorder = showCorrect ? D.green.border : showWrong ? D.red.border : p.border
+          const activeShadow = showCorrect ? D.green.shadow : showWrong ? D.red.shadow : p.shadow
 
-          {/* Explanation */}
-          {showResult && (
-            <Paper
-              elevation={4}
+          return (
+            <Box
+              key={i}
+              onClick={() => handleAnswerClick(i)}
               sx={{
-                p: 3,
-                mt: 3,
-                backgroundColor: selectedAnswer === currentQuestion.correctIndex ? '#e8f5e9' : '#ffebee'
+                bgcolor: activeBg, border: `2px solid ${activeBorder}`, borderRadius: '16px',
+                boxShadow: `4px 4px 0 ${activeShadow}`,
+                p: { xs: 2, md: 3 }, cursor: showResult ? 'default' : 'pointer',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1,
+                minHeight: 80, textAlign: 'center', transition: 'all 0.15s',
+                '&:hover': !showResult ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${activeShadow}` } : {},
               }}
             >
-              <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: '#000000' }}>
-                {selectedAnswer === currentQuestion.correctIndex ? '✓ Correct!' : '✗ Incorrect'}
+              {showCorrect && <CheckCircleIcon sx={{ color: D.green.border, fontSize: 28 }} />}
+              {showWrong && <CancelIcon sx={{ color: D.red.border, fontSize: 28 }} />}
+              <Typography fontWeight={800} sx={{ color: activeBorder, fontSize: { xs: '0.9rem', md: '1rem' } }}>
+                {answer}
               </Typography>
-              <Typography variant="body1" sx={{ color: '#000000' }}>
-                <strong>Explanation:</strong> {currentQuestion.explanation}
-              </Typography>
-            </Paper>
-          )}
+            </Box>
+          )
+        })}
       </Box>
+
+      {/* Explanation */}
+      {showResult && (
+        <Box sx={{ ...clay(selectedAnswer === currentQuestion?.correctIndex ? D.green : D.red), p: 2.5 }}>
+          <Typography fontWeight={800} sx={{ color: selectedAnswer === currentQuestion?.correctIndex ? D.green.border : D.red.border, mb: 0.5 }}>
+            {selectedAnswer === currentQuestion?.correctIndex ? '✓ Correct!' : '✗ Incorrect'}
+          </Typography>
+          <Typography variant="body2" sx={{ color: D.body }}>
+            <strong>Explanation:</strong> {currentQuestion?.explanation}
+          </Typography>
+        </Box>
+      )}
     </Box>
   )
 }

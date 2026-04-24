@@ -4,6 +4,7 @@ Loads Phase 2 data from phase2.json and provides same interface as old phase2_da
 """
 import json
 import os
+import sys
 from pathlib import Path
 import logging
 
@@ -17,14 +18,19 @@ _phase2_remedial = None
 def load_phase2_json():
     """Load Phase 2 data from JSON file"""
     global _phase2_data
-    
+
     if _phase2_data is not None:
         return _phase2_data
-    
-    # Find phase2.json (in project root, one level up from backend)
-    current_dir = Path(__file__).parent.parent.parent
-    json_path = current_dir / 'phase2.json'
-    
+
+    # When frozen by PyInstaller, data files are extracted to sys._MEIPASS
+    if getattr(sys, 'frozen', False):
+        base = Path(sys._MEIPASS)
+    else:
+        # Dev: project root is three levels up from models/
+        base = Path(__file__).parent.parent.parent
+
+    json_path = base / 'phase2.json'
+
     if not json_path.exists():
         raise FileNotFoundError(f"phase2.json not found at {json_path}")
     

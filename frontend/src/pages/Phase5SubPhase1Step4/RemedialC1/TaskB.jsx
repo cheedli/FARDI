@@ -44,6 +44,7 @@ export default function Phase5Step4RemedialC1TaskB() {
   }
 
   const handleContinue = () => { navigate('/phase5/subphase/1/step/4/remedial/c1/task/c') }
+  window.__remedialSkip = handleContinue
   const progress = ((currentIndex + 1) / 8) * 100
 
   return (

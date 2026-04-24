@@ -110,6 +110,7 @@ export default function Phase6SP1Step2Interaction2() {
   }
 
   const handleContinue = () => navigate('/phase6/subphase/1/step/2/interaction/3')
+  window.__remedialSkip = handleContinue
   const wordCount = explanation.split(/\s+/).filter(w => w.length > 0).length
 
   return (

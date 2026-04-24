@@ -71,6 +71,7 @@ export default function Phase6SP1Step2Interaction1() {
   }
 
   const handleContinue = () => navigate('/phase6/subphase/1/step/2/interaction/2')
+  window.__remedialSkip = handleContinue
   const wordCount = summary.split(/\s+/).filter(w => w.length > 0).length
 
   return (

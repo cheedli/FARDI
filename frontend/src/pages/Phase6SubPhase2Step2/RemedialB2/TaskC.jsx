@@ -25,6 +25,7 @@ function shuffle(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i-
 
 export default function Phase6SP2Step2RemB2TaskC() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase6/subphase/2/step/2/remedial/b2/task/d') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 2, interaction: 3, context: 'remedial_b2' })

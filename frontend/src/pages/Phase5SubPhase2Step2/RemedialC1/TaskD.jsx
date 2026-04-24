@@ -49,6 +49,7 @@ export default function Phase5SubPhase2Step2RemedialC1TaskD() {
     try { await phase5API.logRemedialActivity(2, 'C1', 'D', c, 6, 2) } catch (e) { console.error(e) }
   }
   const handleContinue = async () => navigate(await resolveSubphase2RemedialNextUrl(2, 'C1'))
+  window.__remedialSkip = handleContinue
   const progress = ((currentIndex + 1) / 6) * 100
   const currentFilled = critiques[currentIndex].trim() && fixes[currentIndex].trim()
   return (

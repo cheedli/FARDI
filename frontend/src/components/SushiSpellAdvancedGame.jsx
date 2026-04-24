@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Paper, Typography, Button, Stack, LinearProgress, Chip } from '@mui/material'
+import { Box, Typography, Button, Stack, LinearProgress, useTheme } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import TimerIcon from '@mui/icons-material/Timer'
@@ -10,10 +10,40 @@ import TimerIcon from '@mui/icons-material/Timer'
  * Inspired by British Council's Sushi Spell game
  */
 
+const LIGHT = {
+  pageBg: '#FFFDE7', cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', divider: '#E0E0E0',
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#2E7D32' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1565C0' },
+  teal:   { bg: '#B2EBF2', border: '#0097A7', shadow: '#006064' },
+  orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#E65100' },
+  purple: { bg: '#E8EAF6', border: '#3949AB', shadow: '#283593' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#B71C1C' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F57F17' },
+}
+const DARK = {
+  pageBg: '#0F0F1A', cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', divider: '#2A2A4A',
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  teal:   { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+  orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+  purple: { bg: '#0D0D2B', border: '#7986CB', shadow: '#283593' },
+  red:    { bg: '#2A0A0A', border: '#E57373', shadow: '#B71C1C' },
+  yellow: { bg: '#2A2200', border: '#FFD54F', shadow: '#F57F17' },
+}
+const clay = (c, extra = {}) => ({
+  bgcolor: c.bg,
+  border: `2px solid ${c.border}`,
+  borderRadius: '16px',
+  boxShadow: `4px 4px 0 ${c.shadow}`,
+  ...extra,
+})
+
 const SushiSpellAdvancedGame = ({
   terms = [],
   onComplete
 }) => {
+  const muiTheme = useTheme()
+  const D = muiTheme.palette.mode === 'dark' ? DARK : LIGHT
   const [currentTermIndex, setCurrentTermIndex] = useState(0)
   const [selectedLetters, setSelectedLetters] = useState([])
   const [availableLetters, setAvailableLetters] = useState([])
@@ -211,54 +241,52 @@ const SushiSpellAdvancedGame = ({
 
   if (gameComplete) {
     return (
-      <Paper elevation={6} sx={{ p: 6, textAlign: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        <Box sx={{ color: 'white' }}>
-          <Typography variant="h2" gutterBottom fontWeight="bold" sx={{ fontSize: '4rem' }}>
-            🍣
-          </Typography>
-          <Typography variant="h3" gutterBottom fontWeight="bold">
-            Sushi Spell Master!
-          </Typography>
-          <Typography variant="h5" sx={{ mb: 3 }}>
-            You've spelled all {terms.length} advanced marketing terms!
-          </Typography>
-          <Typography variant="h6">
-            Score: {score} / {terms.length}
-          </Typography>
-          <Typography variant="h6">
-            Time: {formatTime(timeElapsed)}
-          </Typography>
-        </Box>
-      </Paper>
+      <Box sx={{ ...clay(D.purple), p: 6, textAlign: 'center' }}>
+        <Typography variant="h2" gutterBottom fontWeight="bold" sx={{ fontSize: '4rem' }}>
+          🍣
+        </Typography>
+        <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: D.purple.border }}>
+          Sushi Spell Master!
+        </Typography>
+        <Typography variant="h5" sx={{ mb: 3, color: D.body }}>
+          You've spelled all {terms.length} advanced marketing terms!
+        </Typography>
+        <Typography variant="h6" sx={{ color: D.body }}>
+          Score: {score} / {terms.length}
+        </Typography>
+        <Typography variant="h6" sx={{ color: D.body }}>
+          Time: {formatTime(timeElapsed)}
+        </Typography>
+      </Box>
     )
   }
 
   return (
     <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto' }}>
       {/* Header with Timer and Progress */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: '#2e7d32' }}>
+      <Box sx={{ ...clay(D.green), p: 3, mb: 3 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems="center">
           <Stack direction="row" alignItems="center" spacing={2}>
-            <TimerIcon sx={{ color: 'white', fontSize: 30 }} />
-            <Typography variant="h5" fontWeight="bold" sx={{ color: 'white' }}>
+            <TimerIcon sx={{ color: D.green.border, fontSize: 30 }} />
+            <Typography variant="h5" fontWeight="bold" sx={{ color: D.green.border }}>
               {formatTime(timeElapsed)}
             </Typography>
           </Stack>
 
-          <Typography variant="h6" sx={{ color: 'white' }}>
+          <Typography variant="h6" sx={{ color: D.heading }}>
             Term {currentTermIndex + 1} / {terms.length}
           </Typography>
 
           {/* 30-second countdown per word */}
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ color: 'white', mb: 0.5 }}>
+            <Typography variant="body2" sx={{ color: D.body, mb: 0.5 }}>
               Time Left
             </Typography>
             <Typography
               variant="h4"
               fontWeight="bold"
               sx={{
-                color: wordTimeLeft <= 10 ? '#ff5252' : '#ffd700',
+                color: wordTimeLeft <= 10 ? D.red.border : D.yellow.border,
                 animation: wordTimeLeft <= 5 ? 'pulse 1s infinite' : 'none',
                 '@keyframes pulse': {
                   '0%, 100%': { transform: 'scale(1)' },
@@ -271,7 +299,7 @@ const SushiSpellAdvancedGame = ({
           </Box>
 
           <Box sx={{ minWidth: 200 }}>
-            <Typography variant="body2" sx={{ color: 'white', mb: 0.5 }}>
+            <Typography variant="body2" sx={{ color: D.body, mb: 0.5 }}>
               Score: {score} / {currentTermIndex}
             </Typography>
             <LinearProgress
@@ -280,35 +308,34 @@ const SushiSpellAdvancedGame = ({
               sx={{
                 height: 10,
                 borderRadius: 1,
-                backgroundColor: 'rgba(255,255,255,0.3)',
+                bgcolor: D.divider,
                 '& .MuiLinearProgress-bar': {
-                  backgroundColor: '#ffd700'
+                  backgroundColor: D.green.border
                 }
               }}
             />
           </Box>
         </Stack>
-      </Paper>
+      </Box>
 
       {/* Scenario Display */}
-      <Paper elevation={4} sx={{ p: 3, mb: 3, backgroundColor: '#fff3e0' }}>
-        <Typography variant="h6" fontWeight="bold" sx={{ color: '#000000' }} gutterBottom>
+      <Box sx={{ ...clay(D.orange), p: 3, mb: 3 }}>
+        <Typography variant="h6" fontWeight="bold" sx={{ color: D.heading }} gutterBottom>
           Match this scenario:
         </Typography>
-        <Typography variant="h5" sx={{ color: '#bf360c', fontWeight: 'bold' }}>
+        <Typography variant="h5" sx={{ color: D.orange.border, fontWeight: 'bold' }}>
           {currentTerm?.scenario}
         </Typography>
-      </Paper>
+      </Box>
 
       {/* Sushi Belt - Spelled Word Area */}
-      <Paper
-        elevation={6}
+      <Box
         sx={{
+          ...(showFeedback
+            ? clay(isCorrect ? D.green : D.red)
+            : { bgcolor: D.cardBg, border: `4px solid ${D.divider}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${D.blue.shadow}` }),
           p: 4,
           mb: 3,
-          backgroundColor: showFeedback ? (isCorrect ? '#c8e6c9' : '#ffcdd2') : '#f5f5f5',
-          border: '4px solid',
-          borderColor: showFeedback ? (isCorrect ? '#4caf50' : '#f44336') : '#8d6e63',
           minHeight: 120,
           display: 'flex',
           flexDirection: 'column',
@@ -316,34 +343,40 @@ const SushiSpellAdvancedGame = ({
           transition: 'all 0.3s ease'
         }}
       >
-        <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#424242' }} gutterBottom align="center">
+        <Typography variant="subtitle1" fontWeight="bold" sx={{ color: D.heading }} gutterBottom align="center">
           Spell the term:
         </Typography>
 
         <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
           {selectedLetters.length === 0 ? (
-            <Typography variant="h4" sx={{ color: '#757575', fontStyle: 'italic' }}>
+            <Typography variant="h4" sx={{ color: D.muted, fontStyle: 'italic' }}>
               Select letters below...
             </Typography>
           ) : (
             selectedLetters.map((item, index) => (
-              <Chip
+              <Box
                 key={index}
-                label={item.letter}
+                component="span"
                 onClick={() => !showFeedback && handleRemoveLetter(index)}
                 sx={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
+                  ...clay(D.blue),
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   width: 50,
                   height: 50,
-                  backgroundColor: '#8d6e63',
-                  color: 'white',
+                  fontSize: '1.5rem',
+                  fontWeight: 'bold',
+                  color: D.blue.border,
                   cursor: showFeedback ? 'default' : 'pointer',
                   '&:hover': {
-                    backgroundColor: showFeedback ? '#8d6e63' : '#6d4c41'
+                    transform: showFeedback ? 'none' : 'translate(-2px,-2px)',
+                    boxShadow: showFeedback ? `4px 4px 0 ${D.blue.shadow}` : `6px 6px 0 ${D.blue.shadow}`
                   }
                 }}
-              />
+              >
+                {item.letter}
+              </Box>
             ))
           )}
         </Stack>
@@ -352,53 +385,57 @@ const SushiSpellAdvancedGame = ({
           <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
             {isCorrect ? (
               <>
-                <CheckCircleIcon sx={{ color: '#4caf50', fontSize: 30 }} />
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#2e7d32' }}>
+                <CheckCircleIcon sx={{ color: D.green.border, fontSize: 30 }} />
+                <Typography variant="h6" fontWeight="bold" sx={{ color: D.green.border }}>
                   Correct! "{currentTerm.term}"
                 </Typography>
               </>
             ) : (
               <>
-                <CancelIcon sx={{ color: '#f44336', fontSize: 30 }} />
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#c62828' }}>
+                <CancelIcon sx={{ color: D.red.border, fontSize: 30 }} />
+                <Typography variant="h6" fontWeight="bold" sx={{ color: D.red.border }}>
                   Try again!
                 </Typography>
               </>
             )}
           </Stack>
         )}
-      </Paper>
+      </Box>
 
       {/* Available Letters - Sushi Conveyor Belt */}
-      <Paper elevation={4} sx={{ p: 3, mb: 3, backgroundColor: '#795548' }}>
-        <Typography variant="subtitle1" fontWeight="bold" sx={{ color: 'white', mb: 2 }} align="center">
+      <Box sx={{ ...clay(D.teal), p: 3, mb: 3 }}>
+        <Typography variant="subtitle1" fontWeight="bold" sx={{ color: D.heading, mb: 2 }} align="center">
           🍣 Sushi Letter Belt 🍣
         </Typography>
         <Stack direction="row" spacing={1.5} justifyContent="center" flexWrap="wrap" useFlexGap>
           {availableLetters.map((letter, index) => (
-            <Chip
+            <Box
               key={index}
-              label={letter}
+              component="span"
               onClick={() => !showFeedback && handleLetterClick(letter, index)}
               sx={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
+                ...clay(D.green),
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 width: 50,
                 height: 50,
-                backgroundColor: '#8bc34a',
-                color: 'white',
-                cursor: showFeedback ? 'default' : 'pointer',
-                border: '3px solid #558b2f',
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                color: D.green.border,
+                cursor: showFeedback ? 'default' : 'grab',
                 '&:hover': {
-                  backgroundColor: showFeedback ? '#8bc34a' : '#7cb342',
-                  transform: showFeedback ? 'none' : 'scale(1.1)',
+                  transform: showFeedback ? 'none' : 'translate(-2px,-2px)',
+                  boxShadow: showFeedback ? `4px 4px 0 ${D.green.shadow}` : `6px 6px 0 ${D.green.shadow}`,
                   transition: 'all 0.2s ease'
                 }
               }}
-            />
+            >
+              {letter}
+            </Box>
           ))}
         </Stack>
-      </Paper>
+      </Box>
 
       {/* Action Buttons */}
       <Stack direction="row" spacing={2} justifyContent="center">
@@ -426,22 +463,35 @@ const SushiSpellAdvancedGame = ({
 
       {/* Spelled Terms Progress */}
       {spelledTerms.length > 0 && (
-        <Paper elevation={2} sx={{ p: 2, mt: 3, backgroundColor: 'grey.100' }}>
-          <Typography variant="subtitle2" sx={{ color: '#424242' }} gutterBottom>
+        <Box sx={{ ...clay(D.blue), p: 2, mt: 3 }}>
+          <Typography variant="subtitle2" sx={{ color: D.heading }} gutterBottom>
             Completed Terms:
           </Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             {spelledTerms.map((item, index) => (
-              <Chip
+              <Box
                 key={index}
-                label={item.term}
-                icon={<CheckCircleIcon />}
-                color="success"
-                size="small"
-              />
+                component="span"
+                sx={{
+                  px: 1.5,
+                  py: 0.4,
+                  borderRadius: '50px',
+                  bgcolor: D.green.bg,
+                  border: `2px solid ${D.green.border}`,
+                  fontWeight: 700,
+                  fontSize: '0.8rem',
+                  color: D.green.border,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.5
+                }}
+              >
+                <CheckCircleIcon sx={{ fontSize: 14 }} />
+                {item.term}
+              </Box>
             ))}
           </Stack>
-        </Paper>
+        </Box>
       )}
     </Box>
   )

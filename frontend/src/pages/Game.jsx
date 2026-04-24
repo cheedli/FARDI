@@ -1,50 +1,237 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useApiContext } from '../lib/api.jsx'
 import { useNavigate } from 'react-router-dom'
 import {
-  Box, Typography, Button, Stack, LinearProgress, Avatar, Chip, IconButton, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemIcon, ListItemText
+  Box, Typography, Stack, Chip, IconButton, Snackbar, Alert,
+  Dialog, DialogTitle, DialogContent, DialogActions, List,
+  ListItem, ListItemText, TextField, CircularProgress,
 } from '@mui/material'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import SendIcon from '@mui/icons-material/Send'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import ReplayIcon from '@mui/icons-material/Replay'
-import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver'
-import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates'
-import InfoIcon from '@mui/icons-material/Info'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import HelpIcon from '@mui/icons-material/Help'
 import QuizIcon from '@mui/icons-material/Quiz'
 import TimerIcon from '@mui/icons-material/Timer'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import SecurityIcon from '@mui/icons-material/Security'
-import HelpIcon from '@mui/icons-material/Help'
+import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
-import ExerciseRenderer from '../components/ExerciseRenderer.jsx'
+import Avatar from '../components/Avatar.jsx'
 import Phase2Introduction from '../components/Phase2Introduction.jsx'
+
+// ── Character colour palette (clay style) ─────────────────────────────────────
+const CHAR_COLORS = {
+  'Ms. Mabrouki': { bg: '#BBDEFB', border: '#1976D2', shadow: '#1565C0', text: '#0D47A1' },
+  'SKANDER':      { bg: '#B2EBF2', border: '#0097A7', shadow: '#00695C', text: '#006064' },
+  'Emna':         { bg: '#FFE0B2', border: '#F57C00', shadow: '#E65100', text: '#BF360C' },
+  'Ryan':         { bg: '#C8E6C9', border: '#388E3C', shadow: '#2E7D32', text: '#1B5E20' },
+  'Lilia':        { bg: '#E1BEE7', border: '#8E24AA', shadow: '#7B1FA2', text: '#4A148C' },
+}
+const DEFAULT_CHAR = { bg: '#F3E5F5', border: '#9C27B0', shadow: '#7B1FA2', text: '#4A148C' }
+
+const STUDENT_COLOR = { bg: '#E8EAF6', border: '#3949AB', shadow: '#283593' }
+
+function charColor(name) {
+  return CHAR_COLORS[name] || DEFAULT_CHAR
+}
+
+// ── Typing indicator ────────────────────────────────────────────────────────
+function TypingDots() {
+  return (
+    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ px: 1, py: 0.5 }}>
+      {[0, 1, 2].map((i) => (
+        <motion.div
+          key={i}
+          style={{ width: 7, height: 7, borderRadius: '50%', background: '#94a3b8' }}
+          animate={{ opacity: [0.3, 1, 0.3], y: [0, -4, 0] }}
+          transition={{ duration: 0.9, delay: i * 0.2, repeat: Infinity }}
+        />
+      ))}
+    </Stack>
+  )
+}
+
+// ── Single NPC message bubble ───────────────────────────────────────────────
+function NpcBubble({ speaker, question, instruction, type, audioUrl, showAvatar, isNew }) {
+  const C = charColor(speaker)
+  const audioRef = useRef(null)
+
+  // For listening questions, show only the instruction ("Listen carefully and repeat exactly what I say")
+  // — not the sentence to repeat, which should come through audio only
+  const displayText = type === 'listening'
+    ? question.split(':')[0].trim()
+    : question
+
+  return (
+    <motion.div
+      initial={isNew ? { opacity: 0, x: -24 } : false}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.38, ease: 'easeOut' }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, mb: showAvatar ? 2 : 0.8, mt: showAvatar ? 1.5 : 0 }}>
+        {/* Avatar column — always reserve space */}
+        <Box sx={{ width: 36, flexShrink: 0 }}>
+          {showAvatar && (
+            <Avatar speaker={speaker} size={36} showName={false} />
+          )}
+        </Box>
+
+        <Box sx={{ maxWidth: '72%' }}>
+          {showAvatar && (
+            <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: C.text, mb: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {speaker}
+            </Typography>
+          )}
+
+          {/* Bubble */}
+          <Box sx={{
+            bgcolor: C.bg,
+            border: `2px solid ${C.border}`,
+            borderRadius: '18px 18px 18px 4px',
+            boxShadow: `3px 3px 0 ${C.shadow}`,
+            px: 2, py: 1.5,
+          }}>
+            <Typography sx={{ fontSize: '0.95rem', lineHeight: 1.65, color: '#1e293b', fontWeight: 450 }}>
+              {displayText}
+            </Typography>
+
+            {instruction && (
+              <Box sx={{
+                mt: 1.2, pt: 1.2, borderTop: `1px dashed ${C.border}`,
+                display: 'flex', gap: 1, alignItems: 'flex-start',
+              }}>
+                <Typography sx={{ fontSize: '0.78rem', color: C.text, fontWeight: 600, flexShrink: 0 }}>Task:</Typography>
+                <Typography sx={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.5 }}>{instruction}</Typography>
+              </Box>
+            )}
+
+            {audioUrl && (
+              <Box sx={{ mt: 1.5 }}>
+                <audio src={audioUrl} ref={audioRef} />
+                <Stack direction="row" spacing={1}>
+                  <Box
+                    component="button"
+                    onClick={() => audioRef.current?.play()}
+                    sx={{
+                      display: 'flex', alignItems: 'center', gap: 0.5,
+                      px: 1.5, py: 0.5, borderRadius: '10px', cursor: 'pointer',
+                      bgcolor: C.border, color: 'white', border: 'none',
+                      fontSize: '0.75rem', fontWeight: 700,
+                      '&:hover': { opacity: 0.85 },
+                    }}
+                  >
+                    <PlayArrowIcon sx={{ fontSize: 15 }} /> Play
+                  </Box>
+                  <Box
+                    component="button"
+                    onClick={() => { if (audioRef.current) { audioRef.current.currentTime = 0; audioRef.current.play() } }}
+                    sx={{
+                      display: 'flex', alignItems: 'center', gap: 0.5,
+                      px: 1.5, py: 0.5, borderRadius: '10px', cursor: 'pointer',
+                      bgcolor: 'transparent', color: C.border, border: `1.5px solid ${C.border}`,
+                      fontSize: '0.75rem', fontWeight: 700,
+                      '&:hover': { bgcolor: C.bg },
+                    }}
+                  >
+                    <ReplayIcon sx={{ fontSize: 14 }} /> Replay
+                  </Box>
+                </Stack>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Box>
+    </motion.div>
+  )
+}
+
+// ── Student reply bubble ────────────────────────────────────────────────────
+function StudentBubble({ text }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.32, ease: 'easeOut' }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.5 }}>
+        <Box sx={{
+          maxWidth: '72%',
+          bgcolor: STUDENT_COLOR.bg,
+          border: `2px solid ${STUDENT_COLOR.border}`,
+          borderRadius: '18px 18px 4px 18px',
+          boxShadow: `3px 3px 0 ${STUDENT_COLOR.shadow}`,
+          px: 2, py: 1.5,
+        }}>
+          <Typography sx={{ fontSize: '0.95rem', lineHeight: 1.65, color: '#1e293b' }}>
+            {text}
+          </Typography>
+        </Box>
+      </Box>
+    </motion.div>
+  )
+}
 
 export default function Game() {
   const { client } = useApiContext()
-  const [state, setState] = useState(null)
-  const [response, setResponse] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [feedback, setFeedback] = useState(null)
-  const [audioRef, setAudioRef] = useState(null)
-  const [pasteWarn, setPasteWarn] = useState(false)
-  const [showIntro, setShowIntro] = useState(false)
-  const [showInstructions, setShowInstructions] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState('')
   const navigate = useNavigate()
 
-  const load = async () => {
+  const [state, setState] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [response, setResponse] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [pasteWarn, setPasteWarn] = useState(false)
+  const [showInstructions, setShowInstructions] = useState(false)
+  const [showIntro, setShowIntro] = useState(false)
+  const [notice, setNotice] = useState('')
+  const [feedback, setFeedback] = useState(null)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+
+  // Full conversation history: [{role:'npc', speaker, question, instruction, audioUrl, isNew}, {role:'student', text}]
+  const [history, setHistory] = useState([])
+
+  const messagesEndRef = useRef(null)
+  const inputRef = useRef(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => { scrollToBottom() }, [history, submitting])
+
+  const load = async (isFirst = false) => {
     setLoading(true)
     setError('')
     try {
       const s = await client.getGameState()
       if (s.completed) {
-        setSubmitError('Assessment Complete! Calculating your results...')
-        setTimeout(() => { navigate('/results') }, 2000)
-      } else {
-        setState(s)
+        setNotice('Assessment complete! Calculating your results…')
+        setTimeout(() => navigate('/results'), 2000)
+        return
       }
+      setState(s)
+      // Push the new NPC message into history
+      setHistory((prev) => {
+        // Avoid duplicating if same step already in history
+        const alreadyHas = prev.some(
+          (m) => m.role === 'npc' && m.step === s.current_step
+        )
+        if (alreadyHas) return prev
+        return [
+          ...prev,
+          {
+            role: 'npc',
+            step: s.current_step,
+            speaker: s.question.speaker,
+            question: s.question.question,
+            instruction: s.question.instruction,
+            type: s.question.type,
+            audioUrl: s.audio_url,
+            isNew: true,
+          },
+        ]
+      })
     } catch (e) {
       setError(e.message)
     } finally {
@@ -52,518 +239,445 @@ export default function Game() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load(true) }, [])
 
-  const submit = async (e) => {
-    if (e) e.preventDefault()
+  // After history updates, mark all as not-new so re-renders don't re-animate
+  useEffect(() => {
+    setHistory((prev) =>
+      prev.map((m) => (m.isNew ? { ...m, isNew: false } : m))
+    )
+  }, [history.length])
+
+  const submit = async () => {
+    if (!response.trim() || submitting) return
+    const text = response.trim()
+    setResponse('')
+    // Append student bubble immediately
+    setHistory((prev) => [...prev, { role: 'student', text }])
     setSubmitting(true)
-    setSubmitError('')
     try {
-      await client.submitResponse({ response, type: state.question.type })
-      setResponse('')
-      setFeedback(null)
-      if (state.current_step === state.total_steps - 1) {
-        setSubmitError('Final answer submitted! Preparing your results...')
-      }
+      await client.submitResponse({ response: text, type: state.question.type })
       await load()
     } catch (e) {
       if (e.message.includes('AI content detected')) {
-        setSubmitError('Please rephrase your answer in your own words for the most accurate assessment.')
+        setNotice('Please rephrase in your own words for the most accurate assessment.')
       } else {
-        setSubmitError('Unable to submit response. Please try again.')
+        setNotice('Unable to submit. Please try again.')
       }
     } finally {
       setSubmitting(false)
+      setTimeout(() => inputRef.current?.focus(), 100)
     }
   }
 
-  const handleExerciseSubmit = async (responseText) => {
-    setSubmitting(true)
-    setSubmitError('')
-    try {
-      await client.submitResponse({ response: responseText, type: state.question.type })
-      setFeedback(null)
-      const msgs = ["Great work! Moving on...", "Nice response! Let's continue...", "Well done! Next scenario...", "Excellent! Keep going...", "Perfect! Moving forward..."]
-      setSubmitError(msgs[Math.floor(Math.random() * msgs.length)])
-      setTimeout(() => setSubmitError(''), 2000)
-      await load()
-    } catch (e) {
-      if (e.message.includes('AI content detected')) {
-        setSubmitError('Please rephrase your answer in your own words for the most accurate assessment.')
-      } else {
-        setSubmitError('Unable to submit response. Please try again.')
-      }
-    } finally {
-      setSubmitting(false)
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      submit()
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+      e.preventDefault()
+      setPasteWarn(true)
     }
   }
-
-  const handleIntroStart = () => { setShowIntro(false) }
-  const handleIntroClose = () => { navigate('/dashboard') }
 
   const getFeedback = async () => {
+    if (!state) return
     try {
       const data = await client.getFeedback({
         question: state.question.question,
-        response,
+        response: history.filter((m) => m.role === 'student').at(-1)?.text || '',
         speaker: state.question.speaker,
-        type: state.question.type
+        type: state.question.type,
       })
       setFeedback(data)
-    } catch (e) {
-      setFeedback({ error: 'Could not get feedback' })
+      setFeedbackOpen(true)
+    } catch {
+      setFeedback({ error: 'Could not get feedback.' })
+      setFeedbackOpen(true)
     }
   }
 
-  const onPaste = (e) => { e.preventDefault(); setPasteWarn(true) }
-  const onKeyDown = (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') { e.preventDefault(); setPasteWarn(true) }
-  }
-
-  if (loading) return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'white' }}>
-      <Box sx={{ width: 200 }}>
-        <LinearProgress sx={{ borderRadius: 4, height: 4, bgcolor: '#f1f5f9', '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #6366f1, #0ea5e9)' } }} />
-      </Box>
+  // ── Loading / Error states ────────────────────────────────────────────────
+  if (loading && history.length === 0) return (
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#FAFAFA' }}>
+      <CircularProgress size={28} sx={{ color: '#6366f1' }} />
     </Box>
   )
   if (error) return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'white' }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#FAFAFA' }}>
       <Box sx={{ textAlign: 'center' }}>
         <Typography sx={{ color: '#ef4444', fontWeight: 600, mb: 1 }}>Something went wrong</Typography>
         <Typography sx={{ color: '#94a3b8', fontSize: '0.88rem' }}>{error}</Typography>
       </Box>
     </Box>
   )
-  if (!state) return null
 
-  if (showIntro && state.current_step === 0) {
-    return (
-      <Dialog open={true} maxWidth="lg" fullWidth>
-        <Phase2Introduction onStart={handleIntroStart} onClose={handleIntroClose} />
-      </Dialog>
-    )
-  }
+  if (showIntro && state?.current_step === 0) return (
+    <Dialog open maxWidth="lg" fullWidth>
+      <Phase2Introduction
+        onStart={() => setShowIntro(false)}
+        onClose={() => navigate('/dashboard')}
+      />
+    </Dialog>
+  )
 
-  const { current_step, total_steps, xp, question } = state
+  const { current_step = 0, total_steps = 9, xp = 0, question = {} } = state || {}
   const progress = Math.round((current_step / total_steps) * 100)
+  const timeLeft = Math.max(1, Math.round((total_steps - current_step) * 2))
+
+  // Group consecutive NPC messages so avatar only shows on first of a run
+  const renderedHistory = history.map((msg, idx) => {
+    if (msg.role !== 'npc') return { ...msg, showAvatar: false }
+    const prev = history[idx - 1]
+    const showAvatar = !prev || prev.role !== 'npc' || prev.speaker !== msg.speaker
+    return { ...msg, showAvatar }
+  })
+
+  const lastStudentMsg = history.filter((m) => m.role === 'student').at(-1)
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'white', py: { xs: 2, md: 4 }, px: { xs: 2, md: 3 } }}>
-      <Box sx={{ maxWidth: 860, mx: 'auto' }}>
+    <Box sx={{
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      bgcolor: '#FFFDE7',
+      overflow: 'hidden',
+    }}>
 
-        {/* ── Header bar ── */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
-          <Box sx={{ mb: 3 }}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-              <Box>
-                <Typography sx={{ fontWeight: 750, fontSize: { xs: '1.2rem', md: '1.4rem' }, color: '#0f172a', lineHeight: 1.2 }}>
-                  Business English Assessment
-                </Typography>
-                <Typography sx={{ color: '#94a3b8', fontSize: '0.85rem', mt: 0.3 }}>
-                  Question {current_step + 1} of {total_steps}
-                </Typography>
-              </Box>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Chip size="small" label={`${xp} XP`} sx={{
-                  height: 26, fontSize: '0.75rem', fontWeight: 700,
-                  bgcolor: '#6366f108', color: '#6366f1', border: '1px solid #6366f120',
-                }} />
-                <Chip size="small" icon={<TimerIcon sx={{ fontSize: 14 }} />} label={`~${Math.max(1, Math.round((total_steps - current_step) * 2))}m`} sx={{
-                  height: 26, fontSize: '0.75rem', fontWeight: 600,
-                  bgcolor: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0',
-                  '& .MuiChip-icon': { color: '#94a3b8' },
-                }} />
-                <IconButton size="small" onClick={() => setShowInstructions(true)} sx={{ width: 30, height: 30, color: '#94a3b8', '&:hover': { bgcolor: '#f8fafc' } }}>
-                  <HelpIcon sx={{ fontSize: 18 }} />
-                </IconButton>
-              </Stack>
+      {/* ── Fixed header ─────────────────────────────────────────────────── */}
+      <Box sx={{
+        flexShrink: 0,
+        px: { xs: 2, md: 3 },
+        py: 1.5,
+        bgcolor: 'white',
+        borderBottom: '1px solid #f1f5f9',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+      }}>
+        <Box sx={{ maxWidth: 720, mx: 'auto' }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.2 }}>
+            <Box>
+              <Typography sx={{ fontWeight: 800, fontSize: { xs: '1rem', md: '1.1rem' }, color: '#0f172a' }}>
+                Business English Assessment
+              </Typography>
+              <Typography sx={{ color: '#94a3b8', fontSize: '0.78rem' }}>
+                Question {current_step + 1} of {total_steps}
+              </Typography>
+            </Box>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip size="small" label={`${xp} XP`} sx={{
+                height: 24, fontSize: '0.72rem', fontWeight: 700,
+                bgcolor: '#6366f108', color: '#6366f1', border: '1px solid #6366f120',
+              }} />
+              <Chip size="small" icon={<TimerIcon sx={{ fontSize: 13 }} />} label={`~${timeLeft}m`} sx={{
+                height: 24, fontSize: '0.72rem', fontWeight: 600,
+                bgcolor: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0',
+                '& .MuiChip-icon': { color: '#94a3b8' },
+              }} />
+              <IconButton size="small" onClick={() => setShowInstructions(true)}
+                sx={{ width: 28, height: 28, color: '#94a3b8', '&:hover': { bgcolor: '#f8fafc' } }}>
+                <HelpIcon sx={{ fontSize: 16 }} />
+              </IconButton>
             </Stack>
+          </Stack>
 
-            {/* Progress bar */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Box sx={{ flex: 1, height: 6, borderRadius: 3, bgcolor: '#f1f5f9', overflow: 'hidden' }}>
-                <motion.div
-                  style={{ height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, #6366f1, #0ea5e9)' }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.6, ease: 'easeOut' }}
+          {/* Progress bar */}
+          <Box sx={{ height: 5, borderRadius: 3, bgcolor: '#f1f5f9', overflow: 'hidden' }}>
+            <motion.div
+              style={{ height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, #6366f1, #0ea5e9)' }}
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+            />
+          </Box>
+        </Box>
+      </Box>
+
+      {/* ── Scene pill ───────────────────────────────────────────────────── */}
+      {question.scene && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1.5, flexShrink: 0 }}>
+          <Chip
+            size="small"
+            label={String(question.scene).replaceAll('_', ' ')}
+            sx={{
+              fontSize: '0.7rem', fontWeight: 700, textTransform: 'capitalize',
+              bgcolor: '#e0e7ff', color: '#4338ca', border: '1px solid #c7d2fe',
+              height: 22,
+            }}
+          />
+        </Box>
+      )}
+
+      {/* ── Scrollable chat thread ────────────────────────────────────────── */}
+      <Box sx={{
+        flex: 1,
+        overflowY: 'auto',
+        px: { xs: 2, md: 3 },
+        py: 2,
+        '&::-webkit-scrollbar': { width: 6 },
+        '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
+        '&::-webkit-scrollbar-thumb': { bgcolor: '#e2e8f0', borderRadius: 3 },
+      }}>
+        <Box sx={{ maxWidth: 720, mx: 'auto' }}>
+          <AnimatePresence>
+            {renderedHistory.map((msg, idx) =>
+              msg.role === 'npc' ? (
+                <NpcBubble
+                  key={`npc-${msg.step}-${idx}`}
+                  speaker={msg.speaker}
+                  question={msg.question}
+                  instruction={msg.instruction}
+                  type={msg.type}
+                  audioUrl={msg.audioUrl}
+                  showAvatar={msg.showAvatar}
+                  isNew={msg.isNew}
                 />
+              ) : (
+                <StudentBubble key={`student-${idx}`} text={msg.text} />
+              )
+            )}
+          </AnimatePresence>
+
+          {/* Typing indicator while submitting / loading next */}
+          {submitting && (
+            <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, mb: 1 }}>
+              <Box sx={{ width: 36, flexShrink: 0 }} />
+              <Box sx={{
+                bgcolor: '#f1f5f9', border: '2px solid #e2e8f0',
+                borderRadius: '18px 18px 18px 4px',
+                boxShadow: '3px 3px 0 #cbd5e1',
+                px: 2, py: 1,
+              }}>
+                <TypingDots />
               </Box>
-              <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8', minWidth: 35, textAlign: 'right' }}>
-                {progress}%
-              </Typography>
             </Box>
-          </Box>
-        </motion.div>
+          )}
 
-        {/* ── Scene banner ── */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }}>
-          <Box sx={{
-            borderRadius: 3,
-            overflow: 'hidden',
-            mb: 2.5,
-            position: 'relative',
-            height: { xs: 100, md: 120 },
-            backgroundImage: `url(/static/images/scenes/${question.scene}.jpg)`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}>
-            <Box sx={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to top, rgba(15,23,42,0.7) 0%, rgba(15,23,42,0.2) 100%)',
-            }} />
-            <Box sx={{ position: 'absolute', bottom: 0, left: 0, p: 2.5 }}>
-              <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '1rem', textTransform: 'capitalize', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
-                {String(question.scene || '').replaceAll('_', ' ')}
-              </Typography>
-              <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.8rem', mt: 0.2 }}>
-                {state.scene_description}
-              </Typography>
-            </Box>
-          </Box>
-        </motion.div>
+          <div ref={messagesEndRef} />
+        </Box>
+      </Box>
 
-        {/* ── Speaker + Skill info ── */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.4 }}>
-          <Box sx={{
-            borderRadius: 3, border: '1px solid #f1f5f9', p: 2.5, mb: 2.5,
-            display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2.5,
-          }}>
-            {/* Speaker */}
-            <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 220 }}>
-              <Avatar
-                src={state.speaker_avatar ? `/static/images/avatars/${state.speaker_avatar}` : undefined}
+      {/* ── Fixed input area ─────────────────────────────────────────────── */}
+      <Box sx={{
+        flexShrink: 0,
+        bgcolor: 'white',
+        borderTop: '1px solid #f1f5f9',
+        px: { xs: 2, md: 3 },
+        py: 1.5,
+        boxShadow: '0 -2px 8px rgba(0,0,0,0.04)',
+      }}>
+        <Box sx={{ maxWidth: 720, mx: 'auto' }}>
+          {/* Feedback toggle */}
+          {lastStudentMsg && (
+            <Stack direction="row" alignItems="center" justifyContent="flex-end" sx={{ mb: 1 }}>
+              <Box
+                component="button"
+                onClick={getFeedback}
                 sx={{
-                  width: 44, height: 44,
-                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                  fontSize: '1rem', fontWeight: 700,
+                  display: 'flex', alignItems: 'center', gap: 0.6,
+                  px: 1.5, py: 0.5, borderRadius: '10px', cursor: 'pointer',
+                  bgcolor: '#fef3c7', color: '#b45309',
+                  border: '1.5px solid #fde68a',
+                  fontSize: '0.75rem', fontWeight: 700,
+                  '&:hover': { bgcolor: '#fde68a' },
                 }}
               >
-                {(question.speaker || ' ')[0]}
-              </Avatar>
-              <Box>
-                <Typography sx={{ fontWeight: 650, fontSize: '0.9rem', color: '#0f172a' }}>
-                  {question.speaker}
-                </Typography>
-                <Typography sx={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-                  {state.speaker_role}
-                </Typography>
+                <TipsAndUpdatesIcon sx={{ fontSize: 14 }} />
+                AI Feedback
               </Box>
             </Stack>
+          )}
 
-            {/* Divider */}
-            <Box sx={{ width: { xs: '100%', md: '1px' }, height: { xs: '1px', md: 'auto' }, bgcolor: '#f1f5f9' }} />
-
-            {/* Skill */}
-            <Box sx={{ flex: 1 }}>
-              <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mb: 0.5 }}>
-                <RecordVoiceOverIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
-                <Typography sx={{ fontSize: '0.68rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Assessing
-                </Typography>
-              </Stack>
-              <Typography sx={{ fontWeight: 650, fontSize: '0.9rem', color: '#0f172a', textTransform: 'capitalize' }}>
-                {String(question.skill || '').replaceAll('_', ' ')}
-              </Typography>
-              <Typography sx={{ fontSize: '0.8rem', color: '#64748b', mt: 0.3 }}>
-                {state.skill_description}
-              </Typography>
+          {/* Input row */}
+          <Stack direction="row" spacing={1} alignItems="flex-end">
+            <TextField
+              inputRef={inputRef}
+              multiline
+              maxRows={4}
+              fullWidth
+              value={response}
+              onChange={(e) => setResponse(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onPaste={(e) => { e.preventDefault(); setPasteWarn(true) }}
+              placeholder="Type your reply…"
+              disabled={submitting || loading}
+              variant="outlined"
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '16px',
+                  bgcolor: '#f8fafc',
+                  fontSize: '0.92rem',
+                  '& fieldset': { border: '2px solid #e2e8f0' },
+                  '&:hover fieldset': { border: '2px solid #c7d2fe' },
+                  '&.Mui-focused fieldset': { border: '2px solid #6366f1' },
+                },
+              }}
+            />
+            <Box
+              component="button"
+              onClick={submit}
+              disabled={!response.trim() || submitting}
+              sx={{
+                width: 44, height: 44, borderRadius: '14px', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                border: 'none', cursor: 'pointer',
+                boxShadow: '3px 3px 0 #4338ca',
+                color: 'white',
+                transition: 'all 0.15s',
+                '&:hover:not(:disabled)': { transform: 'translate(-1px,-1px)', boxShadow: '4px 4px 0 #4338ca' },
+                '&:disabled': { opacity: 0.45, cursor: 'not-allowed' },
+              }}
+            >
+              <SendIcon sx={{ fontSize: 18 }} />
             </Box>
-          </Box>
-        </motion.div>
+          </Stack>
 
-        {/* ── Question / Dialogue ── */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.4 }}>
-          <Box sx={{ borderRadius: 3, border: '1px solid #f1f5f9', p: 3, mb: 2.5 }}>
-            <Typography sx={{ fontSize: '0.72rem', fontWeight: 600, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1 }}>
-              {question.speaker} says:
+          <Typography sx={{ fontSize: '0.68rem', color: '#cbd5e1', mt: 0.8, textAlign: 'center' }}>
+            Press Enter to send · Shift+Enter for new line
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* ── AI Feedback dialog ───────────────────────────────────────────── */}
+      <Dialog
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 4, border: '1px solid #f1f5f9' } }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <AutoAwesomeIcon sx={{ color: '#6366f1', fontSize: 20 }} />
+            <Typography sx={{ fontWeight: 700, fontSize: '1rem' }}>AI Feedback</Typography>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          {feedback?.error && (
+            <Typography sx={{ color: '#ef4444', fontSize: '0.88rem' }}>{feedback.error}</Typography>
+          )}
+          {feedback?.feedback && (
+            <Typography sx={{ fontSize: '0.92rem', lineHeight: 1.7, color: '#475569', mb: 1.5 }}>
+              {feedback.feedback}
             </Typography>
-            <Typography sx={{ fontSize: '1.05rem', lineHeight: 1.7, color: '#334155', fontWeight: 450 }}>
-              {question.question}
-            </Typography>
-
-            {question.instruction && (
-              <Box sx={{
-                mt: 2, p: 2, borderRadius: 2.5,
-                bgcolor: '#eff6ff', border: '1px solid #dbeafe',
-                display: 'flex', gap: 1.5, alignItems: 'flex-start',
-              }}>
-                <InfoIcon sx={{ fontSize: 18, color: '#3b82f6', mt: 0.2, flexShrink: 0 }} />
-                <Typography sx={{ fontSize: '0.88rem', color: '#1e40af' }}>
-                  {question.instruction}
-                </Typography>
-              </Box>
-            )}
-
-            {state.audio_url && (
-              <Box sx={{
-                mt: 2, p: 2, borderRadius: 2.5,
-                bgcolor: '#f8fafc', border: '1px solid #f1f5f9',
-              }}>
-                <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
-                  <audio src={state.audio_url} ref={(r) => setAudioRef(r)} />
-                  <Button
-                    size="small" startIcon={<PlayArrowIcon sx={{ fontSize: 16 }} />}
-                    onClick={() => audioRef && audioRef.play()}
-                    sx={{
-                      borderRadius: 2.5, px: 2.5, py: 0.6, fontWeight: 600,
-                      textTransform: 'none', fontSize: '0.82rem',
-                      background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                      color: 'white', boxShadow: '0 2px 8px rgba(99,102,241,0.25)',
-                      '&:hover': { background: 'linear-gradient(135deg, #5856eb, #4338ca)' },
-                    }}
-                  >
-                    Play Audio
-                  </Button>
-                  <Button
-                    size="small" startIcon={<ReplayIcon sx={{ fontSize: 16 }} />}
-                    onClick={() => { if (audioRef) { audioRef.currentTime = 0; audioRef.play() } }}
-                    sx={{
-                      borderRadius: 2.5, px: 2.5, py: 0.6, fontWeight: 600,
-                      textTransform: 'none', fontSize: '0.82rem',
-                      color: '#475569', bgcolor: '#f8fafc', border: '1px solid #e2e8f0',
-                      boxShadow: 'none',
-                      '&:hover': { bgcolor: '#f1f5f9', boxShadow: 'none' },
-                    }}
-                  >
-                    Replay
-                  </Button>
-                </Stack>
-              </Box>
-            )}
-          </Box>
-        </motion.div>
-
-        {/* ── Exercise Renderer ── */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.4 }}>
-          <ExerciseRenderer
-            question={{
-              ...question,
-              audio_url: state.audio_url,
-              hint: state.hint
-            }}
-            onSubmit={handleExerciseSubmit}
-            loading={submitting}
-          />
-        </motion.div>
-
-        {/* Submit Error Display */}
-        {submitError && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <Box sx={{
-              mt: 2, p: 2, borderRadius: 2.5,
-              bgcolor: '#eff6ff', border: '1px solid #dbeafe',
-              display: 'flex', alignItems: 'center', gap: 1.5,
-            }}>
-              <InfoIcon sx={{ fontSize: 18, color: '#3b82f6', flexShrink: 0 }} />
-              <Typography sx={{ fontSize: '0.88rem', color: '#1e40af', flex: 1 }}>
-                {submitError}
-              </Typography>
-              <IconButton size="small" onClick={() => setSubmitError('')} sx={{ color: '#94a3b8' }}>
-                <Box component="span" sx={{ fontSize: '1.1rem', lineHeight: 1 }}>&times;</Box>
-              </IconButton>
-            </Box>
-          </motion.div>
-        )}
-
-        {/* ── AI Feedback Section ── */}
-        {!submitting && (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.4 }}>
-            <Box sx={{ borderRadius: 3, border: '1px solid #f1f5f9', p: 2.5, mt: 2.5 }}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-                <Button
-                  size="small"
-                  startIcon={<TipsAndUpdatesIcon sx={{ fontSize: 16 }} />}
-                  onClick={getFeedback}
-                  disabled={!response}
-                  sx={{
-                    borderRadius: 2.5, px: 2.5, py: 0.7, fontWeight: 600,
-                    textTransform: 'none', fontSize: '0.82rem',
-                    color: '#f59e0b', bgcolor: '#fef3c710', border: '1px solid #fde68a40',
-                    boxShadow: 'none',
-                    '&:hover': { bgcolor: '#fef3c730', boxShadow: 'none' },
-                    '&.Mui-disabled': { opacity: 0.4 },
-                  }}
-                >
-                  Get AI Feedback
-                </Button>
-                <Chip size="small" label={`${xp} XP earned`} sx={{
-                  height: 24, fontSize: '0.72rem', fontWeight: 600,
-                  bgcolor: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0',
-                }} />
-              </Stack>
-
-              {feedback && (
-                <Box sx={{ mt: 2.5, p: 2.5, borderRadius: 2.5, bgcolor: '#f8fafc', border: '1px solid #f1f5f9' }}>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
-                    <AutoAwesomeIcon sx={{ fontSize: 16, color: '#6366f1' }} />
-                    <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a' }}>
-                      AI Feedback
-                    </Typography>
-                  </Stack>
-
-                  {feedback.error && (
-                    <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: '#fef2f2', border: '1px solid #fecaca', mb: 1.5 }}>
-                      <Typography sx={{ fontSize: '0.85rem', color: '#991b1b' }}>{feedback.error}</Typography>
-                    </Box>
-                  )}
-                  {feedback.feedback && (
-                    <Typography sx={{ fontSize: '0.9rem', lineHeight: 1.7, color: '#475569', mb: 1.5 }}>
-                      {feedback.feedback}
-                    </Typography>
-                  )}
-                  {feedback.assessment && (
-                    <Box>
-                      <Chip size="small" label={`CEFR ${feedback.assessment.level}`} sx={{
-                        height: 26, fontWeight: 700, fontSize: '0.75rem', mb: 1.5,
-                        bgcolor: '#6366f108', color: '#6366f1', border: '1px solid #6366f120',
-                      }} />
-                      {Array.isArray(feedback.assessment.strengths) && feedback.assessment.strengths.length > 0 && (
-                        <Box sx={{ mb: 1 }}>
-                          <Typography sx={{ fontSize: '0.78rem', fontWeight: 650, color: '#16a34a', mb: 0.3 }}>
-                            Strengths
-                          </Typography>
-                          <Typography sx={{ fontSize: '0.85rem', color: '#64748b' }}>
-                            {feedback.assessment.strengths.slice(0, 3).join(', ')}
-                          </Typography>
-                        </Box>
-                      )}
-                      {Array.isArray(feedback.assessment.improvements) && feedback.assessment.improvements.length > 0 && (
-                        <Box>
-                          <Typography sx={{ fontSize: '0.78rem', fontWeight: 650, color: '#f59e0b', mb: 0.3 }}>
-                            Areas for improvement
-                          </Typography>
-                          <Typography sx={{ fontSize: '0.85rem', color: '#64748b' }}>
-                            {feedback.assessment.improvements.slice(0, 3).join(', ')}
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-                  )}
+          )}
+          {feedback?.assessment && (
+            <Box>
+              <Chip size="small" label={`CEFR ${feedback.assessment.level}`} sx={{
+                fontWeight: 700, fontSize: '0.75rem', mb: 1.5,
+                bgcolor: '#6366f108', color: '#6366f1', border: '1px solid #6366f120',
+              }} />
+              {Array.isArray(feedback.assessment.strengths) && feedback.assessment.strengths.length > 0 && (
+                <Box sx={{ mb: 1 }}>
+                  <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#16a34a', mb: 0.3 }}>Strengths</Typography>
+                  <Typography sx={{ fontSize: '0.85rem', color: '#64748b' }}>
+                    {feedback.assessment.strengths.slice(0, 3).join(', ')}
+                  </Typography>
+                </Box>
+              )}
+              {Array.isArray(feedback.assessment.improvements) && feedback.assessment.improvements.length > 0 && (
+                <Box>
+                  <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#f59e0b', mb: 0.3 }}>Areas to improve</Typography>
+                  <Typography sx={{ fontSize: '0.85rem', color: '#64748b' }}>
+                    {feedback.assessment.improvements.slice(0, 3).join(', ')}
+                  </Typography>
                 </Box>
               )}
             </Box>
-          </motion.div>
-        )}
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Box
+            component="button"
+            onClick={() => setFeedbackOpen(false)}
+            sx={{
+              px: 2.5, py: 0.7, borderRadius: '12px', cursor: 'pointer',
+              bgcolor: '#6366f1', color: 'white', border: 'none',
+              fontWeight: 700, fontSize: '0.85rem',
+              '&:hover': { opacity: 0.88 },
+            }}
+          >
+            Got it
+          </Box>
+        </DialogActions>
+      </Dialog>
 
-      </Box>
+      {/* ── Instructions dialog ──────────────────────────────────────────── */}
+      <Dialog
+        open={showInstructions}
+        onClose={() => setShowInstructions(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 4, border: '1px solid #f1f5f9' } }}
+      >
+        <DialogTitle sx={{ textAlign: 'center', pt: 3, pb: 1 }}>
+          <Box sx={{
+            width: 52, height: 52, borderRadius: 3, mx: 'auto', mb: 1.5,
+            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 14px rgba(99,102,241,0.3)',
+          }}>
+            <QuizIcon sx={{ fontSize: 26, color: 'white' }} />
+          </Box>
+          <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#0f172a' }}>Assessment Instructions</Typography>
+        </DialogTitle>
+        <DialogContent sx={{ px: 3 }}>
+          <List dense>
+            {[
+              { icon: <TimerIcon sx={{ fontSize: 16, color: '#6366f1' }} />, text: '9 workplace scenarios · ~15-20 minutes total' },
+              { icon: <CheckCircleIcon sx={{ fontSize: 16, color: '#16a34a' }} />, text: 'Answer naturally in your own words' },
+              { icon: <CheckCircleIcon sx={{ fontSize: 16, color: '#16a34a' }} />, text: 'Use complete sentences when possible' },
+              { icon: <SecurityIcon sx={{ fontSize: 16, color: '#f59e0b' }} />, text: 'If AI is detected, rephrase in your own words' },
+            ].map(({ icon, text }, i) => (
+              <ListItem key={i} sx={{ px: 0, py: 0.6 }}>
+                <Box sx={{ mr: 1.5, flexShrink: 0 }}>{icon}</Box>
+                <ListItemText primary={text} primaryTypographyProps={{ fontSize: '0.88rem', color: '#475569' }} />
+              </ListItem>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Box
+            component="button"
+            onClick={() => setShowInstructions(false)}
+            sx={{
+              px: 3, py: 0.7, borderRadius: '12px', cursor: 'pointer',
+              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+              color: 'white', border: 'none', fontWeight: 700, fontSize: '0.85rem',
+              boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
+              '&:hover': { opacity: 0.9 },
+            }}
+          >
+            Got it, let's go
+          </Box>
+        </DialogActions>
+      </Dialog>
 
-      {/* Paste warning */}
+      {/* ── Paste warning ────────────────────────────────────────────────── */}
       <Snackbar
         open={pasteWarn}
         autoHideDuration={2500}
         onClose={() => setPasteWarn(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity="warning" variant="filled" onClose={() => setPasteWarn(false)}
-          sx={{ borderRadius: 3 }}
-        >
+        <Alert severity="warning" variant="filled" onClose={() => setPasteWarn(false)} sx={{ borderRadius: 3 }}>
           Pasting is disabled. Please type your own response.
         </Alert>
       </Snackbar>
 
-      {/* ── Instructions Dialog ── */}
-      <Dialog
-        open={showInstructions}
-        onClose={() => setShowInstructions(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{ sx: { borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: '0 16px 48px rgba(0,0,0,0.08)' } }}
+      {/* ── General notice snackbar ──────────────────────────────────────── */}
+      <Snackbar
+        open={!!notice}
+        autoHideDuration={3000}
+        onClose={() => setNotice('')}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <DialogTitle sx={{ textAlign: 'center', pt: 4, pb: 1 }}>
-          <Box sx={{
-            width: 56, height: 56, borderRadius: 3, mx: 'auto', mb: 2,
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 16px rgba(99,102,241,0.3)',
-          }}>
-            <QuizIcon sx={{ fontSize: 28, color: 'white' }} />
-          </Box>
-          <Typography sx={{ fontWeight: 750, fontSize: '1.25rem', color: '#0f172a' }}>
-            Assessment Instructions
-          </Typography>
-          <Typography sx={{ color: '#94a3b8', fontSize: '0.88rem', mt: 0.5 }}>
-            Get ready for your CEFR level evaluation
-          </Typography>
-        </DialogTitle>
-
-        <DialogContent sx={{ px: 3 }}>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            {/* What to expect */}
-            <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#f8fafc', border: '1px solid #f1f5f9' }}>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
-                <TimerIcon sx={{ fontSize: 16, color: '#6366f1' }} />
-                <Typography sx={{ fontWeight: 650, fontSize: '0.88rem', color: '#0f172a' }}>What to Expect</Typography>
-              </Stack>
-              <Stack spacing={0.8}>
-                {['9 workplace scenarios — real business situations', '15-20 minutes total — take your time', 'Different NPCs — meet various characters'].map((t, i) => (
-                  <Typography key={i} sx={{ fontSize: '0.85rem', color: '#475569', pl: 0.5 }}>
-                    &bull;&ensp;{t}
-                  </Typography>
-                ))}
-              </Stack>
-            </Box>
-
-            {/* How to succeed */}
-            <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#f0fdf408', border: '1px solid #bbf7d020' }}>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
-                <CheckCircleIcon sx={{ fontSize: 16, color: '#16a34a' }} />
-                <Typography sx={{ fontWeight: 650, fontSize: '0.88rem', color: '#0f172a' }}>How to Succeed</Typography>
-              </Stack>
-              <Stack spacing={0.8}>
-                {[
-                  'Answer naturally in your own words',
-                  'Use complete sentences when possible',
-                  'Stay relaxed and be yourself',
-                ].map((t, i) => (
-                  <Typography key={i} sx={{ fontSize: '0.85rem', color: '#475569', pl: 0.5 }}>
-                    &bull;&ensp;{t}
-                  </Typography>
-                ))}
-              </Stack>
-            </Box>
-
-            {/* AI detection */}
-            <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#fef3c708', border: '1px solid #fde68a20' }}>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                <SecurityIcon sx={{ fontSize: 16, color: '#f59e0b' }} />
-                <Typography sx={{ fontWeight: 650, fontSize: '0.88rem', color: '#0f172a' }}>AI Detection</Typography>
-              </Stack>
-              <Typography sx={{ fontSize: '0.85rem', color: '#475569' }}>
-                If you see an AI warning, simply rephrase in your own words for the most accurate assessment.
-              </Typography>
-            </Box>
-          </Stack>
-        </DialogContent>
-
-        <DialogActions sx={{ p: 3, pt: 1.5 }}>
-          <Button
-            onClick={() => setShowInstructions(false)}
-            sx={{
-              borderRadius: 2.5, px: 2, py: 0.7, fontWeight: 600,
-              textTransform: 'none', fontSize: '0.85rem',
-              color: '#64748b', boxShadow: 'none',
-              '&:hover': { bgcolor: '#f8fafc', boxShadow: 'none' },
-            }}
-          >
-            I'll read later
-          </Button>
-          <Button
-            startIcon={<PlayArrowIcon sx={{ fontSize: 16 }} />}
-            onClick={() => setShowInstructions(false)}
-            sx={{
-              borderRadius: 2.5, px: 3, py: 0.7, fontWeight: 600,
-              textTransform: 'none', fontSize: '0.85rem',
-              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-              color: 'white', boxShadow: '0 2px 8px rgba(99,102,241,0.3)',
-              '&:hover': { background: 'linear-gradient(135deg, #5856eb, #4338ca)' },
-            }}
-          >
-            Start Assessment
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Alert severity="info" variant="filled" onClose={() => setNotice('')} sx={{ borderRadius: 3 }}>
+          {notice}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

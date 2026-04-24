@@ -22,6 +22,7 @@ const correctAnswers = { 0: 'nuanced', 1: 'objectivity', 2: 'evidence-based', 3:
 
 export default function Phase6SP2Step4RemC1TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase6/subphase/2/step/4/remedial/c1/task/b') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 4, interaction: 1, context: 'remedial_c1' })

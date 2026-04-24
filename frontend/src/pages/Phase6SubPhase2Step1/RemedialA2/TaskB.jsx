@@ -37,6 +37,7 @@ const WORD_BANK = ['feedback', 'positive', 'suggestion', 'strength', 'weakness',
 
 export default function Phase6SP2Step1RemA2TaskB() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase6/subphase/2/step/1/remedial/a2/task/c') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 2, step: 1, interaction: 2, context: 'remedial_a2' })

@@ -45,6 +45,7 @@ export default function Phase5SubPhase2Step2RemedialB1TaskB() {
     try { await phase5API.logRemedialActivity(2, 'B1', 'B', c, 6, 2) } catch (e) { console.error(e) }
   }
   const handleContinue = () => navigate('/phase5/subphase/2/step/2/remedial/b1/task/c')
+  window.__remedialSkip = handleContinue
   const progress = ((currentIndex + 1) / 6) * 100
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>

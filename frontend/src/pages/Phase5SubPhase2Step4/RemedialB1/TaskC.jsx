@@ -53,6 +53,7 @@ export default function Phase5SubPhase2Step4RemedialB1TaskC() {
   }
 
   const handleContinue = async () => navigate(await resolveSubphase2RemedialNextUrl(4, 'B1'))
+  window.__remedialSkip = handleContinue
   const allAnswered = QUESTIONS.every(q => answers[q.id] !== undefined)
 
   return (

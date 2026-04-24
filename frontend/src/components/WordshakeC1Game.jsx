@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Paper, Typography, Grid, Button, Stack, LinearProgress, Chip, TextField } from '@mui/material'
+import { Box, Typography, Grid, Button, Stack, LinearProgress, TextField, useTheme } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import TimerIcon from '@mui/icons-material/Timer'
 import StarIcon from '@mui/icons-material/Star'
@@ -10,11 +10,43 @@ import CancelIcon from '@mui/icons-material/Cancel'
  * Students find 6 advanced marketing words in a grid, then use each in a sentence
  * C1 level: guerilla, surrogate, remarketing, geotargeting, infomercial, viral
  */
+
+const LIGHT = {
+  pageBg: '#FFFDE7', cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', divider: '#E0E0E0',
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#2E7D32' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1565C0' },
+  teal:   { bg: '#B2EBF2', border: '#0097A7', shadow: '#006064' },
+  orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#E65100' },
+  purple: { bg: '#E8EAF6', border: '#3949AB', shadow: '#283593' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#B71C1C' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F57F17' },
+}
+const DARK = {
+  pageBg: '#0F0F1A', cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', divider: '#2A2A4A',
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  teal:   { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+  orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+  purple: { bg: '#0D0D2B', border: '#7986CB', shadow: '#283593' },
+  red:    { bg: '#2A0A0A', border: '#E57373', shadow: '#B71C1C' },
+  yellow: { bg: '#2A2200', border: '#FFD54F', shadow: '#F57F17' },
+}
+const clay = (c, extra = {}) => ({
+  bgcolor: c.bg,
+  border: `2px solid ${c.border}`,
+  borderRadius: '16px',
+  boxShadow: `4px 4px 0 ${c.shadow}`,
+  ...extra,
+})
+
 const WordshakeC1Game = ({
   targetWords = [], // Array of 6 words to find
   duration = 300, // 5 minutes for finding words
   onComplete
 }) => {
+  const muiTheme = useTheme()
+  const D = muiTheme.palette.mode === 'dark' ? DARK : LIGHT
+
   // C1-specific grid with the 6 advanced terms
   const PREDEFINED_GRID = [
     ['G', 'U', 'E', 'R', 'I', 'L', 'L', 'A', 'X', 'Z', 'C', 'V'],
@@ -242,27 +274,25 @@ const WordshakeC1Game = ({
     const totalScore = foundWords.size + correctSentences
 
     return (
-      <Paper elevation={6} sx={{ p: 6, textAlign: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        <Box sx={{ color: 'white' }}>
-          <Typography variant="h3" gutterBottom fontWeight="bold">
-            🎉 Challenge Complete!
+      <Box sx={{ ...clay(D.purple), p: 6, textAlign: 'center' }}>
+        <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: D.heading }}>
+          🎉 Challenge Complete!
+        </Typography>
+        <Typography variant="h5" sx={{ mb: 3, color: D.body }}>
+          You've completed the C1 Wordshake Challenge!
+        </Typography>
+        <Box sx={{ bgcolor: D.cardBg, border: `2px solid ${D.purple.border}`, borderRadius: '12px', p: 3, mb: 2 }}>
+          <Typography variant="h6" gutterBottom sx={{ color: D.body }}>
+            Word Finding: {foundWords.size}/{targetWords.length}
           </Typography>
-          <Typography variant="h5" sx={{ mb: 3 }}>
-            You've completed the C1 Wordshake Challenge!
+          <Typography variant="h6" gutterBottom sx={{ color: D.body }}>
+            Sentence Writing: {correctSentences}/{foundWords.size}
           </Typography>
-          <Box sx={{ backgroundColor: 'rgba(255,255,255,0.2)', p: 3, borderRadius: 2, mb: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Word Finding: {foundWords.size}/{targetWords.length}
-            </Typography>
-            <Typography variant="h6" gutterBottom>
-              Sentence Writing: {correctSentences}/{foundWords.size}
-            </Typography>
-            <Typography variant="h4" fontWeight="bold" sx={{ mt: 2 }}>
-              Total Score: {totalScore}/{targetWords.length * 2}
-            </Typography>
-          </Box>
+          <Typography variant="h4" fontWeight="bold" sx={{ mt: 2, color: D.heading }}>
+            Total Score: {totalScore}/{targetWords.length * 2}
+          </Typography>
         </Box>
-      </Paper>
+      </Box>
     )
   }
 
@@ -274,11 +304,11 @@ const WordshakeC1Game = ({
     return (
       <Box sx={{ width: '100%', maxWidth: 1000, mx: 'auto', p: 3 }}>
         {/* Header */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-          <Typography variant="h5" fontWeight="bold" gutterBottom>
+        <Box sx={{ ...clay(D.purple), p: 3, mb: 3 }}>
+          <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ color: D.heading }}>
             Sentence Writing Phase
           </Typography>
-          <Typography variant="body1">
+          <Typography variant="body1" sx={{ color: D.body }}>
             Write a sentence using each word in a marketing context
           </Typography>
           <LinearProgress
@@ -288,16 +318,20 @@ const WordshakeC1Game = ({
               mt: 2,
               height: 10,
               borderRadius: 1,
-              backgroundColor: 'rgba(255,255,255,0.3)',
-              '& .MuiLinearProgress-bar': { backgroundColor: '#ffd700' }
+              backgroundColor: D.divider,
+              '& .MuiLinearProgress-bar': { backgroundColor: D.purple.border }
             }}
           />
-        </Paper>
+        </Box>
 
         {/* Current Word */}
-        <Paper elevation={4} sx={{ p: 4, mb: 3, backgroundColor: sentenceEvaluation ? (sentenceEvaluation.score === 1 ? '#e8f5e9' : '#ffebee') : 'white' }}>
-          <Typography variant="h6" gutterBottom fontWeight="bold" color="primary">
-            Word {currentWordIndex + 1} of {wordsArray.length}: <span style={{ color: '#667eea' }}>{currentTargetWord}</span>
+        <Box sx={{
+          ...clay(sentenceEvaluation ? (sentenceEvaluation.score === 1 ? D.green : D.red) : D.blue),
+          p: 4,
+          mb: 3
+        }}>
+          <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: D.heading }}>
+            Word {currentWordIndex + 1} of {wordsArray.length}: <span style={{ color: D.purple.border }}>{currentTargetWord}</span>
           </Typography>
 
           <TextField
@@ -318,14 +352,16 @@ const WordshakeC1Game = ({
           />
 
           {sentenceEvaluation && (
-            <Box sx={{ mt: 2, p: 2, backgroundColor: sentenceEvaluation.score === 1 ? 'success.light' : 'error.light', borderRadius: 2 }}>
+            <Box sx={{ ...clay(sentenceEvaluation.score === 1 ? D.green : D.red), mt: 2, p: 2 }}>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                {sentenceEvaluation.score === 1 ? <CheckCircleIcon sx={{ color: 'success.dark' }} /> : <CancelIcon sx={{ color: 'error.dark' }} />}
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#000000' }}>
+                {sentenceEvaluation.score === 1
+                  ? <CheckCircleIcon sx={{ color: D.green.border }} />
+                  : <CancelIcon sx={{ color: D.red.border }} />}
+                <Typography variant="h6" fontWeight="bold" sx={{ color: D.heading }}>
                   {sentenceEvaluation.score === 1 ? 'Excellent!' : 'Needs Improvement'}
                 </Typography>
               </Stack>
-              <Typography variant="body2" sx={{ color: '#000000' }}>
+              <Typography variant="body2" sx={{ color: D.body }}>
                 {sentenceEvaluation.feedback}
               </Typography>
             </Box>
@@ -337,34 +373,52 @@ const WordshakeC1Game = ({
               color="primary"
               onClick={handleSubmitSentence}
               disabled={!currentSentence.trim() || isEvaluating || sentenceEvaluation !== null}
-              sx={{ px: 4 }}
+              sx={{
+                px: 4,
+                borderRadius: '12px',
+                boxShadow: `4px 4px 0 ${D.blue.shadow}`,
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.blue.shadow}` }
+              }}
             >
               {isEvaluating ? 'Evaluating...' : 'Submit Sentence'}
             </Button>
           </Stack>
-        </Paper>
+        </Box>
 
         {/* Progress */}
-        <Paper elevation={2} sx={{ p: 2 }}>
-          <Typography variant="subtitle2" gutterBottom>
+        <Box sx={{ ...clay(D.blue), p: 2 }}>
+          <Typography variant="subtitle2" gutterBottom sx={{ color: D.heading }}>
             Progress: {currentWordIndex}/{wordsArray.length} completed
           </Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             {wordsArray.map((word, index) => {
               const completed = index < currentWordIndex
               const current = index === currentWordIndex
+              const c = current ? D.blue : completed ? D.green : { bg: D.cardBg, border: D.divider }
               return (
-                <Chip
+                <Box
                   key={index}
-                  label={word}
-                  icon={completed ? <CheckCircleIcon /> : null}
-                  color={current ? 'primary' : completed ? 'success' : 'default'}
-                  sx={{ fontWeight: current ? 'bold' : 'normal' }}
-                />
+                  sx={{
+                    px: 1.5,
+                    py: 0.4,
+                    borderRadius: '50px',
+                    bgcolor: c.bg,
+                    border: `2px solid ${c.border}`,
+                    fontWeight: current ? 700 : 400,
+                    fontSize: '0.85rem',
+                    color: c.border,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  {completed && <CheckCircleIcon sx={{ fontSize: 14 }} />}
+                  {word}
+                </Box>
               )
             })}
           </Stack>
-        </Paper>
+        </Box>
       </Box>
     )
   }
@@ -373,13 +427,13 @@ const WordshakeC1Game = ({
   return (
     <Box sx={{ width: '100%', maxWidth: 1000, mx: 'auto', p: 3 }}>
       {/* Header with Timer and Score */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: 'primary.light' }}>
+      <Box sx={{ ...clay(D.blue), p: 3, mb: 3 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" spacing={2}>
           <Box>
-            <Typography variant="h5" fontWeight="bold" color="primary.dark">
+            <Typography variant="h5" fontWeight="bold" sx={{ color: D.heading }}>
               Wordshake Challenge - C1 Level
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: D.muted }}>
               Find 6 advanced marketing terms in the grid
             </Typography>
           </Box>
@@ -388,12 +442,12 @@ const WordshakeC1Game = ({
             {/* Timer */}
             <Box sx={{ textAlign: 'center' }}>
               <Stack direction="row" alignItems="center" spacing={1}>
-                <TimerIcon sx={{ color: timeLeft < 60 ? 'error.main' : 'primary.main' }} />
-                <Typography variant="h4" fontWeight="bold" color={timeLeft < 60 ? 'error.main' : 'primary.main'}>
+                <TimerIcon sx={{ color: timeLeft < 60 ? D.red.border : D.blue.border }} />
+                <Typography variant="h4" fontWeight="bold" sx={{ color: timeLeft < 60 ? D.red.border : D.heading }}>
                   {formatTime(timeLeft)}
                 </Typography>
               </Stack>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{ color: D.muted }}>
                 Time Left
               </Typography>
             </Box>
@@ -402,11 +456,11 @@ const WordshakeC1Game = ({
             <Box sx={{ textAlign: 'center' }}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <StarIcon sx={{ color: 'warning.main' }} />
-                <Typography variant="h4" fontWeight="bold" color="success.main">
+                <Typography variant="h4" fontWeight="bold" sx={{ color: D.green.border }}>
                   {score}/{targetWords.length}
                 </Typography>
               </Stack>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{ color: D.muted }}>
                 Words Found
               </Typography>
             </Box>
@@ -419,27 +473,41 @@ const WordshakeC1Game = ({
           value={(foundWords.size / targetWords.length) * 100}
           sx={{ mt: 2, height: 8, borderRadius: 1 }}
         />
-      </Paper>
+      </Box>
 
       {/* Current Word Display */}
       {currentWord && (
-        <Paper elevation={2} sx={{ p: 2, mb: 2, textAlign: 'center', backgroundColor: 'info.light' }}>
-          <Typography variant="h5" fontWeight="bold" color="info.dark">
+        <Box sx={{ ...clay(D.teal), p: 2, mb: 2, textAlign: 'center' }}>
+          <Typography variant="h5" fontWeight="bold" sx={{ color: D.heading }}>
             {currentWord}
           </Typography>
           <Stack direction="row" justifyContent="center" spacing={2} sx={{ mt: 1 }}>
-            <Button variant="contained" color="success" onClick={handleSubmitWord}>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={handleSubmitWord}
+              sx={{
+                borderRadius: '12px',
+                boxShadow: `4px 4px 0 ${D.green.shadow}`,
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` }
+              }}
+            >
               Submit Word
             </Button>
-            <Button variant="outlined" color="error" onClick={handleClearSelection}>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleClearSelection}
+              sx={{ borderRadius: '12px', '&:hover': { transform: 'translate(-2px,-2px)' } }}
+            >
               Clear
             </Button>
           </Stack>
-        </Paper>
+        </Box>
       )}
 
       {/* Letter Grid */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+      <Box sx={{ ...clay(D.blue), p: 3, mb: 3 }}>
         <Grid container spacing={1}>
           {grid.map((row, rowIndex) => (
             <Grid item xs={12} key={rowIndex}>
@@ -447,11 +515,11 @@ const WordshakeC1Game = ({
                 {row.map((letter, colIndex) => {
                   const selected = isSelected(rowIndex, colIndex)
                   const isFound = isFoundWordCell(rowIndex, colIndex)
+                  const cellColor = selected ? D.blue : isFound ? D.green : { bg: D.cardBg, border: D.divider, shadow: D.muted }
                   return (
-                    <Paper
+                    <Box
                       key={`${rowIndex}-${colIndex}`}
                       onClick={() => handleCellClick(rowIndex, colIndex)}
-                      elevation={selected ? 8 : isFound ? 4 : 2}
                       sx={{
                         width: 45,
                         height: 45,
@@ -459,68 +527,79 @@ const WordshakeC1Game = ({
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: wordFindingComplete ? 'default' : 'pointer',
-                        backgroundColor: selected ? 'primary.main' : isFound ? 'success.light' : 'grey.100',
-                        color: selected ? 'white' : isFound ? 'success.dark' : 'text.primary',
-                        transition: 'all 0.3s',
-                        border: '2px solid',
-                        borderColor: selected ? 'primary.dark' : isFound ? 'success.main' : 'grey.300',
+                        bgcolor: cellColor.bg,
+                        color: selected ? cellColor.border : isFound ? cellColor.border : D.body,
+                        transition: 'all 0.2s',
+                        border: `2px solid ${cellColor.border}`,
+                        borderRadius: '10px',
+                        boxShadow: selected || isFound ? `3px 3px 0 ${cellColor.shadow}` : 'none',
+                        fontWeight: 'bold',
                         '&:hover': {
-                          transform: wordFindingComplete ? 'none' : 'scale(1.1)',
-                          boxShadow: wordFindingComplete ? 2 : 6,
-                          backgroundColor: selected ? 'primary.main' : isFound ? 'success.light' : 'grey.200'
+                          transform: wordFindingComplete ? 'none' : 'translate(-1px,-1px) scale(1.1)',
+                          boxShadow: wordFindingComplete ? 'none' : `4px 4px 0 ${cellColor.shadow || D.blue.shadow}`,
                         }
                       }}
                     >
                       <Typography variant="body1" fontWeight="bold">
                         {letter}
                       </Typography>
-                    </Paper>
+                    </Box>
                   )
                 })}
               </Stack>
             </Grid>
           ))}
         </Grid>
-      </Paper>
+      </Box>
 
       {/* Target Words List */}
-      <Paper elevation={2} sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
+      <Box sx={{ ...clay(D.yellow), p: 3 }}>
+        <Typography variant="h6" gutterBottom sx={{ color: D.heading }}>
           Target Words ({foundWords.size}/{targetWords.length})
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           {targetWords.map((word, index) => {
             const found = foundWords.has(word)
+            const c = found ? D.green : { bg: D.cardBg, border: D.divider }
             return (
-              <Chip
+              <Box
                 key={index}
-                label={word}
-                icon={found ? <CheckCircleIcon /> : null}
-                color={found ? 'success' : 'default'}
                 sx={{
+                  px: 1.5,
+                  py: 0.4,
+                  borderRadius: '50px',
+                  bgcolor: c.bg,
+                  border: `2px solid ${c.border}`,
+                  fontWeight: found ? 700 : 400,
                   fontSize: '1rem',
-                  fontWeight: found ? 'bold' : 'normal',
-                  opacity: found ? 1 : 0.6
+                  color: found ? D.green.border : D.muted,
+                  opacity: found ? 1 : 0.65,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
                 }}
-              />
+              >
+                {found && <CheckCircleIcon sx={{ fontSize: 14 }} />}
+                {word}
+              </Box>
             )
           })}
         </Stack>
-      </Paper>
+      </Box>
 
       {/* Phase Complete Message */}
       {wordFindingComplete && (
-        <Paper elevation={6} sx={{ p: 4, mt: 3, textAlign: 'center', backgroundColor: 'success.main', color: 'white' }}>
-          <Typography variant="h4" gutterBottom>
+        <Box sx={{ ...clay(D.green), p: 4, mt: 3, textAlign: 'center' }}>
+          <Typography variant="h4" gutterBottom sx={{ color: D.heading }}>
             {foundWords.size === targetWords.length ? '🎉 Perfect!' : '⏰ Time\'s Up!'}
           </Typography>
-          <Typography variant="h5">
+          <Typography variant="h5" sx={{ color: D.body }}>
             You found {foundWords.size} out of {targetWords.length} words!
           </Typography>
-          <Typography variant="body1" sx={{ mt: 2 }}>
+          <Typography variant="body1" sx={{ mt: 2, color: D.muted }}>
             Next: Write sentences using each word...
           </Typography>
-        </Paper>
+        </Box>
       )}
     </Box>
   )

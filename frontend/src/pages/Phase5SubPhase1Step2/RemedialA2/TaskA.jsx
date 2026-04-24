@@ -36,6 +36,7 @@ const VOCABULARY_PAIRS = [
 
 export default function Phase5Step2RemedialA2TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase5/subphase/1/step/2/remedial/a2/task/b') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 2, interaction: 1, context: 'remedial_a2' })

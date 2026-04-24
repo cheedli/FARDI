@@ -60,6 +60,7 @@ export default function Phase5SubPhase2Step1RemedialC1TaskD() {
   }
 
   const handleContinue = async () => navigate(await resolveSubphase2RemedialNextUrl(1, 'C1'))
+  window.__remedialSkip = handleContinue
   const progress = ((currentIndex + 1) / 6) * 100
 
   return (

@@ -80,6 +80,8 @@ export default function Dashboard() {
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
   const navigate = useNavigate()
+  const isElectron = window.location.port !== '5173' && window.location.protocol === 'http:'
+  const isTesting = isElectron || new URLSearchParams(window.location.search).get('testing') === '1'
 
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -186,11 +188,11 @@ export default function Dashboard() {
   const getPhaseState = (id) => {
     switch (id) {
       case 1: return { unlocked: true, completed: hasCompletedPhase1, inProgress: currentProgress != null }
-      case 2: return { unlocked: hasCompletedPhase1, completed: hasCompletedPhase2, inProgress: hasPhase2Progress && !hasCompletedPhase2 }
-      case 3: return { unlocked: hasCompletedPhase2, completed: hasCompletedPhase3, inProgress: hasPhase3Progress && !hasCompletedPhase3 }
-      case 4: return { unlocked: hasCompletedPhase3, completed: hasCompletedPhase4, inProgress: hasPhase4Progress && !hasCompletedPhase4 }
-      case 5: return { unlocked: hasCompletedPhase4, completed: hasCompletedPhase5, inProgress: p5TotalSteps > 0 && !hasCompletedPhase5 }
-      case 6: return { unlocked: hasCompletedPhase5, completed: hasCompletedPhase6, inProgress: p6TotalSteps > 0 && !hasCompletedPhase6 }
+      case 2: return { unlocked: isTesting || hasCompletedPhase1, completed: hasCompletedPhase2, inProgress: hasPhase2Progress && !hasCompletedPhase2 }
+      case 3: return { unlocked: isTesting || hasCompletedPhase2, completed: hasCompletedPhase3, inProgress: hasPhase3Progress && !hasCompletedPhase3 }
+      case 4: return { unlocked: isTesting || hasCompletedPhase3, completed: hasCompletedPhase4, inProgress: hasPhase4Progress && !hasCompletedPhase4 }
+      case 5: return { unlocked: isTesting || hasCompletedPhase4, completed: hasCompletedPhase5, inProgress: p5TotalSteps > 0 && !hasCompletedPhase5 }
+      case 6: return { unlocked: isTesting || hasCompletedPhase5, completed: hasCompletedPhase6, inProgress: p6TotalSteps > 0 && !hasCompletedPhase6 }
       default: return { unlocked: false, completed: false, inProgress: false }
     }
   }

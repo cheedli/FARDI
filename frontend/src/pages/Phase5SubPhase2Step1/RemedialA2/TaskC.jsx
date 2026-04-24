@@ -57,6 +57,7 @@ export default function Phase5SubPhase2Step1RemedialA2TaskC() {
   }
 
   const handleContinue = async () => navigate(await resolveSubphase2RemedialNextUrl(1, 'A2'))
+  window.__remedialSkip = handleContinue
   const allFilled = sentences.every(s => s.trim().length > 0)
 
   return (

@@ -36,6 +36,7 @@ const GUIDED_QUESTIONS = [
 
 export default function Phase5Step2RemedialB1TaskB() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase5/subphase/1/step/2/remedial/b1/task/c') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 5, subphase: 1, step: 2, interaction: 2, context: 'remedial_b1' })

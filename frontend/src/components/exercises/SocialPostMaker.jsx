@@ -91,6 +91,11 @@ export default function SocialPostMaker({ exercise, onComplete, onProgress }) {
         setPlatform(randomPlatform)
     }, [])
 
+    // Report progress — must be before any early return
+    useEffect(() => {
+        onProgress?.({ answer: postContent })
+    }, [postContent, onProgress])
+
     if (!platform) return null
 
     const c = pills[PLATFORM_COLORS[platform]]
@@ -114,11 +119,6 @@ export default function SocialPostMaker({ exercise, onComplete, onProgress }) {
             })
         }
     }
-
-    // Report progress
-    useEffect(() => {
-        onProgress?.({ answer: postContent })
-    }, [postContent, onProgress])
 
     const getTimeAgo = () => 'Just now'
 

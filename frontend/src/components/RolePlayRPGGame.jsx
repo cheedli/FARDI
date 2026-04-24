@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Paper, Typography, Chip, Stack, Button, LinearProgress, Avatar, Card, CardContent } from '@mui/material'
+import { Box, Typography, Stack, Button, LinearProgress, Avatar, useTheme } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LockIcon from '@mui/icons-material/Lock'
 import PersonIcon from '@mui/icons-material/Person'
@@ -12,6 +12,34 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
  * Players "level up" their character by using correct terms in role-play scenarios
  */
 
+const LIGHT = {
+  pageBg: '#FFFDE7', cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', divider: '#E0E0E0',
+  green:  { bg: '#C8E6C9', border: '#388E3C', shadow: '#2E7D32' },
+  blue:   { bg: '#BBDEFB', border: '#1976D2', shadow: '#1565C0' },
+  teal:   { bg: '#B2EBF2', border: '#0097A7', shadow: '#006064' },
+  orange: { bg: '#FFE0B2', border: '#F57C00', shadow: '#E65100' },
+  purple: { bg: '#E8EAF6', border: '#3949AB', shadow: '#283593' },
+  red:    { bg: '#FFCDD2', border: '#C62828', shadow: '#B71C1C' },
+  yellow: { bg: '#FFF9C4', border: '#F9A825', shadow: '#F57F17' },
+}
+const DARK = {
+  pageBg: '#0F0F1A', cardBg: '#1A1A2E', heading: '#E8EAFF', body: '#B0BEC5', muted: '#607D8B', divider: '#2A2A4A',
+  green:  { bg: '#0A1F0A', border: '#81C784', shadow: '#2E7D32' },
+  blue:   { bg: '#0A1929', border: '#64B5F6', shadow: '#1565C0' },
+  teal:   { bg: '#001F22', border: '#4DD0E1', shadow: '#00695C' },
+  orange: { bg: '#1F1000', border: '#FFB74D', shadow: '#E65100' },
+  purple: { bg: '#0D0D2B', border: '#7986CB', shadow: '#283593' },
+  red:    { bg: '#2A0A0A', border: '#E57373', shadow: '#B71C1C' },
+  yellow: { bg: '#2A2200', border: '#FFD54F', shadow: '#F57F17' },
+}
+const clay = (c, extra = {}) => ({
+  bgcolor: c.bg,
+  border: `2px solid ${c.border}`,
+  borderRadius: '16px',
+  boxShadow: `4px 4px 0 ${c.shadow}`,
+  ...extra,
+})
+
 const RolePlayRPGGame = ({
   dialogueLines = [],
   wordBank = [],
@@ -19,6 +47,9 @@ const RolePlayRPGGame = ({
   characterName = "Marketing Expert",
   scenario = "Marketing Campaign Discussion"
 }) => {
+  const muiTheme = useTheme()
+  const D = muiTheme.palette.mode === 'dark' ? DARK : LIGHT
+
   const [currentLineIndex, setCurrentLineIndex] = useState(0)
   const [selectedWords, setSelectedWords] = useState([])
   const [completedLines, setCompletedLines] = useState([])
@@ -193,59 +224,55 @@ const RolePlayRPGGame = ({
     const finalLevel = Math.min(Math.floor(experiencePoints / xpPerLevel) + 1, maxLevel)
 
     return (
-      <Paper elevation={6} sx={{ p: 6, textAlign: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        <Box sx={{ color: 'white' }}>
-          <EmojiEventsIcon sx={{ fontSize: 80, mb: 2, color: '#ffd700' }} />
-          <Typography variant="h3" gutterBottom fontWeight="bold">
-            Quest Complete!
-          </Typography>
-          <Typography variant="h5" sx={{ mb: 3 }}>
-            You've mastered the role-play dialogue!
-          </Typography>
+      <Box sx={{ ...clay(D.purple), p: 6, textAlign: 'center' }}>
+        <EmojiEventsIcon sx={{ fontSize: 80, mb: 2, color: D.yellow.border }} />
+        <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: D.heading }}>
+          Quest Complete!
+        </Typography>
+        <Typography variant="h5" sx={{ mb: 3, color: D.body }}>
+          You've mastered the role-play dialogue!
+        </Typography>
 
-          <Card sx={{ maxWidth: 500, mx: 'auto', mb: 3, backgroundColor: 'rgba(255,255,255,0.95)' }}>
-            <CardContent>
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant="h6" color="primary" gutterBottom>
-                    Final Character Level
-                  </Typography>
-                  <Stack direction="row" spacing={1} justifyContent="center">
-                    {[...Array(finalLevel)].map((_, i) => (
-                      <StarIcon key={i} sx={{ color: '#ffd700', fontSize: 40 }} />
-                    ))}
-                  </Stack>
-                  <Typography variant="h4" color="primary.dark" fontWeight="bold">
-                    Level {finalLevel}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography variant="h6" color="text.secondary">
-                    Score
-                  </Typography>
-                  <Typography variant="h3" color="success.dark" fontWeight="bold">
-                    {score} / {totalQuestionsWithBlanks}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography variant="h6" color="text.secondary">
-                    Experience Points
-                  </Typography>
-                  <Typography variant="h4" color="primary.main" fontWeight="bold">
-                    {experiencePoints} XP
-                  </Typography>
-                </Box>
+        <Box sx={{ ...clay(D.blue), maxWidth: 500, mx: 'auto', mb: 3, p: 3 }}>
+          <Stack spacing={2}>
+            <Box>
+              <Typography variant="h6" sx={{ color: D.blue.border }} gutterBottom>
+                Final Character Level
+              </Typography>
+              <Stack direction="row" spacing={1} justifyContent="center">
+                {[...Array(finalLevel)].map((_, i) => (
+                  <StarIcon key={i} sx={{ color: D.yellow.border, fontSize: 40 }} />
+                ))}
               </Stack>
-            </CardContent>
-          </Card>
+              <Typography variant="h4" sx={{ color: D.heading }} fontWeight="bold">
+                Level {finalLevel}
+              </Typography>
+            </Box>
 
-          <Typography variant="body1" sx={{ mt: 2, opacity: 0.9 }}>
-            You're now a certified {characterName}!
-          </Typography>
+            <Box>
+              <Typography variant="h6" sx={{ color: D.muted }}>
+                Score
+              </Typography>
+              <Typography variant="h3" sx={{ color: D.green.border }} fontWeight="bold">
+                {score} / {totalQuestionsWithBlanks}
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant="h6" sx={{ color: D.muted }}>
+                Experience Points
+              </Typography>
+              <Typography variant="h4" sx={{ color: D.blue.border }} fontWeight="bold">
+                {experiencePoints} XP
+              </Typography>
+            </Box>
+          </Stack>
         </Box>
-      </Paper>
+
+        <Typography variant="body1" sx={{ mt: 2, color: D.body }}>
+          You're now a certified {characterName}!
+        </Typography>
+      </Box>
     )
   }
 
@@ -255,14 +282,14 @@ const RolePlayRPGGame = ({
   return (
     <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto' }}>
       {/* RPG Character Status Panel */}
-      <Paper elevation={4} sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+      <Box sx={{ ...clay(D.purple), p: 3, mb: 3 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="center">
           {/* Character Avatar */}
           <Box sx={{ textAlign: 'center' }}>
-            <Avatar sx={{ width: 80, height: 80, bgcolor: '#ffd700', mb: 1 }}>
-              <PersonIcon sx={{ fontSize: 50, color: '#764ba2' }} />
+            <Avatar sx={{ width: 80, height: 80, bgcolor: D.yellow.border, mb: 1 }}>
+              <PersonIcon sx={{ fontSize: 50, color: D.purple.border }} />
             </Avatar>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: 'white' }}>
+            <Typography variant="h6" fontWeight="bold" sx={{ color: D.heading }}>
               {characterName}
             </Typography>
           </Box>
@@ -270,7 +297,7 @@ const RolePlayRPGGame = ({
           {/* Level & XP */}
           <Box sx={{ flexGrow: 1 }}>
             <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
-              <Typography variant="h5" fontWeight="bold" sx={{ color: '#ffd700' }}>
+              <Typography variant="h5" fontWeight="bold" sx={{ color: D.yellow.border }}>
                 Level {characterLevel}
               </Typography>
               <Stack direction="row" spacing={0.5}>
@@ -278,7 +305,7 @@ const RolePlayRPGGame = ({
                   <StarIcon
                     key={i}
                     sx={{
-                      color: i < characterLevel ? '#ffd700' : 'rgba(255,255,255,0.3)',
+                      color: i < characterLevel ? D.yellow.border : D.divider,
                       fontSize: 24
                     }}
                   />
@@ -288,10 +315,10 @@ const RolePlayRPGGame = ({
 
             <Box>
               <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
-                <Typography variant="body2" sx={{ color: 'white' }}>
+                <Typography variant="body2" sx={{ color: D.body }}>
                   Experience: {currentXP} / {xpPerLevel} XP
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'white' }}>
+                <Typography variant="body2" sx={{ color: D.body }}>
                   {xpProgress.toFixed(0)}%
                 </Typography>
               </Stack>
@@ -301,9 +328,9 @@ const RolePlayRPGGame = ({
                 sx={{
                   height: 12,
                   borderRadius: 2,
-                  backgroundColor: 'rgba(255,255,255,0.3)',
+                  backgroundColor: D.divider,
                   '& .MuiLinearProgress-bar': {
-                    backgroundColor: '#ffd700'
+                    backgroundColor: D.yellow.border
                   }
                 }}
               />
@@ -312,10 +339,10 @@ const RolePlayRPGGame = ({
 
           {/* Dialogue Progress */}
           <Box sx={{ minWidth: 200 }}>
-            <Typography variant="body2" sx={{ color: 'white', mb: 0.5 }}>
+            <Typography variant="body2" sx={{ color: D.body, mb: 0.5 }}>
               Quest Progress
             </Typography>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#ffd700' }}>
+            <Typography variant="h6" fontWeight="bold" sx={{ color: D.yellow.border }}>
               {completedLines.length} / {dialogueLines.length}
             </Typography>
             <LinearProgress
@@ -324,50 +351,50 @@ const RolePlayRPGGame = ({
               sx={{
                 height: 8,
                 borderRadius: 1,
-                backgroundColor: 'rgba(255,255,255,0.3)',
+                backgroundColor: D.divider,
                 '& .MuiLinearProgress-bar': {
-                  backgroundColor: '#4caf50'
+                  backgroundColor: D.green.border
                 }
               }}
             />
           </Box>
         </Stack>
-      </Paper>
+      </Box>
 
       {/* Scenario Context */}
-      <Paper elevation={2} sx={{ p: 2, mb: 3, backgroundColor: 'info.light' }}>
-        <Typography variant="subtitle1" fontWeight="bold" color="info.dark">
+      <Box sx={{ ...clay(D.teal), p: 2, mb: 3 }}>
+        <Typography variant="subtitle1" fontWeight="bold" sx={{ color: D.teal.border }}>
           Scenario: {scenario}
         </Typography>
-      </Paper>
+      </Box>
 
       {/* Completed Lines (Dialogue History) */}
       <Stack spacing={2} sx={{ mb: 3 }}>
         {completedLines.map((line, index) => (
-          <Paper
+          <Box
             key={index}
-            elevation={3}
             sx={{
+              ...clay(
+                line.isCorrect === false ? D.red :
+                line.speaker === 'You' ? D.blue : D.orange
+              ),
               p: 2.5,
-              backgroundColor: line.speaker === 'You' ? 'info.light' : 'grey.100',
-              border: '2px solid',
-              borderColor: line.isCorrect === false ? 'error.main' : 'success.main',
               position: 'relative'
             }}
           >
             <Stack direction="row" spacing={2} alignItems="flex-start">
               <Avatar sx={{
-                bgcolor: line.speaker === 'You' ? 'info.dark' : 'grey.500',
+                bgcolor: line.speaker === 'You' ? D.blue.border : D.muted,
                 width: 40,
                 height: 40
               }}>
                 <PersonIcon />
               </Avatar>
               <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="subtitle1" fontWeight="bold" color="text.primary" gutterBottom>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ color: D.heading }} gutterBottom>
                   {line.speaker}
                 </Typography>
-                <Typography variant="body1">
+                <Typography variant="body1" sx={{ color: D.body }}>
                   {line.blanks.length === 0 ? (
                     line.template
                   ) : (
@@ -391,29 +418,26 @@ const RolePlayRPGGame = ({
                   )}
                 </Typography>
                 {line.isCorrect && line.xpGained > 0 && (
-                  <Typography variant="caption" sx={{ color: 'success.dark', fontWeight: 'bold', mt: 1, display: 'block' }}>
+                  <Typography variant="caption" sx={{ color: D.green.border, fontWeight: 'bold', mt: 1, display: 'block' }}>
                     +{line.xpGained} XP earned!
                   </Typography>
                 )}
               </Box>
               <CheckCircleIcon sx={{
-                color: line.isCorrect === false ? 'error.main' : 'success.main',
+                color: line.isCorrect === false ? D.red.border : D.green.border,
                 fontSize: 28
               }} />
             </Stack>
-          </Paper>
+          </Box>
         ))}
       </Stack>
 
       {/* Current Line - Active Role-Play */}
-      <Paper
-        elevation={6}
+      <Box
         sx={{
+          ...clay(showError ? D.red : (currentLine?.speaker === 'You' ? D.blue : D.orange)),
           p: 4,
           mb: 3,
-          backgroundColor: showError ? '#ffebee' : (currentLine?.speaker === 'You' ? 'info.light' : 'grey.50'),
-          border: '3px solid',
-          borderColor: showError ? 'error.main' : 'primary.main',
           transition: 'all 0.3s ease',
           position: 'relative'
         }}
@@ -423,11 +447,11 @@ const RolePlayRPGGame = ({
             position: 'absolute',
             top: 10,
             right: 10,
-            backgroundColor: 'primary.main',
+            bgcolor: D.blue.border,
             color: 'white',
             px: 2,
             py: 0.5,
-            borderRadius: 2
+            borderRadius: '8px',
           }}>
             <Typography variant="caption" fontWeight="bold">
               YOUR TURN
@@ -437,17 +461,17 @@ const RolePlayRPGGame = ({
 
         <Stack direction="row" spacing={2} alignItems="flex-start">
           <Avatar sx={{
-            bgcolor: currentLine?.speaker === 'You' ? 'info.dark' : 'grey.500',
+            bgcolor: currentLine?.speaker === 'You' ? D.blue.border : D.muted,
             width: 48,
             height: 48
           }}>
             <PersonIcon sx={{ fontSize: 30 }} />
           </Avatar>
           <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom color={showError ? 'error.main' : 'primary.dark'}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: showError ? D.red.border : D.heading }}>
               {currentLine?.speaker}
             </Typography>
-            <Typography variant="body1" sx={{ mb: 2, fontSize: '1.15rem', lineHeight: 1.8 }}>
+            <Typography variant="body1" sx={{ mb: 2, fontSize: '1.15rem', lineHeight: 1.8, color: D.body }}>
               {currentLine?.template.split('[____]').map((part, i) => (
                 <React.Fragment key={i}>
                   {part}
@@ -480,12 +504,9 @@ const RolePlayRPGGame = ({
               <Box sx={{
                 mt: 2,
                 p: 2,
-                backgroundColor: 'error.light',
-                borderRadius: 2,
-                border: '2px solid',
-                borderColor: 'error.main'
+                ...clay(D.red),
               }}>
-                <Typography variant="body1" color="error.dark" fontWeight="bold">
+                <Typography variant="body1" sx={{ color: D.red.border }} fontWeight="bold">
                   {!hasRetried
                     ? 'Incorrect! Try again to level up!'
                     : 'Incorrect again! No XP gained. Moving to next dialogue...'}
@@ -494,38 +515,42 @@ const RolePlayRPGGame = ({
             )}
           </Box>
         </Stack>
-      </Paper>
+      </Box>
 
       {/* Word Bank */}
-      <Paper elevation={4} sx={{ p: 3, mb: 3, backgroundColor: 'grey.50', border: '2px solid', borderColor: 'primary.light' }}>
-        <Typography variant="h6" gutterBottom fontWeight="bold" color="primary.dark">
+      <Box sx={{ ...clay(D.blue), p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: D.heading }}>
           Marketing Terms - Choose wisely to level up!
         </Typography>
         <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
           {wordBank.map((word, index) => (
-            <Chip
+            <Box
+              component="span"
               key={index}
-              label={word}
               onClick={() => handleWordClick(word)}
               sx={{
+                px: 1.5,
+                py: 0.4,
+                borderRadius: '50px',
+                bgcolor: selectedWords.includes(word) ? D.blue.border : D.teal.bg,
+                border: '2px solid ' + (selectedWords.includes(word) ? D.blue.shadow : D.teal.border),
+                fontWeight: 700,
                 fontSize: '1.05rem',
-                fontWeight: 'bold',
+                color: selectedWords.includes(word) ? '#fff' : D.teal.border,
+                display: 'inline-flex',
+                alignItems: 'center',
                 cursor: 'pointer',
-                px: 2.5,
-                py: 1.5,
-                height: 'auto',
+                transition: 'all 0.2s ease',
                 '&:hover': {
-                  backgroundColor: 'primary.main',
-                  color: 'white',
                   transform: 'scale(1.05)',
-                  transition: 'all 0.2s ease'
                 }
               }}
-              color={selectedWords.includes(word) ? 'primary' : 'default'}
-            />
+            >
+              {word}
+            </Box>
           ))}
         </Stack>
-      </Paper>
+      </Box>
 
       {/* Action Buttons */}
       <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mb: 3 }}>
@@ -535,6 +560,7 @@ const RolePlayRPGGame = ({
           onClick={handleClear}
           disabled={selectedWords.length === 0 || showError}
           size="large"
+          sx={{ borderRadius: '12px', fontWeight: 700, boxShadow: `2px 2px 0 ${D.red.shadow}` }}
         >
           Clear Selection
         </Button>
@@ -544,7 +570,7 @@ const RolePlayRPGGame = ({
           onClick={handleSubmit}
           disabled={selectedWords.length !== totalBlanks || showError}
           size="large"
-          sx={{ px: 4 }}
+          sx={{ px: 4, borderRadius: '12px', fontWeight: 700, boxShadow: `2px 2px 0 ${D.blue.shadow}` }}
         >
           {selectedWords.length === totalBlanks
             ? 'Submit & Level Up!'
@@ -555,27 +581,26 @@ const RolePlayRPGGame = ({
       {/* Locked Future Dialogues */}
       {currentLineIndex < dialogueLines.length - 1 && (
         <Box sx={{ mt: 4 }}>
-          <Typography variant="subtitle1" color="text.secondary" gutterBottom fontWeight="bold">
+          <Typography variant="subtitle1" sx={{ color: D.muted }} gutterBottom fontWeight="bold">
             Upcoming Dialogues (Complete current to unlock):
           </Typography>
           {dialogueLines.slice(currentLineIndex + 1, currentLineIndex + 3).map((line, index) => (
-            <Paper
+            <Box
               key={index}
-              elevation={1}
               sx={{
+                ...clay(D.orange),
                 p: 2,
                 mb: 1,
-                backgroundColor: 'grey.200',
-                opacity: 0.6
+                opacity: 0.6,
               }}
             >
               <Stack direction="row" spacing={2} alignItems="center">
-                <LockIcon sx={{ color: 'grey.500' }} />
-                <Typography variant="body2" color="text.secondary">
+                <LockIcon sx={{ color: D.muted }} />
+                <Typography variant="body2" sx={{ color: D.body }}>
                   {line.speaker}: {line.template.replace(/\[____\]/g, '____')}
                 </Typography>
               </Stack>
-            </Paper>
+            </Box>
           ))}
         </Box>
       )}

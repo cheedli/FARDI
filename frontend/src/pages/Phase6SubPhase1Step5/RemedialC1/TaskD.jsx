@@ -46,6 +46,7 @@ const WEAKNESSES = [
 
 export default function Phase6SP1Step5RemC1TaskD() {
   const navigate = useNavigate()
+  React.useEffect(() => { resolveSubphase1RemedialNextUrl(5, 'C1').then(url => { window.__remedialSkip = () => navigate(url) }) }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 6, subphase: 1, step: 5, interaction: 4, context: 'remedial_c1' })

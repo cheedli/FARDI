@@ -327,36 +327,23 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
 
     // Check completion
     const isComplete = completedLines.size === userInputLines.length && userInputLines.length > 0
+    const [submitted, setSubmitted] = useState(false)
 
-    useEffect(() => {
-        if (isComplete && onComplete) {
-            const totalCorrectWords = getTotalCorrectWords()
-            const totalBlanksAvailable = getTotalBlanksAvailable()
-
-            console.log('=== PhoneCallSim - Scoring ===')
-            console.log('Total CORRECT words:', totalCorrectWords, '/', totalBlanksAvailable)
-            console.log('Each CORRECT word = +1 point')
-
-            // Log details per line
-            userInputLines.forEach((line) => {
-                const lineKey = `line_${line.originalIndex}`
-                const filledWords = answers[lineKey] || []
-                const correctAnswers = line.correct_answers || []
-                console.log(`Line ${line.originalIndex}:`, filledWords)
-                console.log(`Correct answers:`, correctAnswers)
-                filledWords.forEach((word, index) => {
-                    const isCorrect = correctAnswers[index] && word === correctAnswers[index]
-                    console.log(`  [${index}] "${word}" vs "${correctAnswers[index]}": ${isCorrect ? '+1' : '+0'}`)
-                })
-            })
-
-            onComplete({
-                isPerfect: totalCorrectWords === totalBlanksAvailable,
-                correctCount: totalCorrectWords, // Count only CORRECT words
-                totalCount: totalBlanksAvailable
-            })
-        }
-    }, [isComplete, onComplete, completedLines.size, userInputLines.length])
+    const handleSubmit = () => {
+        setSubmitted(true)
+        // Send word arrays keyed by line_N so backend can do exact matching
+        const lineAnswers = {}
+        userInputLines.forEach((line) => {
+            const lineKey = `line_${line.originalIndex}`
+            lineAnswers[lineKey] = answers[lineKey] || []
+        })
+        onProgress?.({ answers: lineAnswers })
+        onComplete({
+            isPerfect: false,
+            correctCount: undefined,
+            totalCount: getTotalBlanksAvailable(),
+        })
+    }
 
     // Scroll to bottom
     useEffect(() => {
@@ -581,21 +568,6 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
                                             </IconButton>
                                         )}
 
-                                        {/* Completion check */}
-                                        {isCompleted && isOutgoing && (
-                                            <Zoom in={true}>
-                                                <CheckCircleIcon
-                                                    sx={{
-                                                        position: 'absolute',
-                                                        left: { xs: -28, sm: -30 },
-                                                        top: '50%',
-                                                        transform: 'translateY(-50%)',
-                                                        color: c.green.border,
-                                                        fontSize: { xs: 20, sm: 22 }
-                                                    }}
-                                                />
-                                            </Zoom>
-                                        )}
                                     </Box>
                                 </Box>
                             </Fade>
@@ -640,21 +612,41 @@ export default function PhoneCallSim({ exercise, onComplete, onProgress }) {
                         </Fade>
                     )}
 
-                    {/* Completion Message - Green clay card */}
-                    {isComplete && (
+                    {/* Completion — review + submit */}
+                    {isComplete && !submitted && (
                         <Fade in={true}>
-                            <Box sx={{ textAlign: 'center', py: 3 }}>
+                            <Box sx={{ mt: 2 }}>
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Box
+                                        component="button"
+                                        onClick={handleSubmit}
+                                        sx={{
+                                            display: 'inline-flex', alignItems: 'center', gap: 1,
+                                            px: 3, py: 1.25, borderRadius: '14px', cursor: 'pointer',
+                                            bgcolor: c.green.border, color: '#fff', border: 'none',
+                                            fontWeight: 800, fontSize: '0.9rem', fontFamily: 'inherit',
+                                            boxShadow: `4px 4px 0 ${c.green.shadow}`,
+                                            transition: 'transform 0.12s, box-shadow 0.12s',
+                                            '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${c.green.shadow}` },
+                                        }}
+                                    >
+                                        <CheckCircleIcon sx={{ fontSize: 18 }} />
+                                        Submit
+                                    </Box>
+                                </Box>
+                            </Box>
+                        </Fade>
+                    )}
+                    {submitted && (
+                        <Fade in={true}>
+                            <Box sx={{ textAlign: 'center', py: 2 }}>
                                 <Box sx={{
-                                    display: 'inline-block',
-                                    px: { xs: 2, sm: 3 },
-                                    py: 1.5,
-                                    bgcolor: c.green.bg,
-                                    border: `2px solid ${c.green.border}`,
-                                    borderRadius: '20px',
-                                    boxShadow: `4px 4px 0 ${c.green.shadow}`
+                                    display: 'inline-block', px: 3, py: 1.5,
+                                    bgcolor: c.green.bg, border: `2px solid ${c.green.border}`,
+                                    borderRadius: '20px', boxShadow: `4px 4px 0 ${c.green.shadow}`
                                 }}>
-                                    <Typography sx={{ color: c.green.border, fontWeight: 800, fontSize: { xs: '0.85rem', sm: '0.95rem' } }}>
-                                        Conversation complete!
+                                    <Typography sx={{ color: c.green.border, fontWeight: 800, fontSize: '0.9rem' }}>
+                                        Submitted! Evaluating…
                                     </Typography>
                                 </Box>
                             </Box>
