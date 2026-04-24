@@ -47,7 +47,7 @@ export default function Phase3RemedialA2TaskA() {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 1, context: 'remedial_a2' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 1, context: 'remedial_a2' })
   const [answers, setAnswers] = useState({})
   const [showResults, setShowResults] = useState(false)
   const [evaluations, setEvaluations] = useState({})
@@ -92,7 +92,7 @@ export default function Phase3RemedialA2TaskA() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',
@@ -106,6 +106,7 @@ export default function Phase3RemedialA2TaskA() {
   }
 
   const handleNext = () => { navigate('/phase3/step/1/remedial/a2/taskB') }
+  window.__remedialSkip = handleNext
 
   const isComplete = SENTENCE_PROMPTS.every(p => answers[p.id]?.trim().length > 0)
   const allCorrect = totalScore === SENTENCE_PROMPTS.length

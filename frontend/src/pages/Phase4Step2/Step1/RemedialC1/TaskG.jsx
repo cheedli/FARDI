@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Container, TextField } from '@mui/material'
@@ -29,6 +30,7 @@ const TIME_LIMIT = 300
 
 export default function Phase4_2RemedialC1TaskG() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/1/remedial/c1/taskH') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 7, context: 'remedial_c1' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)

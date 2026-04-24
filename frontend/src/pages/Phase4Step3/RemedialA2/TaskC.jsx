@@ -24,6 +24,7 @@ const SENTENCES = [
 
 export default function RemedialA2TaskC() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step3/remedial/b1/taskA') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

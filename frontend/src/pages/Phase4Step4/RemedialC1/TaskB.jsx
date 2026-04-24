@@ -81,6 +81,7 @@ export default function RemedialC1TaskB() {
   }
 
   const handleContinue = () => navigate('/phase4/step/4/remedial/c1/taskC')
+  window.__remedialSkip = handleContinue
   const allFilled = answers.every(a => a.trim().length > 0)
   const progress = ((currentIndex + 1) / QUIZ_QUESTIONS.length) * 100
 

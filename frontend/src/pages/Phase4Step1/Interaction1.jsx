@@ -91,6 +91,8 @@ export default function Phase4Step1Interaction1() {
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameProgress, setGameProgress] = useState({})
 
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/1/interaction/2') }, [])
+
   useEffect(() => {
     loadStepData()
   }, [])

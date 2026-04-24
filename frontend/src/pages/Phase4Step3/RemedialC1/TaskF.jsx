@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Container, Typography, Stack, TextField, LinearProgress } from '@mui/material'
@@ -124,6 +125,7 @@ const TIME_LIMIT = 420
 
 export default function RemedialC1TaskF() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step3/remedial/c1/taskG') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 6, context: 'remedial_c1' })

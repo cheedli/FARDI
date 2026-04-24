@@ -88,6 +88,7 @@ export default function Phase4Step5RemedialC1TaskC() {
   }
 
   const handleContinue = () => navigate('/phase4/step/5/remedial/c1/taskD')
+  window.__remedialSkip = handleContinue
   const progress = ((currentQuestion + 1) / QUESTIONS.length) * 100
   const canSubmit = userAnswer.trim().length >= 30
 

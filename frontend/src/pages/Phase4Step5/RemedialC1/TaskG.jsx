@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Container, Typography, Stack, TextField } from '@mui/material'
@@ -44,6 +45,7 @@ const CRUSADE_SENTENCES = [
 
 export default function Phase4Step5RemedialC1TaskG() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/5/remedial/c1/results') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 7, context: 'remedial_c1' })

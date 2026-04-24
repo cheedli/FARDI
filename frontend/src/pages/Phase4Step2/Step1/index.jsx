@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Grid, Container } from '@mui/material'
 import { useTheme } from '@mui/material'
@@ -15,6 +15,7 @@ import TagIcon from '@mui/icons-material/Tag'
 
 export default function Phase4_2Step1Intro() {
   const navigate = useNavigate()
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/1/interaction/1') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

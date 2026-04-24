@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Stack, Container } from '@mui/material'
@@ -70,6 +71,7 @@ const DARK = {
 
 export default function RemedialB1TaskD() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/remedial/b2/taskA') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 4, context: 'remedial_b1' })
@@ -161,7 +163,7 @@ export default function RemedialB1TaskD() {
       const data = await response.json()
       if (data.success) {
         console.log('Final B1 score logged to backend:', data.data)
-        const nextUrl = data.data.next_url || (passed ? '/phase4/step/3' : '/phase4/remedial/b1/taskA')
+        const nextUrl = data.data.next_url || (passed ? '/phase4_2/step/1' : '/phase4/remedial/b1/taskA')
         sessionStorage.setItem('phase4_step1_b1_next_url', nextUrl)
       }
     } catch (error) {
@@ -177,7 +179,7 @@ export default function RemedialB1TaskD() {
       sessionStorage.removeItem('remedial_b1_taskC_score')
       sessionStorage.removeItem('remedial_b1_taskD_score')
 
-      navigate(sessionStorage.getItem('phase4_step1_b1_next_url') || (passed ? '/phase4/step/3' : '/phase4/remedial/b1/taskA'))
+      navigate(sessionStorage.getItem('phase4_step1_b1_next_url') || (passed ? '/phase4_2/step/1' : '/phase4/remedial/b1/taskA'))
     }, 5000)
   }
 

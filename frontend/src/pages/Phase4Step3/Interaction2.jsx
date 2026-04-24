@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -198,6 +198,8 @@ export default function Phase4Step3Interaction2() {
       setLoading(false)
     }
   }
+
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/3/interaction/3') }, [])
 
   const handleContinue = () => {
     navigate('/phase4/step/3/interaction/3')

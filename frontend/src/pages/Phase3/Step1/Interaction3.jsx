@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Container, Typography, TextField, useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
@@ -44,7 +44,7 @@ export default function Phase3Step1Interaction3() {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 3, context: 'main' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 3, context: 'main' })
   const [userSentence, setUserSentence] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [feedback, setFeedback] = useState(null)
@@ -85,7 +85,9 @@ export default function Phase3Step1Interaction3() {
     console.log(`[Phase 3 Step 1 - Interaction 3] Score: ${score}/5 | Level: ${level}`)
   }
 
-  const handleNext = () => {
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase3/step/1/score') }, [])
+
+  const handleNext = async () => {
     const int1Score = parseInt(sessionStorage.getItem('phase3_step1_int1_score') || '0')
     const int2Score = parseInt(sessionStorage.getItem('phase3_step1_int2_score') || '0')
     const int3Score = parseInt(sessionStorage.getItem('phase3_step1_int3_score') || '0')
@@ -97,7 +99,7 @@ export default function Phase3Step1Interaction3() {
     sessionStorage.setItem('phase3_step1_total_max', totalMax.toString())
     sessionStorage.setItem('phase3_step1_percentage', percentage.toFixed(2))
 
-    console.log(`[Phase 3 Step 1 - TOTAL] Score: ${totalScore}/${totalMax} (${percentage.toFixed(1)}%)`)
+    await saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: int3Score })
     navigate('/phase3/step/1/score')
   }
 

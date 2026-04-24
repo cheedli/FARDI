@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Stack, Container } from '@mui/material'
 import { useTheme } from '@mui/material'
@@ -36,6 +36,8 @@ export default function Phase4Step3Intro() {
     red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
   }
   const P = isDark ? DARK : LIGHT
+
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/3/vocabulary') }, [])
 
   const handleStartActivities = () => {
     navigate('/phase4/step/3/vocabulary')

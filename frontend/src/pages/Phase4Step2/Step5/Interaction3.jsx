@@ -8,6 +8,7 @@ import { requestPhase42StepScore } from '../shared/routing.js'
 
 function Phase4_2Step5Interaction3() {
   const navigate = useNavigate()
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/5/remedial/a2/taskA') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

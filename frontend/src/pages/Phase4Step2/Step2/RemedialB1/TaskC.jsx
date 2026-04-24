@@ -115,6 +115,7 @@ export default function Phase4_2Step2RemedialB1TaskC() {
   }
 
   const handleNext = () => navigate('/phase4_2/step/2/remedial/b1/results')
+  window.__remedialSkip = handleNext
 
   const allAnswered = Object.keys(answers).length === QUESTIONS.length
 

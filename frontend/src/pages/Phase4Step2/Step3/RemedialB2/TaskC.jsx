@@ -136,6 +136,7 @@ export default function RemedialB2TaskC() {
 
   const handleStartGame = () => setGameStarted(true)
   const handleContinue = () => navigate('/phase4_2/step/3/remedial/b2/taskD')
+  window.__remedialSkip = handleContinue
   const allMatched = Object.keys(matches).length === 8
   const getTermById = (id) => TERMS.find(t => t.id === id)
 

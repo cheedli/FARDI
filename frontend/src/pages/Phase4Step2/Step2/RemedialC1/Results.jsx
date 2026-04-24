@@ -81,7 +81,7 @@ export default function Phase4_2Step2RemedialC1Results() {
 
   const handleContinue = () => {
     clearScores()
-    navigate(results.passed ? '/dashboard' : '/phase4_2/step/2/remedial/c1/taskA')
+    navigate(results.passed ? '/phase4_2/step/3' : '/phase4_2/step/2/remedial/c1/taskA')
   }
 
   const progressPercent = (results.average / 10) * 100

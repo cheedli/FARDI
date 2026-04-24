@@ -31,6 +31,7 @@ const TIME_LIMIT = 300
 
 export default function RemedialB2TaskF() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/1/remedial/b2/results') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 6, context: 'remedial_b2' })
   const [gameStarted, setGameStarted] = useState(false)
   const [gameFinished, setGameFinished] = useState(false)

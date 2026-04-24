@@ -39,6 +39,7 @@ const DIALOGUE_MESSAGES = [
 
 export default function RemedialB2TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/2/remedial/b2/taskB') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

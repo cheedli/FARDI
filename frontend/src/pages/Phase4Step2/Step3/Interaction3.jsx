@@ -28,6 +28,7 @@ const TARGET_WORDS = [
 
 export default function Phase4_2Step3Interaction3() {
   const navigate = useNavigate()
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/3/remedial/a2/taskA') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 3, interaction: 3, context: 'main' })
   const [gameResult, setGameResult] = useState(null)
 

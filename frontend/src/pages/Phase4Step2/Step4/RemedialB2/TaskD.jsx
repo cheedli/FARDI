@@ -83,6 +83,7 @@ export default function RemedialB2TaskD() {
   }
 
   const handleContinue = () => { navigate('/phase4_2/step/4/remedial/b2/results') }
+  window.__remedialSkip = handleContinue
 
   const allAnswered = TERMS.every(term => {
     const answer = answers[term.id] || {}

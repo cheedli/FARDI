@@ -1,3 +1,4 @@
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Container } from '@mui/material'
 import { useTheme } from '@mui/material'
@@ -70,6 +71,7 @@ const DARK = {
 
 export default function RemedialB2TaskC() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/remedial/b2/taskD') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 3, context: 'remedial_b2' })

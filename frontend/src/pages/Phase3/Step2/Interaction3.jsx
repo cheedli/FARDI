@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Container, Typography, Select, MenuItem, FormControl, useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
@@ -89,7 +89,7 @@ function clay(c) {
 
 export default function Phase3Step2Interaction3() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 2, interaction: 3, context: 'main' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 2, interaction: 3, context: 'main' })
   const [answers, setAnswers] = useState({})
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
@@ -117,7 +117,7 @@ export default function Phase3Step2Interaction3() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/interaction/log', {
         method: 'POST',
@@ -130,7 +130,9 @@ export default function Phase3Step2Interaction3() {
     }
   }
 
-  const handleContinue = () => {
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase3/step/2/score') }, [])
+
+  const handleContinue = async () => {
     const int1Score = parseInt(sessionStorage.getItem('phase3_step2_int1_score') || '0')
     const int1Max = parseInt(sessionStorage.getItem('phase3_step2_int1_max') || '10')
     const int2Score = parseInt(sessionStorage.getItem('phase3_step2_int2_score') || '0')
@@ -146,8 +148,7 @@ export default function Phase3Step2Interaction3() {
     sessionStorage.setItem('phase3_step2_total_max', totalQuestions.toString())
     sessionStorage.setItem('phase3_step2_percentage', percentage.toFixed(2))
 
-    console.log(`[Phase 3 Step 2 - TOTAL] Score: ${totalCorrect}/${totalQuestions} (${percentage.toFixed(1)}%)`)
-
+    await saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: int3Score })
     navigate('/phase3/step/2/score')
   }
 

@@ -75,7 +75,7 @@ export default function Phase4_2Step2RemedialA2Results() {
       sessionStorage.removeItem('phase4_2_step2_remedial_a2_taskA_score')
       sessionStorage.removeItem('phase4_2_step2_remedial_a2_taskB_score')
       sessionStorage.removeItem('phase4_2_step2_remedial_a2_taskC_score')
-      navigate('/dashboard')
+      navigate('/phase4_2/step/2/remedial/b1/taskA')
     } else {
       sessionStorage.removeItem('phase4_2_step2_remedial_a2_taskA_score')
       sessionStorage.removeItem('phase4_2_step2_remedial_a2_taskB_score')

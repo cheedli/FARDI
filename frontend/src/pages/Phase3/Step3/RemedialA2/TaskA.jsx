@@ -31,7 +31,7 @@ const GAP_FILL_SENTENCES = [
 
 export default function Phase3Step3RemedialA2TaskA() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 3, interaction: 1, context: 'remedial_a2' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 3, interaction: 1, context: 'remedial_a2' })
   const muiTheme = useTheme()
   const dark = muiTheme.palette.mode === 'dark'
 
@@ -79,7 +79,7 @@ export default function Phase3Step3RemedialA2TaskA() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',
@@ -90,7 +90,8 @@ export default function Phase3Step3RemedialA2TaskA() {
     } catch (error) { console.error('Failed to log task:', error) }
   }
 
-  const handleNext = () => { navigate('/phase3/step/3/interaction/1') }
+  const handleNext = () => { navigate('/phase3/step/3/remedial/b1/taskA') }
+  window.__remedialSkip = handleNext
   const allAnswered = Object.keys(answers).length === GAP_FILL_SENTENCES.length &&
     Object.values(answers).every(a => a && a.trim().length > 0)
   const passThreshold = 8
@@ -269,7 +270,7 @@ export default function Phase3Step3RemedialA2TaskA() {
                 '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: '6px 6px 0 #2E7D32' },
               }}
             >
-              Retry Step 3 <ArrowForwardIcon fontSize="small" />
+              Continue to B1 Practice <ArrowForwardIcon fontSize="small" />
             </Box>
           )}
         </Box>

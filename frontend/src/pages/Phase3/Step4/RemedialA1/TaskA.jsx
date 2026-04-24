@@ -54,7 +54,7 @@ export default function Phase3Step4RemedialA1TaskA() {
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 4, interaction: 1, context: 'remedial_a1' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 4, interaction: 1, context: 'remedial_a1' })
   const [answers, setAnswers] = useState({})
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
@@ -73,7 +73,7 @@ export default function Phase3Step4RemedialA1TaskA() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
@@ -82,7 +82,8 @@ export default function Phase3Step4RemedialA1TaskA() {
     } catch (error) { console.error('Failed to log task:', error) }
   }
 
-  const handleNext = () => navigate('/phase3/step/4/interaction/1')
+  const handleNext = () => navigate('/phase3/step/4/remedial/a2/taskA')
+  window.__remedialSkip = handleNext
 
   const allAnswered = BUDGET_TEMPLATE.every(item => answers[item.id]?.trim()?.length >= 2)
   const passThreshold = 3
@@ -247,7 +248,7 @@ export default function Phase3Step4RemedialA1TaskA() {
                   '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` },
                 }}
               >
-                Retry Step 4 <ArrowForwardIcon fontSize="small" />
+                Continue to A2 Practice <ArrowForwardIcon fontSize="small" />
               </Box>
             </motion.div>
           )}

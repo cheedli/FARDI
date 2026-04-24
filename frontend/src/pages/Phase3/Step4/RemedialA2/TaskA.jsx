@@ -55,7 +55,7 @@ export default function Phase3Step4RemedialA2TaskA() {
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 4, interaction: 1, context: 'remedial_a2' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 4, interaction: 1, context: 'remedial_a2' })
   const [answers, setAnswers] = useState({})
   const [showResults, setShowResults] = useState(false)
   const [evaluation, setEvaluation] = useState({})
@@ -85,7 +85,7 @@ export default function Phase3Step4RemedialA2TaskA() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
@@ -94,7 +94,8 @@ export default function Phase3Step4RemedialA2TaskA() {
     } catch (error) { console.error('Failed to log task:', error) }
   }
 
-  const handleNext = () => navigate('/phase3/step/4/interaction/1')
+  const handleNext = () => navigate('/phase3/step/4/remedial/b1/taskA')
+  window.__remedialSkip = handleNext
 
   const allAnswered = SENTENCE_STARTERS.every(s => answers[s.id]?.trim()?.length >= 5)
   const score = Object.values(evaluation).filter(e => e.correct).length
@@ -267,7 +268,7 @@ export default function Phase3Step4RemedialA2TaskA() {
                 '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` },
               }}
             >
-              Retry Step 4 <ArrowForwardIcon fontSize="small" />
+              Continue to B1 Practice <ArrowForwardIcon fontSize="small" />
             </Box>
           )}
         </Box>

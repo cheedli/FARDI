@@ -38,6 +38,7 @@ const SENTENCE_BUILDER_EXERCISE = {
 
 export default function Phase4Step4RemedialA2TaskB() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/4/remedial/a2/taskC') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

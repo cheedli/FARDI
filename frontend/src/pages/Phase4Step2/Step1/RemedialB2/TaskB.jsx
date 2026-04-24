@@ -19,6 +19,7 @@ import { requestPhase42TaskBScore } from '../../shared/routing.js'
 
 export default function RemedialB2TaskB() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/1/remedial/b2/taskC') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 2, context: 'remedial_b2' })
   const [paragraph, setParagraph] = useState('')
   const [sentenceCount, setSentenceCount] = useState(0)

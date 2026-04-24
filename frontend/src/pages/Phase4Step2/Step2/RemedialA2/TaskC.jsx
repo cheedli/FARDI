@@ -30,6 +30,7 @@ const PROMPTS = [
 
 export default function Phase4_2Step2RemedialA2TaskC() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/2/remedial/a2/results') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

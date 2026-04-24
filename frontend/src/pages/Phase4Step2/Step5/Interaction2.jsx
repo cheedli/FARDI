@@ -7,6 +7,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 
 function Phase4_2Step5Interaction2() {
   const navigate = useNavigate()
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/5/interaction/3') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

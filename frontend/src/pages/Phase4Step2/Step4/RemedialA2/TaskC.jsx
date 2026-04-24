@@ -30,6 +30,7 @@ const PROMPTS = [
 
 export default function Phase4_2Step4RemedialA2TaskC() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/4/remedial/a2/results') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 4, interaction: 3, context: 'remedial_a2' })
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'

@@ -85,7 +85,7 @@ export default function RemedialB1Results() {
     sessionStorage.removeItem('remedial_step3_b1_taskD_score')
     sessionStorage.removeItem('remedial_step3_b1_taskE_score')
     sessionStorage.removeItem('remedial_step3_b1_taskF_score')
-    if (scores.passed) navigate('/phase4/step/4')
+    if (scores.passed) navigate('/phase4/step3/remedial/b2/taskA')
     else navigate('/phase4/step3/remedial/b1/taskA')
   }
 

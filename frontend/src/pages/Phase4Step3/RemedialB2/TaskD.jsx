@@ -51,6 +51,7 @@ const LETTER_COLORS = ['#e74c3c', '#e67e22', '#f39c12', '#27ae60', '#3498db', '#
 
 export default function RemedialB2TaskD() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step3/remedial/b2/taskE') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 4, context: 'remedial_b2' })

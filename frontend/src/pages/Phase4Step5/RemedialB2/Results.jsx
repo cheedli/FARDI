@@ -88,7 +88,7 @@ export default function Phase4Step5RemedialB2Results() {
 
   const handleRedirect = () => {
     TASKS.forEach(t => sessionStorage.removeItem(`phase4_step5_remedial_b2_${t.key}_score`))
-    navigate(sessionStorage.getItem('phase4_step5_b2_next_url') || (scores.passed ? '/phase4_2/step/1' : '/phase4/step/5/remedial/b2/taskA'))
+    navigate(sessionStorage.getItem('phase4_step5_b2_next_url') || (scores.passed ? '/phase4/step/5/remedial/c1/taskA' : '/phase4/step/5/remedial/b2/taskA'))
   }
 
   if (loading) {

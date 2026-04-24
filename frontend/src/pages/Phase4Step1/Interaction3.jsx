@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Stack, Container } from '@mui/material'
 import { useTheme } from '@mui/material'
@@ -116,6 +116,13 @@ export default function Phase4Step1Interaction3() {
         }
         navigate(nextUrl)
     }
+
+    useEffect(() => {
+        window.__remedialSkip = () => {
+            const nextUrl = sessionStorage.getItem('phase4_step1_next_url')
+            navigate(nextUrl || '/phase4/remedial/a1/taskA')
+        }
+    }, [])
 
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: isDark ? DARK.pageBg : LIGHT.pageBg, py: 4 }}>

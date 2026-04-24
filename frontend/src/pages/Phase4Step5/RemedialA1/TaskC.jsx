@@ -29,6 +29,7 @@ const GRAMMAR_FIXES = [
 
 export default function Phase4Step5RemedialA1TaskC() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/5/remedial/a2/taskA') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {
@@ -152,7 +153,7 @@ export default function Phase4Step5RemedialA1TaskC() {
       sessionStorage.removeItem('phase4_step5_remedial_a1_taskB_score')
       sessionStorage.removeItem('phase4_step5_remedial_a1_taskC_score')
 
-      navigate(sessionStorage.getItem('phase4_step5_a1_next_url') || (passed ? '/phase4_2/step/1' : '/phase4/step/5/remedial/a1/taskA'))
+      navigate(sessionStorage.getItem('phase4_step5_a1_next_url') || (passed ? '/phase4/step/5/remedial/a2/taskA' : '/phase4/step/5/remedial/a1/taskA'))
     }, 5000)
   }
 

@@ -82,6 +82,7 @@ export default function Phase4_2Step2RemedialC1TaskD() {
   }
 
   const handleNext = () => { navigate('/phase4_2/step/2/remedial/c1/taskE') }
+  window.__remedialSkip = handleNext
 
   const allCompleted = POST_ELEMENTS.every(element => {
     const critique = critiques[element.id] || ''

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box, Typography, TextField, CircularProgress, Grid, Container, useTheme, Stack
@@ -61,7 +61,7 @@ export default function Phase3Step4Interaction2() {
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 4, interaction: 2, context: 'main' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 4, interaction: 2, context: 'main' })
   const [selectedSponsor, setSelectedSponsor] = useState(null)
   const [pitch, setPitch] = useState('')
   const [evaluation, setEvaluation] = useState(null)
@@ -150,10 +150,12 @@ export default function Phase3Step4Interaction2() {
     }
   }
 
-  const handleContinue = () => {
-    const int1Score = parseInt(sessionStorage.getItem('phase3_step4_interaction1_score') || '0')
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase3/step/4/score') }, [])
+
+  const handleContinue = async () => {
     const int2Score = evaluation?.score || 0
     sessionStorage.setItem('phase3_step4_interaction2_score', int2Score.toString())
+    await saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction2', is_correct: true, score: int2Score })
     navigate('/phase3/step/4/score')
   }
 

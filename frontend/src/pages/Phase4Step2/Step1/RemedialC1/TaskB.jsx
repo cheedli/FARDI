@@ -14,6 +14,7 @@ import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 export default function Phase4_2RemedialC1TaskB() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/1/remedial/c1/taskC') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 2, context: 'remedial_c1' })
   const [analysis, setAnalysis] = useState('')
   const [showResults, setShowResults] = useState(false)

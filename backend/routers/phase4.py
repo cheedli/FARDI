@@ -96,9 +96,11 @@ def _phase4_retry_url(step, level):
 
 
 def _phase4_next_step_url(step):
+    if step == 1:
+        return "/phase4_2/step/1"
     if step == 5:
         return "/phase4_2/step/1"
-    return _phase4_step_path(step + 2 if step == 1 else step + 1)
+    return _phase4_step_path(step + 1)
 
 
 def _phase4_normalize_to_cefr(score, max_score):

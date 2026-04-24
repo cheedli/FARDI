@@ -191,6 +191,7 @@ export default function Phase4_2Step2RemedialA2TaskA() {
   }
 
   const handleNext = () => navigate('/phase4_2/step/2/remedial/a2/taskB')
+  window.__remedialSkip = handleNext
 
   const allMatched = Object.keys(matches).length === WORD_PAIRS.length
   const timerPercent = (timeLeft / TIMER_DURATION) * 100

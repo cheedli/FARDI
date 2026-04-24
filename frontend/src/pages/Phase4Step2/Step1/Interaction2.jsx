@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box, Typography, TextField, CircularProgress,
@@ -23,6 +23,7 @@ const GLOSSARY_TERMS = [
 
 export default function Phase4_2Step1Interaction2() {
   const navigate = useNavigate()
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/1/interaction/3') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 2, context: 'main' })
   const [response, setResponse] = useState('')
   const [evaluation, setEvaluation] = useState(null)

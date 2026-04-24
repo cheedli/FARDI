@@ -74,6 +74,7 @@ export default function Phase4Step5RemedialB2TaskE() {
   }
 
   const handleContinue = () => navigate('/phase4/step/5/remedial/b2/taskF')
+  window.__remedialSkip = handleContinue
   const allFilled = CONDITIONAL_PROMPTS.every(p => answers[p.id] && answers[p.id].trim())
 
   return (

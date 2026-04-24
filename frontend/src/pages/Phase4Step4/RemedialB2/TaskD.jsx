@@ -151,6 +151,7 @@ export default function RemedialB2TaskD() {
   }
 
   const handleContinue = () => navigate('/phase4/step/4/remedial/b2/results')
+  window.__remedialSkip = handleContinue
   const allFilled = corrections[currentIndex].every(c => c.trim().length > 0)
   const allComplete = corrections.every(c => c.every(a => a.trim().length > 0))
   const progress = ((currentIndex + 1) / ERROR_SENTENCES.length) * 100

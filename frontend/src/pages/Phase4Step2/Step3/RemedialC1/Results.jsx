@@ -80,7 +80,7 @@ export default function Phase4_2Step3RemedialC1Results() {
     const keys = ['phase4_2_step3_c1_taskA_score','phase4_2_step3_c1_taskB_score','phase4_2_step3_c1_taskC_score','phase4_2_step3_c1_taskD_score','phase4_2_step3_c1_taskE_score','phase4_2_step3_c1_taskF_score','phase4_2_step3_c1_taskG_score','phase4_2_step3_c1_taskH_score']
     keys.forEach(k => sessionStorage.removeItem(k))
     if (results.passed) {
-      navigate('/dashboard')
+      navigate('/phase4_2/step/4')
     } else {
       navigate('/phase4_2/step/3/remedial/c1/taskA')
     }

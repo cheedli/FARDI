@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Container, Typography, Box } from '@mui/material'
 import { useTheme } from '@mui/material'
@@ -7,6 +7,7 @@ import { CharacterMessage } from '../../../components/Avatar.jsx'
 
 function Phase4_2Step4Intro() {
   const navigate = useNavigate()
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/4/interaction/1') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

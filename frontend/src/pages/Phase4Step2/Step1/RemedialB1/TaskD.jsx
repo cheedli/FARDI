@@ -85,6 +85,7 @@ export default function Phase4_2RemedialB1TaskD() {
   }
 
   const handleNext = () => { navigate('/phase4_2/step/1/remedial/b1/taskE') }
+  window.__remedialSkip = handleNext
   const allAnswered = SENTENCES.every(s => answers[s.id]?.trim())
 
   return (

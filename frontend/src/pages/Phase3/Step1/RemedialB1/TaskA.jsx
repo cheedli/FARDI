@@ -39,7 +39,7 @@ export default function Phase3RemedialB1TaskA() {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 1, context: 'remedial_b1' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 1, context: 'remedial_b1' })
   const [writing, setWriting] = useState('')
   const [showResults, setShowResults] = useState(false)
   const [wordCount, setWordCount] = useState(0)
@@ -58,7 +58,7 @@ export default function Phase3RemedialB1TaskA() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',
@@ -71,7 +71,8 @@ export default function Phase3RemedialB1TaskA() {
     }
   }
 
-  const handleNext = () => { navigate('/phase3/step/1/interaction/1') }
+  const handleNext = () => { navigate('/phase3/step/1/remedial/b2/taskA') }
+  window.__remedialSkip = handleNext
 
   const sentenceCount = writing.split(/[.!?]+/).filter(s => s.trim().length > 0).length
   const isComplete = wordCount >= 40 && sentenceCount >= 4
@@ -215,7 +216,7 @@ export default function Phase3RemedialB1TaskA() {
                   '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` },
                 }}
               >
-                Retry Step 1
+                Continue to B2 Practice
                 <ArrowForwardIcon fontSize="small" />
               </Box>
             </motion.div>

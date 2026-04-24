@@ -57,6 +57,7 @@ const EXAMPLE_SENTENCES = [
 
 export default function Phase4_2Step3RemedialC1TaskB() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/3/remedial/c1/taskC') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const P = isDark ? DARK : LIGHT

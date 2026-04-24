@@ -18,6 +18,7 @@ const ANSWERS_PART2 = { 'g_3_0': 'emoji', 'g_4_0': 'because', 'g_5_0': 'call-to-
 
 export default function Phase4_2RemedialB1TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/1/remedial/b1/taskB') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 1, context: 'remedial_b1' })
   const [phase, setPhase] = useState(1)
   const [part1Score, setPart1Score] = useState(null)

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import SchoolIcon from '@mui/icons-material/School'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 const LIGHT = {
   pageBg: '#FFFDE7', cardBg: '#ffffff', heading: '#1A237E', body: '#37474F', muted: '#78909C', divider: '#E0E0E0',
@@ -48,6 +49,7 @@ export default function Phase3Step2ScoreCalculation() {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 2, interaction: 0, context: 'score' })
 
   useEffect(() => { calculateScore() }, [])
 
@@ -66,15 +68,18 @@ export default function Phase3Step2ScoreCalculation() {
       const result = await res.json()
       if (result.success) {
         setRouting(result.data.total)
+        await saveNow({ item_index: 0, item_id: 'score', item_type: 'task_complete', prompt: 'Score calculation', answer: result.data.total?.remedial_level || 'complete', is_correct: true, score: i1 + i2 + i3 })
       } else {
         const total = i1 + i2 + i3
         const level = total < 8 ? 'A1' : total < 13 ? 'A2' : total < 18 ? 'B1' : total < 21 ? 'B2' : 'C1'
         setRouting({ should_proceed: false, remedial_level: level, next_url: `/phase3/step/2/remedial/${level.toLowerCase()}/taskA` })
+        await saveNow({ item_index: 0, item_id: 'score', item_type: 'task_complete', prompt: 'Score calculation', answer: level, is_correct: true, score: total })
       }
     } catch {
       const total = i1 + i2 + i3
       const level = total < 8 ? 'A1' : total < 13 ? 'A2' : total < 18 ? 'B1' : total < 21 ? 'B2' : 'C1'
       setRouting({ should_proceed: false, remedial_level: level, next_url: `/phase3/step/2/remedial/${level.toLowerCase()}/taskA` })
+      await saveNow({ item_index: 0, item_id: 'score', item_type: 'task_complete', prompt: 'Score calculation', answer: level, is_correct: true, score: total })
     } finally {
       setLoading(false)
     }
@@ -92,6 +97,8 @@ export default function Phase3Step2ScoreCalculation() {
     if (!routing) return
     navigate((routing.next_url || '/phase3/step/2/remedial/a1/taskA').replace(/^\/app/, ''))
   }
+
+  useEffect(() => { window.__remedialSkip = handleContinue }, [handleContinue])
 
   if (loading) {
     return (

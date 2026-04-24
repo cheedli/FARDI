@@ -151,6 +151,7 @@ export default function Phase4Step5RemedialB1TaskB() {
   }
 
   const handleContinue = () => { navigate('/phase4/step/5/remedial/b1/taskC') }
+  window.__remedialSkip = handleContinue
 
   const progress = ((currentSentence + 1) / SENTENCE_CORRECTIONS.length) * 100
 

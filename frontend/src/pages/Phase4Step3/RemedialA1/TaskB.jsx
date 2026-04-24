@@ -36,6 +36,7 @@ const CORRECT_ANSWERS = [
 
 export default function RemedialA1TaskB() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step3/remedial/a1/taskC') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

@@ -80,6 +80,7 @@ const DARK = {
 
 export default function RemedialA1TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/remedial/a1/taskB') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 1, context: 'remedial_a1' })

@@ -50,6 +50,7 @@ const TIME_LIMIT = 300 // 5 minutes for all 6 sentences
 
 export default function Phase4_2Step3RemedialC1TaskE() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/3/remedial/c1/taskF') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const P = isDark ? DARK : LIGHT

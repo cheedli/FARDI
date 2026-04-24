@@ -23,6 +23,7 @@ const SENTENCE_PROMPTS = [
 
 export default function Phase4_2RemedialA1TaskC() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/1/remedial/a1/results') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 3, context: 'remedial_a1' })
   const [sentences, setSentences] = useState({})
   const [showResults, setShowResults] = useState(false)

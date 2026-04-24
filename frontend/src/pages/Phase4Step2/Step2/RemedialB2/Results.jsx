@@ -83,7 +83,7 @@ export default function RemedialB2Results() {
     sessionStorage.removeItem('remedial_phase4_2_step2_b2_taskB_score')
     sessionStorage.removeItem('remedial_phase4_2_step2_b2_taskC_score')
     sessionStorage.removeItem('remedial_phase4_2_step2_b2_taskD_score')
-    if (scores.passed) { navigate('/dashboard') } else { navigate('/phase4_2/step/2/remedial/b2/taskA') }
+    if (scores.passed) { navigate('/phase4_2/step/2/remedial/c1/taskA') } else { navigate('/phase4_2/step/2/remedial/b2/taskA') }
   }
 
   const handleRedirectNow = () => { setCountdown(0) }
@@ -191,7 +191,7 @@ export default function RemedialB2Results() {
           {/* Countdown + Button */}
           <Box sx={{ bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.yellow.shadow}`, p: 3, textAlign: 'center' }}>
             <Typography variant="h6" gutterBottom sx={{ color: P.yellow.shadow }}>
-              {scores.passed ? 'Proceeding to dashboard...' : 'Restarting B2 remedial activities...'}
+              {scores.passed ? 'Proceeding to C1 practice...' : 'Restarting B2 remedial activities...'}
             </Typography>
             <Typography variant="body1" sx={{ mb: 2, color: isDark ? '#aaa' : '#666' }}>
               Redirecting in {countdown} seconds

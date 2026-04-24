@@ -49,7 +49,7 @@ export default function Phase3RemedialA1TaskA() {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 1, context: 'remedial_a1' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 1, context: 'remedial_a1' })
   const [matches, setMatches] = useState({})
   const [selectedWord, setSelectedWord] = useState(null)
   const [selectedImage, setSelectedImage] = useState(null)
@@ -93,7 +93,7 @@ export default function Phase3RemedialA1TaskA() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',
@@ -106,7 +106,8 @@ export default function Phase3RemedialA1TaskA() {
     }
   }
 
-  const handleNext = () => { navigate('/app/phase3/step/1/remedial/a1/taskB') }
+  const handleNext = () => { navigate('/phase3/step/1/remedial/a1/taskB') }
+  window.__remedialSkip = handleNext
 
   const isComplete = correctMatches.length === WORD_IMAGE_PAIRS.length
   const allPairsMatched = Object.keys(matches).length === WORD_IMAGE_PAIRS.length

@@ -49,7 +49,7 @@ export default function Phase3RemedialA1TaskB() {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 2, context: 'remedial_a1' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 2, context: 'remedial_a1' })
   const [answers, setAnswers] = useState({})
   const [showResults, setShowResults] = useState(false)
 
@@ -66,7 +66,7 @@ export default function Phase3RemedialA1TaskB() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',
@@ -79,7 +79,8 @@ export default function Phase3RemedialA1TaskB() {
     }
   }
 
-  const handleNext = () => { navigate('/phase3/step/1/interaction/1') }
+  const handleNext = () => { navigate('/phase3/step/1/remedial/a2/taskA') }
+  window.__remedialSkip = handleNext
 
   const correctCount = GAP_FILL_SENTENCES.filter(s => answers[s.id] === s.answer).length
   const isComplete = Object.keys(answers).length === GAP_FILL_SENTENCES.length
@@ -243,7 +244,7 @@ export default function Phase3RemedialA1TaskB() {
                   '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` },
                 }}
               >
-                Retry Step 1
+                Continue to A2 Practice
                 <ArrowForwardIcon fontSize="small" />
               </Box>
             </motion.div>

@@ -63,7 +63,7 @@ export default function Phase4_2Step4RemedialB1Results() {
     sessionStorage.removeItem('phase4_2_step4_b1_taskA')
     sessionStorage.removeItem('phase4_2_step4_b1_taskB')
     sessionStorage.removeItem('phase4_2_step4_b1_taskC')
-    navigate(results.passed ? '/dashboard' : '/phase4_2/step/4/remedial/b1/taskA')
+    navigate(results.passed ? '/phase4_2/step/4/remedial/b2/taskA' : '/phase4_2/step/4/remedial/b1/taskA')
   }
 
   const progressPercent = (results.total / MAX_SCORE) * 100

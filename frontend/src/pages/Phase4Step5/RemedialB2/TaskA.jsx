@@ -49,6 +49,7 @@ const DIALOGUE_MESSAGES = [
 
 export default function Phase4Step5RemedialB2TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/5/remedial/b2/taskB') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 1, context: 'remedial_b2' })

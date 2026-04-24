@@ -64,6 +64,7 @@ export default function Phase4_2RemedialA1TaskB() {
     } catch (error) { console.error('Failed to log task completion:', error) }
   }
   const handleContinue = () => { navigate('/phase4_2/step/1/remedial/a1/taskC') }
+  window.__remedialSkip = handleContinue
 
   const clayBtn = (color) => ({
     bgcolor: P[color].bg, border: `2px solid ${P[color].border}`, borderRadius: '12px',

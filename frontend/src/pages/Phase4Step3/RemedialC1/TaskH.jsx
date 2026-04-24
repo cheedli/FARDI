@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Container, Typography, Stack, TextField, LinearProgress } from '@mui/material'
@@ -52,6 +53,7 @@ const TIME_LIMIT = 300
 
 export default function RemedialC1TaskH() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/4') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 8, context: 'remedial_c1' })
@@ -236,7 +238,7 @@ export default function RemedialC1TaskH() {
                   navigate('/phase4/step/4')
                 } else {
                   alert(`Your score: ${totalScore}/54. You need 43/54 to pass. Please try the Remedial C1 exercises again.`)
-                  navigate('/phase4/step3/remedial/c1/taskA')
+                  navigate('/phase4/step/4')
                 }
               }}
               sx={{ ...cardSx('orange'), width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1rem', '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` } }}

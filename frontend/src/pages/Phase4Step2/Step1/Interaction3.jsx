@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Stack, Container } from '@mui/material'
 import { useTheme } from '@mui/material'
@@ -19,6 +19,7 @@ const TARGET_WORDS = [
 
 export default function Phase4_2Step1Interaction3() {
   const navigate = useNavigate()
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/1/remedial/a1/taskA') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 3, context: 'main' })
   const [gameResult, setGameResult] = useState(null)
   const theme = useTheme()

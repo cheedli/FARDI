@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Stack, Container, useTheme } from '@mui/material'
@@ -25,6 +26,7 @@ const CORRECT_ANSWERS = ['fold', 'space', 'move', 'picture']
 
 export default function RemedialB1TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/4/remedial/b1/taskB') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

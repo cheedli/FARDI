@@ -27,6 +27,7 @@ const TARGET_WORDS = ['hashtag', 'caption', 'emoji', 'tag', 'call-to-action']
 
 export default function Phase4_2Step2Interaction3() {
   const navigate = useNavigate()
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/2/remedial/a2/taskA') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

@@ -1,3 +1,4 @@
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Container, useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
@@ -88,6 +89,7 @@ const WORD_BANK = shuffleArray([
 
 export default function Phase4_2Step3RemedialC1TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/3/remedial/c1/taskB') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const P = isDark ? DARK : LIGHT

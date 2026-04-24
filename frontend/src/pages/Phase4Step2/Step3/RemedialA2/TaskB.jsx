@@ -89,6 +89,7 @@ export default function Phase4_2Step3RemedialA2TaskB() {
   }
 
   const handleNext = () => { navigate('/phase4_2/step/3/remedial/a2/taskC') }
+  window.__remedialSkip = handleNext
 
   const allAnswered = SENTENCES.every(s => answers[s.id]?.trim())
   const completedLevels = SENTENCES.filter(s => answers[s.id]?.trim()).length

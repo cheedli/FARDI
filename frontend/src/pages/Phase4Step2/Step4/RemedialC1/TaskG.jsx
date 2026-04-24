@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Container, TextField } from '@mui/material'
@@ -112,6 +113,7 @@ const DARK = {
 
 export default function Phase4_2Step4RemedialC1TaskG() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/4/remedial/c1/taskH') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 4, interaction: 7, context: 'remedial_c1' })
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -222,6 +222,10 @@ export default function Phase4Step3Interaction3() {
     console.log(`[Phase 4 Step 3 - FALLBACK] Routing to: ${remedialPath}`)
     navigate(remedialPath)
   }
+
+  useEffect(() => {
+    window.__remedialSkip = () => navigate('/phase4/step3/remedial/a1/taskA')
+  }, [])
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>

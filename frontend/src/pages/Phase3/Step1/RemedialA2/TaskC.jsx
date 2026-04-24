@@ -47,10 +47,11 @@ const SENTENCES = [
 
 export default function Phase3RemedialA2TaskC() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase3/step/1/remedial/a2/taskD') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 3, context: 'remedial_a2' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 3, context: 'remedial_a2' })
   const [arrangements, setArrangements] = useState(() =>
     SENTENCES.reduce((acc, s) => ({ ...acc, [s.id]: [] }), {})
   )
@@ -98,7 +99,7 @@ export default function Phase3RemedialA2TaskC() {
   }
 
   const logTaskCompletion = async (score) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',

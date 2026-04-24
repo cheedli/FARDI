@@ -32,6 +32,7 @@ const GUIDED_QUESTIONS = [
 
 export default function RemedialB2TaskB() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/3/remedial/b2/taskC') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 3, interaction: 2, context: 'remedial_b2' })
   const [explanation, setExplanation] = useState('')
   const [sentenceCount, setSentenceCount] = useState(0)

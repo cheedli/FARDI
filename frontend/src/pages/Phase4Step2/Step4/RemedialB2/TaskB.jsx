@@ -84,6 +84,7 @@ export default function RemedialB2TaskB() {
   }
 
   const handleContinue = () => { navigate('/phase4_2/step/4/remedial/b2/taskC') }
+  window.__remedialSkip = handleContinue
 
   const answeredCount = Object.keys(answers).filter(key => (answers[key] || '').trim().length >= 20).length
   const canSubmit = answeredCount === 8

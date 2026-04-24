@@ -88,6 +88,7 @@ export default function Phase4_2RemedialB1TaskB() {
   }
 
   const handleNext = () => { navigate('/phase4_2/step/1/remedial/b1/taskC') }
+  window.__remedialSkip = handleNext
   const allFilled = proposals.every(p => p.trim().length >= 8)
 
   return (

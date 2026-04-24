@@ -47,6 +47,7 @@ const SENTENCES = [
 
 export default function Phase4Step4RemedialA2TaskC() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/4/remedial/b1/taskA') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {
@@ -213,7 +214,7 @@ export default function Phase4Step4RemedialA2TaskC() {
       sessionStorage.removeItem('phase4_step4_remedial_a2_taskB_score')
       sessionStorage.removeItem('phase4_step4_remedial_a2_taskC_score')
 
-      navigate(sessionStorage.getItem('phase4_step4_a2_next_url') || (passed ? '/phase4/step/5' : '/phase4/step/4/remedial/a2/taskA'))
+      navigate(sessionStorage.getItem('phase4_step4_a2_next_url') || (passed ? '/phase4/step/4/remedial/b1/taskA' : '/phase4/step/4/remedial/a2/taskA'))
     }, 5000) // 5 second delay
   }
 

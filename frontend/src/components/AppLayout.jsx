@@ -21,10 +21,13 @@ import DarkModeIcon from '@mui/icons-material/DarkMode'
 import LightModeIcon from '@mui/icons-material/LightMode'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import MenuIcon from '@mui/icons-material/Menu'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import BarChartIcon from '@mui/icons-material/BarChart'
 import PeopleIcon from '@mui/icons-material/People'
 import SmartToyIcon from '@mui/icons-material/SmartToy'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
+import SkipNextIcon from '@mui/icons-material/SkipNext'
 import SecurityIcon from '@mui/icons-material/Security'
 import { useColorMode } from '../theme.jsx'
 import { useAuth } from '../lib/api.jsx'
@@ -57,6 +60,7 @@ const DARK = {
 const PHASE_COLOR_KEY = ['indigo', 'blue', 'green', 'orange', 'red', 'purple']
 
 const SIDEBAR_W = 260
+const SIDEBAR_W_COLLAPSED = 64
 
 const PHASES = [
   { id: 1, title: 'Foundation', subtitle: 'Language Assessment', icon: SchoolIcon, color: '#6366f1', path: '/game' },
@@ -73,9 +77,24 @@ export default function AppLayout() {
   const { stats, loading: statsLoading } = useUserStats()
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = React.useState(false)
+  const [collapsed, setCollapsed] = React.useState(false)
   const navigate = useNavigate()
 
   const D = mode === 'dark' ? DARK : LIGHT
+
+  // Active when ?testing=1 is in the URL, or automatically when running inside Electron
+  // (Electron serves on a random port, never 5173 which is the Vite dev server)
+  const isElectron = window.location.port !== '5173' && window.location.protocol === 'http:'
+  const isTesting = isElectron || new URLSearchParams(location.search).get('testing') === '1'
+  const isRemedialRoute = location.pathname.includes('remedial') ||
+    /\/phase[3-6]/.test(location.pathname) ||
+    /\/app\/phase[3-6]/.test(location.pathname)
+
+  const handleTestingSkip = () => {
+    if (window.__remedialSkip) {
+      window.__remedialSkip()
+    }
+  }
 
   // Close drawer on route change
   React.useEffect(() => { setMobileOpen(false) }, [location.pathname])
@@ -102,6 +121,7 @@ export default function AppLayout() {
   const hasCompletedPhase5 = isPhaseComplete(5)
 
   const getPhaseUnlocked = (id) => {
+    if (isTesting) return true
     switch (id) {
       case 1: return true
       case 2: return hasCompletedPhase1
@@ -179,16 +199,18 @@ export default function AppLayout() {
   }
 
   // ── Sidebar content (shared desktop + mobile) ──
-  const sidebar = (
+  const makeSidebar = (isCollapsible) => (
     <Box sx={{
       display: 'flex', flexDirection: 'column', height: '100%',
       bgcolor: D.pageBg,
     }}>
       {/* Logo */}
       <Box sx={{
-        px: 2.5, py: 2.5,
+        px: isCollapsible && collapsed ? 1 : 2.5, py: 2.5,
         borderBottom: `2px solid ${D.border}`,
         boxShadow: `0 2px 0 ${D.border}`,
+        display: 'flex', alignItems: 'center',
+        justifyContent: isCollapsible && collapsed ? 'center' : 'space-between',
       }}>
         <RouterLink to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
           <Box sx={{
@@ -197,41 +219,75 @@ export default function AppLayout() {
             border: `2px solid ${D.purple.border}`,
             boxShadow: `3px 3px 0 ${D.purple.shadow}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
           }}>
             <AutoAwesomeIcon sx={{ fontSize: 18, color: D.purple.border }} />
           </Box>
-          <Typography sx={{
-            fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em',
-            color: D.heading,
-          }}>
-            FARDI
-          </Typography>
+          {(!isCollapsible || !collapsed) && (
+            <Typography sx={{
+              fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em',
+              color: D.heading,
+            }}>
+              FARDI
+            </Typography>
+          )}
         </RouterLink>
+        {isCollapsible && (
+          <Tooltip title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="right">
+            <IconButton
+              onClick={() => setCollapsed(c => !c)}
+              size="small"
+              sx={{
+                width: 28, height: 28,
+                borderRadius: '8px',
+                color: D.muted,
+                border: `2px solid transparent`,
+                ml: collapsed ? 0 : 0.5,
+                transition: 'all 0.12s ease',
+                '&:hover': {
+                  bgcolor: D.cardBg,
+                  border: `2px solid ${D.border}`,
+                  color: D.body,
+                  boxShadow: `2px 2px 0 ${D.border}`,
+                },
+                '&:active': { transform: 'translate(1px,1px)', boxShadow: 'none' },
+              }}
+            >
+              {collapsed
+                ? <ChevronRightIcon sx={{ fontSize: 16 }} />
+                : <ChevronLeftIcon sx={{ fontSize: 16 }} />}
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
 
       {/* Nav links */}
-      <Box sx={{ flex: 1, overflowY: 'auto', px: 1.5, py: 2 }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', px: isCollapsible && collapsed ? 0.5 : 1.5, py: 2 }}>
         {isAdmin ? (
           <>
             {/* Admin badge */}
-            <Box sx={{ px: 1, mb: 2 }}>
-              <Box sx={{
-                display: 'flex', alignItems: 'center', gap: 1,
-                px: 1.5, py: 0.8, borderRadius: '10px',
-                bgcolor: D.red.bg,
-                border: `2px solid ${D.red.border}`,
-                boxShadow: `3px 3px 0 ${D.red.shadow}`,
-              }}>
-                <SecurityIcon sx={{ fontSize: 16, color: D.red.border }} />
-                <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: D.red.border, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Admin Panel
-                </Typography>
+            {(!isCollapsible || !collapsed) && (
+              <Box sx={{ px: 1, mb: 2 }}>
+                <Box sx={{
+                  display: 'flex', alignItems: 'center', gap: 1,
+                  px: 1.5, py: 0.8, borderRadius: '10px',
+                  bgcolor: D.red.bg,
+                  border: `2px solid ${D.red.border}`,
+                  boxShadow: `3px 3px 0 ${D.red.shadow}`,
+                }}>
+                  <SecurityIcon sx={{ fontSize: 16, color: D.red.border }} />
+                  <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: D.red.border, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Admin Panel
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
+            )}
 
-            <Typography sx={{ px: 1, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Overview
-            </Typography>
+            {(!isCollapsible || !collapsed) && (
+              <Typography sx={{ px: 1, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Overview
+              </Typography>
+            )}
             <List disablePadding>
               {[
                 { to: '/admin', icon: <DashboardIcon />, label: 'Dashboard', colorKey: 'indigo' },
@@ -239,108 +295,134 @@ export default function AppLayout() {
               ].map((item) => {
                 const active = location.pathname === item.to
                 const c = D[item.colorKey]
+                const isCollapsed = isCollapsible && collapsed
                 return (
                   <ListItem key={item.to} disablePadding sx={{ mb: 0.5 }}>
-                    <ListItemButton
-                      component={RouterLink} to={item.to}
-                      sx={navItemSx(active, item.colorKey)}
-                    >
-                      <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: 36 }}>
-                        {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
-                      </ListItemIcon>
-                      <ListItemText primary={
-                        <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
-                          {item.label}
-                        </Typography>
-                      } />
-                    </ListItemButton>
+                    <Tooltip title={isCollapsed ? item.label : ''} placement="right">
+                      <ListItemButton
+                        component={RouterLink} to={item.to}
+                        sx={{ ...navItemSx(active, item.colorKey), justifyContent: isCollapsed ? 'center' : 'flex-start', px: isCollapsed ? 1 : 1.5 }}
+                      >
+                        <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: isCollapsed ? 0 : 36 }}>
+                          {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
+                        </ListItemIcon>
+                        {!isCollapsed && (
+                          <ListItemText primary={
+                            <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
+                              {item.label}
+                            </Typography>
+                          } />
+                        )}
+                      </ListItemButton>
+                    </Tooltip>
                   </ListItem>
                 )
               })}
             </List>
 
-            <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Students
-            </Typography>
+            {(!isCollapsible || !collapsed) && (
+              <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Students
+              </Typography>
+            )}
             <List disablePadding>
               {[
                 { to: '/admin/users', icon: <PeopleIcon />, label: 'All Students', colorKey: 'green', match: '/admin/users' },
               ].map((item) => {
                 const active = isActive(item.match || item.to)
                 const c = D[item.colorKey]
+                const isCollapsed = isCollapsible && collapsed
                 return (
                   <ListItem key={item.to} disablePadding sx={{ mb: 0.5 }}>
-                    <ListItemButton
-                      component={RouterLink} to={item.to}
-                      sx={navItemSx(active, item.colorKey)}
-                    >
-                      <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: 36 }}>
-                        {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
-                      </ListItemIcon>
-                      <ListItemText primary={
-                        <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
-                          {item.label}
-                        </Typography>
-                      } />
-                    </ListItemButton>
+                    <Tooltip title={isCollapsed ? item.label : ''} placement="right">
+                      <ListItemButton
+                        component={RouterLink} to={item.to}
+                        sx={{ ...navItemSx(active, item.colorKey), justifyContent: isCollapsed ? 'center' : 'flex-start', px: isCollapsed ? 1 : 1.5 }}
+                      >
+                        <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: isCollapsed ? 0 : 36 }}>
+                          {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
+                        </ListItemIcon>
+                        {!isCollapsed && (
+                          <ListItemText primary={
+                            <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
+                              {item.label}
+                            </Typography>
+                          } />
+                        )}
+                      </ListItemButton>
+                    </Tooltip>
                   </ListItem>
                 )
               })}
             </List>
 
-            <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Communication
-            </Typography>
+            {(!isCollapsible || !collapsed) && (
+              <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Communication
+              </Typography>
+            )}
             <List disablePadding>
               {[
                 { to: '/admin/chat', icon: <ChatBubbleOutlineIcon />, label: 'Messages', colorKey: 'orange', match: '/admin/chat' },
               ].map((item) => {
                 const active = isActive(item.match || item.to)
                 const c = D[item.colorKey]
+                const isCollapsed = isCollapsible && collapsed
                 return (
                   <ListItem key={item.to} disablePadding sx={{ mb: 0.5 }}>
-                    <ListItemButton
-                      component={RouterLink} to={item.to}
-                      sx={navItemSx(active, item.colorKey)}
-                    >
-                      <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: 36 }}>
-                        {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
-                      </ListItemIcon>
-                      <ListItemText primary={
-                        <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
-                          {item.label}
-                        </Typography>
-                      } />
-                    </ListItemButton>
+                    <Tooltip title={isCollapsed ? item.label : ''} placement="right">
+                      <ListItemButton
+                        component={RouterLink} to={item.to}
+                        sx={{ ...navItemSx(active, item.colorKey), justifyContent: isCollapsed ? 'center' : 'flex-start', px: isCollapsed ? 1 : 1.5 }}
+                      >
+                        <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: isCollapsed ? 0 : 36 }}>
+                          {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
+                        </ListItemIcon>
+                        {!isCollapsed && (
+                          <ListItemText primary={
+                            <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
+                              {item.label}
+                            </Typography>
+                          } />
+                        )}
+                      </ListItemButton>
+                    </Tooltip>
                   </ListItem>
                 )
               })}
             </List>
 
-            <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Account
-            </Typography>
+            {(!isCollapsible || !collapsed) && (
+              <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Account
+              </Typography>
+            )}
             <List disablePadding>
               {[
                 { to: '/profile', icon: <PersonIcon />, label: 'Profile', colorKey: 'teal' },
               ].map((item) => {
                 const active = isActive(item.to)
                 const c = D[item.colorKey]
+                const isCollapsed = isCollapsible && collapsed
                 return (
                   <ListItem key={item.to} disablePadding sx={{ mb: 0.5 }}>
-                    <ListItemButton
-                      component={RouterLink} to={item.to}
-                      sx={navItemSx(active, item.colorKey)}
-                    >
-                      <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: 36 }}>
-                        {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
-                      </ListItemIcon>
-                      <ListItemText primary={
-                        <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
-                          {item.label}
-                        </Typography>
-                      } />
-                    </ListItemButton>
+                    <Tooltip title={isCollapsed ? item.label : ''} placement="right">
+                      <ListItemButton
+                        component={RouterLink} to={item.to}
+                        sx={{ ...navItemSx(active, item.colorKey), justifyContent: isCollapsed ? 'center' : 'flex-start', px: isCollapsed ? 1 : 1.5 }}
+                      >
+                        <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: isCollapsed ? 0 : 36 }}>
+                          {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
+                        </ListItemIcon>
+                        {!isCollapsed && (
+                          <ListItemText primary={
+                            <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
+                              {item.label}
+                            </Typography>
+                          } />
+                        )}
+                      </ListItemButton>
+                    </Tooltip>
                   </ListItem>
                 )
               })}
@@ -348,9 +430,11 @@ export default function AppLayout() {
           </>
         ) : (
           <>
-            <Typography sx={{ px: 1, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Menu
-            </Typography>
+            {(!isCollapsible || !collapsed) && (
+              <Typography sx={{ px: 1, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Menu
+              </Typography>
+            )}
             <List disablePadding>
               {[
                 { to: '/dashboard', icon: <DashboardIcon />, label: 'Dashboard', colorKey: 'indigo' },
@@ -360,30 +444,37 @@ export default function AppLayout() {
               ].map((item) => {
                 const active = isActive(item.to)
                 const c = D[item.colorKey]
+                const isCollapsed = isCollapsible && collapsed
                 return (
                   <ListItem key={item.to} disablePadding sx={{ mb: 0.5 }}>
-                    <ListItemButton
-                      component={RouterLink} to={item.to}
-                      sx={navItemSx(active, item.colorKey)}
-                    >
-                      <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: 36 }}>
-                        {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
-                      </ListItemIcon>
-                      <ListItemText primary={
-                        <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
-                          {item.label}
-                        </Typography>
-                      } />
-                    </ListItemButton>
+                    <Tooltip title={isCollapsed ? item.label : ''} placement="right">
+                      <ListItemButton
+                        component={RouterLink} to={item.to}
+                        sx={{ ...navItemSx(active, item.colorKey), justifyContent: isCollapsed ? 'center' : 'flex-start', px: isCollapsed ? 1 : 1.5 }}
+                      >
+                        <ListItemIcon sx={{ color: active ? c.border : D.muted, minWidth: isCollapsed ? 0 : 36 }}>
+                          {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
+                        </ListItemIcon>
+                        {!isCollapsed && (
+                          <ListItemText primary={
+                            <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.88rem', color: active ? c.border : D.body }}>
+                              {item.label}
+                            </Typography>
+                          } />
+                        )}
+                      </ListItemButton>
+                    </Tooltip>
                   </ListItem>
                 )
               })}
             </List>
 
             {/* Phases */}
-            <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Phases
-            </Typography>
+            {(!isCollapsible || !collapsed) && (
+              <Typography sx={{ px: 1, mt: 2.5, mb: 1, fontSize: '0.68rem', fontWeight: 600, color: D.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Phases
+              </Typography>
+            )}
             <List disablePadding>
               {PHASES.map((phase) => {
                 const unlocked = getPhaseUnlocked(phase.id)
@@ -398,78 +489,88 @@ export default function AppLayout() {
                   (phase.id === 6 && isActive('/phase6'))
                 const colorKey = PHASE_COLOR_KEY[phase.id - 1]
                 const c = D[colorKey]
+                const isCollapsed = isCollapsible && collapsed
 
                 return (
                   <ListItem key={phase.id} disablePadding sx={{ mb: 0.5 }}>
-                    <ListItemButton
-                      onClick={unlocked ? () => handlePhaseClick(phase) : undefined}
-                      disabled={!unlocked}
-                      sx={{
-                        borderRadius: '10px',
-                        py: 1,
-                        px: 1.5,
-                        opacity: unlocked ? 1 : 0.45,
-                        border: active ? `2px solid ${c.border}` : '2px solid transparent',
-                        borderLeft: active ? `3px solid ${c.border}` : '3px solid transparent',
-                        bgcolor: active ? c.bg : 'transparent',
-                        boxShadow: active ? `3px 3px 0 ${c.shadow}` : 'none',
-                        transition: 'all 0.12s ease',
-                        '&:hover': (unlocked && !active) ? {
-                          bgcolor: D.cardBg,
-                          border: `2px solid ${D.border}`,
-                          borderLeft: `3px solid ${D.border}`,
-                          boxShadow: `3px 3px 0 ${D.border}`,
-                          transform: 'translate(-1px,-1px)',
-                        } : {},
-                        '&:active': unlocked ? {
-                          transform: 'translate(1px,1px)',
-                          boxShadow: `2px 2px 0 ${active ? c.shadow : D.border}`,
-                        } : {},
-                      }}
-                    >
-                      <ListItemIcon sx={{ minWidth: 36 }}>
-                        <Box sx={{
-                          width: 28, height: 28,
-                          borderRadius: '8px',
-                          bgcolor: unlocked ? c.bg : D.border,
-                          border: unlocked ? `2px solid ${c.border}` : `2px solid ${D.border}`,
-                          boxShadow: unlocked ? `2px 2px 0 ${c.shadow}` : 'none',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          {completed ? (
-                            <CheckCircleIcon sx={{ fontSize: 14, color: c.border }} />
-                          ) : !unlocked ? (
-                            <LockIcon sx={{ fontSize: 13, color: D.muted }} />
-                          ) : (
-                            <IconComp sx={{ fontSize: 14, color: c.border }} />
+                    <Tooltip title={isCollapsed ? `Phase ${phase.id}: ${phase.title}` : ''} placement="right">
+                      <span style={{ width: '100%' }}>
+                        <ListItemButton
+                          onClick={unlocked ? () => handlePhaseClick(phase) : undefined}
+                          disabled={!unlocked}
+                          sx={{
+                            borderRadius: '10px',
+                            py: 1,
+                            px: isCollapsed ? 1 : 1.5,
+                            justifyContent: isCollapsed ? 'center' : 'flex-start',
+                            opacity: unlocked ? 1 : 0.45,
+                            border: active ? `2px solid ${c.border}` : '2px solid transparent',
+                            borderLeft: active ? `3px solid ${c.border}` : '3px solid transparent',
+                            bgcolor: active ? c.bg : 'transparent',
+                            boxShadow: active ? `3px 3px 0 ${c.shadow}` : 'none',
+                            transition: 'all 0.12s ease',
+                            '&:hover': (unlocked && !active) ? {
+                              bgcolor: D.cardBg,
+                              border: `2px solid ${D.border}`,
+                              borderLeft: `3px solid ${D.border}`,
+                              boxShadow: `3px 3px 0 ${D.border}`,
+                              transform: 'translate(-1px,-1px)',
+                            } : {},
+                            '&:active': unlocked ? {
+                              transform: 'translate(1px,1px)',
+                              boxShadow: `2px 2px 0 ${active ? c.shadow : D.border}`,
+                            } : {},
+                          }}
+                        >
+                          <ListItemIcon sx={{ minWidth: isCollapsed ? 0 : 36 }}>
+                            <Box sx={{
+                              width: 28, height: 28,
+                              borderRadius: '8px',
+                              bgcolor: unlocked ? c.bg : D.border,
+                              border: unlocked ? `2px solid ${c.border}` : `2px solid ${D.border}`,
+                              boxShadow: unlocked ? `2px 2px 0 ${c.shadow}` : 'none',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                              {completed ? (
+                                <CheckCircleIcon sx={{ fontSize: 14, color: c.border }} />
+                              ) : !unlocked ? (
+                                <LockIcon sx={{ fontSize: 13, color: D.muted }} />
+                              ) : (
+                                <IconComp sx={{ fontSize: 14, color: c.border }} />
+                              )}
+                            </Box>
+                          </ListItemIcon>
+                          {!isCollapsed && (
+                            <>
+                              <ListItemText
+                                primary={
+                                  <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.85rem', color: unlocked ? (active ? c.border : D.body) : D.muted }}>
+                                    Phase {phase.id}
+                                  </Typography>
+                                }
+                                secondary={
+                                  <Typography sx={{ fontSize: '0.72rem', color: D.muted }}>
+                                    {phase.title}
+                                  </Typography>
+                                }
+                              />
+                              {completed && (
+                                <Chip size="small" label="Done" sx={{
+                                  height: 20,
+                                  fontSize: '0.6rem',
+                                  fontWeight: 700,
+                                  bgcolor: D.green.bg,
+                                  border: `2px solid ${D.green.border}`,
+                                  color: D.green.border,
+                                  borderRadius: '50px',
+                                  boxShadow: `2px 2px 0 ${D.green.shadow}`,
+                                }} />
+                              )}
+                            </>
                           )}
-                        </Box>
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={
-                          <Typography sx={{ fontWeight: active ? 700 : 500, fontSize: '0.85rem', color: unlocked ? (active ? c.border : D.body) : D.muted }}>
-                            Phase {phase.id}
-                          </Typography>
-                        }
-                        secondary={
-                          <Typography sx={{ fontSize: '0.72rem', color: D.muted }}>
-                            {phase.title}
-                          </Typography>
-                        }
-                      />
-                      {completed && (
-                        <Chip size="small" label="Done" sx={{
-                          height: 20,
-                          fontSize: '0.6rem',
-                          fontWeight: 700,
-                          bgcolor: D.green.bg,
-                          border: `2px solid ${D.green.border}`,
-                          color: D.green.border,
-                          borderRadius: '50px',
-                          boxShadow: `2px 2px 0 ${D.green.shadow}`,
-                        }} />
-                      )}
-                    </ListItemButton>
+                        </ListItemButton>
+                      </span>
+                    </Tooltip>
                   </ListItem>
                 )
               })}
@@ -480,119 +581,163 @@ export default function AppLayout() {
         {/* Theme toggle */}
         <Box sx={{ my: 2, mx: 0.5, height: '2px', bgcolor: D.border }} />
         <ListItem disablePadding>
-          <ListItemButton
-            onClick={toggle}
-            sx={{
-              borderRadius: '12px',
-              py: 1, px: 1.5,
-              bgcolor: D.yellow.bg,
-              border: `2px solid ${D.yellow.border}`,
-              boxShadow: `4px 4px 0 ${D.yellow.shadow}`,
-              transition: 'all 0.12s ease',
-              '&:hover': {
-                transform: 'translate(-2px,-2px)',
-                boxShadow: `6px 6px 0 ${D.yellow.shadow}`,
-              },
-              '&:active': {
-                transform: 'translate(1px,1px)',
-                boxShadow: `2px 2px 0 ${D.yellow.shadow}`,
-              },
-            }}
-          >
-            <ListItemIcon sx={{ color: D.yellow.border, minWidth: 36 }}>
-              {mode === 'light' ? <DarkModeIcon sx={{ fontSize: 20 }} /> : <LightModeIcon sx={{ fontSize: 20 }} />}
-            </ListItemIcon>
-            <ListItemText primary={
-              <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: D.yellow.border }}>
-                {mode === 'light' ? 'Dark Mode' : 'Light Mode'}
-              </Typography>
-            } />
-          </ListItemButton>
+          <Tooltip title={(isCollapsible && collapsed) ? (mode === 'light' ? 'Dark Mode' : 'Light Mode') : ''} placement="right">
+            <ListItemButton
+              onClick={toggle}
+              sx={{
+                borderRadius: '12px',
+                py: 1, px: isCollapsible && collapsed ? 1 : 1.5,
+                justifyContent: isCollapsible && collapsed ? 'center' : 'flex-start',
+                bgcolor: D.yellow.bg,
+                border: `2px solid ${D.yellow.border}`,
+                boxShadow: `4px 4px 0 ${D.yellow.shadow}`,
+                transition: 'all 0.12s ease',
+                '&:hover': {
+                  transform: 'translate(-2px,-2px)',
+                  boxShadow: `6px 6px 0 ${D.yellow.shadow}`,
+                },
+                '&:active': {
+                  transform: 'translate(1px,1px)',
+                  boxShadow: `2px 2px 0 ${D.yellow.shadow}`,
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: D.yellow.border, minWidth: isCollapsible && collapsed ? 0 : 36 }}>
+                {mode === 'light' ? <DarkModeIcon sx={{ fontSize: 20 }} /> : <LightModeIcon sx={{ fontSize: 20 }} />}
+              </ListItemIcon>
+              {(!isCollapsible || !collapsed) && (
+                <ListItemText primary={
+                  <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: D.yellow.border }}>
+                    {mode === 'light' ? 'Dark Mode' : 'Light Mode'}
+                  </Typography>
+                } />
+              )}
+            </ListItemButton>
+          </Tooltip>
         </ListItem>
       </Box>
 
       {/* User section (pinned bottom) */}
       <Box sx={{
         borderTop: `2px solid ${D.border}`,
-        p: 2,
+        p: isCollapsible && collapsed ? 1 : 2,
         bgcolor: D.cardBg,
       }}>
-        <Stack direction="row" alignItems="center" spacing={1.5}>
-          <Avatar sx={{
-            width: 36, height: 36,
-            bgcolor: D.purple.bg,
-            border: `2px solid ${D.purple.border}`,
-            boxShadow: `3px 3px 0 ${D.purple.shadow}`,
-            fontSize: '0.85rem', fontWeight: 700,
-            color: D.purple.border,
-          }}>
-            {userName[0].toUpperCase()}
-          </Avatar>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontWeight: 600, fontSize: '0.88rem', color: D.heading, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {userName}
-            </Typography>
-            {isAdmin ? (
-              <Chip size="small" label="Admin" sx={{
-                height: 20, mt: 0.3, fontSize: '0.6rem', fontWeight: 700,
-                bgcolor: D.red.bg,
-                color: D.red.border,
-                border: `2px solid ${D.red.border}`,
-                borderRadius: '50px',
-                boxShadow: `2px 2px 0 ${D.red.shadow}`,
-              }} />
-            ) : userLevel ? (
-              <Chip size="small" label={`CEFR ${userLevel}`} sx={{
-                height: 20, mt: 0.3, fontSize: '0.6rem', fontWeight: 700,
+        {isCollapsible && collapsed ? (
+          <Stack alignItems="center" spacing={1}>
+            <Tooltip title={userName} placement="right">
+              <Avatar sx={{
+                width: 36, height: 36,
                 bgcolor: D.purple.bg,
-                color: D.purple.border,
                 border: `2px solid ${D.purple.border}`,
-                borderRadius: '50px',
-                boxShadow: `2px 2px 0 ${D.purple.shadow}`,
-              }} />
-            ) : null}
-          </Box>
-          <Tooltip title="Logout">
-            <IconButton
-              href="/auth/logout"
-              size="small"
-              sx={{
-                width: 32, height: 32, borderRadius: '8px',
-                color: D.muted,
-                border: `2px solid transparent`,
-                transition: 'all 0.12s ease',
-                '&:hover': {
+                boxShadow: `3px 3px 0 ${D.purple.shadow}`,
+                fontSize: '0.85rem', fontWeight: 700,
+                color: D.purple.border,
+              }}>
+                {userName[0].toUpperCase()}
+              </Avatar>
+            </Tooltip>
+            <Tooltip title="Logout" placement="right">
+              <IconButton
+                href="/auth/logout"
+                size="small"
+                sx={{
+                  width: 32, height: 32, borderRadius: '8px',
+                  color: D.muted,
+                  border: `2px solid transparent`,
+                  transition: 'all 0.12s ease',
+                  '&:hover': {
+                    bgcolor: D.red.bg,
+                    border: `2px solid ${D.red.border}`,
+                    color: D.red.border,
+                    boxShadow: `2px 2px 0 ${D.red.shadow}`,
+                  },
+                  '&:active': { transform: 'translate(1px,1px)', boxShadow: 'none' },
+                }}
+              >
+                <LogoutIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        ) : (
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Avatar sx={{
+              width: 36, height: 36,
+              bgcolor: D.purple.bg,
+              border: `2px solid ${D.purple.border}`,
+              boxShadow: `3px 3px 0 ${D.purple.shadow}`,
+              fontSize: '0.85rem', fontWeight: 700,
+              color: D.purple.border,
+            }}>
+              {userName[0].toUpperCase()}
+            </Avatar>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography sx={{ fontWeight: 600, fontSize: '0.88rem', color: D.heading, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {userName}
+              </Typography>
+              {isAdmin ? (
+                <Chip size="small" label="Admin" sx={{
+                  height: 20, mt: 0.3, fontSize: '0.6rem', fontWeight: 700,
                   bgcolor: D.red.bg,
-                  border: `2px solid ${D.red.border}`,
                   color: D.red.border,
+                  border: `2px solid ${D.red.border}`,
+                  borderRadius: '50px',
                   boxShadow: `2px 2px 0 ${D.red.shadow}`,
-                },
-                '&:active': {
-                  transform: 'translate(1px,1px)',
-                  boxShadow: 'none',
-                },
-              }}
-            >
-              <LogoutIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
-        </Stack>
+                }} />
+              ) : userLevel ? (
+                <Chip size="small" label={`CEFR ${userLevel}`} sx={{
+                  height: 20, mt: 0.3, fontSize: '0.6rem', fontWeight: 700,
+                  bgcolor: D.purple.bg,
+                  color: D.purple.border,
+                  border: `2px solid ${D.purple.border}`,
+                  borderRadius: '50px',
+                  boxShadow: `2px 2px 0 ${D.purple.shadow}`,
+                }} />
+              ) : null}
+            </Box>
+            <Tooltip title="Logout">
+              <IconButton
+                href="/auth/logout"
+                size="small"
+                sx={{
+                  width: 32, height: 32, borderRadius: '8px',
+                  color: D.muted,
+                  border: `2px solid transparent`,
+                  transition: 'all 0.12s ease',
+                  '&:hover': {
+                    bgcolor: D.red.bg,
+                    border: `2px solid ${D.red.border}`,
+                    color: D.red.border,
+                    boxShadow: `2px 2px 0 ${D.red.shadow}`,
+                  },
+                  '&:active': { transform: 'translate(1px,1px)', boxShadow: 'none' },
+                }}
+              >
+                <LogoutIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        )}
       </Box>
     </Box>
   )
 
+  const sidebarW = collapsed ? SIDEBAR_W_COLLAPSED : SIDEBAR_W
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: D.pageBg }}>
-      {/* Desktop sidebar — fixed */}
-      <Box component="nav" sx={{ width: SIDEBAR_W, flexShrink: 0, display: { xs: 'none', md: 'block' } }}>
+      {/* Desktop sidebar — fixed, collapsible */}
+      <Box component="nav" sx={{ width: sidebarW, flexShrink: 0, display: { xs: 'none', md: 'block' }, transition: 'width 0.2s ease' }}>
         <Box sx={{
-          width: SIDEBAR_W, height: '100vh', position: 'fixed', top: 0, left: 0,
+          width: sidebarW, height: '100vh', position: 'fixed', top: 0, left: 0,
           borderRight: `2px solid ${D.border}`,
           boxShadow: `3px 0 0 ${D.border}`,
           overflowY: 'auto',
+          overflowX: 'hidden',
           bgcolor: D.pageBg,
+          transition: 'width 0.2s ease',
         }}>
-          {sidebar}
+          {makeSidebar(true)}
         </Box>
       </Box>
 
@@ -612,11 +757,11 @@ export default function AppLayout() {
           },
         }}
       >
-        {sidebar}
+        {makeSidebar(false)}
       </Drawer>
 
       {/* Main content */}
-      <Box component="main" sx={{ flexGrow: 1, minHeight: '100vh', width: { xs: '100%', md: `calc(100% - ${SIDEBAR_W}px)` }, bgcolor: D.pageBg }}>
+      <Box component="main" sx={{ flexGrow: 1, minHeight: '100vh', width: { xs: '100%', md: `calc(100% - ${sidebarW}px)` }, transition: 'width 0.2s ease', bgcolor: D.pageBg }}>
         {/* Mobile header bar */}
         <Box sx={{
           display: { xs: 'flex', md: 'none' },
@@ -670,6 +815,30 @@ export default function AppLayout() {
         </Box>
 
         <Outlet />
+
+        {/* Testing skip button — shown on all remedial routes when ?testing=1 */}
+        {isTesting && isRemedialRoute && (
+          <Box sx={{
+            position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
+          }}>
+            <Button
+              onClick={handleTestingSkip}
+              variant="contained"
+              endIcon={<SkipNextIcon />}
+              sx={{
+                bgcolor: '#f59e0b', color: '#fff',
+                fontWeight: 800, fontSize: '0.85rem', textTransform: 'none',
+                borderRadius: '14px', px: 2.5, py: 1,
+                border: '2px solid #d97706',
+                boxShadow: '4px 4px 0 #d97706',
+                '&:hover': { bgcolor: '#d97706', transform: 'translate(-2px,-2px)', boxShadow: '6px 6px 0 #b45309' },
+                transition: 'all 0.12s ease',
+              }}
+            >
+              Skip →
+            </Button>
+          </Box>
+        )}
       </Box>
     </Box>
   )

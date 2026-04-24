@@ -117,6 +117,7 @@ export default function Phase4_2RemedialA1TaskA() {
   }
 
   const handleNext = () => { navigate('/phase4_2/step/1/remedial/a1/taskB') }
+  window.__remedialSkip = handleNext
 
   const isComplete = correctMatches.length === WORD_IMAGE_PAIRS.length
   const allPairsMatched = Object.keys(matches).length === WORD_IMAGE_PAIRS.length

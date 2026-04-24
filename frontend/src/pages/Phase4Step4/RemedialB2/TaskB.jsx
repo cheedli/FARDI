@@ -90,6 +90,7 @@ export default function RemedialB2TaskB() {
   }
 
   const handleContinue = () => navigate('/phase4/step/4/remedial/b2/taskC')
+  window.__remedialSkip = handleContinue
   const allFilled = critiques.every(c => c.trim().length > 0)
   const progress = ((currentIndex + 1) / CRITIQUE_TERMS.length) * 100
 

@@ -108,6 +108,7 @@ export default function Phase4_2RemedialB1TaskE() {
   }
 
   const handleContinue = () => navigate('/phase4_2/step/1/remedial/b1/results')
+  window.__remedialSkip = handleContinue
   const formatTime = (seconds) => `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`
   const allAnswered = SENTENCES.every(s => answers[s.id]?.trim())
 

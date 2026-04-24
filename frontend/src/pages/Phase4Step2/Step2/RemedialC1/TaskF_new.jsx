@@ -30,6 +30,7 @@ const TIME_LIMIT = 300
 
 export default function Phase4_2Step2RemedialC1TaskE() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/2/remedial/c1/taskF') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

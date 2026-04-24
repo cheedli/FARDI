@@ -24,6 +24,7 @@ const QUESTIONS = [
 
 export default function Phase4_2RemedialC1TaskC() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/1/remedial/c1/taskD') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 1, interaction: 3, context: 'remedial_c1' })
   const [answers, setAnswers] = useState({})
   const [justifications, setJustifications] = useState({})

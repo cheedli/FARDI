@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Grid, Container } from '@mui/material'
 import { useTheme } from '@mui/material'
@@ -38,6 +38,8 @@ export default function Phase4Step1Intro() {
   const navigate = useNavigate()
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
+
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/1/interaction/1') }, [])
 
   const handleStartActivities = () => {
     navigate('/phase4/step/1/interaction/1')

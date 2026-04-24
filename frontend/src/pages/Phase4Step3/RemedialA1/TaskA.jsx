@@ -28,6 +28,7 @@ const TERM_PAIRS = [
 
 export default function RemedialA1TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step3/remedial/a1/taskB') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

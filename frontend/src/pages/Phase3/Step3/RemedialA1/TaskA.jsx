@@ -36,7 +36,7 @@ const shuffleArray = (array) => {
 
 export default function Phase3Step3RemedialA1TaskA() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 3, interaction: 1, context: 'remedial_a1' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 3, interaction: 1, context: 'remedial_a1' })
   const muiTheme = useTheme()
   const dark = muiTheme.palette.mode === 'dark'
 
@@ -110,7 +110,7 @@ export default function Phase3Step3RemedialA1TaskA() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',
@@ -121,7 +121,8 @@ export default function Phase3Step3RemedialA1TaskA() {
     } catch (error) { console.error('Failed to log task:', error) }
   }
 
-  const handleNext = () => { navigate('/phase3/step/3/interaction/1') }
+  const handleNext = () => { navigate('/phase3/step/3/remedial/a2/taskA') }
+  window.__remedialSkip = handleNext
   const allCompleted = exercises.every(ex => ex.userOrder.length === ex.correctOrder.length)
   const passThreshold = 4
 
@@ -351,7 +352,7 @@ export default function Phase3Step3RemedialA1TaskA() {
                 '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: '6px 6px 0 #2E7D32' },
               }}
             >
-              Retry Step 3 <ArrowForwardIcon fontSize="small" />
+              Continue to A2 Practice <ArrowForwardIcon fontSize="small" />
             </Box>
           )}
         </Box>

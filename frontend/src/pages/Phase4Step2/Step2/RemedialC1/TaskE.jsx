@@ -122,6 +122,7 @@ export default function Phase4_2Step2RemedialC1TaskE() {
 
   const handleStartGame = () => { setGameStarted(true) }
   const handleContinue = () => { navigate('/phase4_2/step/2/remedial/c1/taskF') }
+  window.__remedialSkip = handleContinue
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)

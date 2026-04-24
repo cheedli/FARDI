@@ -8,6 +8,7 @@ import { useProgressSave } from '../../../../hooks/useProgressSave'
 
 const TaskB = () => {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/5/remedial/a2/task/a') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 5, interaction: 2, context: 'remedial_a2' });
 
   const theme = useTheme()

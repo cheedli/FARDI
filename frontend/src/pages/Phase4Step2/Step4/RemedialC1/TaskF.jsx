@@ -110,6 +110,7 @@ export default function Phase4_2Step4RemedialC1TaskF() {
   }
 
   const handleNext = () => navigate('/phase4_2/step/4/remedial/c1/taskG')
+  window.__remedialSkip = handleNext
 
   const allAnswered = PROMPTS.every((_, idx) => sentences[idx]?.trim())
 

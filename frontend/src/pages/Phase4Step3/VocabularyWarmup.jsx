@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Stack, LinearProgress, IconButton, Container } from '@mui/material'
 import { useTheme } from '@mui/material'
@@ -97,6 +97,8 @@ export default function VocabularyWarmup() {
     }
   }
 
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/3/interaction/1') }, [])
+
   const handleContinue = () => {
     navigate('/phase4/step/3/interaction/1')
   }
@@ -118,7 +120,7 @@ export default function VocabularyWarmup() {
             p: 3, mb: 3,
           }}>
             <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
-              Phase 4 - Step 2: Explain - Vocabulary Warm-up
+              Phase 4 - Step 3: Explain - Vocabulary Warm-up
             </Typography>
             <Typography variant="body1" sx={{ color: P.blue.shadow }}>
               Learn marketing and video terminology through flashcards. Browse all 20 terms to continue!
@@ -190,15 +192,15 @@ export default function VocabularyWarmup() {
                 position: 'absolute', width: '100%', height: '100%',
                 backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                p: 4, color: 'white',
-                bgcolor: P.purple.shadow, borderRadius: '20px',
+                p: 4,
+                bgcolor: P.purple.bg, borderRadius: '20px',
                 border: `2px solid ${P.purple.border}`,
-                boxShadow: `4px 4px 0 ${P.blue.shadow}`,
+                boxShadow: `6px 6px 0 ${P.purple.shadow}`,
               }}>
-                <Typography variant="overline" sx={{ mb: 2, opacity: 0.8, fontSize: '1rem' }}>TERM</Typography>
-                <Typography variant="h2" fontWeight="bold" align="center">{currentCard.term}</Typography>
-                <FlipCameraAndroidIcon sx={{ mt: 4, fontSize: 50, opacity: 0.6 }} />
-                <Typography variant="body1" sx={{ mt: 2, opacity: 0.8 }}>Click to flip and see definition</Typography>
+                <Typography variant="overline" sx={{ mb: 2, fontSize: '0.85rem', fontWeight: 800, color: P.purple.border, letterSpacing: 2 }}>TERM</Typography>
+                <Typography variant="h2" fontWeight={800} align="center" sx={{ color: P.purple.shadow }}>{currentCard.term}</Typography>
+                <FlipCameraAndroidIcon sx={{ mt: 4, fontSize: 40, color: P.purple.border, opacity: 0.7 }} />
+                <Typography variant="body2" fontWeight={600} sx={{ mt: 1.5, color: P.purple.border }}>Click to flip and see definition</Typography>
               </Box>
 
               {/* Back - DEFINITION */}
@@ -207,13 +209,13 @@ export default function VocabularyWarmup() {
                 backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
                 transform: 'rotateY(180deg)',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                p: 5, color: 'white',
-                bgcolor: P.blue.shadow, borderRadius: '20px',
+                p: 4,
+                bgcolor: P.blue.bg, borderRadius: '20px',
                 border: `2px solid ${P.blue.border}`,
-                boxShadow: `4px 4px 0 ${P.purple.shadow}`,
+                boxShadow: `6px 6px 0 ${P.blue.shadow}`,
               }}>
-                <Typography variant="overline" sx={{ mb: 2, opacity: 0.8, fontSize: '1rem' }}>DEFINITION</Typography>
-                <Typography variant="h4" fontWeight="medium" align="center" sx={{ mb: 3 }}>
+                <Typography variant="overline" sx={{ mb: 2, fontSize: '0.85rem', fontWeight: 800, color: P.blue.border, letterSpacing: 2 }}>DEFINITION</Typography>
+                <Typography variant="h5" fontWeight={700} align="center" sx={{ mb: 2, color: P.blue.shadow }}>
                   {currentCard.definition}
                 </Typography>
 
@@ -221,66 +223,67 @@ export default function VocabularyWarmup() {
                   <Box
                     onClick={(e) => e.stopPropagation()}
                     sx={{
-                      p: 2, mt: 2, bgcolor: 'rgba(255,255,255,0.95)',
-                      borderLeft: `4px solid ${P.green.border}`, borderRadius: '8px',
+                      p: 2, mt: 1, width: '100%',
+                      bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                      borderRadius: '14px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
                     }}
                   >
                     <Stack direction="row" spacing={1} alignItems="flex-start">
-                      <Lightbulb sx={{ color: P.green.shadow, mt: 0.5 }} />
+                      <Lightbulb sx={{ color: P.green.shadow, mt: 0.25, flexShrink: 0 }} />
                       <Box>
-                        <Typography variant="caption" fontWeight="bold" sx={{ color: P.green.shadow }}>EXAMPLE</Typography>
-                        <Typography variant="body2" sx={{ color: '#000000', fontWeight: 500 }}>{currentCard.example}</Typography>
+                        <Typography variant="caption" fontWeight={800} sx={{ color: P.green.shadow }}>EXAMPLE</Typography>
+                        <Typography variant="body2" fontWeight={500} sx={{ color: P.green.shadow }}>{currentCard.example}</Typography>
                       </Box>
                     </Stack>
                   </Box>
                 )}
 
                 <Box component="button" onClick={handleShowExample} sx={{
-                  mt: 2, bgcolor: 'transparent', border: '2px solid white',
-                  borderRadius: '12px', px: 3, py: 1, fontWeight: 700, fontSize: '0.9rem',
-                  cursor: 'pointer', color: 'white',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.15)' }
+                  mt: 2,
+                  bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`,
+                  borderRadius: '12px', boxShadow: `3px 3px 0 ${P.teal.shadow}`,
+                  px: 3, py: 0.75, fontWeight: 700, fontSize: '0.85rem',
+                  cursor: 'pointer', color: P.teal.shadow,
+                  transition: 'all 0.12s',
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.teal.shadow}` }
                 }}>
                   {showExample ? 'Hide Example' : 'Show Example'}
                 </Box>
 
-                <FlipCameraAndroidIcon sx={{ mt: 3, fontSize: 40, opacity: 0.6 }} />
-                <Typography variant="body2" sx={{ mt: 1, opacity: 0.8 }}>Click to flip back</Typography>
+                <FlipCameraAndroidIcon sx={{ mt: 2, fontSize: 32, color: P.blue.border, opacity: 0.7 }} />
+                <Typography variant="body2" fontWeight={600} sx={{ mt: 1, color: P.blue.border }}>Click to flip back</Typography>
               </Box>
             </Box>
           </Box>
 
           {/* Navigation Buttons */}
           <Stack direction="row" spacing={2} justifyContent="center" alignItems="center" sx={{ mb: 3 }}>
-            <IconButton
-              onClick={handlePreviousCard}
-              disabled={currentIndex === 0}
-              sx={{
-                bgcolor: currentIndex === 0 ? 'grey.300' : P.blue.border,
-                color: 'white', width: 56, height: 56,
-                '&:hover': { bgcolor: P.blue.shadow },
-                '&:disabled': { bgcolor: 'grey.300' }
-              }}
-            >
+            <Box component="button" onClick={handlePreviousCard} disabled={currentIndex === 0} sx={{
+              bgcolor: P.blue.bg, border: `2px solid ${currentIndex === 0 ? '#ccc' : P.blue.border}`,
+              borderRadius: '14px', boxShadow: currentIndex === 0 ? 'none' : `4px 4px 0 ${P.blue.shadow}`,
+              width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: currentIndex === 0 ? 'not-allowed' : 'pointer', opacity: currentIndex === 0 ? 0.4 : 1,
+              color: P.blue.shadow, transition: 'all 0.12s',
+              '&:hover': currentIndex === 0 ? {} : { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.blue.shadow}` },
+            }}>
               <ArrowBack />
-            </IconButton>
+            </Box>
 
-            <Typography variant="h6" sx={{ minWidth: 150, textAlign: 'center', color: P.blue.shadow, fontWeight: 700 }}>
+            <Typography variant="h6" sx={{ minWidth: 150, textAlign: 'center', color: P.blue.shadow, fontWeight: 800 }}>
               {currentIndex + 1} / {shuffledVocab.length}
             </Typography>
 
-            <IconButton
-              onClick={handleNextCard}
-              disabled={currentIndex === shuffledVocab.length - 1}
-              sx={{
-                bgcolor: currentIndex === shuffledVocab.length - 1 ? 'grey.300' : P.blue.border,
-                color: 'white', width: 56, height: 56,
-                '&:hover': { bgcolor: P.blue.shadow },
-                '&:disabled': { bgcolor: 'grey.300' }
-              }}
-            >
+            <Box component="button" onClick={handleNextCard} disabled={currentIndex === shuffledVocab.length - 1} sx={{
+              bgcolor: P.blue.bg, border: `2px solid ${currentIndex === shuffledVocab.length - 1 ? '#ccc' : P.blue.border}`,
+              borderRadius: '14px', boxShadow: currentIndex === shuffledVocab.length - 1 ? 'none' : `4px 4px 0 ${P.blue.shadow}`,
+              width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: currentIndex === shuffledVocab.length - 1 ? 'not-allowed' : 'pointer',
+              opacity: currentIndex === shuffledVocab.length - 1 ? 0.4 : 1,
+              color: P.blue.shadow, transition: 'all 0.12s',
+              '&:hover': currentIndex === shuffledVocab.length - 1 ? {} : { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.blue.shadow}` },
+            }}>
               <ArrowForward />
-            </IconButton>
+            </Box>
           </Stack>
 
           {/* Continue Button */}

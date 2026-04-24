@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Stack, Container } from '@mui/material'
 import { useTheme } from '@mui/material'
@@ -62,6 +62,8 @@ export default function Phase4Step1Interaction2() {
     setGameCompleted(true)
     setGameResult(result)
   }
+
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/1/interaction/3') }, [])
 
   const handleCompleteStep = () => {
     navigate('/phase4/step/1/interaction/3')

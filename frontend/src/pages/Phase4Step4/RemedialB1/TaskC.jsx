@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Stack, Container, useTheme, LinearProgress } from '@mui/material'
@@ -61,6 +62,7 @@ const QUIZ_QUESTIONS = [
 
 export default function RemedialB1TaskC() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/4/remedial/b1/taskD') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

@@ -31,6 +31,7 @@ const DIALOGUE_MESSAGES = [
 
 export default function Phase4_2Step5RemedialB2TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/5/remedial/b2/taskb') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 5, interaction: 1, context: 'remedial_b2' })
 
   const theme = useTheme()
@@ -209,7 +210,7 @@ export default function Phase4_2Step5RemedialB2TaskA() {
               <Typography variant="body1" sx={{ mt: 2 }}>Dialogue Progress: {((score / 4) * 100).toFixed(0)}% Complete</Typography>
             </Box>
             <Box sx={{ textAlign: 'center' }}>
-              <Box component="button" onClick={() => navigate('/app/phase4_2/step/5/remedial/b2/taskb')} sx={{
+              <Box component="button" onClick={() => navigate('/phase4_2/step/5/remedial/b2/taskb')} sx={{
                 bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
                 px: 6, py: 2, fontWeight: 700, fontSize: '1.1rem', cursor: 'pointer', color: P.green.shadow,
                 '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },

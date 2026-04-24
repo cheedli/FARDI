@@ -63,7 +63,7 @@ const Results = () => {
     navigate('/phase4_2/step/5/remedial/b1/task/a');
   };
 
-  const handleDashboard = () => navigate('/dashboard');
+  const handleDashboard = () => navigate('/phase4_2/step/5/remedial/b2/taskA');
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>

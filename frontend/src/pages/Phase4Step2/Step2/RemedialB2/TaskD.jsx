@@ -225,6 +225,7 @@ export default function RemedialB2TaskD() {
 
   const handleStartGame = () => { setGameStarted(true) }
   const handleContinue = () => { navigate('/phase4_2/step/2/remedial/b2/results') }
+  window.__remedialSkip = handleContinue
 
   const formatTime = (seconds) => `0:${seconds.toString().padStart(2, '0')}`
 

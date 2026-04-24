@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Container, Typography, useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
@@ -53,7 +53,7 @@ export default function Phase3Step1Interaction1() {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 1, context: 'main' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 1, context: 'main' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
 
@@ -71,7 +71,7 @@ export default function Phase3Step1Interaction1() {
   }
 
   const logTaskCompletion = async (score, timeElapsed) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction1', is_correct: true, score: score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction1', is_correct: true, score: score })
     try {
       const response = await fetch('/api/phase3/interaction/log', {
         method: 'POST',
@@ -87,8 +87,10 @@ export default function Phase3Step1Interaction1() {
   }
 
   const handleContinue = () => {
-    navigate('/app/phase3/step/1/interaction/2')
+    navigate('/phase3/step/1/interaction/2')
   }
+
+  useEffect(() => { window.__remedialSkip = handleContinue }, [])
 
   const isPerfect = gameResult && gameResult.score === MATCHING_PAIRS.length
   const resultColor = isPerfect ? D.green : D.orange

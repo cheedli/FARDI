@@ -31,6 +31,7 @@ const GUIDED_QUESTIONS = [
 
 export default function RemedialB2TaskB() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/2/remedial/b2/taskC') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

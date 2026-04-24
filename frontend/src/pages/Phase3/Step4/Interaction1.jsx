@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box, Typography, TextField, CircularProgress, Grid, IconButton, Container, useTheme
@@ -62,7 +62,7 @@ export default function Phase3Step4Interaction1() {
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 4, interaction: 1, context: 'main' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 4, interaction: 1, context: 'main' })
   const [costItems, setCostItems] = useState(DEFAULT_COST_ITEMS)
   const [fundingSources, setFundingSources] = useState(DEFAULT_FUNDING_SOURCES)
   const [budgetJustification, setBudgetJustification] = useState('')
@@ -183,7 +183,9 @@ export default function Phase3Step4Interaction1() {
     }
   }
 
-  const handleContinue = () => navigate('/app/phase3/step/4/interaction/2')
+  const handleContinue = () => navigate('/phase3/step/4/interaction/2')
+
+  useEffect(() => { window.__remedialSkip = handleContinue }, [])
 
   const totalCosts = calculateTotal(costItems)
   const totalFunding = calculateTotal(fundingSources)

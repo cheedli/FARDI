@@ -81,7 +81,7 @@ export default function RemedialB2Results() {
 
   const handleRedirect = () => {
     TASKS.forEach(t => sessionStorage.removeItem(t.storage))
-    if (scores.passed) navigate('/dashboard')
+    if (scores.passed) navigate('/phase4_2/step/1/remedial/c1/taskA')
     else navigate('/phase4_2/step/1/remedial/b2/taskA')
   }
 
@@ -174,7 +174,7 @@ export default function RemedialB2Results() {
           {/* Countdown + Action */}
           <Box sx={{ bgcolor: R.bg, border: `2px solid ${R.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${R.shadow}`, p: 3, textAlign: 'center' }}>
             <Typography variant="h6" gutterBottom sx={{ color: R.shadow }}>
-              {scores.passed ? 'Proceeding to dashboard...' : 'Restarting B2 remedial activities...'}
+              {scores.passed ? 'Proceeding to C1 practice...' : 'Restarting B2 remedial activities...'}
             </Typography>
             <Typography variant="body1" sx={{ color: R.shadow, mb: 2 }}>Redirecting in {countdown} seconds</Typography>
             <Box sx={{ height: 8, borderRadius: '4px', bgcolor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', overflow: 'hidden', mb: 2 }}>

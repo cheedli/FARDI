@@ -120,7 +120,7 @@ export default function RemedialB2Results() {
     sessionStorage.removeItem('phase4_2_step3_b2_taskD')
 
     if (scores.passed) {
-      navigate('/dashboard')
+      navigate('/phase4_2/step/3/remedial/c1/taskA')
     } else {
       navigate('/phase4_2/step/3/remedial/b2/taskA')
     }
@@ -250,7 +250,7 @@ export default function RemedialB2Results() {
           {/* Countdown and Action */}
           <Box sx={{ ...clayCard(resultColor), textAlign: 'center' }}>
             <Typography variant="h6" fontWeight="bold" sx={{ color: P[resultColor].border, mb: 0.5 }}>
-              {scores.passed ? 'Proceeding to dashboard...' : 'Restarting B2 remedial activities...'}
+              {scores.passed ? 'Proceeding to C1 practice...' : 'Restarting B2 remedial activities...'}
             </Typography>
             <Typography variant="body1" sx={{ color: isDark ? '#ccc' : '#555', mb: 2 }}>
               Redirecting in {countdown} seconds

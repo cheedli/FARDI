@@ -63,7 +63,8 @@ const TaskC = () => {
     sessionStorage.setItem('phase4_2_step5_remedialB1_taskC', calculatedScore.toString());
   };
 
-  const handleNext = () => navigate('/phase4_2/step/5/remedial/b1/task/d');
+  const handleNext = () => navigate('/phase4_2/step/5/remedial/b1/task/d')
+  window.__remedialSkip = handleNext;
 
   const allAnswered = Object.values(answers).every(answer => answer !== '');
 

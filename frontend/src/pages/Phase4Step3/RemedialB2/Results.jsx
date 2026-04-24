@@ -81,7 +81,7 @@ export default function RemedialB2Results() {
 
   const handleRedirect = () => {
     ['taskA','taskB','taskC','taskD','taskE','taskF'].forEach(t => sessionStorage.removeItem(`remedial_step3_b2_${t}_score`))
-    if (scores.passed) navigate('/phase4/step/4')
+    if (scores.passed) navigate('/phase4/step3/remedial/c1/taskA')
     else navigate('/phase4/step3/remedial/b2/taskA')
   }
 

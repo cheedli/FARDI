@@ -27,6 +27,7 @@ const SPELLING_PAIRS = [
 
 export default function Phase4Step5RemedialA1TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/5/remedial/a1/taskB') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

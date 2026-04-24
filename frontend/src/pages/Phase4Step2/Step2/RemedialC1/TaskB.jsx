@@ -87,6 +87,7 @@ export default function Phase4_2Step2RemedialC1TaskB() {
   }
 
   const handleNext = () => { navigate('/phase4_2/step/2/remedial/c1/taskC') }
+  window.__remedialSkip = handleNext
   const isComplete = sentenceCount >= 8
 
   return (

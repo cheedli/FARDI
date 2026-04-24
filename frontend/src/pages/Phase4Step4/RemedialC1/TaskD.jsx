@@ -86,6 +86,7 @@ export default function RemedialC1TaskD() {
   }
 
   const handleContinue = () => navigate('/phase4/step/4/remedial/c1/results')
+  window.__remedialSkip = handleContinue
   const allFilled = completions[currentIndex].every(c => c.trim().length > 0)
   const allComplete = completions.every(c => c.every(a => a.trim().length > 0))
   const progress = ((currentIndex + 1) / CLAUSE_SENTENCES.length) * 100

@@ -195,6 +195,7 @@ export default function Phase4Step5RemedialB2TaskD() {
   }
 
   const handleContinue = () => navigate('/phase4/step/5/remedial/b2/taskE')
+  window.__remedialSkip = handleContinue
   const canCheckSpelling = spelledWord.length === currentTerm?.word.length
   const canSubmitExplanation = userExplanation.trim().length >= 10
 

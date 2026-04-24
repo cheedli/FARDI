@@ -121,7 +121,7 @@ export default function RemedialB1Results() {
     sessionStorage.removeItem('remedial_step4_b1_taskE_score')
     sessionStorage.removeItem('remedial_step4_b1_taskF_score')
 
-    navigate(sessionStorage.getItem('phase4_step4_b1_next_url') || (scores.passed ? '/phase4/step/5' : '/phase4/step/4/remedial/b1/taskA'))
+    navigate(sessionStorage.getItem('phase4_step4_b1_next_url') || (scores.passed ? '/phase4/step/4/remedial/b2/taskA' : '/phase4/step/4/remedial/b1/taskA'))
   }
 
   const handleRedirectNow = () => setCountdown(0)

@@ -45,6 +45,7 @@ const ANSWERS_PART2 = {
 
 export default function Phase4Step4RemedialA1TaskB() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/4/remedial/a1/taskC') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

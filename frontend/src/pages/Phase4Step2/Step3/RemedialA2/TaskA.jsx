@@ -29,6 +29,7 @@ const TERM_PAIRS = [
 
 export default function Phase4_2Step3RemedialA2TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/3/remedial/a2/taskB') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 3, interaction: 1, context: 'remedial_a2' })
   const [matches, setMatches] = useState({})
   const [showResults, setShowResults] = useState(false)

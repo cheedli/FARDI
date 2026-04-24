@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Container, LinearProgress, TextField, Avatar, useTheme } from '@mui/material'
@@ -50,6 +51,7 @@ const TIME_LIMIT = 300
 
 export default function Phase4_2Step3RemedialC1TaskG() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/3/remedial/c1/taskH') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const P = isDark ? DARK : LIGHT

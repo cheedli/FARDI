@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Container, Typography, useTheme, TextField, CircularProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
@@ -27,7 +27,7 @@ const REQUIRED_CONNECTORS = ['because', 'so', 'due to']
 
 export default function Phase3Step3Interaction3() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 3, interaction: 3, context: 'main' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 3, interaction: 3, context: 'main' })
   const muiTheme = useTheme()
   const dark = muiTheme.palette.mode === 'dark'
 
@@ -116,7 +116,7 @@ export default function Phase3Step3Interaction3() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/interaction/log', {
         method: 'POST',
@@ -127,7 +127,9 @@ export default function Phase3Step3Interaction3() {
     } catch (error) { console.error('Failed to log interaction:', error) }
   }
 
-  const handleContinue = () => {
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase3/step/3/score') }, [])
+
+  const handleContinue = async () => {
     const int1Score = parseInt(sessionStorage.getItem('phase3_step3_int1_score') || '0')
     const int2Score = parseInt(sessionStorage.getItem('phase3_step3_int2_score') || '0')
     const int3Score = evaluation?.score || 0
@@ -137,7 +139,7 @@ export default function Phase3Step3Interaction3() {
     sessionStorage.setItem('phase3_step3_total_score', totalScore.toString())
     sessionStorage.setItem('phase3_step3_total_max', totalMax.toString())
     sessionStorage.setItem('phase3_step3_percentage', percentage.toFixed(2))
-    console.log(`[Phase 3 Step 3 - TOTAL] Score: ${totalScore}/${totalMax} (${percentage.toFixed(1)}%)`)
+    await saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: int3Score })
     navigate('/phase3/step/3/score')
   }
 

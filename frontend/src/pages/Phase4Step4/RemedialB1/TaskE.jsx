@@ -78,6 +78,7 @@ export default function RemedialB1TaskE() {
   }
 
   const handleContinue = () => navigate('/phase4/step/4/remedial/b1/taskF')
+  window.__remedialSkip = handleContinue
   const allFilled = SENTENCES.every(s => answers[s.id] && answers[s.id].trim().length > 0)
 
   return (

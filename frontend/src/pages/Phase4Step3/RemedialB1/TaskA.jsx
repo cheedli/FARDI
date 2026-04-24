@@ -73,6 +73,7 @@ export default function RemedialB1TaskA() {
   }
 
   const handleContinue = () => navigate('/phase4/step3/remedial/b1/taskB')
+  window.__remedialSkip = handleContinue
 
   const allFilled = answers['g_0_0'] && answers['g_0_1'] && answers['g_1_0'] && answers['g_1_1'] && answers['g_1_2']
 

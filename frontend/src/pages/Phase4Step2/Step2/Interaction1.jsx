@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box, Typography, TextField, CircularProgress, Stack, Container
@@ -116,6 +116,7 @@ export default function Phase4_2Step2Interaction1() {
   }
 
   const handleContinue = () => { navigate('/phase4_2/step/2/interaction/2') }
+  window.__remedialSkip = handleContinue
 
   const wordCount = caption.trim().split(/\s+/).filter(w => w.length > 0).length
   const sentenceCount = caption.split(/[.!?]+/).filter(s => s.trim().length > 0).length

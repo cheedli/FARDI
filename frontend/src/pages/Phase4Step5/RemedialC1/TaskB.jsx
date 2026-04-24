@@ -90,6 +90,7 @@ export default function Phase4Step5RemedialC1TaskB() {
   }
 
   const handleContinue = () => navigate('/phase4/step/5/remedial/c1/taskC')
+  window.__remedialSkip = handleContinue
   const progress = ((currentSentence + 1) / SENTENCE_CORRECTIONS.length) * 100
   const canSubmit = userAnswer.trim().split(/\s+/).length >= 8
 

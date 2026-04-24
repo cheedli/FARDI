@@ -106,6 +106,7 @@ const DARK = {
 
 export default function Phase4_2Step4RemedialC1TaskH() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/4/remedial/c1/results') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 4, interaction: 8, context: 'remedial_c1' })
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT

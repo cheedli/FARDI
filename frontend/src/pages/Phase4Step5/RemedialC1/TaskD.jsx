@@ -134,6 +134,7 @@ export default function Phase4Step5RemedialC1TaskD() {
   }
 
   const handleContinue = () => navigate('/phase4/step/5/remedial/c1/taskE')
+  window.__remedialSkip = handleContinue
   const allFilled = MIXED_ERROR_SENTENCES.every(s => answers[s.id] && answers[s.id].trim())
 
   return (

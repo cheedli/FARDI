@@ -131,6 +131,7 @@ export default function Phase4Step5RemedialB1TaskC() {
   }
 
   const handleContinue = () => { navigate('/phase4/step/5/remedial/b1/taskD') }
+  window.__remedialSkip = handleContinue
 
   if (!gameStarted) {
     return (

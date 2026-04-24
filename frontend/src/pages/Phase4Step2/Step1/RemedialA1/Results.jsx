@@ -63,7 +63,7 @@ export default function Phase4_2RemedialA1Results() {
     sessionStorage.removeItem('phase4_2_remedial_a1_taskA_score')
     sessionStorage.removeItem('phase4_2_remedial_a1_taskB_score')
     sessionStorage.removeItem('phase4_2_remedial_a1_taskC_score')
-    if (results.passed) navigate('/dashboard')
+    if (results.passed) navigate('/phase4_2/step/1/remedial/a2/taskA')
     else navigate('/phase4_2/step/1/remedial/a1/taskA')
   }
 

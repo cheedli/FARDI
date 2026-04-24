@@ -87,7 +87,7 @@ export default function RemedialB2Results() {
     sessionStorage.removeItem('phase4_2_step4_b2_taskB')
     sessionStorage.removeItem('phase4_2_step4_b2_taskC')
     sessionStorage.removeItem('phase4_2_step4_b2_taskD')
-    if (scores.passed) navigate('/dashboard')
+    if (scores.passed) navigate('/phase4_2/step/4/remedial/c1/taskA')
     else navigate('/phase4_2/step/4/remedial/b2/taskA')
   }
 
@@ -226,7 +226,7 @@ export default function RemedialB2Results() {
             p: 3, textAlign: 'center',
           }}>
             <Typography variant="h6" sx={{ color: P.teal.shadow, mb: 1 }}>
-              {scores.passed ? 'Proceeding to dashboard...' : 'Restarting B2 remedial activities...'}
+              {scores.passed ? 'Proceeding to C1 practice...' : 'Restarting B2 remedial activities...'}
             </Typography>
             <Typography variant="body2" sx={{ color: P.teal.shadow, mb: 2 }}>
               Redirecting in {countdown} seconds

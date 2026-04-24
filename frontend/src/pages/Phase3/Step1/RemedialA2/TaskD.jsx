@@ -46,10 +46,11 @@ const QUESTIONS = [
 
 export default function Phase3RemedialA2TaskD() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase3/step/1/remedial/b1/taskA') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 4, context: 'remedial_a2' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 4, context: 'remedial_a2' })
   const [answers, setAnswers] = useState({})
   const [showResults, setShowResults] = useState(false)
 
@@ -62,7 +63,7 @@ export default function Phase3RemedialA2TaskD() {
   }
 
   const logTaskCompletion = async (score) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskD', is_correct: true, score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskD', is_correct: true, score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',
@@ -215,7 +216,7 @@ export default function Phase3RemedialA2TaskD() {
             <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={8}>
               <Box
                 component="button"
-                onClick={() => navigate('/phase3/step/1/interaction/1')}
+                onClick={() => navigate('/phase3/step/1/remedial/b1/taskA')}
                 sx={{
                   display: 'flex', alignItems: 'center', gap: 1,
                   px: 3, py: 1.25,
@@ -228,7 +229,7 @@ export default function Phase3RemedialA2TaskD() {
                   '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` },
                 }}
               >
-                Retry Step 1
+                Continue to B1 Practice
                 <ArrowForwardIcon fontSize="small" />
               </Box>
             </motion.div>

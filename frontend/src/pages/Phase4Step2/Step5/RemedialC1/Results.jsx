@@ -81,7 +81,7 @@ const Results = () => {
   };
 
   const handleDashboard = () => {
-    navigate('/dashboard');
+    navigate('/phase4/step/3');
   };
 
   return (

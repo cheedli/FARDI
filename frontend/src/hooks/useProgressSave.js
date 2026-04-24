@@ -78,26 +78,27 @@ export function useProgressSave({
    * @param {number|null}  responseData.score
    * @param {string|null}  responseData.ai_feedback
    */
-  const saveResponse = useCallback((responseData) => {
-    const payload = {
-      phase,
-      subphase,
-      step,
-      interaction,
-      context,
-      item_index: responseData.item_index ?? 0,
-      session_id: sessionId.current,
-      response: {
-        item_id: responseData.item_id ?? null,
-        item_type: responseData.item_type ?? 'unknown',
-        prompt: responseData.prompt ?? null,
-        answer: responseData.answer,
-        is_correct: responseData.is_correct ?? null,
-        score: responseData.score ?? null,
-        ai_feedback: responseData.ai_feedback ?? null,
-      },
-    }
+  const buildPayload = useCallback((responseData) => ({
+    phase,
+    subphase,
+    step,
+    interaction,
+    context,
+    item_index: responseData.item_index ?? 0,
+    session_id: sessionId.current,
+    response: {
+      item_id: responseData.item_id ?? null,
+      item_type: responseData.item_type ?? 'unknown',
+      prompt: responseData.prompt ?? null,
+      answer: responseData.answer,
+      is_correct: responseData.is_correct ?? null,
+      score: responseData.score ?? null,
+      ai_feedback: responseData.ai_feedback ?? null,
+    },
+  }), [phase, subphase, step, interaction, context])
 
+  const saveResponse = useCallback((responseData) => {
+    const payload = buildPayload(responseData)
     pendingRef.current = payload
 
     if (timerRef.current) clearTimeout(timerRef.current)
@@ -107,7 +108,17 @@ export function useProgressSave({
         pendingRef.current = null
       }
     }, DEBOUNCE_MS)
-  }, [phase, subphase, step, interaction, context, flushToServer])
+  }, [buildPayload, flushToServer])
+
+  /**
+   * Immediately flush a save, bypassing the debounce. Use before navigating away
+   * so the progress pointer is written before the next page loads.
+   */
+  const saveNow = useCallback(async (responseData) => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    pendingRef.current = null
+    await flushToServer(buildPayload(responseData))
+  }, [buildPayload, flushToServer])
 
   /**
    * Flush any pending save immediately and mark the phase complete.
@@ -150,5 +161,5 @@ export function useProgressSave({
     }
   }, [])
 
-  return { saveResponse, markComplete }
+  return { saveResponse, saveNow, markComplete }
 }

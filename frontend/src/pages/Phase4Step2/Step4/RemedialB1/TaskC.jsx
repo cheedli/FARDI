@@ -82,6 +82,7 @@ export default function Phase4_2Step4RemedialB1TaskC() {
   }
 
   const handleNext = () => { navigate('/phase4_2/step/4/remedial/b1/results') }
+  window.__remedialSkip = handleNext
 
   const allAnswered = selectedAnswers.every(answer => answer !== null)
   const passThreshold = 5

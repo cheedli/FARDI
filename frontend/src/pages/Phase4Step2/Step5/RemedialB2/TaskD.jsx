@@ -77,7 +77,8 @@ const TaskD = () => {
     sessionStorage.setItem('phase4_2_step5_remedialB2_taskD', calculatedScore.toString());
   };
 
-  const handleNext = () => navigate('/phase4_2/step/5/remedial/b2/results');
+  const handleNext = () => navigate('/phase4_2/step/5/remedial/b2/results')
+  window.__remedialSkip = handleNext;
 
   const allAnswered = terms.every(term =>
     answers[`term${term.id}_spelling`]?.trim() !== '' && answers[`term${term.id}_explanation`]?.trim() !== ''

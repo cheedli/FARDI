@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, Container } from '@mui/material'
@@ -25,6 +26,7 @@ const MATCHING_PAIRS = [
 
 export default function Phase4_2Step5RemedialA2TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/5/remedial/a2/taskb') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 5, interaction: 1, context: 'remedial_a2' })
   const [gameCompleted, setGameCompleted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
@@ -85,7 +87,7 @@ export default function Phase4_2Step5RemedialA2TaskA() {
   }
 
   const handleContinue = () => {
-    navigate('/app/phase4_2/step/5/remedial/a2/taskb')
+    navigate('/phase4_2/step/5/remedial/a2/taskb')
   }
 
   return (

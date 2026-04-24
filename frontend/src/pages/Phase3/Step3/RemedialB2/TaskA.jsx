@@ -18,7 +18,7 @@ const fadeUp = {
 
 export default function Phase3Step3RemedialB2TaskA() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 3, interaction: 1, context: 'remedial_b2' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 3, interaction: 1, context: 'remedial_b2' })
   const muiTheme = useTheme()
   const dark = muiTheme.palette.mode === 'dark'
 
@@ -87,7 +87,7 @@ export default function Phase3Step3RemedialB2TaskA() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',
@@ -98,7 +98,8 @@ export default function Phase3Step3RemedialB2TaskA() {
     } catch (error) { console.error('Failed to log task:', error) }
   }
 
-  const handleNext = () => { navigate('/phase3/step/3/interaction/1') }
+  const handleNext = () => { navigate('/phase3/step/3/remedial/c1/taskA') }
+  window.__remedialSkip = handleNext
   const wordCount = response.trim().split(/\s+/).filter(w => w.length > 0).length
   const hasMinimumLength = response.trim().length >= 100
 
@@ -258,7 +259,7 @@ export default function Phase3Step3RemedialB2TaskA() {
                   '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: '6px 6px 0 #2E7D32' },
                 }}
               >
-                Retry Step 3 <ArrowForwardIcon fontSize="small" />
+                Continue to C1 Practice <ArrowForwardIcon fontSize="small" />
               </Box>
             </Box>
           </motion.div>

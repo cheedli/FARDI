@@ -101,6 +101,7 @@ export default function Phase4Step5RemedialB2TaskC() {
   }
 
   const handleContinue = () => navigate('/phase4/step/5/remedial/b2/taskD')
+  window.__remedialSkip = handleContinue
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>

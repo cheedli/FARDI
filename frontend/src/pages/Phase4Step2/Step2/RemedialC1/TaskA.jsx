@@ -38,6 +38,7 @@ const WORD_BANK = shuffleArray(['hashtag', 'viral', 'engagement', 'caption', 'em
 
 export default function Phase4_2Step2RemedialC1TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/2/remedial/c1/taskB') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Typography, LinearProgress, Container } from '@mui/material'
@@ -27,6 +28,7 @@ const FLASHCARDS = [
 
 export default function Phase4_2Step3RemedialB1TaskD() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/3/remedial/b1/results') }, [])
   const { saveResponse } = useProgressSave({ phase: 4, subphase: 2, step: 3, interaction: 4, context: 'remedial_b1' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)

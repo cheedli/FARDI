@@ -58,6 +58,7 @@ const VOCABULARY_PAIRS = [
 
 export default function Phase4Step4RemedialA1TaskA() {
   const navigate = useNavigate()
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/4/remedial/a1/taskB') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {

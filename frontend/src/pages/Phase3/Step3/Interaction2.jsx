@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Container, Typography, useTheme, Radio, RadioGroup, FormControlLabel } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
@@ -72,7 +72,7 @@ const SENTENCE_PAIRS = [
 
 export default function Phase3Step3Interaction2() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 3, interaction: 2, context: 'main' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 3, interaction: 2, context: 'main' })
   const muiTheme = useTheme()
   const dark = muiTheme.palette.mode === 'dark'
 
@@ -125,7 +125,7 @@ export default function Phase3Step3Interaction2() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction2', is_correct: true, score: score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction2', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/interaction/log', {
         method: 'POST',
@@ -136,7 +136,10 @@ export default function Phase3Step3Interaction2() {
     } catch (error) { console.error('Failed to log interaction:', error) }
   }
 
-  const handleContinue = () => { navigate('/app/phase3/step/3/interaction/3') }
+  const handleContinue = () => { navigate('/phase3/step/3/interaction/3') }
+
+  useEffect(() => { window.__remedialSkip = handleContinue }, [])
+
   const allAnswered = Object.keys(answers).length === SENTENCE_PAIRS.length
 
   return (

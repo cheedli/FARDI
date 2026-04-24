@@ -90,7 +90,7 @@ export default function RemedialB2Results() {
           sessionStorage.removeItem('remedial_step4_b2_taskB_score')
           sessionStorage.removeItem('remedial_step4_b2_taskC_score')
           sessionStorage.removeItem('remedial_step4_b2_taskD_score')
-          navigate(sessionStorage.getItem('phase4_step4_b2_next_url') || (passed ? '/phase4/step/5' : '/phase4/step/4/remedial/b2/taskA'))
+          navigate(sessionStorage.getItem('phase4_step4_b2_next_url') || (passed ? '/phase4/step/4/remedial/c1/taskA' : '/phase4/step/4/remedial/b2/taskA'))
           return 0
         }
         return prev - 1

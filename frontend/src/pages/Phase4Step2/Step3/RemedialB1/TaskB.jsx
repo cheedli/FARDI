@@ -98,6 +98,7 @@ export default function Phase4_2Step3RemedialB1TaskB() {
   }
 
   const handleNext = () => { navigate('/phase4_2/step/3/remedial/b1/taskC') }
+  window.__remedialSkip = handleNext
 
   const allFilled = definitions.every(def => def.trim() !== '')
 

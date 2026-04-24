@@ -58,7 +58,8 @@ const TaskD = () => {
     sessionStorage.setItem('phase4_2_step5_remedialB1_taskD', score.toString());
   };
 
-  const handleNext = () => navigate('/phase4_2/step/5/remedial/b1/results');
+  const handleNext = () => navigate('/phase4_2/step/5/remedial/b1/results')
+  window.__remedialSkip = handleNext;
 
   const score = Object.values(markedAsLearned).filter(Boolean).length;
 

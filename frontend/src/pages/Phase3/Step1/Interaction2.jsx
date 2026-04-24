@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Container, Typography, useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
@@ -43,11 +43,11 @@ export default function Phase3Step1Interaction2() {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const D = isDark ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 2, context: 'main' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 1, interaction: 2, context: 'main' })
   const [gameResult, setGameResult] = useState(null)
 
   const handleGameComplete = (result) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction2', is_correct: true, score: result })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction2', is_correct: true, score: result })
     console.log('Sushi Spell Game completed:', result)
     setGameResult(result)
 
@@ -76,8 +76,10 @@ export default function Phase3Step1Interaction2() {
   }
 
   const handleContinue = () => {
-    navigate('/app/phase3/step/1/interaction/3')
+    navigate('/phase3/step/1/interaction/3')
   }
+
+  useEffect(() => { window.__remedialSkip = handleContinue }, [])
 
   const foundCount = gameResult?.foundWords?.length || 0
   const isExcellent = foundCount >= 5

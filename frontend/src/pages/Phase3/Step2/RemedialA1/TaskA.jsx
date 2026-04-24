@@ -60,7 +60,8 @@ function clay(c) {
 
 export default function Phase3Step2RemedialA1TaskA() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 2, interaction: 1, context: 'remedial_a1' })
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase3/step/2/remedial/a2/taskA') }, [])
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 2, interaction: 1, context: 'remedial_a1' })
   const [sortedItems, setSortedItems] = useState({ cost: [], income: [] })
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
@@ -100,7 +101,7 @@ export default function Phase3Step2RemedialA1TaskA() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/remedial/log', {
         method: 'POST',
@@ -114,7 +115,7 @@ export default function Phase3Step2RemedialA1TaskA() {
   }
 
   const handleNext = () => {
-    navigate('/phase3/step/2/interaction/1')
+    navigate('/phase3/step/2/remedial/a2/taskA')
   }
 
   const allItemsSorted = sortedItems.cost.length + sortedItems.income.length === ITEMS.length
@@ -422,7 +423,7 @@ export default function Phase3Step2RemedialA1TaskA() {
                 '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${D.green.shadow}` },
               }}
             >
-              Retry Step 2 <ArrowForwardIcon />
+              Continue to A2 Practice <ArrowForwardIcon />
             </Box>
           )}
         </Box>

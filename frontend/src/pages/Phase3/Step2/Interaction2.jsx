@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Container, Typography, Radio, RadioGroup, FormControlLabel, Collapse, useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
@@ -108,7 +108,7 @@ function clay(c) {
 
 export default function Phase3Step2Interaction2() {
   const navigate = useNavigate()
-  const { saveResponse } = useProgressSave({ phase: 3, subphase: null, step: 2, interaction: 2, context: 'main' })
+  const { saveNow } = useProgressSave({ phase: 3, subphase: null, step: 2, interaction: 2, context: 'main' })
   const [answers, setAnswers] = useState({})
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
@@ -135,7 +135,7 @@ export default function Phase3Step2Interaction2() {
   }
 
   const logTaskCompletion = async (score, maxScore) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction2', is_correct: true, score: score })
+    saveNow({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction2', is_correct: true, score: score })
     try {
       await fetch('/api/phase3/interaction/log', {
         method: 'POST',
@@ -149,8 +149,10 @@ export default function Phase3Step2Interaction2() {
   }
 
   const handleContinue = () => {
-    navigate('/app/phase3/step/2/interaction/3')
+    navigate('/phase3/step/2/interaction/3')
   }
+
+  useEffect(() => { window.__remedialSkip = handleContinue }, [])
 
   const allAnswered = Object.keys(answers).length === SCENARIOS.length
 

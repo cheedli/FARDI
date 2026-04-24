@@ -114,6 +114,7 @@ export default function RemedialC1TaskA() {
   }
 
   const handleContinue = () => navigate('/phase4/step/4/remedial/c1/taskB')
+  window.__remedialSkip = handleContinue
   const allFilled = essayBoxes.every(box => box !== null)
 
   return (

@@ -23,6 +23,7 @@ import { useProgressSave } from '../../../hooks/useProgressSave'
 
 export default function Phase4_2Step2Interaction2() {
   const navigate = useNavigate()
+  useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/2/interaction/3') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {
