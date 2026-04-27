@@ -1,54 +1,93 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Typography, Stack, Container, LinearProgress } from '@mui/material'
-import { useTheme } from '@mui/material/styles'
-import { motion } from 'framer-motion'
+import { Box, Typography, Stack, Container, useTheme, LinearProgress } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
 import TimerIcon from '@mui/icons-material/Timer'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import { useProgressSave } from '../../../hooks/useProgressSave'
-
-const LIGHT = {
-  pageBg: '#FFFDE7',
-  blue:   { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
-  green:  { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
-  orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
-  red:    { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
-  purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
-  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
-}
-const DARK = {
-  pageBg: '#0F0F1A',
-  blue:   { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
-  green:  { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
-  orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
-  red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
-  purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
-  yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
-}
+import { motion } from 'framer-motion'
 
 /**
- * Phase 4 Step 3 - Remedial B1 - Task C: Wordshake Quiz
+ * Phase 4 Step 3 - Remedial B1 - Task C: Quiz Game
+ * 6 multiple choice questions with 3 options each
+ * Score: +1 for each correct answer (6 total)
  */
 
 const QUIZ_QUESTIONS = [
-  { id: 1, question: 'What is promotional?', answers: ['To sell/promote', 'To hide', 'To copy'], correctIndex: 0, explanation: 'Promotional means to sell or promote a product or service.' },
-  { id: 2, question: 'Persuasive uses what?', answers: ['Ethos, pathos, logos', 'Only pictures', 'No words'], correctIndex: 0, explanation: 'Persuasive advertising uses ethos (credibility), pathos (emotion), and logos (logic).' },
-  { id: 3, question: 'Targeted means?', answers: ['For specific group', 'For everyone', 'For animals'], correctIndex: 0, explanation: 'Targeted advertising is aimed at a specific group of people.' },
-  { id: 4, question: 'Original is?', answers: ['New idea', 'Copied', 'Old'], correctIndex: 0, explanation: "Original means a new, unique idea that hasn't been copied." },
-  { id: 5, question: 'Creative means?', answers: ['Use imagination', 'Use same', 'No color'], correctIndex: 0, explanation: 'Creative means using imagination to create something new and interesting.' },
-  { id: 6, question: 'Ethical is?', answers: ['Honest/fair', 'Lie', 'Expensive'], correctIndex: 0, explanation: 'Ethical advertising is honest and fair, following moral principles.' }
+  {
+    id: 1,
+    question: 'What is promotional?',
+    answers: ['To sell/promote', 'To hide', 'To copy'],
+    correctIndex: 0,
+    explanation: 'Promotional means to sell or promote a product or service through advertising.'
+  },
+  {
+    id: 2,
+    question: 'Persuasive uses what?',
+    answers: ['Ethos, pathos, logos', 'Only pictures', 'No words'],
+    correctIndex: 0,
+    explanation: 'Persuasive advertising uses ethos (credibility), pathos (emotion), and logos (logic) to convince people.'
+  },
+  {
+    id: 3,
+    question: 'Targeted means?',
+    answers: ['For specific group', 'For everyone', 'For animals'],
+    correctIndex: 0,
+    explanation: 'Targeted advertising is aimed at a specific group of people, like students at our university.'
+  },
+  {
+    id: 4,
+    question: 'Original is?',
+    answers: ['New idea', 'Copied', 'Old'],
+    correctIndex: 0,
+    explanation: 'Original means a new, unique idea that has not been copied from somewhere else.'
+  },
+  {
+    id: 5,
+    question: 'Creative means?',
+    answers: ['Use imagination', 'Use same', 'No color'],
+    correctIndex: 0,
+    explanation: 'Creative means using imagination to make something new and interesting.'
+  },
+  {
+    id: 6,
+    question: 'Ethical is?',
+    answers: ['Honest/fair', 'Lie', 'Expensive'],
+    correctIndex: 0,
+    explanation: 'Ethical advertising is honest and fair, following moral principles and not lying to customers.'
+  }
 ]
-
-const ANSWER_COLORS = ['red', 'blue', 'yellow']
 
 export default function RemedialB1TaskC() {
   const navigate = useNavigate()
-  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step3/remedial/b1/taskD') }, [])
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/3/remedial/b1/taskD') }, [])
   const theme = useTheme()
-  const P = theme.palette.mode === 'dark' ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 3, context: 'remedial_b1' })
+  const isDark = theme.palette.mode === 'dark'
+  const LIGHT = {
+    pageBg: '#FFFDE7',
+    blue:   { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
+    green:  { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+    yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+    purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+    teal:   { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
+    orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
+    red:    { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
+  }
+  const DARK = {
+    pageBg: '#0F0F1A',
+    blue:   { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
+    green:  { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+    yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+    purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
+    teal:   { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
+    orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
+    red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
+  }
+  const P = isDark ? DARK : LIGHT
+
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 3, context: 'remedial_b1' })
   const [gameStarted, setGameStarted] = useState(false)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState(null)
@@ -70,19 +109,17 @@ export default function RemedialB1TaskC() {
   const currentQuestion = shuffledQuestions[currentQuestionIndex]
   const totalQuestions = shuffledQuestions.length
 
-  const cardSx = (color) => ({
-    bgcolor: P[color].bg,
-    border: `2px solid ${P[color].border}`,
-    borderRadius: '20px',
-    boxShadow: `4px 4px 0 ${P[color].shadow}`,
-    p: 3,
-  })
+  const answerColors = [P.red, P.blue, P.yellow]
 
   useEffect(() => {
     if (gameStarted && !showResult && !quizCompleted) {
       const timer = setInterval(() => {
         setTimeLeft(prev => {
-          if (prev <= 1) { clearInterval(timer); handleTimeUp(); return 0 }
+          if (prev <= 1) {
+            clearInterval(timer)
+            handleTimeUp()
+            return 0
+          }
           return prev - 1
         })
       }, 1000)
@@ -90,11 +127,14 @@ export default function RemedialB1TaskC() {
     }
   }, [gameStarted, currentQuestionIndex, showResult, quizCompleted])
 
-  const handleStartQuiz = () => { setGameStarted(true); setTimeLeft(20) }
+  const handleStartQuiz = () => {
+    setGameStarted(true)
+    setTimeLeft(20)
+  }
 
   const handleTimeUp = () => {
     setShowResult(true)
-    setTimeout(() => moveToNextQuestion(), 3000)
+    setTimeout(() => { moveToNextQuestion() }, 3000)
   }
 
   const handleAnswerClick = (answerIndex) => {
@@ -103,7 +143,7 @@ export default function RemedialB1TaskC() {
     const isCorrect = answerIndex === currentQuestion.correctIndex
     if (isCorrect) setScore(score + 1)
     setShowResult(true)
-    setTimeout(() => moveToNextQuestion(), 3000)
+    setTimeout(() => { moveToNextQuestion() }, 3000)
   }
 
   const moveToNextQuestion = () => {
@@ -115,7 +155,7 @@ export default function RemedialB1TaskC() {
     } else {
       setQuizCompleted(true)
       const finalScore = score + (selectedAnswer === currentQuestion.correctIndex ? 1 : 0)
-      sessionStorage.setItem('remedial_step3_b1_taskC_score', finalScore)
+      sessionStorage.setItem('remedial_step4_b1_taskC_score', finalScore)
       logTaskCompletion(finalScore)
     }
   }
@@ -124,39 +164,47 @@ export default function RemedialB1TaskC() {
     saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: finalScore })
     try {
       await fetch('/api/phase4/remedial/log', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ level: 'B1', task: 'C', step: 2, score: finalScore, max_score: 6, completed: true })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ level: 'B1', task: 'C', step: 4, score: finalScore, max_score: 6, completed: true })
       })
-    } catch (error) { console.error('Failed to log task completion:', error) }
+    } catch (error) {
+      console.error('Failed to log task completion:', error)
+    }
   }
 
+  const handleContinue = () => {
+    navigate('/phase4/step/3/remedial/b1/taskD')
+  }
+
+  // Start screen
   if (!gameStarted) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
         <Container maxWidth="md">
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
-            <Box sx={{ ...cardSx('orange'), mb: 3 }}>
-              <Typography variant="h4" gutterBottom fontWeight="bold">Phase 4 - Step 3: Remedial Activities</Typography>
-              <Typography variant="h5" gutterBottom>Level B1 - Task C: Wordshake Quiz 🎮</Typography>
-              <Typography variant="body1">Test your knowledge! Answer 6 multiple-choice questions.</Typography>
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+            <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
+              <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>Phase 4 - Step 3: Remedial Activities</Typography>
+              <Typography variant="h5" gutterBottom sx={{ color: P.blue.shadow }}>Level B1 - Task C: Quiz Game</Typography>
+              <Typography variant="body1" sx={{ color: P.blue.shadow }}>Test your knowledge! Answer 6 multiple-choice questions.</Typography>
             </Box>
-            <Box sx={{ ...cardSx('blue'), mb: 3 }}>
-              <CharacterMessage character="MS. MABROUKI" message="Excellent progress! Now test your knowledge with this quiz. Answer 6 questions about advertising terminology. You have 20 seconds per question. Good luck!" />
+
+            <Box sx={{ bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`, p: 3, mb: 3 }}>
+              <CharacterMessage speaker="MS. MABROUKI" message="Excellent progress! Now test your knowledge with this quiz. Answer 6 questions about advertising terminology from the video. You have 20 seconds per question. Good luck!" />
             </Box>
-            <Box sx={{ ...cardSx('purple'), textAlign: 'center', p: 5 }}>
-              <Typography variant="h3" gutterBottom fontWeight="bold">Ready to Start?</Typography>
-              <Typography variant="h6" sx={{ mb: 4 }}>6 Questions · 20 seconds each · Score: X/6</Typography>
-              <Box
-                component="button"
-                onClick={handleStartQuiz}
-                sx={{
-                  ...cardSx('green'), cursor: 'pointer', px: 6, py: 2,
-                  fontSize: '1.4rem', fontWeight: 'bold', color: P.green.border, transition: 'all 0.2s',
-                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }
-                }}
-              >
-                Start Quiz
-              </Box>
+
+            <Box sx={{ bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.purple.shadow}`, p: 6, textAlign: 'center' }}>
+              <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: P.purple.shadow }}>Ready to Start?</Typography>
+              <Typography variant="h6" sx={{ color: P.purple.shadow, mb: 4 }}>6 Questions · 20 seconds each · Score: X/6</Typography>
+              <Box component="button" onClick={handleStartQuiz} sx={{
+                bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                borderRadius: '12px', boxShadow: `4px 4px 0 ${P.green.shadow}`,
+                px: 6, py: 2, fontWeight: 700, fontSize: '1.3rem',
+                cursor: 'pointer', color: P.green.shadow,
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` },
+                '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` }
+              }}>Start Quiz</Box>
             </Box>
           </motion.div>
         </Container>
@@ -164,33 +212,32 @@ export default function RemedialB1TaskC() {
     )
   }
 
+  // Quiz completed screen
   if (quizCompleted) {
-    const finalScore = sessionStorage.getItem('remedial_step3_b1_taskC_score') || score
+    const finalScore = sessionStorage.getItem('remedial_step4_b1_taskC_score') || score
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
         <Container maxWidth="md">
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
-            <Box sx={{ ...cardSx('orange'), mb: 3 }}>
-              <Typography variant="h4" gutterBottom fontWeight="bold">Phase 4 - Step 3: Remedial Activities</Typography>
-              <Typography variant="h5">Level B1 - Task C: Wordshake Quiz 🎮</Typography>
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+            <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
+              <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>Phase 4 - Step 3: Remedial Activities</Typography>
+              <Typography variant="h5" sx={{ color: P.blue.shadow }}>Level B1 - Task C: Quiz Game</Typography>
             </Box>
-            <Box sx={{ ...cardSx('purple'), textAlign: 'center', p: 6 }}>
-              <Typography variant="h3" gutterBottom fontWeight="bold">Quiz Complete! 🎉</Typography>
-              <Box sx={{ ...cardSx('yellow'), maxWidth: 280, mx: 'auto', my: 4 }}>
-                <Typography variant="h2" fontWeight="bold" sx={{ color: P.blue.border }}>{finalScore} / 6</Typography>
-                <Typography variant="h6" color="text.secondary">Your Score</Typography>
+
+            <Box sx={{ bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.purple.shadow}`, p: 6, textAlign: 'center' }}>
+              <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: P.purple.shadow }}>Quiz Complete!</Typography>
+              <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '16px', boxShadow: `3px 3px 0 ${P.blue.shadow}`, p: 4, maxWidth: 300, mx: 'auto', my: 4 }}>
+                <Typography variant="h2" fontWeight="bold" sx={{ color: P.blue.shadow }}>{finalScore} / 6</Typography>
+                <Typography variant="body1" sx={{ color: P.blue.shadow }}>Your Score</Typography>
               </Box>
-              <Box
-                component="button"
-                onClick={() => navigate('/phase4/step3/remedial/b1/taskD')}
-                sx={{
-                  ...cardSx('green'), cursor: 'pointer', px: 6, py: 2,
-                  fontSize: '1.1rem', fontWeight: 'bold', color: P.green.border, transition: 'all 0.2s',
-                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }
-                }}
-              >
-                Continue to Task D →
-              </Box>
+              <Box component="button" onClick={handleContinue} sx={{
+                bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                borderRadius: '12px', boxShadow: `4px 4px 0 ${P.green.shadow}`,
+                px: 6, py: 2, fontWeight: 700, fontSize: '1.1rem',
+                cursor: 'pointer', color: P.green.shadow,
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` },
+                '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` }
+              }}>Continue to Task D →</Box>
             </Box>
           </motion.div>
         </Container>
@@ -202,44 +249,61 @@ export default function RemedialB1TaskC() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
       <Container maxWidth="md">
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
 
-          {/* Header with timer */}
-          <Box sx={{ ...cardSx('purple'), mb: 3 }}>
+          {/* Header with timer and score */}
+          <Box sx={{ bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.purple.shadow}`, p: 3, mb: 3 }}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems="center">
-              <Typography variant="h5" fontWeight="bold">
+              <Typography variant="h5" fontWeight="bold" sx={{ color: P.purple.shadow }}>
                 Question {currentQuestionIndex + 1} / {totalQuestions}
               </Typography>
+
               <Box sx={{ textAlign: 'center' }}>
                 <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
-                  <TimerIcon />
-                  <Typography variant="h3" fontWeight="bold" sx={{ color: timeLeft <= 5 ? P.red.border : 'inherit' }}>
+                  <TimerIcon sx={{ fontSize: 30, color: timeLeft <= 5 ? P.red.shadow : P.purple.shadow }} />
+                  <Typography variant="h3" fontWeight="bold" sx={{
+                    color: timeLeft <= 5 ? P.red.shadow : P.purple.shadow,
+                    animation: timeLeft <= 5 ? 'pulse 1s infinite' : 'none',
+                    '@keyframes pulse': {
+                      '0%, 100%': { transform: 'scale(1)' },
+                      '50%': { transform: 'scale(1.15)' }
+                    }
+                  }}>
                     {timeLeft}
                   </Typography>
                 </Stack>
                 <LinearProgress
                   variant="determinate"
                   value={(timeLeft / 20) * 100}
-                  sx={{ height: 8, borderRadius: 4, mt: 1, bgcolor: 'rgba(255,255,255,0.2)', '& .MuiLinearProgress-bar': { bgcolor: timeLeft <= 5 ? P.red.border : P.green.border } }}
+                  sx={{
+                    height: 8, borderRadius: '999px', mt: 1,
+                    bgcolor: P.purple.border,
+                    '& .MuiLinearProgress-bar': { bgcolor: timeLeft <= 5 ? P.red.shadow : P.green.shadow }
+                  }}
                 />
               </Box>
-              <Typography variant="h5" fontWeight="bold">Score: {score} / 6</Typography>
+
+              <Typography variant="h5" fontWeight="bold" sx={{ color: P.purple.shadow }}>
+                Score: {score} / 6
+              </Typography>
             </Stack>
           </Box>
 
-          {/* Question */}
-          <Box sx={{ ...cardSx('blue'), mb: 3, minHeight: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography variant="h4" fontWeight="bold" align="center">{currentQuestion?.question}</Typography>
+          {/* Question Display */}
+          <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 4, mb: 3, minHeight: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography variant="h4" fontWeight="bold" align="center" sx={{ color: P.blue.shadow }}>
+              {currentQuestion?.question}
+            </Typography>
           </Box>
 
-          {/* Answer options */}
-          <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+          {/* Answer Options */}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3 }}>
             {currentQuestion?.answers.map((answer, index) => {
               const isSelected = selectedAnswer === index
               const isCorrect = index === currentQuestion.correctIndex
               const showCorrect = showResult && isCorrect
               const showIncorrect = showResult && isSelected && !isCorrect
-              const color = showCorrect ? 'green' : showIncorrect ? 'red' : ANSWER_COLORS[index]
+              const color = showCorrect ? P.green : showIncorrect ? P.red : answerColors[index]
 
               return (
                 <Box
@@ -248,18 +312,25 @@ export default function RemedialB1TaskC() {
                   onClick={() => handleAnswerClick(index)}
                   disabled={showResult}
                   sx={{
-                    flex: 1, bgcolor: P[color].bg, border: `2px solid ${P[color].border}`,
-                    borderRadius: '16px', boxShadow: `4px 4px 0 ${P[color].shadow}`,
-                    p: 3, cursor: showResult ? 'default' : 'pointer',
-                    transition: 'all 0.2s', minHeight: 100,
-                    '&:hover': !showResult ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P[color].shadow}` } : {}
+                    flex: 1,
+                    bgcolor: color.bg,
+                    border: `2px solid ${color.border}`,
+                    borderRadius: '16px',
+                    boxShadow: showResult ? 'none' : `3px 3px 0 ${color.shadow}`,
+                    py: 3, px: 2,
+                    cursor: showResult ? 'not-allowed' : 'pointer',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                    opacity: showResult && !isCorrect && !isSelected ? 0.6 : 1,
+                    '&:hover': showResult ? {} : { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${color.shadow}` },
+                    '&:active': showResult ? {} : { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${color.shadow}` },
+                    transition: 'all 0.15s ease',
                   }}
                 >
-                  <Stack spacing={1} alignItems="center">
-                    {showCorrect && <CheckCircleIcon sx={{ fontSize: 32, color: P.green.border }} />}
-                    {showIncorrect && <CancelIcon sx={{ fontSize: 32, color: P.red.border }} />}
-                    <Typography variant="h6" fontWeight="bold" align="center">{answer}</Typography>
-                  </Stack>
+                  {showCorrect && <CheckCircleIcon sx={{ fontSize: 32, color: P.green.shadow }} />}
+                  {showIncorrect && <CancelIcon sx={{ fontSize: 32, color: P.red.shadow }} />}
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: color.shadow }}>
+                    {answer}
+                  </Typography>
                 </Box>
               )
             })}
@@ -267,11 +338,17 @@ export default function RemedialB1TaskC() {
 
           {/* Explanation */}
           {showResult && (
-            <Box sx={{ ...cardSx(selectedAnswer === currentQuestion.correctIndex ? 'green' : 'red') }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                {selectedAnswer === currentQuestion.correctIndex ? '✓ Correct!' : '✗ Incorrect'}
+            <Box sx={{
+              bgcolor: selectedAnswer === currentQuestion.correctIndex ? P.green.bg : P.red.bg,
+              border: `2px solid ${selectedAnswer === currentQuestion.correctIndex ? P.green.border : P.red.border}`,
+              borderRadius: '16px',
+              boxShadow: `3px 3px 0 ${selectedAnswer === currentQuestion.correctIndex ? P.green.shadow : P.red.shadow}`,
+              p: 3,
+            }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: selectedAnswer === currentQuestion.correctIndex ? P.green.shadow : P.red.shadow }}>
+                {selectedAnswer === currentQuestion.correctIndex ? 'Correct!' : 'Incorrect'}
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" sx={{ color: selectedAnswer === currentQuestion.correctIndex ? P.green.shadow : P.red.shadow }}>
                 <strong>Explanation:</strong> {currentQuestion.explanation}
               </Typography>
             </Box>

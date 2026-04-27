@@ -1,42 +1,42 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Typography, Stack, Container } from '@mui/material'
-import { useTheme } from '@mui/material'
-import { motion } from 'framer-motion'
+import { Box, Typography, Avatar, LinearProgress, Container, useTheme } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
-import GapFillStory from '../../../components/GapFillStory.jsx'
+import SendIcon from '@mui/icons-material/Send'
+import CheckIcon from '@mui/icons-material/Check'
+import DoneAllIcon from '@mui/icons-material/DoneAll'
 import { useProgressSave } from '../../../hooks/useProgressSave'
+import { motion } from 'framer-motion'
 
 /**
- * Phase 4 Step 3 - Remedial A2 - Task A: Dialogue Adventure
- * Complete dialogue explaining video terms (8 blanks)
- * Score: +1 for each correct word (8 total)
+ * Phase 4 Step 3 - Level A2 - Task A: Dialogue Adventure
+ * WhatsApp/Messenger-style chat interface
+ * Complete dialogue describing poster/video
+ * Score: +1 for each correct word (7 total)
  */
 
-const WORD_BANK = [
-  'promotional', 'sell', 'persuasive', 'convince',
-  'targeted', 'group', 'original', 'new'
+// Only the words that need to be filled: gatefold, animation, jingle, and, dramatisation, with, sketch
+const WORD_BANK_ORIGINAL = [
+  'gatefold', 'animation', 'jingle', 'and', 'dramatisation', 'with', 'sketch'
 ]
 
-const DIALOGUE_SENTENCES = [
-  'Lilia: What is promotional?',
-  'You: _______ is to _______.',
-  'Ms. Mabrouki: Persuasive?',
-  'You: _______ is to _______.',
-  'You: _______ for _______.',
-  'You: _______ is _______ idea.'
+const AVATARS = {
+  'MS. MABROUKI': { color: '#9D84B7', initials: 'MM' },
+  'LILIA': { color: '#6BCF7F', initials: 'LI' },
+  'YOU': { color: '#4D96FF', initials: 'ME' }
+}
+
+const DIALOGUE_MESSAGES = [
+  { id: 1, sender: 'LILIA', text: 'Poster gatefold?', type: 'question' },
+  { id: 2, sender: 'YOU', template: '______ is fold.', blanks: ['gatefold'], type: 'response' },
+  { id: 3, sender: 'MS. MABROUKI', text: 'Video animation?', type: 'question' },
+  { id: 4, sender: 'YOU', template: '______ is move picture.', blanks: ['animation'], type: 'response' },
+  { id: 5, sender: 'YOU', template: '______ is song ______ ______ is story ______ ______.', blanks: ['jingle', 'and', 'dramatisation', 'with', 'sketch'], type: 'response' }
 ]
 
-const CORRECT_ANSWERS = [
-  'promotional', 'sell',
-  'persuasive', 'convince',
-  'targeted', 'group',
-  'original', 'new'
-]
-
-export default function RemedialA2TaskA() {
+export default function Phase4Step4RemedialA2TaskA() {
   const navigate = useNavigate()
-  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step3/remedial/a2/taskB') }, [])
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/3/remedial/a2/taskB') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {
@@ -61,225 +61,326 @@ export default function RemedialA2TaskA() {
   }
   const P = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 1, context: 'remedial_a2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 1, context: 'remedial_a2' })
+  const [wordBank] = useState(() => [...WORD_BANK_ORIGINAL].sort(() => Math.random() - 0.5))
+  const [selectedWord, setSelectedWord] = useState(null)
   const [answers, setAnswers] = useState({})
-  const [submitted, setSubmitted] = useState(false)
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
+  const [displayedMessages, setDisplayedMessages] = useState([])
   const [score, setScore] = useState(0)
+  const [completed, setCompleted] = useState(false)
+  const messagesEndRef = useRef(null)
 
-  const handleAnswerChange = (key, value) => {
-    setAnswers(prev => ({ ...prev, [key]: value }))
-  }
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [displayedMessages])
 
-  const calculateScore = () => {
-    let correctCount = 0
-    let answerIndex = 0
-    DIALOGUE_SENTENCES.forEach((sentence, sentenceIndex) => {
-      const blankCount = (sentence.match(/_______/g) || []).length
-      for (let i = 0; i < blankCount; i++) {
-        const key = `g_${sentenceIndex}_${i}`
-        const userAnswer = answers[key]?.toLowerCase().trim()
-        const correctAnswer = CORRECT_ANSWERS[answerIndex]?.toLowerCase()
-        if (userAnswer === correctAnswer) correctCount++
-        answerIndex++
+  useEffect(() => {
+    setTimeout(() => addNextMessage(), 500)
+  }, [])
+
+  const addNextMessage = () => {
+    if (currentMessageIndex >= DIALOGUE_MESSAGES.length) return
+    const message = DIALOGUE_MESSAGES[currentMessageIndex]
+    setTimeout(() => {
+      setDisplayedMessages(prev => [...prev, {
+        ...message, status: message.sender === 'YOU' ? null : 'delivered',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }])
+      setCurrentMessageIndex(prev => prev + 1)
+
+      // If this was a question, immediately show the next message (user's response)
+      if (message.type === 'question' && currentMessageIndex + 1 < DIALOGUE_MESSAGES.length) {
+        const nextMessage = DIALOGUE_MESSAGES[currentMessageIndex + 1]
+        if (nextMessage.type === 'response') {
+          setTimeout(() => {
+            setDisplayedMessages(prev => [...prev, {
+              ...nextMessage, status: null,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }])
+            setCurrentMessageIndex(prev => prev + 1)
+          }, 600)
+        }
       }
-    })
-    return correctCount
+    }, 800)
   }
 
-  const handleSubmit = async () => {
-    const finalScore = calculateScore()
-    setScore(finalScore)
-    setSubmitted(true)
-    sessionStorage.setItem('remedial_step3_a2_taskA_score', finalScore)
-    await logTaskCompletion(finalScore)
-  }
+  const handleWordClick = (word) => {
+    setSelectedWord(word)
 
-  const logTaskCompletion = async (score) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskA', is_correct: true, score: score })
-    try {
-      const response = await fetch('/api/phase4/remedial/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ level: 'A2', task: 'A', step: 2, score: score, max_score: 8, completed: true })
-      })
-      const data = await response.json()
-      if (data.success) console.log('Step 3 Task A completion logged to backend')
-    } catch (error) {
-      console.error('Failed to log task completion:', error)
+    // Auto-fill first empty blank
+    const currentUserMessage = displayedMessages.find(msg => msg.sender === 'YOU' && msg.type === 'response' && !msg.sent)
+    if (currentUserMessage) {
+      const firstEmptyBlankIndex = currentUserMessage.blanks.findIndex((_, idx) => !answers[`msg${currentUserMessage.id}_blank${idx}`])
+      if (firstEmptyBlankIndex !== -1) {
+        setAnswers(prev => ({ ...prev, [`msg${currentUserMessage.id}_blank${firstEmptyBlankIndex}`]: word }))
+        setSelectedWord(null)
+        if (navigator.vibrate) navigator.vibrate(30)
+      }
     }
   }
 
-  const handleContinue = () => {
-    navigate('/phase4/step3/remedial/a2/taskB')
+  const handleBlankClick = (messageId, blankIndex) => {
+    const key = `msg${messageId}_blank${blankIndex}`
+
+    // Double-click to remove (check if already filled)
+    if (answers[key]) {
+      setAnswers(prev => {
+        const newAnswers = { ...prev }
+        delete newAnswers[key]
+        return newAnswers
+      })
+      if (navigator.vibrate) navigator.vibrate(50)
+      return
+    }
+
+    // Single click with selected word to fill
+    if (selectedWord) {
+      setAnswers(prev => ({ ...prev, [key]: selectedWord }))
+      setSelectedWord(null)
+      if (navigator.vibrate) navigator.vibrate(30)
+    }
   }
 
-  const allFilled = (() => {
-    return DIALOGUE_SENTENCES.every((sentence, sentenceIndex) => {
-      const blankCount = (sentence.match(/_______/g) || []).length
-      for (let i = 0; i < blankCount; i++) {
-        const key = `g_${sentenceIndex}_${i}`
-        if (!answers[key]) return false
-      }
-      return true
+  const handleSendMessage = (messageId) => {
+    const message = DIALOGUE_MESSAGES.find(m => m.id === messageId)
+    if (!message || !message.blanks) return
+
+    const allFilled = message.blanks.every((_, idx) => answers[`msg${messageId}_blank${idx}`])
+    if (!allFilled) return
+
+    let correct = 0
+    message.blanks.forEach((correctAnswer, idx) => {
+      if (answers[`msg${messageId}_blank${idx}`]?.toLowerCase() === correctAnswer.toLowerCase()) correct++
     })
-  })()
+    setScore(prev => prev + correct)
+
+    setDisplayedMessages(prev => prev.map(msg => msg.id === messageId ? { ...msg, status: 'sent', sent: true } : msg))
+    setTimeout(() => setDisplayedMessages(prev => prev.map(msg => msg.id === messageId ? { ...msg, status: 'delivered' } : msg)), 500)
+    setTimeout(() => setDisplayedMessages(prev => prev.map(msg => msg.id === messageId ? { ...msg, status: 'read' } : msg)), 1000)
+
+    if (currentMessageIndex < DIALOGUE_MESSAGES.length) {
+      setTimeout(() => addNextMessage(), 1500)
+    } else {
+      setTimeout(() => handleComplete(), 2000)
+    }
+  }
+
+  const handleComplete = () => {
+    setCompleted(true)
+    sessionStorage.setItem('phase4_step4_remedial_a2_taskA_score', score)
+    fetch('/api/phase4/step4/remedial/log', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+      body: JSON.stringify({ level: 'A2', task: 'A', score, max_score: 7, completed: true })
+    }).catch(err => console.error('Log error:', err))
+  }
+
+  const renderMessageContent = (message) => {
+    if (message.type === 'question') {
+      return <Typography variant="body1" sx={{ fontWeight: 500 }}>{message.text}</Typography>
+    }
+
+    if (message.type === 'response') {
+      if (message.sent) {
+        const parts = message.template.split(/_{3,}/)
+        return <Typography variant="body1" sx={{ fontWeight: 500 }}>{parts.map((part, idx) => (
+          <React.Fragment key={idx}>
+            {part}
+            {idx < parts.length - 1 && (
+              <strong style={{
+                color: answers[`msg${message.id}_blank${idx}`]?.toLowerCase() === message.blanks[idx]?.toLowerCase()
+                  ? P.green.shadow
+                  : P.red.shadow
+              }}>
+                {answers[`msg${message.id}_blank${idx}`]}
+              </strong>
+            )}
+          </React.Fragment>
+        ))}</Typography>
+      }
+
+      const parts = message.template.split(/_{3,}/)
+      const allFilled = message.blanks.every((_, idx) => answers[`msg${message.id}_blank${idx}`])
+
+      return (
+        <Box>
+          <Typography variant="caption" sx={{ display: 'block', mb: 1, fontWeight: 600, fontSize: '0.75rem', color: P.blue.shadow }}>Tap words to complete your message:</Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5 }}>
+            {parts.map((part, idx) => (
+              <React.Fragment key={idx}>
+                <Typography component="span" variant="body2" sx={{ fontWeight: 500 }}>{part}</Typography>
+                {idx < parts.length - 1 && (
+                  <Box
+                    component="span"
+                    onClick={() => handleBlankClick(message.id, idx)}
+                    sx={{
+                      display: 'inline-block',
+                      bgcolor: answers[`msg${message.id}_blank${idx}`] ? P.blue.bg : 'transparent',
+                      border: `2px dashed ${answers[`msg${message.id}_blank${idx}`] ? P.blue.border : P.yellow.border}`,
+                      borderRadius: '999px',
+                      px: 1.5, py: 0.25,
+                      fontSize: '0.8rem', fontWeight: 700,
+                      color: answers[`msg${message.id}_blank${idx}`] ? P.blue.shadow : P.yellow.shadow,
+                      cursor: 'pointer',
+                      minWidth: 70, textAlign: 'center',
+                    }}
+                  >
+                    {answers[`msg${message.id}_blank${idx}`] || 'tap here'}
+                  </Box>
+                )}
+              </React.Fragment>
+            ))}
+          </Box>
+          {allFilled && (
+            <Box
+              component="button"
+              onClick={() => handleSendMessage(message.id)}
+              sx={{
+                mt: 1.5,
+                bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                borderRadius: '12px', boxShadow: `2px 2px 0 ${P.green.shadow}`,
+                px: 2, py: 0.5, fontWeight: 700, fontSize: '0.85rem',
+                cursor: 'pointer', color: P.green.shadow,
+                display: 'flex', alignItems: 'center', gap: 0.5,
+                '&:hover': { transform: 'translate(-1px,-1px)', boxShadow: `3px 3px 0 ${P.green.shadow}` },
+              }}
+            >
+              <SendIcon sx={{ fontSize: 16 }} /> Send
+            </Box>
+          )}
+        </Box>
+      )
+    }
+  }
+
+  if (completed) {
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
+        <Container maxWidth="md">
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+            <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
+              <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>Phase 4 Step 3: Apply - Remedial Practice</Typography>
+              <Typography variant="h5" sx={{ color: P.blue.shadow }}>Level A2 - Task A: Dialogue Adventure Complete!</Typography>
+            </Box>
+            <Box sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.green.shadow}`, p: 4, textAlign: 'center', mb: 3 }}>
+              <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: P.green.shadow }}>{score} / 7</Typography>
+              <Typography variant="h6" sx={{ color: P.green.shadow }}>Points Earned</Typography>
+              <Typography variant="body1" sx={{ mt: 2, color: P.green.shadow }}>Adventure Progress: {((score / 7) * 100).toFixed(0)}% Complete</Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center' }}>
+              <Box component="button" onClick={() => navigate('/phase4/step/3/remedial/a2/taskB')} sx={{
+                bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
+                px: 6, py: 2, fontWeight: 700, fontSize: '1.1rem',
+                cursor: 'pointer', color: P.green.shadow,
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
+                '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` }
+              }}>
+                Continue to Task B: Expand Empire →
+              </Box>
+            </Box>
+          </motion.div>
+        </Container>
+      </Box>
+    )
+  }
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
-      <Container maxWidth="lg">
+      <Container maxWidth="md">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
 
           {/* Header */}
-          <Box sx={{
-            bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
-            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`,
-            p: 3, mb: 3,
-          }}>
-            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
-              Phase 4 - Step 3: Remedial Activities
-            </Typography>
-            <Typography variant="h5" gutterBottom sx={{ color: P.blue.shadow }}>
-              Level A2 - Task A: Dialogue Adventure
-            </Typography>
-            <Typography variant="body1" sx={{ color: P.blue.shadow }}>
-              Complete the dialogue to adventure through the story! Fill in the blanks to help explain video terms.
-            </Typography>
+          <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>Phase 4 Step 3: Apply - Remedial Practice</Typography>
+            <Typography variant="h5" gutterBottom sx={{ color: P.blue.shadow }}>Level A2 - Task A: Dialogue Adventure</Typography>
+            <Typography variant="body1" sx={{ color: P.blue.shadow }}>Complete the dialogue about posters and videos!</Typography>
           </Box>
 
           {/* Instructor Message */}
-          <Box sx={{
-            bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`,
-            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`,
-            p: 3, mb: 3,
-          }}>
-            <CharacterMessage
-              character="MS. MABROUKI"
-              message="Welcome to the Dialogue Adventure! You're having a conversation about video terms with Lilia and me. Fill in the blanks using the word bank below. Click a word from the Word Bank, then click the blank space where it belongs."
-            />
+          <Box sx={{ bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`, p: 3, mb: 3 }}>
+            <CharacterMessage speaker="MS. MABROUKI" message="Welcome to the Dialogue Adventure! This is a group chat conversation. Read the messages and complete your responses by tapping words from the word bank, then tapping the blanks in your message. Send each complete message to continue the adventure!" />
           </Box>
 
-          {/* Gap Fill Game */}
-          {!submitted && (
-            <Box>
-              <GapFillStory
-                templates={DIALOGUE_SENTENCES}
-                wordBank={WORD_BANK}
-                answers={answers}
-                onChange={handleAnswerChange}
-              />
+          {/* Chat Interface */}
+          <Box sx={{ bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.yellow.shadow}`, overflow: 'hidden', mb: 3 }}>
+            {/* Chat Header */}
+            <Box sx={{ bgcolor: P.blue.bg, borderBottom: `2px solid ${P.blue.border}`, p: 1.5, display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar sx={{ bgcolor: P.green.border, width: 36, height: 36 }}><Typography variant="caption" fontWeight="bold">A2</Typography></Avatar>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: P.blue.shadow }}>Media Team Chat</Typography>
+                <Typography variant="caption" sx={{ fontSize: '0.7rem', color: P.blue.shadow }}>Ms. Mabrouki, Lilia, You</Typography>
+              </Box>
+              <Box component="span" sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '999px', px: 1.5, py: 0.25, fontSize: '0.8rem', fontWeight: 700, color: P.green.shadow }}>
+                {score}/7
+              </Box>
             </Box>
-          )}
 
-          {/* Submit Button */}
-          {!submitted && (
-            <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 4 }}>
-              <Box component="button" onClick={handleSubmit} disabled={!allFilled} sx={{
-                bgcolor: allFilled ? P.blue.bg : 'grey.200',
-                border: `2px solid ${allFilled ? P.blue.border : '#ccc'}`,
-                borderRadius: '12px',
-                boxShadow: allFilled ? `3px 3px 0 ${P.blue.shadow}` : 'none',
-                px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
-                cursor: allFilled ? 'pointer' : 'not-allowed',
-                color: allFilled ? P.blue.shadow : 'grey.500',
-                '&:hover': allFilled ? { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.blue.shadow}` } : {},
-                '&:active': allFilled ? { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.blue.shadow}` } : {},
-              }}>
-                {allFilled ? 'Submit Dialogue' : 'Fill All Gaps First'}
-              </Box>
-            </Stack>
-          )}
-
-          {/* Results */}
-          {submitted && (
-            <Box>
-              <Box sx={{
-                bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
-                borderRadius: '20px', boxShadow: `4px 4px 0 ${P.green.shadow}`,
-                p: 4, mt: 3, textAlign: 'center',
-              }}>
-                <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.green.shadow }}>
-                  {score === 8 ? 'Perfect Adventure!' : 'Good Work!'}
-                </Typography>
-                <Typography variant="h6" sx={{ color: P.green.shadow }}>
-                  You scored {score} out of 8 points!
-                </Typography>
-              </Box>
-
-              {/* Dialogue Review */}
-              <Box sx={{
-                bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`,
-                borderRadius: '20px', boxShadow: `4px 4px 0 ${P.yellow.shadow}`,
-                p: 3, mt: 3,
-              }}>
-                <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.yellow.shadow }}>
-                  Dialogue Review:
-                </Typography>
-                <Stack spacing={2}>
-                  {DIALOGUE_SENTENCES.map((sentence, sentenceIndex) => {
-                    const blankCount = (sentence.match(/_______/g) || []).length
-                    if (blankCount === 0) {
-                      return (
-                        <Box key={sentenceIndex} sx={{
-                          bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
-                          borderRadius: '12px', p: 2,
-                        }}>
-                          <Typography variant="body1" sx={{ color: P.blue.shadow }}>{sentence}</Typography>
+            {/* Messages */}
+            <Box sx={{ p: 2, minHeight: 400, maxHeight: 500, overflowY: 'auto', bgcolor: isDark ? '#1a1a2e' : '#f0f4f8' }}>
+              {displayedMessages.map((message, index) => (
+                <Box key={index} sx={{ display: 'flex', justifyContent: message.sender === 'YOU' ? 'flex-end' : 'flex-start', mb: 1.5, alignItems: 'flex-end' }}>
+                  {message.sender !== 'YOU' && <Avatar sx={{ bgcolor: AVATARS[message.sender]?.color || '#666', width: 28, height: 28, mr: 0.5, fontSize: '0.7rem' }}>{AVATARS[message.sender]?.initials}</Avatar>}
+                  <Box sx={{
+                    maxWidth: '70%', p: 1.5,
+                    bgcolor: message.sender === 'YOU' ? P.green.bg : P.blue.bg,
+                    border: `2px solid ${message.sender === 'YOU' ? P.green.border : P.blue.border}`,
+                    borderRadius: message.sender === 'YOU' ? '12px 12px 0 12px' : '12px 12px 12px 0',
+                    boxShadow: `2px 2px 0 ${message.sender === 'YOU' ? P.green.shadow : P.blue.shadow}`,
+                  }}>
+                    {message.sender !== 'YOU' && <Typography variant="caption" fontWeight="bold" sx={{ color: AVATARS[message.sender]?.color, display: 'block', mb: 0.5, fontSize: '0.7rem' }}>{message.sender}</Typography>}
+                    {renderMessageContent(message)}
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                      <Typography variant="caption" sx={{ fontSize: '0.65rem', opacity: 0.6 }}>{message.timestamp}</Typography>
+                      {message.sender === 'YOU' && message.status && (
+                        <Box sx={{ color: message.status === 'read' ? P.blue.border : 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center' }}>
+                          {message.status === 'sent' && <CheckIcon sx={{ fontSize: 16 }} />}
+                          {(message.status === 'delivered' || message.status === 'read') && <DoneAllIcon sx={{ fontSize: 16 }} />}
                         </Box>
-                      )
-                    }
-                    let answerStartIndex = 0
-                    for (let i = 0; i < sentenceIndex; i++) {
-                      answerStartIndex += (DIALOGUE_SENTENCES[i].match(/_______/g) || []).length
-                    }
-                    let displaySentence = sentence
-                    let allCorrect = true
-                    for (let i = 0; i < blankCount; i++) {
-                      const key = `g_${sentenceIndex}_${i}`
-                      const userAnswer = answers[key]?.trim() || '(empty)'
-                      const correctAnswer = CORRECT_ANSWERS[answerStartIndex + i]
-                      const isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase()
-                      if (!isCorrect) allCorrect = false
-                      displaySentence = displaySentence.replace('_______', `"${userAnswer}"`)
-                    }
-                    return (
-                      <Box key={sentenceIndex} sx={{
-                        bgcolor: allCorrect ? P.green.bg : P.red.bg,
-                        border: `2px solid ${allCorrect ? P.green.border : P.red.border}`,
-                        borderRadius: '12px', p: 2,
-                      }}>
-                        <Typography variant="body2" sx={{ color: allCorrect ? P.green.shadow : P.red.shadow }}>
-                          {displaySentence}
-                        </Typography>
-                        {!allCorrect && (
-                          <Typography variant="caption" sx={{ color: P.red.shadow, opacity: 0.8, display: 'block', mt: 1 }}>
-                            {blankCount === 1 ? (
-                              <>Correct: <strong>{CORRECT_ANSWERS[answerStartIndex]}</strong></>
-                            ) : (
-                              <>Correct: <strong>{CORRECT_ANSWERS.slice(answerStartIndex, answerStartIndex + blankCount).join(', ')}</strong></>
-                            )}
-                          </Typography>
-                        )}
-                      </Box>
-                    )
-                  })}
-                </Stack>
-              </Box>
-
-              <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 4 }}>
-                <Box component="button" onClick={handleContinue} sx={{
-                  bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
-                  borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
-                  px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
-                  cursor: 'pointer', color: P.green.shadow,
-                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
-                  '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` },
-                }}>
-                  Next: Expand Empire →
+                      )}
+                    </Box>
+                  </Box>
                 </Box>
-              </Stack>
+              ))}
+              <div ref={messagesEndRef} />
             </Box>
-          )}
+
+            {/* Word Bank */}
+            <Box sx={{ bgcolor: P.orange.bg, borderTop: `2px solid ${P.orange.border}`, p: 2 }}>
+              <Typography variant="caption" sx={{ display: 'block', mb: 1, color: P.orange.shadow, fontWeight: 700, fontSize: '0.85rem' }}>Tap words to auto-fill blanks (tap filled blank to remove):</Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {wordBank.map((word, idx) => (
+                  <Box
+                    key={idx}
+                    component="span"
+                    onClick={() => handleWordClick(word)}
+                    sx={{
+                      display: 'inline-block',
+                      bgcolor: selectedWord === word ? P.orange.border : P.orange.bg,
+                      border: `2px solid ${selectedWord === word ? P.orange.shadow : P.orange.border}`,
+                      borderRadius: '999px',
+                      px: 2, py: 0.5,
+                      fontSize: '0.85rem', fontWeight: selectedWord === word ? 700 : 600,
+                      color: selectedWord === word ? 'white' : P.orange.shadow,
+                      cursor: 'pointer',
+                      boxShadow: selectedWord === word ? `2px 2px 0 ${P.orange.shadow}` : 'none',
+                    }}
+                  >
+                    {word}
+                  </Box>
+                ))}
+              </Box>
+              {selectedWord && (
+                <Box sx={{ mt: 1.5, bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`, borderRadius: '12px', p: 1 }}>
+                  <Typography variant="caption" sx={{ color: P.yellow.shadow, fontWeight: 700, fontSize: '0.9rem' }}>
+                    Filling next blank with: "{selectedWord}"
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+
+            <LinearProgress variant="determinate" value={(currentMessageIndex / DIALOGUE_MESSAGES.length) * 100} sx={{ height: 3, bgcolor: 'rgba(0,0,0,0.1)', '& .MuiLinearProgress-bar': { bgcolor: P.green.border } }} />
+          </Box>
 
         </motion.div>
       </Container>

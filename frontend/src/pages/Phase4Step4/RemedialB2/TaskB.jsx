@@ -6,7 +6,9 @@ import { useProgressSave } from '../../../hooks/useProgressSave'
 import { motion } from 'framer-motion'
 
 /**
- * Phase 4 Step 4 - Remedial B2 - Task B: Critique Game
+ * Phase 4 Step 4 - Remedial B2 - Task B: Analysis Odyssey
+ * Correct 8 faulty sentences one by one for coherence/vocabulary
+ * Score: +1 per correctly corrected sentence (8 total)
  */
 
 const LIGHT = {
@@ -30,69 +32,92 @@ const DARK = {
   red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
 }
 
-const CRITIQUE_TERMS = [
-  { id: 1, term: 'Promotional', modelCritique: 'While undeniably effective for immediate sales impact, over-reliance on promotional messaging risks alienating audiences who perceive it as overly commercial.', keywords: ['effective', 'sales impact', 'over-reliance', 'alienating', 'commercial'] },
-  { id: 2, term: 'Persuasive', modelCritique: 'The use of ethos, pathos, and logos is powerful, but unbalanced pathos can border on emotional manipulation if not tempered with credibility.', keywords: ['ethos', 'pathos', 'logos', 'manipulation', 'credibility'] },
-  { id: 3, term: 'Targeted/Personalized', modelCritique: 'These strategies significantly increase relevance, yet they raise serious ethical questions concerning data privacy and consumer autonomy.', keywords: ['relevance', 'ethical questions', 'privacy', 'autonomy'] },
-  { id: 4, term: 'Original/Creative', modelCritique: 'Originality and creativity are vital for differentiation, but excessive novelty can confuse audiences if not aligned with brand identity.', keywords: ['differentiation', 'novelty', 'confuse', 'brand identity'] },
-  { id: 5, term: 'Consistent', modelCritique: 'Consistency strengthens brand recall and trust, although rigid adherence may stifle adaptability in rapidly changing cultural contexts.', keywords: ['brand recall', 'trust', 'rigid', 'adaptability'] },
-  { id: 6, term: 'Dramatisation', modelCritique: 'The narrative structure is emotionally compelling, yet over-dramatisation risks appearing contrived if the obstacles feel inauthentic.', keywords: ['narrative', 'compelling', 'contrived', 'inauthentic'] }
+const SENTENCE_CORRECTIONS = [
+  { id: 1, faulty: 'Poster with billboard is good but it not have slogan good.', correct: 'A poster with a billboard-style design is effective, but it often lacks a strong slogan.' },
+  { id: 2, faulty: 'Video feature is viral but animation are bad sometime.', correct: 'The video feature goes viral easily, although the animation is sometimes poorly executed.' },
+  { id: 3, faulty: 'Slogan use words catchy but it not clear always.', correct: 'The slogan uses catchy words, but it is not always clear to the audience.' },
+  { id: 4, faulty: 'Layout in poster organize thing but color is too much bright.', correct: 'The layout in the poster organizes information well, even though the colors can be overly bright.' },
+  { id: 5, faulty: 'Dramatisation in video make emotional but it too long and boring.', correct: 'Dramatisation in the video creates emotional impact, but it can become too long and feel boring.' },
+  { id: 6, faulty: 'Jingle is song nice but not fit with video sometime.', correct: "The jingle is a pleasant tune, but it does not always fit the video's mood." },
+  { id: 7, faulty: 'Clip show culture but it jump too fast and confuse.', correct: 'The clips show cultural elements, but they jump too fast and can confuse viewers.' },
+  { id: 8, faulty: 'Overall promotion is ok but need improve for attract more people.', correct: 'Overall, the promotion is acceptable, but it needs improvement to attract more people.' },
 ]
 
-export default function RemedialB2TaskB() {
+export default function Phase4Step5RemedialB2TaskB() {
   const navigate = useNavigate()
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 2, context: 'remedial_b2' })
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [critiques, setCritiques] = useState(Array(CRITIQUE_TERMS.length).fill(''))
-  const [submitted, setSubmitted] = useState(false)
-  const [evaluating, setEvaluating] = useState(false)
-  const [results, setResults] = useState([])
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 2, context: 'remedial_b2' })
+  const [currentSentence, setCurrentSentence] = useState(0)
+  const [userAnswer, setUserAnswer] = useState('')
   const [score, setScore] = useState(0)
+  const [feedback, setFeedback] = useState(null)
+  const [gameCompleted, setGameCompleted] = useState(false)
 
-  const currentTerm = CRITIQUE_TERMS[currentIndex]
-  const handleCritiqueChange = (value) => { const n = [...critiques]; n[currentIndex] = value; setCritiques(n) }
-  const handleNext = () => { if (currentIndex < CRITIQUE_TERMS.length - 1) setCurrentIndex(currentIndex + 1) }
-  const handlePrevious = () => { if (currentIndex > 0) setCurrentIndex(currentIndex - 1) }
+  const handleCheckSentence = async () => {
+    const faultySentence = SENTENCE_CORRECTIONS[currentSentence].faulty
+    const userAnswerTrimmed = userAnswer.trim()
+    setFeedback({ type: 'info', message: 'Evaluating your correction...' })
 
-  const handleSubmit = async () => {
-    setEvaluating(true)
     try {
-      const response = await fetch('/api/phase4/step4/remedial/b2/evaluate-critiques', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ critiques: critiques.map((c, idx) => ({ term: CRITIQUE_TERMS[idx].term, critique: c, modelCritique: CRITIQUE_TERMS[idx].modelCritique })) })
+      const response = await fetch('/api/phase4/step5/remedial/evaluate-expansion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ level: 'B2', faultySentence, userAnswer: userAnswerTrimmed, sentenceIndex: currentSentence })
       })
       const data = await response.json()
-      if (data.success) {
-        setResults(data.results); const totalScore = data.results.filter(r => r.passed).length
-        setScore(totalScore); sessionStorage.setItem('remedial_step4_b2_taskB_score', totalScore); await logTaskCompletion(totalScore)
-      } else { fallback() }
-    } catch { fallback() }
-    setEvaluating(false); setSubmitted(true)
+      const pointsEarned = data.correct ? 1 : 0
+      if (data.correct) {
+        setScore(score + pointsEarned)
+        setFeedback({ type: 'success', message: `Excellent B2-level correction! Odyssey continues! +${pointsEarned} point` })
+      } else {
+        setFeedback({ type: 'error', message: data.feedback || 'Not quite B2 level. Focus on: articles (a/the), subject-verb agreement, advanced vocabulary, and connectors.' })
+      }
+      setTimeout(() => {
+        if (currentSentence < SENTENCE_CORRECTIONS.length - 1) {
+          setCurrentSentence(currentSentence + 1); setUserAnswer(''); setFeedback(null)
+        } else {
+          const finalScore = data.correct ? score + 1 : score
+          sessionStorage.setItem('phase4_step5_remedial_b2_taskB_score', finalScore)
+          logTaskCompletion(finalScore); setGameCompleted(true); setFeedback(null)
+        }
+      }, 2000)
+    } catch (error) {
+      console.error('Evaluation error:', error)
+      const userLower = userAnswerTrimmed.toLowerCase()
+      const hasArticles = /\b(a|an|the)\b/.test(userLower)
+      const hasAdvancedVocab = /(effective|pleasant|acceptable|poorly executed|organizes|creates)/i.test(userAnswerTrimmed)
+      const hasProperLength = userAnswerTrimmed.split(/\s+/).length >= 8
+      const hasFixes = userLower !== faultySentence.toLowerCase()
+      const pointsEarned = (hasArticles && hasAdvancedVocab && hasProperLength && hasFixes) ? 1 : 0
+      if (pointsEarned > 0) {
+        setScore(score + pointsEarned)
+        setFeedback({ type: 'success', message: `Good B2-level improvement! Odyssey continues! +${pointsEarned} point` })
+      } else {
+        setFeedback({ type: 'error', message: 'Remember to add articles (a/the), use advanced vocabulary (effective, pleasant), fix grammar, and create coherent sentences.' })
+      }
+      setTimeout(() => {
+        if (currentSentence < SENTENCE_CORRECTIONS.length - 1) {
+          setCurrentSentence(currentSentence + 1); setUserAnswer(''); setFeedback(null)
+        } else {
+          const finalScore = pointsEarned > 0 ? score + 1 : score
+          sessionStorage.setItem('phase4_step5_remedial_b2_taskB_score', finalScore)
+          logTaskCompletion(finalScore); setGameCompleted(true); setFeedback(null)
+        }
+      }, 2000)
+    }
   }
 
-  const fallback = () => {
-    const fallbackResults = critiques.map(c => {
-      const wordCount = c.trim().split(/\s+/).length
-      const hasBalanced = ['but','yet','although','however'].some(w => c.toLowerCase().includes(w))
-      const passed = wordCount >= 15 && hasBalanced
-      return { passed, feedback: passed ? 'Good balanced critique.' : 'Needs more balance and detail.' }
-    })
-    setResults(fallbackResults)
-    const totalScore = fallbackResults.filter(r => r.passed).length
-    setScore(totalScore); sessionStorage.setItem('remedial_step4_b2_taskB_score', totalScore); logTaskCompletion(totalScore)
-  }
-
-  const logTaskCompletion = async (score) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score })
-    try { await fetch('/api/phase4/remedial/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ level: 'B2', task: 'B', step: 4, score, max_score: 6, completed: true }) }) } catch (e) { console.error(e) }
+  const logTaskCompletion = async (finalScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score: finalScore })
+    try { await fetch('/api/phase4/step5/remedial/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ level: 'B2', task: 'B', score: finalScore, max_score: 8, completed: true }) }) } catch (e) { console.error(e) }
   }
 
   const handleContinue = () => navigate('/phase4/step/4/remedial/b2/taskC')
   window.__remedialSkip = handleContinue
-  const allFilled = critiques.every(c => c.trim().length > 0)
-  const progress = ((currentIndex + 1) / CRITIQUE_TERMS.length) * 100
+  const progress = ((currentSentence + 1) / SENTENCE_CORRECTIONS.length) * 100
+  const canSubmit = userAnswer.trim().split(/\s+/).length >= 5
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
@@ -100,87 +125,89 @@ export default function RemedialB2TaskB() {
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
 
           <Box sx={{ bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`, p: 3, mb: 3 }}>
-            <Typography variant="h5" fontWeight="bold" sx={{ color: P.orange.shadow }}>Phase 4 - Step 4: Remedial Activities</Typography>
-            <Typography variant="h6" sx={{ color: P.orange.border }}>Level B2 - Task B: Critique Game 🎯</Typography>
-            <Typography variant="body2" sx={{ color: P.orange.shadow, mt: 0.5 }}>Write balanced, nuanced critiques of advertising terms.</Typography>
+            <Typography variant="h5" fontWeight="bold" sx={{ color: P.orange.shadow }}>Phase 4 Step 4: Evaluate - Remedial Practice</Typography>
+            <Typography variant="h6" sx={{ color: P.orange.border }}>Level B2 - Task B: Analysis Odyssey 📝</Typography>
+            <Typography variant="body2" sx={{ color: P.orange.shadow, mt: 0.5 }}>Journey through corrections! Rewrite faulty sentences with B2-level accuracy.</Typography>
           </Box>
 
           <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
-            <CharacterMessage character="MS. MABROUKI" message="Time to think critically! For each advertising term, write a balanced critique that shows BOTH strengths and weaknesses. Use advanced vocabulary and demonstrate nuanced reasoning. Remember: good critiques acknowledge positives before highlighting concerns!" />
+            <CharacterMessage character="LILIA" message="Welcome to the Analysis Odyssey! 📝 You have 8 faulty sentences to correct, one at a time. Your mission: completely rewrite each sentence with proper grammar, articles, advanced vocabulary, and coherent structure. Each correct B2-level sentence earns you 1 point!" />
           </Box>
 
-          {!submitted ? (
-            <Box>
-              <Box sx={{ bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`, borderRadius: '16px', boxShadow: `3px 3px 0 ${P.yellow.shadow}`, p: 2, mb: 3 }}>
-                <Typography variant="body2" sx={{ color: P.yellow.shadow, mb: 1 }}>Term {currentIndex + 1} of {CRITIQUE_TERMS.length}</Typography>
-                <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 4, bgcolor: 'rgba(0,0,0,0.1)', '& .MuiLinearProgress-bar': { bgcolor: P.yellow.border } }} />
-              </Box>
+          <Box sx={{ bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`, p: 3, mb: 3 }}>
+            <Typography variant="h6" fontWeight="bold" sx={{ color: P.teal.shadow, mb: 1 }}>📝 What to Fix:</Typography>
+            <Stack spacing={0.75}>
+              {[
+                ['Grammar:', 'Subject-verb agreement (are→is, have→has), verb forms (organize→organizes)'],
+                ['Articles:', 'Add a/the (poster→a poster, video→the video)'],
+                ['Spelling:', 'sometime→sometimes, thing→information'],
+                ['Vocabulary:', 'Upgrade (good→effective, bad→poorly executed, ok→acceptable, nice→pleasant)'],
+                ['Connectors:', 'Use although, even though, but properly'],
+                ['Coherence:', 'Create logical flow between ideas'],
+              ].map(([label, desc]) => (
+                <Typography key={label} variant="body2" sx={{ color: P.teal.shadow }}><strong>{label}</strong> {desc}</Typography>
+              ))}
+            </Stack>
+          </Box>
 
-              <Box sx={{ bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.purple.shadow}`, p: 4, mb: 3 }}>
-                <Box sx={{ bgcolor: P.purple.border, borderRadius: '12px', p: 3, mb: 3, textAlign: 'center' }}>
-                  <Typography variant="h3" fontWeight="bold" sx={{ color: '#fff' }}>{currentTerm.term}</Typography>
+          {!gameCompleted ? (
+            <Box sx={{ bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.purple.shadow}`, p: 4, mb: 3 }}>
+              <LinearProgress variant="determinate" value={progress} sx={{ mb: 3, height: 8, borderRadius: 4, bgcolor: 'rgba(0,0,0,0.1)', '& .MuiLinearProgress-bar': { bgcolor: P.purple.border } }} />
+
+              <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
+                <Box sx={{ bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`, borderRadius: '12px', boxShadow: `2px 2px 0 ${P.purple.shadow}`, px: 2, py: 0.75 }}>
+                  <Typography variant="body2" fontWeight="bold" sx={{ color: P.purple.shadow }}>Sentence {currentSentence + 1} / {SENTENCE_CORRECTIONS.length}</Typography>
                 </Box>
-
-                <Typography variant="subtitle1" fontWeight="bold" sx={{ color: P.purple.shadow, mb: 1 }}>Write your balanced critique:</Typography>
-                <TextField fullWidth multiline rows={4} value={critiques[currentIndex]} onChange={(e) => handleCritiqueChange(e.target.value)}
-                  placeholder="Write a balanced critique showing both strengths and weaknesses using advanced vocabulary..."
-                  helperText={`Word count: ${critiques[currentIndex].trim().split(/\s+/).filter(w => w).length} (aim for 20-30 words)`} />
-
-                <Box sx={{ bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`, borderRadius: '12px', p: 2, mt: 2 }}>
-                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: P.teal.shadow }}>💡 Include in your critique:</Typography>
-                  <Typography variant="body2" sx={{ color: P.teal.border }}>{currentTerm.keywords.join(', ')}</Typography>
-                  <Typography variant="caption" sx={{ color: P.teal.shadow, display: 'block', mt: 0.5 }}>Use connecting words: "but", "yet", "although", "however"</Typography>
+                <Box sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '12px', boxShadow: `2px 2px 0 ${P.green.shadow}`, px: 2, py: 0.75 }}>
+                  <Typography variant="body2" fontWeight="bold" sx={{ color: P.green.shadow }}>Score: {score} / {SENTENCE_CORRECTIONS.length}</Typography>
                 </Box>
+              </Stack>
 
-                <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
-                  <Box component="button" onClick={handlePrevious} disabled={currentIndex === 0} sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '12px', boxShadow: `3px 3px 0 ${P.blue.shadow}`, px: 3, py: 1, cursor: currentIndex === 0 ? 'not-allowed' : 'pointer', fontWeight: 'bold', color: P.blue.shadow, opacity: currentIndex === 0 ? 0.4 : 1 }}>← Previous</Box>
-                  {currentIndex < CRITIQUE_TERMS.length - 1 ? (
-                    <Box component="button" onClick={handleNext} disabled={!critiques[currentIndex].trim()} sx={{ bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`, borderRadius: '12px', boxShadow: `3px 3px 0 ${P.teal.shadow}`, px: 3, py: 1, cursor: critiques[currentIndex].trim() ? 'pointer' : 'not-allowed', fontWeight: 'bold', color: P.teal.shadow, opacity: critiques[currentIndex].trim() ? 1 : 0.4 }}>Next Term →</Box>
-                  ) : (
-                    <Box component="button" onClick={handleSubmit} disabled={!allFilled || evaluating} sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`, px: 3, py: 1, cursor: !allFilled || evaluating ? 'not-allowed' : 'pointer', fontWeight: 'bold', color: P.green.shadow, opacity: !allFilled || evaluating ? 0.5 : 1 }}>{evaluating ? 'Evaluating...' : 'Submit Critiques 🎯'}</Box>
-                  )}
-                </Stack>
+              <Box sx={{ bgcolor: P.red.bg, border: `2px solid ${P.red.border}`, borderRadius: '16px', boxShadow: `3px 3px 0 ${P.red.shadow}`, p: 3, mb: 3 }}>
+                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: P.red.shadow, mb: 1 }}>❌ Faulty Sentence (DO NOT copy — rewrite it!):</Typography>
+                <Typography variant="h6" sx={{ color: P.red.border, fontFamily: 'monospace' }}>{SENTENCE_CORRECTIONS[currentSentence].faulty}</Typography>
               </Box>
 
-              <Box sx={{ bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`, borderRadius: '16px', boxShadow: `3px 3px 0 ${P.teal.shadow}`, p: 2 }}>
-                <Typography variant="body2" sx={{ color: P.teal.shadow, mb: 1 }}>Jump to term:</Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  {CRITIQUE_TERMS.map((t, idx) => (
-                    <Box key={idx} component="button" onClick={() => setCurrentIndex(idx)} sx={{ bgcolor: idx === currentIndex ? P.teal.border : P.teal.bg, border: `2px solid ${P.teal.border}`, borderRadius: '8px', boxShadow: `2px 2px 0 ${P.teal.shadow}`, px: 1, py: 0.5, cursor: 'pointer', fontWeight: 'bold', color: idx === currentIndex ? '#fff' : P.teal.shadow, fontSize: '0.8rem' }}>
-                      {t.term.slice(0, 4)}... {critiques[idx].trim() && '✓'}
-                    </Box>
-                  ))}
-                </Stack>
-              </Box>
+              <Typography variant="subtitle1" fontWeight="bold" sx={{ color: P.green.shadow, mb: 1 }}>✏️ Your B2-level correction (fix grammar, add articles, upgrade vocabulary):</Typography>
+              <TextField fullWidth multiline rows={2} value={userAnswer} onChange={(e) => setUserAnswer(e.target.value)} disabled={feedback !== null} placeholder="Rewrite the sentence with B2-level improvements..." variant="outlined" autoFocus sx={{ mb: 2 }} />
+
+              {feedback && (
+                <Box sx={{
+                  bgcolor: feedback.type === 'success' ? P.green.bg : feedback.type === 'info' ? P.blue.bg : P.red.bg,
+                  border: `2px solid ${feedback.type === 'success' ? P.green.border : feedback.type === 'info' ? P.blue.border : P.red.border}`,
+                  borderRadius: '12px',
+                  boxShadow: `3px 3px 0 ${feedback.type === 'success' ? P.green.shadow : feedback.type === 'info' ? P.blue.shadow : P.red.shadow}`,
+                  p: 2, mb: 2
+                }}>
+                  <Typography variant="body1" fontWeight="bold" sx={{ color: feedback.type === 'success' ? P.green.shadow : feedback.type === 'info' ? P.blue.shadow : P.red.shadow }}>
+                    {feedback.message}
+                  </Typography>
+                </Box>
+              )}
+
+              {!feedback && (
+                <Box component="button" onClick={handleCheckSentence} disabled={!canSubmit}
+                  sx={{ display: 'block', width: '100%', bgcolor: canSubmit ? P.green.bg : P.yellow.bg, border: `2px solid ${canSubmit ? P.green.border : P.yellow.border}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${canSubmit ? P.green.shadow : P.yellow.shadow}`, p: 2, cursor: canSubmit ? 'pointer' : 'not-allowed', fontSize: '1rem', fontWeight: 'bold', color: canSubmit ? P.green.shadow : P.yellow.shadow, opacity: canSubmit ? 1 : 0.6, '&:hover': canSubmit ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` } : {} }}>
+                  {canSubmit ? 'Check Sentence ✓' : 'Write at least 5 words'}
+                </Box>
+              )}
             </Box>
           ) : (
-            <Box>
-              <Box sx={{ bgcolor: score === 6 ? P.green.bg : P.yellow.bg, border: `2px solid ${score === 6 ? P.green.border : P.yellow.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${score === 6 ? P.green.shadow : P.yellow.shadow}`, p: 4, textAlign: 'center', mb: 3 }}>
-                <Typography variant="h4" fontWeight="bold" sx={{ color: score === 6 ? P.green.shadow : P.yellow.shadow }}>{score === 6 ? '🎯 Perfect Critiques! 🎯' : '🌟 Critiques Complete! 🌟'}</Typography>
-                <Typography variant="h6" sx={{ color: score === 6 ? P.green.shadow : P.yellow.shadow }}>You scored {score} out of 6 points!</Typography>
-              </Box>
-
-              <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
-                <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>Critique Review:</Typography>
-                <Stack spacing={2}>
-                  {CRITIQUE_TERMS.map((term, index) => {
-                    const result = results[index]
-                    return (
-                      <Box key={index} sx={{ bgcolor: result?.passed ? P.green.bg : P.yellow.bg, border: `2px solid ${result?.passed ? P.green.border : P.yellow.border}`, borderRadius: '12px', p: 2 }}>
-                        <Typography variant="body2" fontWeight="bold" sx={{ color: result?.passed ? P.green.shadow : P.yellow.shadow }}>{term.term}</Typography>
-                        <Typography variant="body2" sx={{ mt: 0.5, fontStyle: 'italic', color: result?.passed ? P.green.shadow : P.yellow.shadow }}>Your critique: "{critiques[index]}"</Typography>
-                        <Typography variant="body2" sx={{ mt: 0.5, color: result?.passed ? P.green.shadow : P.yellow.shadow }}>{result?.feedback}</Typography>
-                        {!result?.passed && <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>Model critique: {term.modelCritique}</Typography>}
-                      </Box>
-                    )
-                  })}
-                </Stack>
+            <>
+              <Box sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.green.shadow}`, p: 4, textAlign: 'center', mb: 3 }}>
+                <Typography variant="h4" fontWeight="bold" sx={{ color: P.green.shadow }}>📝 Analysis Odyssey Complete!</Typography>
+                <Typography variant="h5" sx={{ color: P.green.border, mt: 1 }}>Score: {score} / 8</Typography>
+                <Typography variant="body1" sx={{ color: P.green.shadow, mt: 1 }}>
+                  {score === 8 ? 'Perfect B2-level writing! All sentences corrected excellently!' : score >= 6 ? 'Great job! Strong B2-level improvements!' : 'Good effort! Keep practicing B2 writing skills!'}
+                </Typography>
               </Box>
 
               <Stack direction="row" justifyContent="flex-end">
-                <Box component="button" onClick={handleContinue} sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${P.green.shadow}`, px: 4, py: 1.5, cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold', color: P.green.shadow, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` } }}>Continue to Task C →</Box>
+                <Box component="button" onClick={handleContinue} sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${P.green.shadow}`, px: 5, py: 1.5, cursor: 'pointer', fontSize: '1.1rem', fontWeight: 'bold', color: P.green.shadow, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` } }}>
+                  Continue to Task C →
+                </Box>
               </Stack>
-            </Box>
+            </>
           )}
 
         </motion.div>

@@ -1,48 +1,33 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Typography, Container, useTheme } from '@mui/material'
-import { CharacterMessage } from '../../../components/Avatar.jsx'
-import SentenceBuilder from '../../../components/exercises/SentenceBuilder.jsx'
-import { useProgressSave } from '../../../hooks/useProgressSave'
+import {
+  Box,
+  Typography,
+  TextField,
+  Stack,
+  LinearProgress,
+  Container
+} from '@mui/material'
+import { useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
+import { CharacterMessage } from '../../../components/Avatar.jsx'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 - Level A1 - Task C: Grammar Exercise (Simple Sentences)
- * Write 6 simple sentences describing poster/video following template examples
  */
 
-// Exercise structure for SentenceBuilder component
-const SENTENCE_BUILDER_EXERCISE = {
-  instruction: 'Complete each sentence following the template',
-  templates: [
-    'Poster has ___.',
-    'Video has ___.',
-    '___ is song.',
-    '___ is story.',
-    'Clip is ___.',
-    'Sketch is ___.'
-  ],
-  correct_answers: [
-    'Poster has gatefold.',
-    'Video has animation.',
-    'Jingle is song.',
-    'Dramatisation is story.',
-    'Clip is short.',
-    'Sketch is plan.'
-  ]
-}
-
-// For scoring purposes
-const SENTENCE_TEMPLATES = [
-  { term: 'gatefold', template: 'Poster has gatefold.', subject: 'Poster', verb: 'has', object: 'gatefold' },
-  { term: 'animation', template: 'Video has animation.', subject: 'Video', verb: 'has', object: 'animation' },
-  { term: 'jingle', template: 'Jingle is song.', subject: 'Jingle', verb: 'is', object: 'song' },
-  { term: 'dramatisation', template: 'Dramatisation is story.', subject: 'Dramatisation', verb: 'is', object: 'story' },
-  { term: 'clip', template: 'Clip is short.', subject: 'Clip', verb: 'is', object: 'short' },
-  { term: 'sketch', template: 'Sketch is plan.', subject: 'Sketch', verb: 'is', object: 'plan' }
+const GRAMMAR_FIXES = [
+  { id: 1, faulty: 'Poster hav title.', correct: 'Poster has title.' },
+  { id: 2, faulty: 'Video hav animation.', correct: 'Video has animation.' },
+  { id: 3, faulty: 'Slogan is word.', correct: 'Slogan is words.' },
+  { id: 4, faulty: 'Clip is parts.', correct: 'Clip is part.' },
+  { id: 5, faulty: 'Jingle is songs.', correct: 'Jingle is song.' },
+  { id: 6, faulty: 'Feature is highlights.', correct: 'Feature is highlight.' }
 ]
 
-export default function Phase4Step4RemedialA1TaskC() {
+export default function Phase4Step5RemedialA1TaskC() {
   const navigate = useNavigate()
   React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/4/remedial/a2/taskA') }, [])
   const theme = useTheme()
@@ -69,136 +54,129 @@ export default function Phase4Step4RemedialA1TaskC() {
   }
   const P = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 3, context: 'remedial_a1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 3, context: 'remedial_a1' })
+  const [currentSentence, setCurrentSentence] = useState(0)
+  const [userAnswer, setUserAnswer] = useState(GRAMMAR_FIXES[0].faulty)
+  const [score, setScore] = useState(0)
+  const [feedback, setFeedback] = useState(null)
   const [gameCompleted, setGameCompleted] = useState(false)
   const [showFinalResults, setShowFinalResults] = useState(false)
   const [finalScore, setFinalScore] = useState({ taskA: 0, taskB: 0, taskC: 0, total: 0, passed: false })
 
-  const handleGameComplete = (result) => {
-    // SentenceBuilder now awards 1 point per correct sentence
-    const score = result.score || 0 // This will be the actual score (1 point per sentence)
+  const handleCheckSentence = () => {
+    const correctAnswer = GRAMMAR_FIXES[currentSentence].correct
+    const userAnswerTrimmed = userAnswer.trim().toLowerCase()
+    const correctAnswerLower = correctAnswer.toLowerCase()
+    const isCorrect = userAnswerTrimmed === correctAnswerLower
 
-    console.log('[Phase 4 Step 4] A1 Task C - Sentence Builder completed')
-    console.log('[Phase 4 Step 4] A1 Task C - Score:', score, '/', SENTENCE_TEMPLATES.length)
-    console.log('[Phase 4 Step 4] A1 Task C - Result:', result)
+    if (isCorrect) {
+      setScore(score + 1)
+      setFeedback({ type: 'success', message: 'Perfect! +1 point' })
+    } else {
+      setFeedback({ type: 'error', message: `Incorrect. Correct answer: ${correctAnswer}` })
+    }
 
-    sessionStorage.setItem('phase4_step4_remedial_a1_taskC_score', score)
-    logTaskCompletion(score)
-    setGameCompleted(true)
+    setTimeout(() => {
+      if (currentSentence < GRAMMAR_FIXES.length - 1) {
+        const nextIndex = currentSentence + 1
+        setCurrentSentence(nextIndex)
+        setUserAnswer(GRAMMAR_FIXES[nextIndex].faulty)
+        setFeedback(null)
+      } else {
+        const finalTaskCScore = isCorrect ? score + 1 : score
+        sessionStorage.setItem('phase4_step5_remedial_a1_taskC_score', finalTaskCScore)
+        logTaskCompletion(finalTaskCScore)
+        setGameCompleted(true)
+        setFeedback(null)
+      }
+    }, 1500)
   }
 
-  const logTaskCompletion = async (score) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: score })
+  const logTaskCompletion = async (taskScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: taskScore })
     try {
-      const response = await fetch('/api/phase4/step4/remedial/log', {
+      const response = await fetch('/api/phase4/step5/remedial/log', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          level: 'A1',
-          task: 'C',
-          score: score,
-          max_score: 6,
-          completed: true
-        })
+        body: JSON.stringify({ level: 'A1', task: 'C', score: taskScore, max_score: 6, completed: true })
       })
-
       const data = await response.json()
-      if (data.success) {
-        console.log('[Phase 4 Step 4] A1 Task C completion logged to backend')
-      }
+      if (data.success) console.log('[Phase 4 Step 5] A1 Task C completion logged to backend')
     } catch (error) {
       console.error('Failed to log task completion:', error)
     }
   }
 
   const handleContinue = async () => {
-    // Calculate total score from all three tasks
-    const taskAScore = parseInt(sessionStorage.getItem('phase4_step4_remedial_a1_taskA_score') || '0')
-    const taskBScore = parseInt(sessionStorage.getItem('phase4_step4_remedial_a1_taskB_score') || '0')
-    const taskCScore = parseInt(sessionStorage.getItem('phase4_step4_remedial_a1_taskC_score') || '0')
+    const taskAScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_a1_taskA_score') || '0')
+    const taskBScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_a1_taskB_score') || '0')
+    const taskCScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_a1_taskC_score') || '0')
     const totalScore = taskAScore + taskBScore + taskCScore
     const maxScore = 8 + 8 + 6 // 22 total
-    const threshold = 18
+    const threshold = 17
     const passed = totalScore >= threshold
 
     console.log('\n' + '='.repeat(60))
-    console.log('PHASE 4 STEP 4 - REMEDIAL A1 - FINAL RESULTS')
+    console.log('PHASE 4 STEP 5 - REMEDIAL A1 - FINAL RESULTS')
     console.log('='.repeat(60))
-    console.log('Task A (Matching):', taskAScore, '/8')
-    console.log('Task B (Gap Fill):', taskBScore, '/8')
+    console.log('Task A (Spelling Rescue):', taskAScore, '/8')
+    console.log('Task B (Fill Quest):', taskBScore, '/8')
     console.log('Task C (Sentence Builder):', taskCScore, '/6')
     console.log('-'.repeat(60))
     console.log('TOTAL SCORE:', totalScore, '/', maxScore)
     console.log('PASS THRESHOLD:', threshold, '/', maxScore, '(80%)')
-    console.log('-'.repeat(60))
-    if (passed) {
-      console.log('✅ PASSED - Student will proceed to Dashboard/Next Phase')
-    } else {
-      console.log('❌ FAILED - Student will repeat Remedial Level A1')
-    }
+    console.log(passed ? '✅ PASSED' : '❌ FAILED')
     console.log('='.repeat(60) + '\n')
 
-    // Log final score to backend
     try {
-      const response = await fetch('/api/phase4/step4/remedial/a1/final-score', {
+      const response = await fetch('/api/phase4/step5/remedial/a1/final-score', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          task_a_score: taskAScore,
-          task_b_score: taskBScore,
-          task_c_score: taskCScore
-        })
+        body: JSON.stringify({ task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore })
       })
-
       const data = await response.json()
       if (data.success) {
         console.log('Final A1 score logged to backend:', data.data)
-        sessionStorage.setItem('phase4_step4_a1_next_url', data.data.next_url || (passed ? '/phase4/step/5' : '/phase4/step/4/remedial/a1/taskA'))
+        sessionStorage.setItem('phase4_step5_a1_next_url', data.data.next_url || (passed ? '/phase4_2/step/1' : '/phase4/step/4/remedial/a1/taskA'))
       }
     } catch (error) {
       console.error('Failed to log final score:', error)
     }
 
-    // Show final results
     setFinalScore({ taskA: taskAScore, taskB: taskBScore, taskC: taskCScore, total: totalScore, passed })
     setShowFinalResults(true)
 
-    // Delay navigation to show results
     setTimeout(() => {
-      // Clear A1 scores
-      sessionStorage.removeItem('phase4_step4_remedial_a1_taskA_score')
-      sessionStorage.removeItem('phase4_step4_remedial_a1_taskB_score')
-      sessionStorage.removeItem('phase4_step4_remedial_a1_taskC_score')
+      sessionStorage.removeItem('phase4_step5_remedial_a1_taskA_score')
+      sessionStorage.removeItem('phase4_step5_remedial_a1_taskB_score')
+      sessionStorage.removeItem('phase4_step5_remedial_a1_taskC_score')
 
-      navigate(sessionStorage.getItem('phase4_step4_a1_next_url') || (passed ? '/phase4/step/4/remedial/a2/taskA' : '/phase4/step/4/remedial/a1/taskA'))
-    }, 5000) // 5 second delay
+      navigate(sessionStorage.getItem('phase4_step5_a1_next_url') || (passed ? '/phase4/step/4/remedial/a2/taskA' : '/phase4/step/4/remedial/a1/taskA'))
+    }, 5000)
   }
+
+  const progress = ((currentSentence + 1) / GRAMMAR_FIXES.length) * 100
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
       <Container maxWidth="md">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-
           {/* Header */}
           <Box sx={{
-            bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
-            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`,
+            bgcolor: P.red.bg, border: `2px solid ${P.red.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.red.shadow}`,
             p: 3, mb: 3,
           }}>
-            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
-              Phase 4 Step 4: Apply - Remedial Practice
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.red.shadow }}>
+              Phase 4 Step 4: Evaluate - Remedial Practice
             </Typography>
-            <Typography variant="h5" gutterBottom sx={{ color: P.blue.shadow }}>
+            <Typography variant="h5" gutterBottom sx={{ color: P.red.shadow }}>
               Level A1 - Task C: Sentence Builder
             </Typography>
-            <Typography variant="body1" sx={{ color: P.blue.shadow }}>
-              Write 6 simple sentences following the template examples
+            <Typography variant="body1" sx={{ color: P.red.shadow }}>
+              Correct 6 simple grammar mistakes!
             </Typography>
           </Box>
 
@@ -209,101 +187,159 @@ export default function Phase4Step4RemedialA1TaskC() {
             p: 3, mb: 3,
           }}>
             <CharacterMessage
-              speaker="MS. MABROUKI"
-              message="Excellent progress! For the final task, write 6 simple sentences following the examples shown. Use simple present tense and basic structure. You can copy the examples or write your own similar sentences!"
+              character="LILIA"
+              message="Excellent progress! For the final task, correct the grammar mistakes in 6 simple sentences. Type the correct version of each sentence!"
             />
           </Box>
 
-          {/* Sentence Builder Game */}
-          {!gameCompleted && (
+          {/* Game Area */}
+          {!gameCompleted && !showFinalResults && (
             <Box sx={{
               bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
               borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`,
-              p: 3, mb: 3,
+              p: 4, mb: 3,
             }}>
-              <SentenceBuilder
-                exercise={SENTENCE_BUILDER_EXERCISE}
-                onComplete={handleGameComplete}
+              {/* Progress Bar */}
+              <LinearProgress
+                variant="determinate"
+                value={progress}
+                sx={{
+                  mb: 3, height: 10, borderRadius: 5,
+                  bgcolor: isDark ? '#3D1A07' : '#FED7AA',
+                  '& .MuiLinearProgress-bar': { bgcolor: P.orange.shadow }
+                }}
               />
-            </Box>
-          )}
 
-          {/* Navigation */}
-          {gameCompleted && !showFinalResults && (
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
-              <Box component="button" onClick={handleContinue} sx={{
-                bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
-                borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
-                px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
-                cursor: 'pointer', color: P.green.shadow,
-                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
-                '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` }
-              }}>
-                View Final Results
-              </Box>
-            </Box>
-          )}
-
-          {/* Final Results - Pass/Fail */}
-          {showFinalResults && (
-            <Box sx={{
-              bgcolor: finalScore.passed ? P.green.bg : P.yellow.bg,
-              border: `2px solid ${finalScore.passed ? P.green.border : P.yellow.border}`,
-              borderRadius: '20px',
-              boxShadow: `4px 4px 0 ${finalScore.passed ? P.green.shadow : P.yellow.shadow}`,
-              p: 5, mt: 3, textAlign: 'center',
-            }}>
-              <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                {finalScore.passed ? 'Congratulations!' : 'Keep Practicing!'}
-              </Typography>
-
-              <Box sx={{ my: 3 }}>
-                <Typography variant="h5" gutterBottom sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                  Phase 4 Step 4 - Remedial A1 - Final Results
-                </Typography>
-                <Typography variant="h6" sx={{ mt: 2, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                  Task A (Term Treasure Hunt): {finalScore.taskA} / 8
-                </Typography>
-                <Typography variant="h6" sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                  Task B (Fill Quest): {finalScore.taskB} / 8
-                </Typography>
-                <Typography variant="h6" sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                  Task C (Sentence Builder): {finalScore.taskC} / 6
-                </Typography>
-                <Typography variant="h4" sx={{ mt: 2, fontWeight: 'bold', color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                  Total Score: {finalScore.total} / 22
-                </Typography>
-                <Typography variant="body1" sx={{ mt: 1, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                  Pass Threshold: 18 / 22 (80%)
-                </Typography>
-              </Box>
-
-              {finalScore.passed ? (
-                <Box>
-                  <Typography variant="h6" sx={{ mt: 3, color: P.green.shadow }}>
-                    You have passed Remedial A1!
-                  </Typography>
-                  <Typography variant="body1" sx={{ mt: 1, color: P.green.shadow }}>
-                    Proceeding to Dashboard...
-                  </Typography>
+              {/* Sentence Counter */}
+              <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box component="span" sx={{
+                  bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+                  borderRadius: '999px', px: 2, py: 0.5,
+                  fontWeight: 700, color: P.blue.shadow, fontSize: '0.85rem',
+                }}>
+                  Sentence {currentSentence + 1} of {GRAMMAR_FIXES.length}
                 </Box>
-              ) : (
-                <Box>
-                  <Typography variant="h6" sx={{ mt: 3, color: P.yellow.shadow }}>
-                    Score below passing threshold
-                  </Typography>
-                  <Typography variant="body1" sx={{ mt: 1, color: P.yellow.shadow }}>
-                    Restarting Remedial A1 to help you improve...
+                <Box component="span" sx={{
+                  bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`,
+                  borderRadius: '999px', px: 2, py: 0.5,
+                  fontWeight: 700, color: P.purple.shadow, fontSize: '0.85rem',
+                }}>
+                  Score: {score}/{GRAMMAR_FIXES.length}
+                </Box>
+              </Box>
+
+              {/* User Input */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow }}>
+                  ✏️ Edit and correct the sentence below:
+                </Typography>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Edit the sentence to fix the grammar..."
+                  value={userAnswer}
+                  onChange={(e) => setUserAnswer(e.target.value)}
+                  disabled={feedback !== null}
+                  autoFocus
+                  sx={{ '& .MuiOutlinedInput-root': { fontSize: '1.1rem', fontFamily: 'monospace' } }}
+                />
+              </Box>
+
+              {/* Feedback */}
+              {feedback && (
+                <Box sx={{
+                  p: 2, mb: 3, borderRadius: '12px',
+                  bgcolor: feedback.type === 'success' ? P.green.bg : P.red.bg,
+                  border: `2px solid ${feedback.type === 'success' ? P.green.border : P.red.border}`,
+                }}>
+                  <Typography variant="body1" fontWeight="bold" sx={{ color: feedback.type === 'success' ? P.green.shadow : P.red.shadow }}>
+                    {feedback.message}
                   </Typography>
                 </Box>
               )}
 
-              <Typography variant="body2" sx={{ mt: 3, color: finalScore.passed ? P.green.shadow : P.yellow.shadow, opacity: 0.8 }}>
+              {/* Check Button */}
+              {!feedback && (
+                <Box component="button" onClick={handleCheckSentence} disabled={!userAnswer.trim()} sx={{
+                  width: '100%',
+                  bgcolor: P.red.bg, border: `2px solid ${P.red.border}`,
+                  borderRadius: '12px', boxShadow: `3px 3px 0 ${P.red.shadow}`,
+                  px: 5, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                  cursor: !userAnswer.trim() ? 'not-allowed' : 'pointer',
+                  color: P.red.shadow, opacity: !userAnswer.trim() ? 0.6 : 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                  '&:hover': userAnswer.trim() ? { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.red.shadow}` } : {},
+                  '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.red.shadow}` },
+                  transition: 'all 0.15s ease',
+                }}>
+                  <CheckCircleIcon sx={{ fontSize: 20 }} />
+                  Check Sentence
+                </Box>
+              )}
+            </Box>
+          )}
+
+          {/* Navigation after game completion */}
+          {gameCompleted && !showFinalResults && (
+            <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 4 }}>
+              <Box component="button" onClick={handleContinue} sx={{
+                bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+                borderRadius: '12px', boxShadow: `3px 3px 0 ${P.orange.shadow}`,
+                px: 5, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                cursor: 'pointer', color: P.orange.shadow,
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.orange.shadow}` },
+                '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.orange.shadow}` },
+                transition: 'all 0.15s ease',
+              }}>
+                View Final Results
+              </Box>
+            </Stack>
+          )}
+
+          {/* Final Results */}
+          {showFinalResults && (
+            <Box sx={{
+              bgcolor: finalScore.passed ? P.green.bg : P.yellow.bg,
+              border: `2px solid ${finalScore.passed ? P.green.border : P.yellow.border}`,
+              borderRadius: '20px', boxShadow: `4px 4px 0 ${finalScore.passed ? P.green.shadow : P.yellow.shadow}`,
+              p: 5, mt: 3, textAlign: 'center',
+            }}>
+              <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                {finalScore.passed ? '🎉 Congratulations!' : '💪 Keep Practicing!'}
+              </Typography>
+
+              <Box sx={{ my: 3 }}>
+                <Typography variant="h5" gutterBottom sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                  Phase 4 Step 5 - Remedial A1 - Final Results
+                </Typography>
+                {[
+                  { label: 'Task A (Spelling Rescue)', val: finalScore.taskA, max: 8 },
+                  { label: 'Task B (Fill Quest)', val: finalScore.taskB, max: 8 },
+                  { label: 'Task C (Sentence Builder)', val: finalScore.taskC, max: 6 },
+                ].map((item, i) => (
+                  <Typography key={i} variant="h6" sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                    {item.label}: {item.val} / {item.max}
+                  </Typography>
+                ))}
+                <Typography variant="h4" sx={{ mt: 2, fontWeight: 'bold', color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                  Total Score: {finalScore.total} / 22
+                </Typography>
+                <Typography variant="body1" sx={{ mt: 1, opacity: 0.9, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                  Pass Threshold: 18 / 22 (80%)
+                </Typography>
+              </Box>
+
+              <Typography variant="h6" sx={{ mt: 3, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                {finalScore.passed ? '✅ You have passed Remedial A1!' : '❌ Score below passing threshold'}
+              </Typography>
+              <Typography variant="body1" sx={{ mt: 1, color: finalScore.passed ? P.green.shadow : P.yellow.shadow, opacity: 0.85 }}>
+                {finalScore.passed ? 'Proceeding to Dashboard...' : 'Restarting Remedial A1 to help you improve...'}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 3, opacity: 0.7, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
                 Redirecting in 5 seconds...
               </Typography>
             </Box>
           )}
-
         </motion.div>
       </Container>
     </Box>

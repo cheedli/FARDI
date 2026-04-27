@@ -6,7 +6,9 @@ import { useProgressSave } from '../../../hooks/useProgressSave'
 import { motion } from 'framer-motion'
 
 /**
- * Phase 4 Step 4 - Remedial C1 - Task B: Quizlet Live Advanced Quiz
+ * Phase 4 Step 4 - Level C1 - Task B: Analysis Odyssey
+ * Correct 8 faulty sentences one by one for C1-level sophistication
+ * Score: +1 per correctly corrected sentence (8 total)
  */
 
 const LIGHT = {
@@ -30,60 +32,67 @@ const DARK = {
   red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
 }
 
-const QUIZ_QUESTIONS = [
-  { id: 1, question: 'What does promotional advertising primarily aim to achieve?', correctAnswer: 'To drive sales and increase brand visibility, as video 1 states.', keywords: ['drive sales', 'increase', 'brand visibility', 'video 1'] },
-  { id: 2, question: 'How does video 1 define the components of persuasive advertising?', correctAnswer: 'Through ethos (credibility), pathos (emotion), and logos (logic).', keywords: ['ethos', 'pathos', 'logos', 'credibility', 'emotion', 'logic'] },
-  { id: 3, question: 'Why does the video advocate for targeted and personalized strategies?', correctAnswer: 'They increase relevance and effectiveness by addressing specific audience needs.', keywords: ['increase relevance', 'effectiveness', 'specific audience needs', 'addressing'] },
-  { id: 4, question: 'What risk does video 1 associate with a lack of originality and creativity?', correctAnswer: 'Ads become forgettable and fail to stand out in saturated media.', keywords: ['forgettable', 'fail', 'stand out', 'saturated media'] },
-  { id: 5, question: 'According to video 1, why is consistency across platforms essential?', correctAnswer: 'It reinforces brand identity and builds long-term trust.', keywords: ['reinforces', 'brand identity', 'builds', 'long-term trust'] },
-  { id: 6, question: 'How does video 2 illustrate the role of dramatisation in successful ads?', correctAnswer: 'By using relatable characters, clear goals, and obstacles to create emotional engagement.', keywords: ['relatable characters', 'clear goals', 'obstacles', 'emotional engagement'] },
+const SENTENCE_CORRECTIONS = [
+  { id: 1, faulty: 'Promotional advertising are fundamentally aim to drive sales but its effectiveness depend on execution quality.', correct: 'Promotional advertising, as outlined in video 1, fundamentally aims to drive sales and brand recognition, yet its effectiveness hinges on the quality of execution.' },
+  { id: 2, faulty: 'Persuasive technique root in ethos pathos logos create compelling case but without overt coercion which video illustrate well.', correct: 'Persuasive techniques—rooted in ethos, pathos, and logos—create a compelling case for the product without overt coercion, a balance the video illustrates effectively.' },
+  { id: 3, faulty: 'Targeted and personalize strategy enhance relevance by adress specific need but raise ethical concern about data privacy.', correct: 'Targeted and personalized strategies enhance relevance by addressing specific audience needs, although they raise legitimate ethical concerns regarding data privacy.' },
+  { id: 4, faulty: 'Originality combine with creativity distinguish ad in oversaturated landscape but excessive novelty confuse audience sometimes.', correct: 'Originality, combined with creativity, distinguishes advertisements in an oversaturated media landscape, ensuring memorability and emotional resonance, though excessive novelty can confuse viewers.' },
+  { id: 5, faulty: 'Consistent messaging across platform reinforce brand identity but rigid adherence may stifle adaptibility.', correct: 'Consistent messaging across platforms reinforces brand identity and trust, but rigid adherence may stifle adaptability in rapidly changing cultural contexts.' },
+  { id: 6, faulty: 'Ethical advertising avoid deception and respect autonomy foster long-term loyalty instead short-term gain.', correct: 'Ethical advertising, by avoiding deception and respecting consumer autonomy, fosters long-term loyalty rather than short-term gains.' },
+  { id: 7, faulty: 'Dramatisation in video 2 through structured story with clear goal and obstacle exemplify how narrative depth captivate viewer emotional.', correct: 'Dramatisation in video 2, through structured storytelling with clear goals and obstacles, exemplifies how narrative depth captivates viewers on an emotional level.' },
+  { id: 8, faulty: 'Ultimately integration of these principle determine whether ad merely inform or truly persuade.', correct: 'Ultimately, the integration of these principles—promotional intent, persuasive balance, ethical responsibility, and creative storytelling—determines whether an advertisement merely informs or truly persuades.' },
 ]
 
-export default function RemedialC1TaskB() {
+export default function Phase4Step5RemedialC1TaskB() {
   const navigate = useNavigate()
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 2, context: 'remedial_c1' })
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [answers, setAnswers] = useState(Array(QUIZ_QUESTIONS.length).fill(''))
-  const [submitted, setSubmitted] = useState(false)
-  const [results, setResults] = useState([])
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 2, context: 'remedial_c1' })
+  const [currentSentence, setCurrentSentence] = useState(0)
+  const [userAnswer, setUserAnswer] = useState('')
   const [score, setScore] = useState(0)
+  const [feedback, setFeedback] = useState(null)
+  const [gameCompleted, setGameCompleted] = useState(false)
 
-  const currentQuestion = QUIZ_QUESTIONS[currentIndex]
-  const handleAnswerChange = (value) => { const n = [...answers]; n[currentIndex] = value; setAnswers(n) }
-  const handleNext = () => { if (currentIndex < QUIZ_QUESTIONS.length - 1) setCurrentIndex(currentIndex + 1) }
-  const handlePrevious = () => { if (currentIndex > 0) setCurrentIndex(currentIndex - 1) }
-
-  const checkAnswer = (userAnswer, correctAnswer, keywords) => {
-    const userLower = userAnswer.toLowerCase().trim()
-    if (userLower === correctAnswer.toLowerCase().trim()) return true
-    const matched = keywords.filter(k => userLower.includes(k.toLowerCase()))
-    return matched.length >= Math.ceil(keywords.length / 2) && userAnswer.split(' ').length >= 5
+  const handleCheckSentence = async () => {
+    const faultySentence = SENTENCE_CORRECTIONS[currentSentence].faulty
+    const userAnswerTrimmed = userAnswer.trim()
+    setFeedback({ type: 'info', message: 'Evaluating your correction...' })
+    try {
+      const response = await fetch('/api/phase4/step5/remedial/evaluate-expansion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ level: 'C1', faultySentence, userAnswer: userAnswerTrimmed, sentenceIndex: currentSentence }) })
+      const data = await response.json()
+      const pointsEarned = data.correct ? 1 : 0
+      if (data.correct) { setScore(score + pointsEarned); setFeedback({ type: 'success', message: `Excellent C1-level correction! Odyssey continues! +${pointsEarned} point` }) }
+      else { setFeedback({ type: 'error', message: data.feedback || 'Not quite C1 level. Focus on: sophisticated vocabulary, complex syntax, precise connectors, and nuanced meaning.' }) }
+      setTimeout(() => {
+        if (currentSentence < SENTENCE_CORRECTIONS.length - 1) { setCurrentSentence(currentSentence + 1); setUserAnswer(''); setFeedback(null) }
+        else { const finalScore = data.correct ? score + 1 : score; sessionStorage.setItem('phase4_step5_remedial_c1_taskB_score', finalScore); logTaskCompletion(finalScore); setGameCompleted(true); setFeedback(null) }
+      }, 2000)
+    } catch (error) {
+      const userLower = userAnswerTrimmed.toLowerCase()
+      const hasAdvancedVocab = /(hinges|rooted|compelling|legitimate|distinguishes|fosters|exemplifies|captivates|determines)/i.test(userAnswerTrimmed)
+      const hasComplexStructure = (userAnswerTrimmed.includes(',') && userAnswerTrimmed.includes('—')) || userAnswerTrimmed.split(/\s+/).length >= 15
+      const hasPrecision = /\b(although|yet|rather than|regarding|ensuring|through)\b/i.test(userAnswerTrimmed)
+      const hasFixes = userLower !== faultySentence.toLowerCase()
+      const pointsEarned = (hasAdvancedVocab && hasComplexStructure && hasPrecision && hasFixes) ? 1 : 0
+      if (pointsEarned > 0) { setScore(score + pointsEarned); setFeedback({ type: 'success', message: `Good C1-level improvement! Odyssey continues! +${pointsEarned} point` }) }
+      else { setFeedback({ type: 'error', message: 'Remember to use sophisticated vocabulary, complex sentence structures, precise connectors, and nuanced expressions for C1 level.' }) }
+      setTimeout(() => {
+        if (currentSentence < SENTENCE_CORRECTIONS.length - 1) { setCurrentSentence(currentSentence + 1); setUserAnswer(''); setFeedback(null) }
+        else { const finalScore = pointsEarned > 0 ? score + 1 : score; sessionStorage.setItem('phase4_step5_remedial_c1_taskB_score', finalScore); logTaskCompletion(finalScore); setGameCompleted(true); setFeedback(null) }
+      }, 2000)
+    }
   }
 
-  const handleSubmit = async () => {
-    const checkResults = answers.map((answer, index) => {
-      const q = QUIZ_QUESTIONS[index]
-      const isCorrect = checkAnswer(answer, q.correctAnswer, q.keywords)
-      return { isCorrect, userAnswer: answer, correctAnswer: q.correctAnswer }
-    })
-    setResults(checkResults)
-    const correctCount = checkResults.filter(r => r.isCorrect).length
-    setScore(correctCount); setSubmitted(true)
-    sessionStorage.setItem('remedial_step4_c1_taskB_score', correctCount)
-    await logTaskCompletion(correctCount)
-  }
-
-  const logTaskCompletion = async (score) => {
-    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score })
-    try { await fetch('/api/phase4/remedial/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ level: 'C1', task: 'B', step: 4, score, max_score: 6, completed: true }) }) } catch (e) { console.error(e) }
+  const logTaskCompletion = async (finalScore) => {
+    saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score: finalScore })
+    try { await fetch('/api/phase4/step5/remedial/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ level: 'C1', task: 'B', score: finalScore, max_score: 8, completed: true }) }) } catch (e) { console.error(e) }
   }
 
   const handleContinue = () => navigate('/phase4/step/4/remedial/c1/taskC')
   window.__remedialSkip = handleContinue
-  const allFilled = answers.every(a => a.trim().length > 0)
-  const progress = ((currentIndex + 1) / QUIZ_QUESTIONS.length) * 100
+  const progress = ((currentSentence + 1) / SENTENCE_CORRECTIONS.length) * 100
+  const canSubmit = userAnswer.trim().split(/\s+/).length >= 8
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
@@ -91,84 +100,75 @@ export default function RemedialC1TaskB() {
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
 
           <Box sx={{ bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`, p: 3, mb: 3 }}>
-            <Typography variant="h5" fontWeight="bold" sx={{ color: P.orange.shadow }}>Phase 4 - Step 4: Remedial Activities</Typography>
-            <Typography variant="h6" sx={{ color: P.orange.border }}>Level C1 - Task B: Quizlet Live 🎮</Typography>
-            <Typography variant="body2" sx={{ color: P.orange.shadow, mt: 0.5 }}>Answer 6 advanced questions with detailed, sophisticated responses!</Typography>
+            <Typography variant="h5" fontWeight="bold" sx={{ color: P.orange.shadow }}>Phase 4 Step 4: Evaluate - Remedial Practice</Typography>
+            <Typography variant="h6" sx={{ color: P.orange.border }}>Level C1 - Task B: Analysis Odyssey 📝</Typography>
+            <Typography variant="body2" sx={{ color: P.orange.shadow, mt: 0.5 }}>Journey through corrections! Rewrite faulty sentences with C1-level sophistication.</Typography>
           </Box>
 
           <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
-            <CharacterMessage character="MS. MABROUKI" message="Welcome to Quizlet Live! Answer each question with detailed, accurate responses using sophisticated vocabulary. Reference video 1 and video 2 where appropriate, and provide specific examples!" />
+            <CharacterMessage character="LILIA" message="Welcome to the Analysis Odyssey! 📝 You have 8 faulty sentences to correct, one at a time. Your mission: completely rewrite each sentence with sophisticated vocabulary, complex syntax, and nuanced meaning. Each correct C1-level sentence earns you 1 point!" />
           </Box>
 
-          {!submitted ? (
-            <Box>
-              <Box sx={{ bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`, borderRadius: '16px', boxShadow: `3px 3px 0 ${P.yellow.shadow}`, p: 2, mb: 3 }}>
-                <Typography variant="body2" sx={{ color: P.yellow.shadow, mb: 1 }}>Question {currentIndex + 1} of {QUIZ_QUESTIONS.length}</Typography>
-                <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 4, bgcolor: 'rgba(0,0,0,0.1)', '& .MuiLinearProgress-bar': { bgcolor: P.yellow.border } }} />
-              </Box>
+          <Box sx={{ bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`, p: 3, mb: 3 }}>
+            <Typography variant="h6" fontWeight="bold" sx={{ color: P.teal.shadow, mb: 1 }}>📝 What to Fix (C1 Level):</Typography>
+            <Stack spacing={0.75}>
+              {[
+                ['Grammar:', 'Subject-verb agreement, precise verb forms, proper tense usage'],
+                ['Vocabulary:', 'Sophisticated words (hinges, rooted, compelling, fosters, exemplifies, captivates)'],
+                ['Syntax:', 'Complex structures with dashes (—), commas, subordinate clauses'],
+                ['Connectors:', 'Precise connectors (although, yet, rather than, regarding, ensuring, through)'],
+                ['Nuance:', 'Add detail, context, and sophisticated meaning'],
+                ['Coherence:', 'Create elegant, flowing sentences with clear logical relationships'],
+              ].map(([label, desc]) => (
+                <Typography key={label} variant="body2" sx={{ color: P.teal.shadow }}><strong>{label}</strong> {desc}</Typography>
+              ))}
+            </Stack>
+          </Box>
 
-              <Box sx={{ bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.purple.shadow}`, p: 4, mb: 3 }}>
-                <Box sx={{ bgcolor: P.purple.border, borderRadius: '12px', p: 2, mb: 3 }}>
-                  <Typography variant="h6" fontWeight="bold" sx={{ color: '#fff' }}>Q{currentIndex + 1}: {currentQuestion.question}</Typography>
+          {!gameCompleted ? (
+            <Box sx={{ bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.purple.shadow}`, p: 4, mb: 3 }}>
+              <LinearProgress variant="determinate" value={progress} sx={{ mb: 3, height: 8, borderRadius: 4, bgcolor: 'rgba(0,0,0,0.1)', '& .MuiLinearProgress-bar': { bgcolor: P.purple.border } }} />
+              <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
+                <Box sx={{ bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`, borderRadius: '12px', boxShadow: `2px 2px 0 ${P.purple.shadow}`, px: 2, py: 0.75 }}>
+                  <Typography variant="body2" fontWeight="bold" sx={{ color: P.purple.shadow }}>Sentence {currentSentence + 1} / {SENTENCE_CORRECTIONS.length}</Typography>
                 </Box>
-
-                <TextField fullWidth multiline rows={4} value={answers[currentIndex]} onChange={(e) => handleAnswerChange(e.target.value)}
-                  placeholder="Write your detailed answer here..."
-                  helperText={`Word count: ${answers[currentIndex].trim().split(/\s+/).filter(w => w).length} (aim for at least 10 words)`} />
-
-                <Box sx={{ bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`, borderRadius: '12px', p: 2, mt: 2 }}>
-                  <Typography variant="subtitle2" fontWeight="bold" sx={{ color: P.teal.shadow }}>💡 Include in your answer:</Typography>
-                  <Typography variant="body2" sx={{ color: P.teal.border }}>{currentQuestion.keywords.join(', ')}</Typography>
+                <Box sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '12px', boxShadow: `2px 2px 0 ${P.green.shadow}`, px: 2, py: 0.75 }}>
+                  <Typography variant="body2" fontWeight="bold" sx={{ color: P.green.shadow }}>Score: {score} / {SENTENCE_CORRECTIONS.length}</Typography>
                 </Box>
+              </Stack>
 
-                <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
-                  <Box component="button" onClick={handlePrevious} disabled={currentIndex === 0} sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '12px', boxShadow: `3px 3px 0 ${P.blue.shadow}`, px: 3, py: 1, cursor: currentIndex === 0 ? 'not-allowed' : 'pointer', fontWeight: 'bold', color: P.blue.shadow, opacity: currentIndex === 0 ? 0.4 : 1 }}>← Previous</Box>
-                  {currentIndex < QUIZ_QUESTIONS.length - 1 ? (
-                    <Box component="button" onClick={handleNext} disabled={!answers[currentIndex].trim()} sx={{ bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`, borderRadius: '12px', boxShadow: `3px 3px 0 ${P.teal.shadow}`, px: 3, py: 1, cursor: answers[currentIndex].trim() ? 'pointer' : 'not-allowed', fontWeight: 'bold', color: P.teal.shadow, opacity: answers[currentIndex].trim() ? 1 : 0.4 }}>Next Question →</Box>
-                  ) : (
-                    <Box component="button" onClick={handleSubmit} disabled={!allFilled} sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`, px: 3, py: 1, cursor: allFilled ? 'pointer' : 'not-allowed', fontWeight: 'bold', color: P.green.shadow, opacity: allFilled ? 1 : 0.5 }}>Submit Quiz 🎮</Box>
-                  )}
-                </Stack>
+              <Box sx={{ bgcolor: P.red.bg, border: `2px solid ${P.red.border}`, borderRadius: '16px', boxShadow: `3px 3px 0 ${P.red.shadow}`, p: 3, mb: 3 }}>
+                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: P.red.shadow, mb: 1 }}>❌ Faulty Sentence (DO NOT copy — rewrite with C1 sophistication!):</Typography>
+                <Typography variant="h6" sx={{ color: P.red.border, fontFamily: 'monospace' }}>{SENTENCE_CORRECTIONS[currentSentence].faulty}</Typography>
               </Box>
 
-              <Box sx={{ bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`, borderRadius: '16px', boxShadow: `3px 3px 0 ${P.teal.shadow}`, p: 2 }}>
-                <Typography variant="body2" sx={{ color: P.teal.shadow, mb: 1 }}>Jump to question:</Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  {QUIZ_QUESTIONS.map((_, idx) => (
-                    <Box key={idx} component="button" onClick={() => setCurrentIndex(idx)} sx={{ bgcolor: idx === currentIndex ? P.teal.border : P.teal.bg, border: `2px solid ${P.teal.border}`, borderRadius: '8px', boxShadow: `2px 2px 0 ${P.teal.shadow}`, minWidth: 36, py: 0.5, cursor: 'pointer', fontWeight: 'bold', color: idx === currentIndex ? '#fff' : P.teal.shadow, fontSize: '0.85rem' }}>
-                      {idx + 1} {answers[idx].trim() && '✓'}
-                    </Box>
-                  ))}
-                </Stack>
-              </Box>
+              <Typography variant="subtitle1" fontWeight="bold" sx={{ color: P.purple.shadow, mb: 1 }}>✏️ Your C1-level correction (use sophisticated vocabulary, complex syntax, precise connectors):</Typography>
+              <TextField fullWidth multiline rows={3} value={userAnswer} onChange={(e) => setUserAnswer(e.target.value)} disabled={feedback !== null} placeholder="Rewrite the sentence with C1-level sophistication..." variant="outlined" autoFocus sx={{ mb: 2 }} />
+
+              {feedback && (
+                <Box sx={{ bgcolor: feedback.type === 'success' ? P.green.bg : feedback.type === 'info' ? P.blue.bg : P.red.bg, border: `2px solid ${feedback.type === 'success' ? P.green.border : feedback.type === 'info' ? P.blue.border : P.red.border}`, borderRadius: '12px', boxShadow: `3px 3px 0 ${feedback.type === 'success' ? P.green.shadow : feedback.type === 'info' ? P.blue.shadow : P.red.shadow}`, p: 2, mb: 2 }}>
+                  <Typography variant="body1" fontWeight="bold" sx={{ color: feedback.type === 'success' ? P.green.shadow : feedback.type === 'info' ? P.blue.shadow : P.red.shadow }}>{feedback.message}</Typography>
+                </Box>
+              )}
+
+              {!feedback && (
+                <Box component="button" onClick={handleCheckSentence} disabled={!canSubmit}
+                  sx={{ display: 'block', width: '100%', bgcolor: canSubmit ? P.green.bg : P.yellow.bg, border: `2px solid ${canSubmit ? P.green.border : P.yellow.border}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${canSubmit ? P.green.shadow : P.yellow.shadow}`, p: 2, cursor: canSubmit ? 'pointer' : 'not-allowed', fontSize: '1rem', fontWeight: 'bold', color: canSubmit ? P.green.shadow : P.yellow.shadow, opacity: canSubmit ? 1 : 0.6, '&:hover': canSubmit ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` } : {} }}>
+                  {canSubmit ? 'Check Sentence ✓' : 'Write at least 8 words'}
+                </Box>
+              )}
             </Box>
           ) : (
-            <Box>
-              <Box sx={{ bgcolor: score === 6 ? P.green.bg : P.yellow.bg, border: `2px solid ${score === 6 ? P.green.border : P.yellow.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${score === 6 ? P.green.shadow : P.yellow.shadow}`, p: 4, textAlign: 'center', mb: 3 }}>
-                <Typography variant="h4" fontWeight="bold" sx={{ color: score === 6 ? P.green.shadow : P.yellow.shadow }}>{score === 6 ? '🎮 Perfect Quiz! 🎮' : '🌟 Quiz Complete! 🌟'}</Typography>
-                <Typography variant="h6" sx={{ color: score === 6 ? P.green.shadow : P.yellow.shadow }}>You scored {score} out of 6 points!</Typography>
+            <>
+              <Box sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.green.shadow}`, p: 4, textAlign: 'center', mb: 3 }}>
+                <Typography variant="h4" fontWeight="bold" sx={{ color: P.green.shadow }}>📝 Analysis Odyssey Complete!</Typography>
+                <Typography variant="h5" sx={{ color: P.green.border, mt: 1 }}>Score: {score} / 8</Typography>
+                <Typography variant="body1" sx={{ color: P.green.shadow, mt: 1 }}>{score === 8 ? 'Perfect C1-level writing! All sentences corrected with sophistication!' : score >= 6 ? 'Great job! Strong C1-level improvements!' : 'Good effort! Keep practicing C1 writing skills!'}</Typography>
               </Box>
-
-              <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
-                <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>Answer Review:</Typography>
-                <Stack spacing={2}>
-                  {QUIZ_QUESTIONS.map((question, index) => {
-                    const result = results[index]
-                    return (
-                      <Box key={index} sx={{ bgcolor: result.isCorrect ? P.green.bg : P.yellow.bg, border: `2px solid ${result.isCorrect ? P.green.border : P.yellow.border}`, borderRadius: '12px', p: 2 }}>
-                        <Typography variant="body2" fontWeight="bold" sx={{ color: result.isCorrect ? P.green.shadow : P.yellow.shadow }}>Q{index + 1}: {question.question}</Typography>
-                        <Typography variant="body2" sx={{ mt: 0.5, fontStyle: 'italic', color: result.isCorrect ? P.green.shadow : P.yellow.shadow }}>Your answer: "{result.userAnswer}"</Typography>
-                        {!result.isCorrect && <Typography variant="body2" sx={{ mt: 0.5, color: P.green.shadow }}>Model answer: <strong>{result.correctAnswer}</strong></Typography>}
-                      </Box>
-                    )
-                  })}
-                </Stack>
-              </Box>
-
               <Stack direction="row" justifyContent="flex-end">
-                <Box component="button" onClick={handleContinue} sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${P.green.shadow}`, px: 4, py: 1.5, cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold', color: P.green.shadow, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` } }}>Continue to Task C →</Box>
+                <Box component="button" onClick={handleContinue} sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '16px', boxShadow: `4px 4px 0 ${P.green.shadow}`, px: 5, py: 1.5, cursor: 'pointer', fontSize: '1.1rem', fontWeight: 'bold', color: P.green.shadow, '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` } }}>Continue to Task C →</Box>
               </Stack>
-            </Box>
+            </>
           )}
 
         </motion.div>

@@ -261,15 +261,17 @@ export default function Dashboard() {
       return `/phase4_2/step/${safeStep}/interaction/${safeInteraction}`
     }
 
+    const backendToFrontendStep = { 1: 1, 2: 2, 3: 2, 4: 3, 5: 4 }
+    const frontendStep = backendToFrontendStep[safeStep] || safeStep
+
     if (context && context.startsWith('remedial_')) {
       const level = context.replace('remedial_', '')
       const taskLetter = String.fromCharCode(64 + safeInteraction)
       if (safeStep === 1) return `/phase4/remedial/${level}/task${taskLetter}`
-      if (safeStep === 3) return `/phase4/step3/remedial/${level}/task${taskLetter}`
-      return `/phase4/step/${safeStep}/remedial/${level}/task${taskLetter}`
+      return `/phase4/step/${frontendStep}/remedial/${level}/task${taskLetter}`
     }
 
-    return `/phase4/step/${safeStep}/interaction/${safeInteraction}`
+    return `/phase4/step/${frontendStep}/interaction/${safeInteraction}`
   }
 
   const buildPhase5ResumeUrl = ({ subphase, step, interaction, context }) => {

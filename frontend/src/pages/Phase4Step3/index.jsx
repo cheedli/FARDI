@@ -1,17 +1,17 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Typography, Stack, Container } from '@mui/material'
-import { useTheme } from '@mui/material'
-import { motion } from 'framer-motion'
+import { Box, Typography, Stack, Container, useTheme } from '@mui/material'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
+import { motion } from 'framer-motion'
 
 /**
- * Phase 4 Step 3: Explain - Promotion Basics
- * Introduction to promotion basics before activities begin
+ * Phase 4 Step 3: Apply - Complete Poster and Video Description
+ * Introduction to the main activity where students write complete descriptions
+ * Updated: 2026-01-14
  */
 
-export default function Phase4Step3Intro() {
+export default function Phase4Step4Intro() {
   const navigate = useNavigate()
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
@@ -37,10 +37,8 @@ export default function Phase4Step3Intro() {
   }
   const P = isDark ? DARK : LIGHT
 
-  useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/3/vocabulary') }, [])
-
   const handleStartActivities = () => {
-    navigate('/phase4/step/3/vocabulary')
+    navigate('/phase4/step/3/interaction/1')
   }
 
   return (
@@ -58,10 +56,10 @@ export default function Phase4Step3Intro() {
               Phase 4: Marketing & Promotion
             </Typography>
             <Typography variant="h5" gutterBottom sx={{ color: P.blue.shadow }}>
-              Step 3: Explain
+              Step 3: Apply
             </Typography>
             <Typography variant="body1" sx={{ color: P.blue.shadow }}>
-              Understanding promotion basics: posters and videos
+              Writing complete descriptions for posters and videos
             </Typography>
           </Box>
 
@@ -75,7 +73,7 @@ export default function Phase4Step3Intro() {
               Congratulations!
             </Typography>
             <Typography variant="body1" sx={{ color: P.green.shadow }}>
-              You've successfully completed the remedial phase and are ready to move forward to Step 3!
+              You've successfully completed the previous steps and are ready to apply what you've learned!
             </Typography>
           </Box>
 
@@ -83,77 +81,109 @@ export default function Phase4Step3Intro() {
           <Box sx={{
             bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`,
             borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`,
-            p: 3, mb: 4,
+            p: 3, mb: 3,
           }}>
             <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.teal.shadow, mb: 2 }}>
-              Scenario
+              Main Activity (Scenario)
             </Typography>
             <CharacterMessage
               speaker="Ms. Mabrouki"
-              message="Let's explain posters first (e.g., promotional, persuasive), then videos (e.g., dramatisation, creative). We'll watch three short videos: first on ad characteristics, then two video ad examples. Listen for terms like 'promotional', 'persuasive', 'dramatisation', and note how they apply to posters/videos!"
+              message="Now apply what we've learned by writing a complete description of a poster first (using the guided template with examples), then a script for a video (using the guided template with examples), for the festival. Focus on grammar, spelling, and structure—follow the examples, adapt them, and self-check for mistakes before submitting."
             />
           </Box>
 
-          {/* Key Terms to Listen For */}
+          {/* What You'll Do */}
+          <Box sx={{
+            bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow }}>
+              What You'll Do
+            </Typography>
+            <Stack spacing={2}>
+              <Box>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ color: P.orange.shadow }} gutterBottom>
+                  1. Poster Description
+                </Typography>
+                <Typography variant="body1" sx={{ color: P.orange.shadow }}>
+                  Write 4-8 sentences describing poster elements (layout, colors, slogan) using the guided template with examples. Adapt the examples to your ideas and check for grammar/spelling mistakes.
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ color: P.orange.shadow }} gutterBottom>
+                  2. Video Script
+                </Typography>
+                <Typography variant="body1" sx={{ color: P.orange.shadow }}>
+                  Write a complete script for a video using the guided template with examples. Focus on structure, grammar, and spelling.
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
+
+          {/* Assessment Focus */}
           <Box sx={{
             bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`,
             borderRadius: '20px', boxShadow: `4px 4px 0 ${P.purple.shadow}`,
-            p: 3, mb: 4,
+            p: 3, mb: 3,
           }}>
             <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.purple.shadow }}>
-              Key Terms to Listen For
+              Assessment Focus
             </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
-              {['Promotional', 'Persuasive', 'Dramatisation', 'Creative'].map((term) => (
-                <Box key={term} component="span" sx={{
-                  bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`,
-                  borderRadius: '999px', px: 2, py: 0.5,
-                  fontSize: '0.85rem', fontWeight: 700, color: P.purple.shadow,
-                  display: 'inline-block'
-                }}>{term}</Box>
-              ))}
-            </Stack>
-            <Typography variant="body2" sx={{ color: P.purple.shadow, opacity: 0.8 }}>
-              Pay attention to how these terms are used in the context of posters and video advertisements.
-            </Typography>
+            <Box component="ul" sx={{ pl: 2 }}>
+              <Typography component="li" variant="body1" sx={{ mb: 1, color: P.purple.shadow }}>
+                <strong>Writing Skills:</strong> Grammar, spelling, and structure
+              </Typography>
+              <Typography component="li" variant="body1" sx={{ mb: 1, color: P.purple.shadow }}>
+                <strong>Vocabulary Use:</strong> Appropriate marketing and promotional terms
+              </Typography>
+              <Typography component="li" variant="body1" sx={{ mb: 1, color: P.purple.shadow }}>
+                <strong>Template Adaptation:</strong> Following examples and making them your own
+              </Typography>
+              <Typography component="li" variant="body1" sx={{ color: P.purple.shadow }}>
+                <strong>Self-Correction:</strong> Checking for mistakes before submitting
+              </Typography>
+            </Box>
           </Box>
 
-          {/* Learning Objectives */}
+          {/* Key Tips */}
           <Box sx={{
             bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`,
             borderRadius: '20px', boxShadow: `4px 4px 0 ${P.yellow.shadow}`,
             p: 3, mb: 4,
           }}>
             <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.yellow.shadow }}>
-              What You'll Learn
+              Important Tips
             </Typography>
             <Box component="ul" sx={{ pl: 2 }}>
-              {[
-                ['Poster Types:', 'Promotional vs. Persuasive approaches'],
-                ['Video Types:', 'Dramatisation and creative techniques'],
-                ['Ad Characteristics:', 'What makes advertisements effective'],
-                ['Application:', 'How these concepts apply to both posters and videos'],
-              ].map(([label, desc]) => (
-                <Typography key={label} component="li" variant="body1" sx={{ mb: 1, color: P.yellow.shadow }}>
-                  <strong>{label}</strong> {desc}
-                </Typography>
-              ))}
+              <Typography component="li" variant="body1" sx={{ mb: 1, color: P.yellow.shadow }}>
+                Use the examples as models, change words to make it your own
+              </Typography>
+              <Typography component="li" variant="body1" sx={{ mb: 1, color: P.yellow.shadow }}>
+                Check for grammar mistakes (e.g., subject-verb agreement)
+              </Typography>
+              <Typography component="li" variant="body1" sx={{ mb: 1, color: P.yellow.shadow }}>
+                Check for spelling mistakes (e.g., "gatefold")
+              </Typography>
+              <Typography component="li" variant="body1" sx={{ color: P.yellow.shadow }}>
+                Ensure logical flow and structure in your writing
+              </Typography>
             </Box>
           </Box>
 
           {/* Start Button */}
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
             <Box component="button" onClick={handleStartActivities} sx={{
-              bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
-              borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
-              px: 5, py: 1.5, fontWeight: 700, fontSize: '1rem',
-              cursor: 'pointer', color: P.green.shadow,
+              bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+              borderRadius: '12px', boxShadow: `3px 3px 0 ${P.orange.shadow}`,
+              px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
+              cursor: 'pointer', color: P.orange.shadow,
               display: 'flex', alignItems: 'center', gap: 1,
-              '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
-              '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` }
+              '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.orange.shadow}` },
+              '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.orange.shadow}` }
             }}>
-              <PlayArrowIcon fontSize="small" />
-              Start Learning Activities
+              <PlayArrowIcon />
+              Start Writing Activities
             </Box>
           </Box>
 

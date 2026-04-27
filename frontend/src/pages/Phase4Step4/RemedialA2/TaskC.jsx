@@ -1,51 +1,28 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Typography, Container, useTheme, Stack } from '@mui/material'
-import { CharacterMessage } from '../../../components/Avatar.jsx'
-import { CheckCircle, Cancel, Link as LinkIcon } from '@mui/icons-material'
-import { useProgressSave } from '../../../hooks/useProgressSave'
+import { Box, Typography, Stack, Alert, LinearProgress, Container } from '@mui/material'
+import { useTheme } from '@mui/material'
 import { motion } from 'framer-motion'
+import { CharacterMessage } from '../../../components/Avatar.jsx'
+import { CheckCircle, Cancel } from '@mui/icons-material'
+import { useProgressSave } from '../../../hooks/useProgressSave'
 
 /**
  * Phase 4 Step 4 - Level A2 - Task C: Connector Quest
- * Add "because" or "and" to 6 sentences
- * Score: +1 for each correct connector (6 total)
  */
 
+const CONNECTOR_OPTIONS = ['and', 'but', 'so', 'because']
+
 const SENTENCES = [
-  {
-    text: 'Poster gatefold _____ lettering.',
-    correctConnector: 'and',
-    explanation: 'Use "and" to join two equal ideas: gatefold AND lettering'
-  },
-  {
-    text: 'Video animation _____ fun.',
-    correctConnector: 'because',
-    explanation: 'Use "because" to show reason: animation BECAUSE (it is) fun'
-  },
-  {
-    text: 'Jingle short _____ catchy.',
-    correctConnector: 'and',
-    explanation: 'Use "and" to join two equal ideas: short AND catchy'
-  },
-  {
-    text: 'Dramatisation story _____ engage.',
-    correctConnector: 'because',
-    explanation: 'Use "because" to show reason: story BECAUSE (it can) engage'
-  },
-  {
-    text: 'Sketch plan _____ draw.',
-    correctConnector: 'and',
-    explanation: 'Use "and" to join two equal ideas: plan AND draw'
-  },
-  {
-    text: 'Clip short _____ quick.',
-    correctConnector: 'because',
-    explanation: 'Use "because" to show reason: short BECAUSE (it is) quick'
-  }
+  { part1: 'Poster has gatefold', part2: 'video has animation', correctConnector: 'and', explanation: '"and" joins two equal ideas (gatefold AND animation)' },
+  { part1: 'Slogan is catchy', part2: 'poster is memorable', correctConnector: 'so', explanation: '"so" shows result (catchy LEADS TO memorable)' },
+  { part1: 'Clip is short', part2: 'it is easy to watch', correctConnector: 'so', explanation: '"so" shows result (short LEADS TO easy to watch)' },
+  { part1: 'Jingle is simple', part2: 'it is complex', correctConnector: 'but', explanation: '"but" shows contrast (simple VERSUS complex)' },
+  { part1: 'Video uses dramatisation', part2: 'it engages viewers', correctConnector: 'because', explanation: '"because" shows reason (uses dramatisation FOR THE REASON THAT it engages)' },
+  { part1: 'Poster is colorful', part2: 'video is plain', correctConnector: 'but', explanation: '"but" shows contrast (colorful VERSUS plain)' }
 ]
 
-export default function Phase4Step4RemedialA2TaskC() {
+export default function Phase4Step5RemedialA2TaskC() {
   const navigate = useNavigate()
   React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/4/remedial/b1/taskA') }, [])
   const theme = useTheme()
@@ -72,7 +49,7 @@ export default function Phase4Step4RemedialA2TaskC() {
   }
   const P = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 3, context: 'remedial_a2' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 5, interaction: 3, context: 'remedial_a2' })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState(Array(SENTENCES.length).fill(''))
   const [submitted, setSubmitted] = useState(false)
@@ -89,299 +66,215 @@ export default function Phase4Step4RemedialA2TaskC() {
     setUserAnswers(newAnswers)
   }
 
-  const handleNext = () => {
-    if (currentIndex < SENTENCES.length - 1) {
-      setCurrentIndex(currentIndex + 1)
-    }
-  }
-
-  const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
-    }
-  }
+  const handleNext = () => { if (currentIndex < SENTENCES.length - 1) setCurrentIndex(currentIndex + 1) }
+  const handlePrevious = () => { if (currentIndex > 0) setCurrentIndex(currentIndex - 1) }
 
   const handleSubmit = async () => {
-    // Check all answers
     const checkResults = userAnswers.map((answer, index) => {
       const isCorrect = answer === SENTENCES[index].correctConnector
       return {
         userAnswer: answer,
         correctAnswer: SENTENCES[index].correctConnector,
         isCorrect,
-        explanation: SENTENCES[index].explanation
+        explanation: SENTENCES[index].explanation,
+        correctSentence: `${SENTENCES[index].part1} ${SENTENCES[index].correctConnector} ${SENTENCES[index].part2}.`
       }
     })
-
     setResults(checkResults)
     const correctCount = checkResults.filter(r => r.isCorrect).length
     setScore(correctCount)
     setSubmitted(true)
-
-    // Store result
-    sessionStorage.setItem('phase4_step4_remedial_a2_taskC_score', correctCount)
-
-    // Log to backend
+    sessionStorage.setItem('phase4_step5_remedial_a2_taskC_score', correctCount)
     await logTaskCompletion(correctCount)
   }
 
   const logTaskCompletion = async (score) => {
     saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskC', is_correct: true, score: score })
     try {
-      const response = await fetch('/api/phase4/step4/remedial/log', {
+      const response = await fetch('/api/phase4/step5/remedial/log', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          level: 'A2',
-          task: 'C',
-          score: score,
-          max_score: 6,
-          completed: true
-        })
+        body: JSON.stringify({ level: 'A2', task: 'C', score: score, max_score: 6, completed: true })
       })
-
       const data = await response.json()
-      if (data.success) {
-        console.log('[Phase 4 Step 4] A2 Task C completion logged to backend')
-      }
+      if (data.success) console.log('[Phase 4 Step 5] A2 Task C completion logged to backend')
     } catch (error) {
       console.error('Failed to log task completion:', error)
     }
   }
 
   const handleContinue = async () => {
-    // Calculate total score from all three tasks
-    const taskAScore = parseInt(sessionStorage.getItem('phase4_step4_remedial_a2_taskA_score') || '0')
-    const taskBScore = parseInt(sessionStorage.getItem('phase4_step4_remedial_a2_taskB_score') || '0')
-    const taskCScore = parseInt(sessionStorage.getItem('phase4_step4_remedial_a2_taskC_score') || '0')
+    const taskAScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_a2_taskA_score') || '0')
+    const taskBScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_a2_taskB_score') || '0')
+    const taskCScore = parseInt(sessionStorage.getItem('phase4_step5_remedial_a2_taskC_score') || '0')
     const totalScore = taskAScore + taskBScore + taskCScore
-    const maxScore = 7 + 8 + 6 // 21 total (Task A now worth 7, not 12)
-    const threshold = 18
+    const maxScore = 18
+    const threshold = 15
     const passed = totalScore >= threshold
 
-    console.log('\n' + '='.repeat(60))
-    console.log('PHASE 4 STEP 4 - REMEDIAL A2 - FINAL RESULTS')
-    console.log('='.repeat(60))
-    console.log('Task A (Dialogue Adventure):', taskAScore, '/7')
-    console.log('Task B (Expand Empire):', taskBScore, '/8')
-    console.log('Task C (Connector Quest):', taskCScore, '/6')
-    console.log('-'.repeat(60))
-    console.log('TOTAL SCORE:', totalScore, '/', maxScore)
-    console.log('PASS THRESHOLD:', threshold, '/', maxScore, '(80%)')
-    console.log('-'.repeat(60))
-    if (passed) {
-      console.log('✅ PASSED - Student will proceed to Dashboard/Next Phase')
-    } else {
-      console.log('❌ FAILED - Student will repeat Remedial Level A2')
-    }
-    console.log('='.repeat(60) + '\n')
-
-    // Log final score to backend
     try {
-      const response = await fetch('/api/phase4/step4/remedial/a2/final-score', {
+      const response = await fetch('/api/phase4/step5/remedial/a2/final-score', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          task_a_score: taskAScore,
-          task_b_score: taskBScore,
-          task_c_score: taskCScore
-        })
+        body: JSON.stringify({ task_a_score: taskAScore, task_b_score: taskBScore, task_c_score: taskCScore })
       })
-
       const data = await response.json()
       if (data.success) {
         console.log('Final A2 score logged to backend:', data.data)
-        sessionStorage.setItem('phase4_step4_a2_next_url', data.data.next_url || (passed ? '/phase4/step/5' : '/phase4/step/4/remedial/a2/taskA'))
+        sessionStorage.setItem('phase4_step5_a2_next_url', data.data.next_url || (passed ? '/phase4_2/step/1' : '/phase4/step/4/remedial/a2/taskA'))
       }
     } catch (error) {
       console.error('Failed to log final score:', error)
     }
 
-    // Show final results
     setFinalScore({ taskA: taskAScore, taskB: taskBScore, taskC: taskCScore, total: totalScore, passed })
     setShowFinalResults(true)
 
-    // Delay navigation to show results
     setTimeout(() => {
-      // Clear A2 scores
-      sessionStorage.removeItem('phase4_step4_remedial_a2_taskA_score')
-      sessionStorage.removeItem('phase4_step4_remedial_a2_taskB_score')
-      sessionStorage.removeItem('phase4_step4_remedial_a2_taskC_score')
-
-      navigate(sessionStorage.getItem('phase4_step4_a2_next_url') || (passed ? '/phase4/step/4/remedial/b1/taskA' : '/phase4/step/4/remedial/a2/taskA'))
-    }, 5000) // 5 second delay
+      sessionStorage.removeItem('phase4_step5_remedial_a2_taskA_score')
+      sessionStorage.removeItem('phase4_step5_remedial_a2_taskB_score')
+      sessionStorage.removeItem('phase4_step5_remedial_a2_taskC_score')
+      navigate(sessionStorage.getItem('phase4_step5_a2_next_url') || (passed ? '/phase4/step/4/remedial/b1/taskA' : '/phase4/step/4/remedial/a2/taskA'))
+    }, 5000)
   }
+
+  const progress = ((currentIndex + 1) / SENTENCES.length) * 100
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
       <Container maxWidth="md">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-
           {/* Header */}
-          <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
-            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
-              Phase 4 Step 4: Apply - Remedial Practice
+          <Box sx={{
+            bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.purple.shadow}`,
+            p: 3, mb: 3,
+          }}>
+            <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.purple.shadow }}>
+              Phase 4 Step 4: Evaluate - Remedial Practice
             </Typography>
-            <Typography variant="h5" gutterBottom sx={{ color: P.blue.shadow }}>
+            <Typography variant="h5" gutterBottom sx={{ color: P.purple.shadow }}>
               Level A2 - Task C: Connector Quest
             </Typography>
-            <Typography variant="body1" sx={{ color: P.blue.shadow }}>
-              Connect sentences to quest for treasure! Choose the right connector (because/and) to link ideas together.
+            <Typography variant="body1" sx={{ color: P.purple.shadow }}>
+              Choose the right connector to link ideas!
             </Typography>
           </Box>
 
           {/* Instructor Message */}
-          <Box sx={{ bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`, p: 3, mb: 3 }}>
+          <Box sx={{
+            bgcolor: P.teal.bg, border: `2px solid ${P.teal.border}`,
+            borderRadius: '20px', boxShadow: `4px 4px 0 ${P.teal.shadow}`,
+            p: 3, mb: 3,
+          }}>
             <CharacterMessage
-              character="MS. MABROUKI"
-              message="Excellent work on expanding sentences! Now let's connect them! You have 6 sentences with blanks. For each one, choose either 'because' or 'and' to fill the blank. Remember: use 'and' to join equal ideas, use 'because' to show a reason. Think carefully about each sentence!"
+              character="LILIA"
+              message="Excellent work! Now let's connect sentences! For each sentence pair, choose the best connector: 'and' (join equal ideas), 'but' (show contrast), 'so' (show result), or 'because' (show reason). Choose wisely!"
             />
           </Box>
 
           {!submitted ? (
             <Box>
-              {/* Progress */}
-              <Box sx={{ bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.yellow.shadow}`, p: 2, mb: 3 }}>
-                <Typography variant="body2" sx={{ color: P.yellow.shadow }} gutterBottom>
-                  Sentence {currentIndex + 1} of {SENTENCES.length}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                  {SENTENCES.map((_, idx) => (
-                    <Box
-                      key={idx}
-                      sx={{
-                        width: '100%', height: 8, borderRadius: '999px',
-                        bgcolor: idx < currentIndex ? P.green.border :
-                                idx === currentIndex ? P.blue.border : (isDark ? '#333' : '#ddd'),
-                        border: `1px solid ${idx < currentIndex ? P.green.shadow : idx === currentIndex ? P.blue.shadow : 'transparent'}`,
-                      }}
-                    />
-                  ))}
-                </Box>
-              </Box>
+              <LinearProgress
+                variant="determinate"
+                value={progress}
+                sx={{
+                  mb: 3, height: 10, borderRadius: 5,
+                  bgcolor: isDark ? '#3B1F6E' : '#E9D5FF',
+                  '& .MuiLinearProgress-bar': { bgcolor: P.purple.shadow }
+                }}
+              />
 
-              {/* Current Sentence */}
-              <Box sx={{ bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`, p: 4, mb: 3 }}>
-                {/* Sentence display */}
-                <Box sx={{ textAlign: 'center', mb: 4 }}>
-                  <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow }}>
-                    {currentIndex + 1}. {currentSentence.text.replace('_____', '___')}
+              <Box sx={{
+                bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+                borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`,
+                p: 4, mb: 3,
+              }}>
+                <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box component="span" sx={{
+                    bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+                    borderRadius: '999px', px: 2, py: 0.5,
+                    fontWeight: 700, color: P.blue.shadow, fontSize: '0.85rem',
+                  }}>
+                    Sentence {currentIndex + 1} of {SENTENCES.length}
+                  </Box>
+                  <Box component="span" sx={{
+                    bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`,
+                    borderRadius: '999px', px: 2, py: 0.5,
+                    fontWeight: 700, color: P.purple.shadow, fontSize: '0.85rem',
+                  }}>
+                    Answered: {userAnswers.filter(a => a).length}/{SENTENCES.length}
+                  </Box>
+                </Box>
+
+                {/* Sentence Display */}
+                <Box sx={{
+                  bgcolor: isDark ? '#1a1a2e' : '#F5F5F5',
+                  border: `2px solid ${P.blue.border}`,
+                  borderRadius: '16px', p: 3, mb: 3, textAlign: 'center',
+                }}>
+                  <Typography variant="h5" sx={{ fontWeight: 'bold', color: P.blue.shadow }}>
+                    {currentSentence.part1}
+                    <Box component="span" sx={{
+                      mx: 2, px: 3, py: 0.5,
+                      bgcolor: userAnswers[currentIndex] ? P.purple.bg : isDark ? '#1a1a2e' : '#fff',
+                      border: `2px dashed ${P.purple.border}`,
+                      borderRadius: '8px', display: 'inline-block', minWidth: 120,
+                      color: P.purple.shadow, fontWeight: 700,
+                    }}>
+                      {userAnswers[currentIndex] || '______'}
+                    </Box>
+                    {currentSentence.part2}.
                   </Typography>
                 </Box>
 
-                {/* Connector Buttons (large circular clay buttons) */}
-                <Stack direction="row" spacing={3} justifyContent="center" sx={{ mb: 4 }}>
-                  <Box
-                    component="button"
-                    onClick={() => handleConnectorSelect('because')}
-                    sx={{
-                      width: 160, height: 160, borderRadius: '50%',
-                      fontSize: '1.3rem', fontWeight: 'bold',
-                      bgcolor: userAnswers[currentIndex] === 'because' ? P.green.border : P.green.bg,
-                      color: userAnswers[currentIndex] === 'because' ? 'white' : P.green.shadow,
-                      border: `4px solid ${userAnswers[currentIndex] === 'because' ? P.green.shadow : P.green.border}`,
-                      boxShadow: userAnswers[currentIndex] === 'because' ? `4px 4px 0 ${P.green.shadow}` : `3px 3px 0 ${P.green.shadow}`,
-                      cursor: 'pointer',
-                      '&:hover': { transform: 'scale(1.05)', transition: 'all 0.2s' }
-                    }}
-                  >
-                    because
-                  </Box>
+                <Typography variant="h6" gutterBottom sx={{ textAlign: 'center', mb: 3, color: P.blue.shadow }}>
+                  Choose the best connector:
+                </Typography>
 
-                  <Box
-                    component="button"
-                    onClick={() => handleConnectorSelect('and')}
-                    sx={{
-                      width: 160, height: 160, borderRadius: '50%',
-                      fontSize: '1.3rem', fontWeight: 'bold',
-                      bgcolor: userAnswers[currentIndex] === 'and' ? P.yellow.border : P.yellow.bg,
-                      color: userAnswers[currentIndex] === 'and' ? 'white' : P.yellow.shadow,
-                      border: `4px solid ${userAnswers[currentIndex] === 'and' ? P.yellow.shadow : P.yellow.border}`,
-                      boxShadow: userAnswers[currentIndex] === 'and' ? `4px 4px 0 ${P.yellow.shadow}` : `3px 3px 0 ${P.yellow.shadow}`,
-                      cursor: 'pointer',
-                      '&:hover': { transform: 'scale(1.05)', transition: 'all 0.2s' }
-                    }}
-                  >
-                    and
-                  </Box>
+                <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap" sx={{ mb: 4 }}>
+                  {CONNECTOR_OPTIONS.map((connector) => (
+                    <Box component="button" key={connector} onClick={() => handleConnectorSelect(connector)} sx={{
+                      minWidth: 120, height: 60,
+                      bgcolor: userAnswers[currentIndex] === connector ? P.purple.bg : isDark ? '#1a1a2e' : '#fff',
+                      border: `2px solid ${P.purple.border}`,
+                      borderRadius: '12px',
+                      boxShadow: userAnswers[currentIndex] === connector ? `3px 3px 0 ${P.purple.shadow}` : 'none',
+                      fontSize: '1.2rem', fontWeight: 'bold',
+                      cursor: 'pointer', color: P.purple.shadow,
+                      '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `3px 3px 0 ${P.purple.shadow}` },
+                      '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.purple.shadow}` },
+                      transition: 'all 0.15s ease',
+                    }}>
+                      {connector}
+                    </Box>
+                  ))}
                 </Stack>
 
-                {/* Helper Info */}
-                <Box sx={{ bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`, borderRadius: '16px', boxShadow: `3px 3px 0 ${P.purple.shadow}`, p: 2, mb: 3 }}>
-                  <Stack direction="row" spacing={4} justifyContent="center">
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight="bold" sx={{ color: P.green.shadow }}>
-                        <LinkIcon sx={{ verticalAlign: 'middle', mr: 0.5 }} />
-                        "because" = reason
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: P.purple.shadow }}>
-                        Shows why something happens
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight="bold" sx={{ color: P.yellow.shadow }}>
-                        <LinkIcon sx={{ verticalAlign: 'middle', mr: 0.5 }} />
-                        "and" = join equal ideas
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: P.purple.shadow }}>
-                        Connects two similar things
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Box>
-
-                {/* Score Display */}
-                <Box sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '16px', boxShadow: `3px 3px 0 ${P.green.shadow}`, p: 2, textAlign: 'center', mb: 3 }}>
-                  <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap">
-                    {SENTENCES.map((sentence, idx) => {
-                      const userAnswer = userAnswers[idx]
-                      const isCorrect = userAnswer === sentence.correctConnector
-                      const isAnswered = userAnswer !== ''
-                      return (
-                        <Box key={idx} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 60 }}>
-                          <Typography variant="caption" sx={{ color: P.green.shadow }}>Q{idx + 1}</Typography>
-                          <Typography variant="h5" fontWeight="bold" sx={{ color: !isAnswered ? (isDark ? '#555' : '#ccc') : isCorrect ? P.green.shadow : P.red.shadow }}>
-                            {!isAnswered ? '-' : isCorrect ? '+1' : '0'}
-                          </Typography>
-                        </Box>
-                      )
-                    })}
-                  </Stack>
-                  <Typography variant="h4" fontWeight="bold" sx={{ mt: 2, color: P.green.shadow }}>
-                    SCORE: {userAnswers.filter((answer, idx) => answer === SENTENCES[idx].correctConnector).length}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: P.green.shadow }}>
-                    Answered: {userAnswers.filter(a => a).length} / {SENTENCES.length}
-                  </Typography>
-                </Box>
-
-                {/* Navigation */}
                 <Stack direction="row" spacing={2} justifyContent="space-between">
                   <Box component="button" onClick={handlePrevious} disabled={currentIndex === 0} sx={{
-                    bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
-                    borderRadius: '12px', boxShadow: `3px 3px 0 ${P.blue.shadow}`,
-                    px: 3, py: 1.5, fontWeight: 700, fontSize: '1rem',
-                    cursor: currentIndex === 0 ? 'not-allowed' : 'pointer', color: P.blue.shadow,
-                    opacity: currentIndex === 0 ? 0.5 : 1,
-                    '&:hover': currentIndex !== 0 ? { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.blue.shadow}` } : {},
+                    bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`,
+                    borderRadius: '12px', boxShadow: `3px 3px 0 ${P.yellow.shadow}`,
+                    px: 3, py: 1, fontWeight: 700, fontSize: '0.9rem',
+                    cursor: currentIndex === 0 ? 'not-allowed' : 'pointer',
+                    color: P.yellow.shadow, opacity: currentIndex === 0 ? 0.5 : 1,
+                    '&:hover': currentIndex !== 0 ? { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.yellow.shadow}` } : {},
+                    transition: 'all 0.15s ease',
                   }}>
                     ← Previous
                   </Box>
 
                   {currentIndex < SENTENCES.length - 1 ? (
                     <Box component="button" onClick={handleNext} disabled={!userAnswers[currentIndex]} sx={{
-                      bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
-                      borderRadius: '12px', boxShadow: `3px 3px 0 ${P.orange.shadow}`,
-                      px: 3, py: 1.5, fontWeight: 700, fontSize: '1rem',
-                      cursor: !userAnswers[currentIndex] ? 'not-allowed' : 'pointer', color: P.orange.shadow,
-                      opacity: !userAnswers[currentIndex] ? 0.5 : 1,
-                      '&:hover': userAnswers[currentIndex] ? { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.orange.shadow}` } : {},
+                      bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`,
+                      borderRadius: '12px', boxShadow: `3px 3px 0 ${P.purple.shadow}`,
+                      px: 3, py: 1, fontWeight: 700, fontSize: '0.9rem',
+                      cursor: !userAnswers[currentIndex] ? 'not-allowed' : 'pointer',
+                      color: P.purple.shadow, opacity: !userAnswers[currentIndex] ? 0.5 : 1,
+                      '&:hover': userAnswers[currentIndex] ? { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.purple.shadow}` } : {},
+                      transition: 'all 0.15s ease',
                     }}>
                       Next →
                     </Box>
@@ -389,10 +282,11 @@ export default function Phase4Step4RemedialA2TaskC() {
                     <Box component="button" onClick={handleSubmit} disabled={userAnswers.some(answer => !answer)} sx={{
                       bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
                       borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
-                      px: 3, py: 1.5, fontWeight: 700, fontSize: '1rem',
-                      cursor: userAnswers.some(answer => !answer) ? 'not-allowed' : 'pointer', color: P.green.shadow,
-                      opacity: userAnswers.some(answer => !answer) ? 0.5 : 1,
-                      '&:hover': !userAnswers.some(answer => !answer) ? { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` } : {},
+                      px: 4, py: 1, fontWeight: 700, fontSize: '0.9rem',
+                      cursor: userAnswers.some(a => !a) ? 'not-allowed' : 'pointer',
+                      color: P.green.shadow, opacity: userAnswers.some(a => !a) ? 0.5 : 1,
+                      '&:hover': !userAnswers.some(a => !a) ? { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` } : {},
+                      transition: 'all 0.15s ease',
                     }}>
                       Submit Quest
                     </Box>
@@ -400,25 +294,25 @@ export default function Phase4Step4RemedialA2TaskC() {
                 </Stack>
               </Box>
 
-              {/* Quick Navigation */}
-              <Box sx={{ bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.purple.shadow}`, p: 2 }}>
-                <Typography variant="body2" sx={{ color: P.purple.shadow }} gutterBottom>Jump to sentence:</Typography>
+              {/* Quick Jump */}
+              <Box sx={{
+                bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`,
+                borderRadius: '16px', boxShadow: `3px 3px 0 ${P.yellow.shadow}`,
+                p: 2,
+              }}>
+                <Typography variant="body2" sx={{ color: P.yellow.shadow, mb: 1 }}>Jump to sentence:</Typography>
                 <Stack direction="row" spacing={1} flexWrap="wrap">
                   {SENTENCES.map((_, idx) => (
-                    <Box
-                      key={idx}
-                      component="button"
-                      onClick={() => setCurrentIndex(idx)}
-                      sx={{
-                        minWidth: 40, py: 0.5, px: 1,
-                        bgcolor: idx === currentIndex ? P.purple.border : P.purple.bg,
-                        border: `2px solid ${P.purple.border}`,
-                        borderRadius: '8px',
-                        boxShadow: idx === currentIndex ? `2px 2px 0 ${P.purple.shadow}` : 'none',
-                        color: idx === currentIndex ? 'white' : P.purple.shadow,
-                        fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
-                      }}
-                    >
+                    <Box component="button" key={idx} onClick={() => setCurrentIndex(idx)} sx={{
+                      minWidth: 40, height: 36,
+                      bgcolor: idx === currentIndex ? P.purple.bg : isDark ? '#1a1a2e' : '#fff',
+                      border: `2px solid ${P.purple.border}`,
+                      borderRadius: '8px',
+                      fontWeight: 700, fontSize: '0.85rem',
+                      cursor: 'pointer', color: P.purple.shadow,
+                      '&:hover': { transform: 'translate(-1px,-1px)', boxShadow: `2px 2px 0 ${P.purple.shadow}` },
+                      transition: 'all 0.15s ease',
+                    }}>
                       {idx + 1} {userAnswers[idx] && '✓'}
                     </Box>
                   ))}
@@ -427,113 +321,105 @@ export default function Phase4Step4RemedialA2TaskC() {
             </Box>
           ) : !showFinalResults ? (
             <Box>
-              {/* Results */}
-              <Box sx={{ bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.green.shadow}`, p: 4, mb: 3, textAlign: 'center' }}>
+              <Box sx={{
+                bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                borderRadius: '20px', boxShadow: `4px 4px 0 ${P.green.shadow}`,
+                p: 4, mb: 3, textAlign: 'center',
+              }}>
                 <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.green.shadow }}>
-                  {score === 6 ? 'Perfect Connection!' : 'Good Quest!'}
+                  {score === 6 ? 'Perfect Connection!' : 'Quest Complete!'}
                 </Typography>
                 <Typography variant="h6" sx={{ color: P.green.shadow }}>
-                  You scored {score} out of 6 points!
+                  Score: {score} / 6
                 </Typography>
               </Box>
 
-              {/* Answer Review */}
-              <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
-                <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
-                  Connector Review:
-                </Typography>
+              <Box sx={{
+                bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+                borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`,
+                p: 3, mb: 3,
+              }}>
+                <Typography variant="h6" gutterBottom sx={{ color: P.blue.shadow }}>Connector Review:</Typography>
                 <Stack spacing={2}>
                   {results.map((result, index) => (
-                    <Box key={index} sx={{
-                      bgcolor: result.isCorrect ? P.green.bg : P.red.bg,
-                      border: `2px solid ${result.isCorrect ? P.green.border : P.red.border}`,
-                      borderRadius: '12px', boxShadow: `2px 2px 0 ${result.isCorrect ? P.green.shadow : P.red.shadow}`,
-                      p: 2, display: 'flex', gap: 1, alignItems: 'flex-start',
-                    }}>
-                      {result.isCorrect ? <CheckCircle sx={{ color: P.green.shadow }} /> : <Cancel sx={{ color: P.red.shadow }} />}
-                      <Box>
-                        <Typography variant="body2" gutterBottom sx={{ color: result.isCorrect ? P.green.shadow : P.red.shadow }}>
-                          <strong>Sentence {index + 1}:</strong> {SENTENCES[index].text.replace('_____', `[${result.userAnswer || '?'}]`)}
+                    <Alert
+                      key={index}
+                      severity={result.isCorrect ? 'success' : 'error'}
+                      icon={result.isCorrect ? <CheckCircle /> : <Cancel />}
+                      sx={{ borderRadius: '12px' }}
+                    >
+                      <Typography variant="body2" gutterBottom><strong>Sentence {index + 1}:</strong></Typography>
+                      <Typography variant="body2" color="success.dark" sx={{ fontWeight: 'bold', mb: 1 }}>
+                        ✓ Correct: {result.correctSentence}
+                      </Typography>
+                      {!result.isCorrect && (
+                        <Typography variant="body2" color="error.dark" sx={{ mt: 1 }}>
+                          Your answer: <strong>{result.userAnswer || 'No answer'}</strong> (should be "<strong>{result.correctAnswer}</strong>")
                         </Typography>
-                        {!result.isCorrect && (
-                          <Typography variant="body2" sx={{ mt: 1, color: P.red.shadow }}>
-                            Correct answer: <strong>{result.correctAnswer}</strong>
-                          </Typography>
-                        )}
-                        <Typography variant="caption" sx={{ display: 'block', mt: 1, color: result.isCorrect ? P.green.shadow : P.red.shadow, opacity: 0.8 }}>
-                          {result.explanation}
-                        </Typography>
-                      </Box>
-                    </Box>
+                      )}
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                        {result.explanation}
+                      </Typography>
+                    </Alert>
                   ))}
                 </Stack>
               </Box>
 
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Stack direction="row" spacing={2} justifyContent="center">
                 <Box component="button" onClick={handleContinue} sx={{
-                  bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
-                  borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
-                  px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
-                  cursor: 'pointer', color: P.green.shadow,
-                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
-                  '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` }
+                  bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+                  borderRadius: '12px', boxShadow: `3px 3px 0 ${P.orange.shadow}`,
+                  px: 5, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                  cursor: 'pointer', color: P.orange.shadow,
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.orange.shadow}` },
+                  '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.orange.shadow}` },
+                  transition: 'all 0.15s ease',
                 }}>
                   View Final Results
                 </Box>
-              </Box>
+              </Stack>
             </Box>
           ) : (
-            /* Final Results - Pass/Fail */
             <Box sx={{
               bgcolor: finalScore.passed ? P.green.bg : P.yellow.bg,
               border: `2px solid ${finalScore.passed ? P.green.border : P.yellow.border}`,
-              borderRadius: '20px',
-              boxShadow: `4px 4px 0 ${finalScore.passed ? P.green.shadow : P.yellow.shadow}`,
+              borderRadius: '20px', boxShadow: `4px 4px 0 ${finalScore.passed ? P.green.shadow : P.yellow.shadow}`,
               p: 5, textAlign: 'center',
             }}>
               <Typography variant="h3" gutterBottom fontWeight="bold" sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                {finalScore.passed ? 'Congratulations!' : 'Keep Practicing!'}
+                {finalScore.passed ? '🎉 Congratulations!' : '💪 Keep Practicing!'}
               </Typography>
-
               <Box sx={{ my: 3 }}>
                 <Typography variant="h5" gutterBottom sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                  Phase 4 Step 4 - Remedial A2 - Final Results
+                  Phase 4 Step 5 - Remedial A2 - Final Results
                 </Typography>
-                <Typography variant="h6" sx={{ mt: 2, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                  Task A (Dialogue Adventure): {finalScore.taskA} / 7
-                </Typography>
-                <Typography variant="h6" sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                  Task B (Expand Empire): {finalScore.taskB} / 8
-                </Typography>
-                <Typography variant="h6" sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                  Task C (Connector Quest): {finalScore.taskC} / 6
-                </Typography>
+                {[
+                  { label: 'Task A (Dialogue Adventure)', val: finalScore.taskA, max: 4 },
+                  { label: 'Task B (Expand Empire)', val: finalScore.taskB, max: 8 },
+                  { label: 'Task C (Connector Quest)', val: finalScore.taskC, max: 6 },
+                ].map((item, i) => (
+                  <Typography key={i} variant="h6" sx={{ color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                    {item.label}: {item.val} / {item.max}
+                  </Typography>
+                ))}
                 <Typography variant="h4" sx={{ mt: 2, fontWeight: 'bold', color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                  Total Score: {finalScore.total} / 21
+                  Total Score: {finalScore.total} / 18
                 </Typography>
-                <Typography variant="body1" sx={{ mt: 1, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
-                  Pass Threshold: 17 / 21 (80%)
+                <Typography variant="body1" sx={{ mt: 1, opacity: 0.9, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                  Pass Threshold: 15 / 18 (80%)
                 </Typography>
               </Box>
-
-              {finalScore.passed ? (
-                <Box>
-                  <Typography variant="h6" sx={{ mt: 3, color: P.green.shadow }}>You have passed Remedial A2!</Typography>
-                  <Typography variant="body1" sx={{ mt: 1, color: P.green.shadow }}>Proceeding to Dashboard...</Typography>
-                </Box>
-              ) : (
-                <Box>
-                  <Typography variant="h6" sx={{ mt: 3, color: P.yellow.shadow }}>Score below passing threshold</Typography>
-                  <Typography variant="body1" sx={{ mt: 1, color: P.yellow.shadow }}>Restarting Remedial A2 to help you improve...</Typography>
-                </Box>
-              )}
-
-              <Typography variant="body2" sx={{ mt: 3, opacity: 0.8, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+              <Typography variant="h6" sx={{ mt: 3, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                {finalScore.passed ? '✅ You have passed Remedial A2!' : '❌ Score below passing threshold'}
+              </Typography>
+              <Typography variant="body1" sx={{ mt: 1, opacity: 0.85, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
+                {finalScore.passed ? 'Proceeding to Dashboard...' : 'Restarting Remedial A2 to help you improve...'}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 3, opacity: 0.7, color: finalScore.passed ? P.green.shadow : P.yellow.shadow }}>
                 Redirecting in 5 seconds...
               </Typography>
             </Box>
           )}
-
         </motion.div>
       </Container>
     </Box>

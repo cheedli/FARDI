@@ -1,42 +1,51 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Typography, Stack, Container } from '@mui/material'
-import { useTheme } from '@mui/material'
-import { motion } from 'framer-motion'
+import { Box, Typography, Container, useTheme } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
-import GapFillStory from '../../../components/GapFillStory.jsx'
+import DragDropGapFill from '../../../components/DragDropGapFill.jsx'
 import { useProgressSave } from '../../../hooks/useProgressSave'
+import { motion } from 'framer-motion'
 
 /**
- * Phase 4 Step 3 - Remedial A1 - Task B: Fill Quest
- * Fill in 8 gaps with advertising terms from the videos
- * Score: +1 for each correct answer (8 total)
+ * Phase 4 Step 3 - Level A1 - Task B: Gap Fill Exercise
+ * Fill in 8 gaps for poster/video descriptions in two phases (4+4), gamified as "Fill Quest"
  */
 
-const WORD_BANK = [
-  'promotional', 'persuasive', 'targeted', 'original',
-  'creative', 'dramatisation', 'goal', 'obstacles'
+const WORD_BANK = ['gatefold', 'lettering', 'animation', 'jingle', 'dramatisation', 'sketch', 'clip', 'storytelling']
+
+// First 4 sentences
+const TEMPLATES_PART1 = [
+  'Poster has ___.',
+  '___ on poster.',
+  'Video uses ___.',
+  '___ in video.'
 ]
 
-const SENTENCES = [
-  'Ad is _______.',
-  '_______ to buy.',
-  '_______ group.',
-  'Be _______.',
-  'Use _______.',
-  '_______ story.',
-  'Set _______.',
-  'Face _______.'
+const ANSWERS_PART1 = {
+  'g_0_0': 'gatefold',     // Poster has gatefold
+  'g_1_0': 'lettering',    // lettering on poster
+  'g_2_0': 'animation',    // Video uses animation
+  'g_3_0': 'jingle'        // jingle in video
+}
+
+// Second 4 sentences
+const TEMPLATES_PART2 = [
+  '___ is story.',
+  '___ for plan.',
+  'Short ___.',
+  'Use ___.'
 ]
 
-const CORRECT_ANSWERS = [
-  'promotional', 'persuasive', 'targeted', 'original',
-  'creative', 'dramatisation', 'goal', 'obstacles'
-]
+const ANSWERS_PART2 = {
+  'g_4_0': 'dramatisation', // dramatisation is story
+  'g_5_0': 'sketch',        // sketch for plan
+  'g_6_0': 'clip',          // Short clip
+  'g_7_0': 'storytelling'   // Use storytelling
+}
 
-export default function RemedialA1TaskB() {
+export default function Phase4Step4RemedialA1TaskB() {
   const navigate = useNavigate()
-  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step3/remedial/a1/taskC') }, [])
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/3/remedial/a1/taskC') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const LIGHT = {
@@ -61,62 +70,69 @@ export default function RemedialA1TaskB() {
   }
   const P = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 2, context: 'remedial_a1' })
-  const [answers, setAnswers] = useState({})
-  const [submitted, setSubmitted] = useState(false)
-  const [score, setScore] = useState(0)
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 2, context: 'remedial_a1' })
+  const [phase, setPhase] = useState(1) // 1 = first 4 sentences, 2 = second 4 sentences, 3 = complete
+  const [part1Score, setPart1Score] = useState(null)
+  const [totalScore, setTotalScore] = useState(0)
 
-  const handleAnswerChange = (key, value) => {
-    setAnswers(prev => ({ ...prev, [key]: value }))
+  const handlePart1Complete = (result) => {
+    console.log('[Phase 4 Step 4] A1 Task B - Part 1 completed:', result.score, '/', result.total)
+    setPart1Score(result.score)
   }
 
-  const calculateScore = () => {
-    let correctCount = 0
-    SENTENCES.forEach((_, index) => {
-      const key = `g_${index}_0`
-      const userAnswer = answers[key]?.toLowerCase().trim()
-      const correctAnswer = CORRECT_ANSWERS[index].toLowerCase()
-      if (userAnswer === correctAnswer) correctCount++
-    })
-    return correctCount
+  const handlePart2Complete = (result) => {
+    const finalScore = part1Score + result.score
+    console.log('[Phase 4 Step 4] A1 Task B - Part 2 completed:', result.score, '/', result.total)
+    console.log('[Phase 4 Step 4] A1 Task B - Total Score:', finalScore, '/ 8')
+
+    setTotalScore(finalScore)
+    sessionStorage.setItem('phase4_step4_remedial_a1_taskB_score', finalScore)
+    logTaskCompletion(finalScore)
+    // Don't immediately switch to phase 3 - let user see the feedback first
   }
 
-  const handleSubmit = async () => {
-    const finalScore = calculateScore()
-    setScore(finalScore)
-    setSubmitted(true)
-    sessionStorage.setItem('remedial_step3_a1_taskB_score', finalScore)
-    await logTaskCompletion(finalScore)
+  const handleFinishTaskB = () => {
+    setPhase(3)
+  }
+
+  const handleNextToPart2 = () => {
+    setPhase(2)
   }
 
   const logTaskCompletion = async (score) => {
     saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'TaskB', is_correct: true, score: score })
     try {
-      const response = await fetch('/api/phase4/remedial/log', {
+      const response = await fetch('/api/phase4/step4/remedial/log', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         credentials: 'include',
-        body: JSON.stringify({ level: 'A1', task: 'B', step: 2, score: score, max_score: SENTENCES.length, completed: true })
+        body: JSON.stringify({
+          level: 'A1',
+          task: 'B',
+          score: score,
+          max_score: 8,
+          completed: true
+        })
       })
+
       const data = await response.json()
-      if (data.success) console.log('Step 3 Task B completion logged to backend')
+      if (data.success) {
+        console.log('[Phase 4 Step 4] A1 Task B completion logged to backend')
+      }
     } catch (error) {
       console.error('Failed to log task completion:', error)
     }
   }
 
   const handleContinue = () => {
-    navigate('/phase4/step3/remedial/a1/taskC')
+    navigate('/phase4/step/3/remedial/a1/taskC')
   }
-
-  const allFilled = SENTENCES.every((_, index) => {
-    const key = `g_${index}_0`
-    return answers[key]
-  })
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
-      <Container maxWidth="lg">
+      <Container maxWidth="md">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
 
           {/* Header */}
@@ -126,13 +142,13 @@ export default function RemedialA1TaskB() {
             p: 3, mb: 3,
           }}>
             <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
-              Phase 4 - Step 3: Remedial Activities
+              Phase 4 Step 3: Apply - Remedial Practice
             </Typography>
             <Typography variant="h5" gutterBottom sx={{ color: P.blue.shadow }}>
               Level A1 - Task B: Fill Quest
             </Typography>
             <Typography variant="body1" sx={{ color: P.blue.shadow }}>
-              Fill in the gaps with the correct advertising terms. Complete your quest through 8 levels!
+              Fill gaps to quest through levels - advance with correct answers!
             </Typography>
           </Box>
 
@@ -143,112 +159,120 @@ export default function RemedialA1TaskB() {
             p: 3, mb: 3,
           }}>
             <CharacterMessage
-              character="MS. MABROUKI"
-              message="Excellent work on the Treasure Hunt! Now it's time for the Fill Quest! Click a word from the Word Bank, then click the blank space where it belongs. Each correct fill helps you advance through the quest levels. Fill all 8 gaps to complete your quest!"
+              speaker="MS. MABROUKI"
+              message="Great work on the treasure hunt! Now let's fill in the missing words. Drag and drop words from the word bank to complete the sentences!"
             />
           </Box>
 
-          {/* Gap Fill Game */}
-          {!submitted && (
+          {/* Phase 1: First 4 Sentences */}
+          {phase === 1 && (
             <Box>
-              <GapFillStory
-                templates={SENTENCES}
-                wordBank={WORD_BANK}
-                answers={answers}
-                onChange={handleAnswerChange}
-              />
+              <Box sx={{
+                bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+                borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+                p: 3, mb: 3,
+              }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: P.orange.shadow, mb: 3 }}>
+                  Part 1: Fill in the first 4 sentences
+                </Typography>
+
+                <DragDropGapFill
+                  wordBank={['gatefold', 'lettering', 'animation', 'jingle']}
+                  sentences={TEMPLATES_PART1}
+                  answers={ANSWERS_PART1}
+                  onComplete={handlePart1Complete}
+                />
+              </Box>
+
+              {/* Show Next button after Part 1 is completed */}
+              {part1Score !== null && (
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                  <Box component="button" onClick={handleNextToPart2} sx={{
+                    bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                    borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
+                    px: 6, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                    cursor: 'pointer', color: P.green.shadow,
+                    '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
+                    '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` }
+                  }}>
+                    Next: Part 2 →
+                  </Box>
+                </Box>
+              )}
             </Box>
           )}
 
-          {/* Submit Button */}
-          {!submitted && (
-            <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 4 }}>
-              <Box component="button" onClick={handleSubmit} disabled={!allFilled} sx={{
-                bgcolor: allFilled ? P.blue.bg : 'grey.200',
-                border: `2px solid ${allFilled ? P.blue.border : '#ccc'}`,
-                borderRadius: '12px',
-                boxShadow: allFilled ? `3px 3px 0 ${P.blue.shadow}` : 'none',
-                px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
-                cursor: allFilled ? 'pointer' : 'not-allowed',
-                color: allFilled ? P.blue.shadow : 'grey.500',
-                '&:hover': allFilled ? { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.blue.shadow}` } : {},
-                '&:active': allFilled ? { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.blue.shadow}` } : {},
+          {/* Phase 2: Second 4 Sentences */}
+          {phase === 2 && (
+            <Box>
+              <Box sx={{
+                bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+                borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`,
+                p: 3, mb: 3,
               }}>
-                {allFilled ? 'Submit Answers' : 'Fill All Gaps First'}
+                <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: P.orange.shadow, mb: 3 }}>
+                  Part 2: Fill in the next 4 sentences
+                </Typography>
+
+                <DragDropGapFill
+                  wordBank={['dramatisation', 'sketch', 'clip', 'storytelling']}
+                  sentences={TEMPLATES_PART2}
+                  answers={ANSWERS_PART2}
+                  onComplete={handlePart2Complete}
+                  startIndex={4}
+                />
               </Box>
-            </Stack>
+
+              {/* Show Next button after Part 2 is completed */}
+              {totalScore > 0 && (
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                  <Box component="button" onClick={handleFinishTaskB} sx={{
+                    bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+                    borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
+                    px: 6, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                    cursor: 'pointer', color: P.green.shadow,
+                    '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
+                    '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` }
+                  }}>
+                    View Results & Continue →
+                  </Box>
+                </Box>
+              )}
+            </Box>
           )}
 
-          {/* Results */}
-          {submitted && (
-            <Box>
+          {/* Phase 3: Complete */}
+          {phase === 3 && (
+            <>
               <Box sx={{
                 bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
                 borderRadius: '20px', boxShadow: `4px 4px 0 ${P.green.shadow}`,
-                p: 4, mt: 3, textAlign: 'center',
+                p: 4, mb: 3, textAlign: 'center',
               }}>
-                <Typography variant="h4" gutterBottom fontWeight="bold" sx={{ color: P.green.shadow }}>
-                  {score === SENTENCES.length ? 'Perfect Quest!' : 'Quest Complete!'}
+                <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ color: P.green.shadow }}>
+                  Task B Complete!
                 </Typography>
-                <Typography variant="h6" sx={{ color: P.green.shadow }}>
-                  You scored {score} out of {SENTENCES.length} points!
+                <Typography variant="h6" sx={{ mt: 2, color: P.green.shadow }}>
+                  Total Score: {totalScore} / 8
                 </Typography>
-                {score === SENTENCES.length && (
-                  <Typography variant="body1" sx={{ mt: 2, color: P.green.shadow, opacity: 0.8 }}>
-                    Amazing! You filled every gap correctly!
-                  </Typography>
-                )}
+                <Typography variant="body1" sx={{ mt: 1, color: P.green.shadow }}>
+                  You've filled all the gaps! Let's continue to the final task.
+                </Typography>
               </Box>
 
-              {/* Answer Review */}
-              <Box sx={{
-                bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`,
-                borderRadius: '20px', boxShadow: `4px 4px 0 ${P.yellow.shadow}`,
-                p: 3, mt: 3,
-              }}>
-                <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.yellow.shadow }}>
-                  Answer Review:
-                </Typography>
-                <Stack spacing={2}>
-                  {SENTENCES.map((sentence, index) => {
-                    const key = `g_${index}_0`
-                    const userAnswer = answers[key]?.toLowerCase().trim()
-                    const correctAnswer = CORRECT_ANSWERS[index]
-                    const isCorrect = userAnswer === correctAnswer.toLowerCase()
-
-                    return (
-                      <Box key={index} sx={{
-                        bgcolor: isCorrect ? P.green.bg : P.red.bg,
-                        border: `2px solid ${isCorrect ? P.green.border : P.red.border}`,
-                        borderRadius: '12px', p: 2,
-                      }}>
-                        <Typography variant="body2" sx={{ color: isCorrect ? P.green.shadow : P.red.shadow }}>
-                          <strong>Sentence {index + 1}:</strong> {sentence.replace('_______', `"${userAnswer || '(empty)'}"`)}
-                        </Typography>
-                        {!isCorrect && (
-                          <Typography variant="caption" sx={{ color: P.red.shadow, opacity: 0.8 }}>
-                            Correct answer: <strong>{correctAnswer}</strong>
-                          </Typography>
-                        )}
-                      </Box>
-                    )
-                  })}
-                </Stack>
-              </Box>
-
-              <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 4 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Box component="button" onClick={handleContinue} sx={{
                   bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
                   borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
                   px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
                   cursor: 'pointer', color: P.green.shadow,
                   '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
-                  '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` },
+                  '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` }
                 }}>
-                  Continue to Task C
+                  Next: Task C →
                 </Box>
-              </Stack>
-            </Box>
+              </Box>
+            </>
           )}
 
         </motion.div>

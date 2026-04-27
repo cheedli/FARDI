@@ -1,81 +1,70 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Typography, Stack, Container, TextField } from '@mui/material'
-import { useTheme } from '@mui/material/styles'
-import { motion } from 'framer-motion'
+import { Box, Typography, Stack, Container, useTheme, TextField } from '@mui/material'
 import { CharacterMessage } from '../../../components/Avatar.jsx'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import AccessTimeIcon from '@mui/icons-material/AccessTime'
-import CancelIcon from '@mui/icons-material/Cancel'
 import { useProgressSave } from '../../../hooks/useProgressSave'
+import { motion } from 'framer-motion'
+
+/**
+ * Phase 4 Step 3 - Remedial B1 - Task E: Tense Time Travel (Past Tense)
+ * Rewrite 6 sentences from present to past tense
+ * Score: +1 for each correct sentence (6 total)
+ */
 
 const LIGHT = {
   pageBg: '#FFFDE7',
   blue:   { bg: '#EFF6FF', border: '#3B82F6', shadow: '#1D4ED8' },
   green:  { bg: '#F0FDF4', border: '#22C55E', shadow: '#15803D' },
+  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
+  purple: { bg: '#FAF5FF', border: '#A855F7', shadow: '#7E22CE' },
+  teal:   { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
   orange: { bg: '#FFF7ED', border: '#F97316', shadow: '#C2410C' },
   red:    { bg: '#FEF2F2', border: '#EF4444', shadow: '#B91C1C' },
-  teal:   { bg: '#F0FDFA', border: '#14B8A6', shadow: '#0F766E' },
-  yellow: { bg: '#FEFCE8', border: '#EAB308', shadow: '#A16207' },
 }
 const DARK = {
   pageBg: '#0F0F1A',
   blue:   { bg: '#1E3A5F', border: '#60A5FA', shadow: '#1E40AF' },
   green:  { bg: '#14532D', border: '#4ADE80', shadow: '#166534' },
+  yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
+  purple: { bg: '#3B1F6E', border: '#C084FC', shadow: '#6B21A8' },
+  teal:   { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
   orange: { bg: '#431407', border: '#FB923C', shadow: '#9A3412' },
   red:    { bg: '#450A0A', border: '#F87171', shadow: '#991B1B' },
-  teal:   { bg: '#134E4A', border: '#2DD4BF', shadow: '#0F766E' },
-  yellow: { bg: '#3D2E00', border: '#FACC15', shadow: '#854D0E' },
 }
 
-/**
- * Phase 4 Step 3 - Remedial B1 - Task E: Tense Time Travel
- * Bonus task worth 6 points
- */
-
 const SENTENCES = [
-  { id: 1, beforeVerb: 'The ad', verb: 'is', afterVerb: 'promotional.', correctPastVerb: 'was', hint: 'Change "is" to past tense' },
-  { id: 2, beforeVerb: 'Persuasive advertising', verb: 'uses', afterVerb: 'ethos, pathos, and logos.', correctPastVerb: 'used', hint: 'Change "uses" to past tense' },
-  { id: 3, beforeVerb: 'Targeted advertising', verb: 'is', afterVerb: 'for a specific group.', correctPastVerb: 'was', hint: 'Change "is" to past tense' },
-  { id: 4, beforeVerb: 'Original content', verb: 'is', afterVerb: 'new and unique.', correctPastVerb: 'was', hint: 'Change "is" to past tense' },
-  { id: 5, beforeVerb: 'Creative design', verb: 'makes', afterVerb: 'ads memorable.', correctPastVerb: 'made', hint: 'Change "makes" to past tense' },
-  { id: 6, beforeVerb: 'Ethical advertising', verb: 'is', afterVerb: 'honest and fair.', correctPastVerb: 'was', hint: 'Change "is" to past tense' }
+  { id: 1, present: 'is', sentence: 'Ad _____ promotional.', correct: 'was' },
+  { id: 2, present: 'uses', sentence: 'Persuasive _____ ethos, pathos, logos.', correct: 'used' },
+  { id: 3, present: 'is', sentence: 'Targeted _____ for group.', correct: 'was' },
+  { id: 4, present: 'is', sentence: 'Original _____ new.', correct: 'was' },
+  { id: 5, present: 'makes', sentence: 'Creative _____ memorable.', correct: 'made' },
+  { id: 6, present: 'is', sentence: 'Ethical _____ honest.', correct: 'was' }
 ]
 
 export default function RemedialB1TaskE() {
   const navigate = useNavigate()
-  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step3/remedial/b1/taskF') }, [])
   const theme = useTheme()
   const P = theme.palette.mode === 'dark' ? DARK : LIGHT
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 5, context: 'remedial_b1' })
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 5, context: 'remedial_b1' })
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
-  const [results, setResults] = useState(null)
-  const [showHints, setShowHints] = useState(false)
-
-  const cardSx = (color) => ({
-    bgcolor: P[color].bg,
-    border: `2px solid ${P[color].border}`,
-    borderRadius: '20px',
-    boxShadow: `4px 4px 0 ${P[color].shadow}`,
-    p: 3,
-  })
+  const [score, setScore] = useState(0)
 
   const handleAnswerChange = (id, value) => setAnswers(prev => ({ ...prev, [id]: value }))
-  const checkAnswer = (studentAnswer, correctAnswer) => studentAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()
 
-  const handleSubmit = () => {
-    let score = 0
-    const feedback = SENTENCES.map(sentence => {
-      const studentAnswer = answers[sentence.id] || ''
-      const isCorrect = checkAnswer(studentAnswer, sentence.correctPastVerb)
-      if (isCorrect) score += 1
-      return { id: sentence.id, beforeVerb: sentence.beforeVerb, verb: sentence.verb, afterVerb: sentence.afterVerb, studentAnswer, correctAnswer: sentence.correctPastVerb, isCorrect }
-    })
-    setResults({ score, feedback })
+  const checkAnswer = (id) => {
+    const answer = answers[id]?.toLowerCase().trim()
+    const correct = SENTENCES.find(s => s.id === id).correct.toLowerCase()
+    return answer === correct
+  }
+
+  const handleSubmit = async () => {
+    let correctCount = 0
+    SENTENCES.forEach(s => { if (checkAnswer(s.id)) correctCount++ })
+    setScore(correctCount)
     setSubmitted(true)
-    sessionStorage.setItem('remedial_step3_b1_taskE_score', score)
-    logTaskCompletion(score)
+    sessionStorage.setItem('remedial_step4_b1_taskE_score', correctCount)
+    await logTaskCompletion(correctCount)
   }
 
   const logTaskCompletion = async (score) => {
@@ -83,171 +72,118 @@ export default function RemedialB1TaskE() {
     try {
       await fetch('/api/phase4/remedial/log', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ level: 'B1', task: 'E', step: 2, score, max_score: 6, completed: true })
+        body: JSON.stringify({ level: 'B1', task: 'E', step: 4, score, max_score: 6, completed: true })
       })
     } catch (error) { console.error('Failed to log task completion:', error) }
   }
 
-  const allAnswered = SENTENCES.every(s => answers[s.id] && answers[s.id].trim().length > 0)
+  const handleContinue = () => navigate('/phase4/step/3/remedial/b1/taskF')
+  window.__remedialSkip = handleContinue
+  const allFilled = SENTENCES.every(s => answers[s.id] && answers[s.id].trim().length > 0)
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
       <Container maxWidth="md">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
 
-          {/* Header */}
-          <Box sx={{ ...cardSx('orange'), mb: 3 }}>
-            <Typography variant="h4" gutterBottom fontWeight="bold">Phase 4 - Step 3: Remedial Activities</Typography>
-            <Typography variant="h5" gutterBottom>Level B1 - Task E: Tense Time Travel ⏰ (BONUS)</Typography>
-            <Typography variant="body1">Convert 6 verbs from present to past tense!</Typography>
-            <Box sx={{ ...cardSx('yellow'), mt: 2 }}>
-              <Typography variant="body2" fontWeight="bold">
-                ⭐ Bonus Task: This is an optional task worth 6 bonus points. Complete it to boost your total score!
-              </Typography>
-            </Box>
+          <Box sx={{ bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.orange.shadow}`, p: 3, mb: 3 }}>
+            <Typography variant="h5" fontWeight="bold" sx={{ color: P.orange.shadow }}>Phase 4 - Step 3: Remedial Activities</Typography>
+            <Typography variant="h6" sx={{ color: P.orange.border }}>Level B1 - Task E: Tense Time Travel ⏰</Typography>
+            <Typography variant="body2" sx={{ color: P.orange.shadow, mt: 0.5 }}>Rewrite 6 sentences from present tense to past tense!</Typography>
           </Box>
 
-          {/* Character */}
-          <Box sx={{ ...cardSx('blue'), mb: 3 }}>
-            <CharacterMessage character="MS. MABROUKI" message="Time to travel back in time! 🕰️ For each sentence, write ONLY the verb in past tense. For example, if you see 'The ad IS promotional', you should write 'was' in the box. Complete all 6 correctly for 6 bonus points!" />
+          <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
+            <CharacterMessage character="MS. MABROUKI" message="Time to travel to the past! For each sentence, fill in the blank with the past tense form of the verb shown. Change 'is' to 'was', 'uses' to 'used', and 'makes' to 'made'. Be careful with your spelling!" />
           </Box>
 
-          {!submitted ? (
+          {!submitted && (
             <Box>
-              {/* Hint Toggle */}
-              <Box sx={{ textAlign: 'center', mb: 3 }}>
-                <Box
-                  component="button"
-                  onClick={() => setShowHints(!showHints)}
-                  sx={{
-                    ...cardSx('teal'), cursor: 'pointer', px: 3, py: 1,
-                    fontWeight: 'bold', fontSize: '0.85rem', color: P.teal.border, transition: 'all 0.2s',
-                    '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.teal.shadow}` }
-                  }}
-                >
-                  {showHints ? 'Hide Hints' : 'Show Hints'}
-                </Box>
-              </Box>
-
               <Stack spacing={3}>
-                {SENTENCES.map((sentence, index) => (
-                  <Box key={sentence.id} sx={{ ...cardSx('blue') }}>
-                    <Typography variant="h6" gutterBottom fontWeight="bold">Sentence {index + 1}</Typography>
-
-                    {showHints && (
-                      <Box sx={{ ...cardSx('teal'), mb: 2, p: 2 }}>
-                        <Typography variant="body2">💡 Hint: {sentence.hint}</Typography>
-                      </Box>
-                    )}
-
-                    <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                      <Typography variant="h6">{sentence.beforeVerb}</Typography>
-                      <Box sx={{ px: 1, py: 0.5, bgcolor: 'rgba(0,0,0,0.15)', borderRadius: '8px', display: 'inline-block' }}>
-                        <Typography variant="body2" sx={{ textDecoration: 'line-through', fontStyle: 'italic' }}>{sentence.verb}</Typography>
-                      </Box>
-                      <TextField
-                        value={answers[sentence.id] || ''}
-                        onChange={(e) => handleAnswerChange(sentence.id, e.target.value)}
-                        placeholder="past tense"
-                        variant="outlined"
-                        size="small"
-                        disabled={submitted}
-                        sx={{ width: 150, '& .MuiOutlinedInput-root': { borderRadius: '10px', fontWeight: 'bold', fontSize: '1rem' } }}
-                      />
-                      <Typography variant="h6">{sentence.afterVerb}</Typography>
-                    </Box>
-
-                    <Typography variant="caption" color="text.secondary">
-                      Original: {sentence.beforeVerb} <strong>{sentence.verb}</strong> {sentence.afterVerb}
-                    </Typography>
+                {SENTENCES.map((sentence) => (
+                  <Box key={sentence.id} sx={{ bgcolor: P.yellow.bg, border: `2px solid ${P.yellow.border}`, borderRadius: '16px', boxShadow: `3px 3px 0 ${P.yellow.shadow}`, p: 3 }}>
+                    <Typography variant="caption" sx={{ color: P.yellow.shadow }}>Sentence {sentence.id}</Typography>
+                    <Typography variant="h6" sx={{ color: P.yellow.shadow, mb: 1, mt: 0.5 }}>{sentence.sentence}</Typography>
+                    <Typography variant="body2" sx={{ color: P.yellow.border, mb: 2 }}>Present tense verb: <strong>{sentence.present}</strong></Typography>
+                    <TextField
+                      fullWidth label="Type the past tense verb"
+                      value={answers[sentence.id] || ''}
+                      onChange={(e) => handleAnswerChange(sentence.id, e.target.value)}
+                      placeholder="Enter past tense form..."
+                      helperText={`Change "${sentence.present}" to past tense`}
+                    />
                   </Box>
                 ))}
               </Stack>
 
-              <Box sx={{ textAlign: 'center', mt: 4 }}>
-                <Box
-                  component="button"
-                  onClick={handleSubmit}
-                  disabled={!allAnswered}
-                  sx={{
-                    ...cardSx('green'), cursor: !allAnswered ? 'not-allowed' : 'pointer', opacity: !allAnswered ? 0.5 : 1,
-                    px: 6, py: 2, fontWeight: 'bold', fontSize: '1.1rem', color: P.green.border, transition: 'all 0.2s',
-                    '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }
-                  }}
-                >
-                  Submit All Answers
+              <Stack direction="row" justifyContent="center" sx={{ mt: 4 }}>
+                <Box component="button" onClick={handleSubmit} disabled={!allFilled} sx={{
+                  bgcolor: allFilled ? P.teal.bg : P.yellow.bg,
+                  border: `2px solid ${allFilled ? P.teal.border : P.yellow.border}`,
+                  borderRadius: '16px', boxShadow: `4px 4px 0 ${allFilled ? P.teal.shadow : P.yellow.shadow}`,
+                  px: 4, py: 1.5, cursor: allFilled ? 'pointer' : 'not-allowed',
+                  fontSize: '1rem', fontWeight: 'bold',
+                  color: allFilled ? P.teal.shadow : P.yellow.shadow,
+                  opacity: allFilled ? 1 : 0.6,
+                  '&:hover': allFilled ? { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.teal.shadow}` } : {}
+                }}>
+                  {allFilled ? 'Submit Time Travel ⏰' : 'Fill All Sentences First'}
                 </Box>
-                {!allAnswered && (
-                  <Typography variant="caption" display="block" sx={{ mt: 1, color: P.red.border }}>
-                    Please answer all 6 verbs before submitting
-                  </Typography>
-                )}
-              </Box>
+              </Stack>
             </Box>
-          ) : (
+          )}
+
+          {submitted && (
             <Box>
-              {/* Results */}
-              <Box sx={{ ...cardSx('teal'), mb: 3, textAlign: 'center', p: 5 }}>
-                <AccessTimeIcon sx={{ fontSize: 72, mb: 2, color: P.teal.border }} />
-                <Typography variant="h3" gutterBottom fontWeight="bold">Time Travel Complete! 🎉</Typography>
-                <Box sx={{ ...cardSx('yellow'), maxWidth: 280, mx: 'auto', my: 3 }}>
-                  <Typography variant="h2" fontWeight="bold">{results.score} / 6</Typography>
-                  <Typography variant="h6" color="text.secondary">Bonus Points Earned</Typography>
-                </Box>
+              <Box sx={{
+                bgcolor: score === 6 ? P.green.bg : P.yellow.bg,
+                border: `2px solid ${score === 6 ? P.green.border : P.yellow.border}`,
+                borderRadius: '20px', boxShadow: `4px 4px 0 ${score === 6 ? P.green.shadow : P.yellow.shadow}`,
+                p: 4, textAlign: 'center', mb: 3
+              }}>
+                <Typography variant="h4" fontWeight="bold" sx={{ color: score === 6 ? P.green.shadow : P.yellow.shadow }}>
+                  {score === 6 ? '⏰ Perfect Time Travel! ⏰' : '🌟 Time Travel Complete! 🌟'}
+                </Typography>
+                <Typography variant="h6" sx={{ color: score === 6 ? P.green.shadow : P.yellow.shadow }}>You scored {score} out of 6 points!</Typography>
               </Box>
 
-              <Box sx={{ ...cardSx('blue'), mb: 3 }}>
-                <Typography variant="h5" gutterBottom fontWeight="bold">Detailed Feedback</Typography>
-                <Stack spacing={2} sx={{ mt: 2 }}>
-                  {results.feedback.map((item, index) => (
-                    <Box
-                      key={item.id}
-                      sx={{
-                        bgcolor: item.isCorrect ? P.green.bg : P.red.bg,
-                        border: `2px solid ${item.isCorrect ? P.green.border : P.red.border}`,
-                        borderRadius: '16px', p: 3,
-                        boxShadow: `3px 3px 0 ${item.isCorrect ? P.green.shadow : P.red.shadow}`,
-                      }}
-                    >
-                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-                        <Typography variant="subtitle1" fontWeight="bold">Sentence {index + 1}</Typography>
-                        {item.isCorrect ? <CheckCircleIcon sx={{ color: P.green.border }} /> : <CancelIcon sx={{ color: P.red.border }} />}
-                      </Stack>
-                      <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 1 }}>
-                        <Typography variant="body1">{item.beforeVerb}</Typography>
-                        <Box sx={{ px: 2, py: 0.5, bgcolor: item.isCorrect ? P.green.border : P.red.border, borderRadius: '8px' }}>
-                          <Typography variant="body1" sx={{ color: 'white', fontWeight: 'bold' }}>{item.studentAnswer || '(empty)'}</Typography>
-                        </Box>
-                        <Typography variant="body1">{item.afterVerb}</Typography>
-                      </Box>
-                      {!item.isCorrect && (
-                        <Box sx={{ ...cardSx('red'), p: 2, mt: 2 }}>
-                          <Typography variant="body2">
-                            <strong>Correct Answer:</strong> {item.correctAnswer}<br />
-                            <Typography component="span" variant="caption">
-                              Full sentence: {item.beforeVerb} <strong>{item.correctAnswer}</strong> {item.afterVerb}
-                            </Typography>
+              <Box sx={{ bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`, borderRadius: '20px', boxShadow: `4px 4px 0 ${P.blue.shadow}`, p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>Answer Review:</Typography>
+                <Stack spacing={2}>
+                  {SENTENCES.map((sentence) => {
+                    const isCorrect = checkAnswer(sentence.id)
+                    return (
+                      <Box key={sentence.id} sx={{
+                        bgcolor: isCorrect ? P.green.bg : P.red.bg,
+                        border: `2px solid ${isCorrect ? P.green.border : P.red.border}`,
+                        borderRadius: '12px', p: 2
+                      }}>
+                        <Typography variant="body2" sx={{ color: isCorrect ? P.green.shadow : P.red.shadow }}>
+                          <strong>Sentence {sentence.id}:</strong> {sentence.sentence.replace('_____', '[' + (answers[sentence.id] || '?') + ']')}
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 0.5, color: isCorrect ? P.green.shadow : P.red.shadow }}>
+                          Present: <strong>{sentence.present}</strong> → Your answer: <strong>{answers[sentence.id] || '(empty)'}</strong>
+                        </Typography>
+                        {!isCorrect && (
+                          <Typography variant="body2" sx={{ mt: 0.5, color: P.green.shadow, fontWeight: 'bold' }}>
+                            Correct: <strong>{sentence.correct}</strong>
                           </Typography>
-                        </Box>
-                      )}
-                    </Box>
-                  ))}
+                        )}
+                      </Box>
+                    )
+                  })}
                 </Stack>
               </Box>
 
-              <Box sx={{ textAlign: 'center' }}>
-                <Box
-                  component="button"
-                  onClick={() => navigate('/phase4/step3/remedial/b1/taskF')}
-                  sx={{
-                    ...cardSx('orange'), cursor: 'pointer', px: 6, py: 2,
-                    fontWeight: 'bold', fontSize: '1.1rem', color: P.orange.border, transition: 'all 0.2s',
-                    '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.orange.shadow}` }
-                  }}
-                >
-                  Continue to Task F (Bonus) →
+              <Stack direction="row" justifyContent="flex-end">
+                <Box component="button" onClick={handleContinue} sx={{
+                  bgcolor: P.green.bg, border: `2px solid ${P.green.border}`, borderRadius: '16px',
+                  boxShadow: `4px 4px 0 ${P.green.shadow}`, px: 4, py: 1.5, cursor: 'pointer',
+                  fontSize: '1rem', fontWeight: 'bold', color: P.green.shadow,
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `6px 6px 0 ${P.green.shadow}` }
+                }}>
+                  Continue to Task F →
                 </Box>
-              </Box>
+              </Stack>
             </Box>
           )}
 

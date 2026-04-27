@@ -81,14 +81,19 @@ def _phase4_total_to_level(total_score, thresholds):
     return 'C1'
 
 
+_BACKEND_STEP_TO_FRONTEND = {1: 1, 2: 2, 3: 2, 4: 3, 5: 4}
+
+
 def _phase4_step_path(step):
-    return f"/phase4/step/{step}"
+    frontend_step = _BACKEND_STEP_TO_FRONTEND.get(step, step)
+    return f"/phase4/step/{frontend_step}"
 
 
 def _phase4_remedial_start_url(step, level):
     if step == 1:
         return f"/phase4/remedial/{level.lower()}/taskA"
-    return f"/phase4/step/{step}/remedial/{level.lower()}/taskA"
+    frontend_step = _BACKEND_STEP_TO_FRONTEND.get(step, step)
+    return f"/phase4/step/{frontend_step}/remedial/{level.lower()}/taskA"
 
 
 def _phase4_retry_url(step, level):
@@ -96,8 +101,6 @@ def _phase4_retry_url(step, level):
 
 
 def _phase4_next_step_url(step):
-    if step == 1:
-        return "/phase4_2/step/1"
     if step == 5:
         return "/phase4_2/step/1"
     return _phase4_step_path(step + 1)
@@ -774,7 +777,7 @@ async def calculate_step3_score(request: Request, user: dict = Depends(get_curre
         else:
             remedial_level = 'Remedial C1'
 
-        next_url = f"/app/phase4/step3/remedial/{remedial_level.split()[-1].lower()}/taskA"
+        next_url = f"/app/phase4/step/2/remedial/{remedial_level.split()[-1].lower()}/taskA"
 
         print("\n" + "="*60)
         print("PHASE 4 STEP 3 - SCORING RESULTS")
@@ -1272,7 +1275,7 @@ async def calculate_step3_a1_final_score(request: Request, user: dict = Depends(
         task_c_score = data.get('task_c_score', 0)
         total_score = task_a_score + task_b_score + task_c_score
         passed = total_score >= 18
-        next_url = "/app/phase4/step/4" if passed else "/app/phase4/step3/remedial/a1/retry"
+        next_url = "/app/phase4/step/3" if passed else "/app/phase4/step/2/remedial/a1/retry"
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
@@ -1331,7 +1334,7 @@ async def calculate_step3_a2_final_score(request: Request, user: dict = Depends(
         task_c_score = data.get('task_c_score', 0)
         total_score = task_a_score + task_b_score + task_c_score
         passed = total_score >= 18
-        next_url = "/app/phase4/step/4" if passed else "/app/phase4/step3/remedial/a2/retry"
+        next_url = "/app/phase4/step/3" if passed else "/app/phase4/step/2/remedial/a2/retry"
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
@@ -1787,7 +1790,7 @@ async def calculate_step3_b2_final_score(request: Request, user: dict = Depends(
         task_f_score = data.get('task_f_score', 0)
         total_score = task_a_score + task_b_score + task_c_score + task_d_score + task_e_score + task_f_score
         passed = total_score >= 35
-        next_url = "/app/phase4/step/4" if passed else "/app/phase4/step3/remedial/b2/retry"
+        next_url = "/app/phase4/step/3" if passed else "/app/phase4/step/2/remedial/b2/retry"
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
@@ -1864,7 +1867,7 @@ async def calculate_step3_b1_final_score(request: Request, user: dict = Depends(
 
         # Pass based on required tasks only
         passed = required_total >= 22
-        next_url = "/app/phase4/step/4" if passed else "/app/phase4/step3/remedial/b1/retry"
+        next_url = "/app/phase4/step/3" if passed else "/app/phase4/step/2/remedial/b1/retry"
 
         # TERMINAL OUTPUT - Detailed logging for professor
         print("\n" + "="*60)
@@ -1940,7 +1943,7 @@ async def calculate_step3_c1_final_score(request: Request, user: dict = Depends(
         task_h_score = data.get('task_h_score', 0)
         total_score = task_a_score + task_b_score + task_c_score + task_d_score + task_e_score + task_f_score + task_g_score + task_h_score
         passed = total_score >= 43
-        next_url = "/app/phase4/step/4" if passed else "/app/phase4/step3/remedial/c1/retry"
+        next_url = "/app/phase4/step/3" if passed else "/app/phase4/step/2/remedial/c1/retry"
 
         print("\n" + "="*60)
         print("PHASE 4 STEP 3 - REMEDIAL C1 - FINAL ASSESSMENT")

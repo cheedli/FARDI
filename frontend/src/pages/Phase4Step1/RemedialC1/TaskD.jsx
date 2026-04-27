@@ -44,7 +44,7 @@ const DARK = {
 
 export default function RemedialC1TaskD() {
   const navigate = useNavigate()
-  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4_2/step/1') }, [])
+  React.useEffect(() => { window.__remedialSkip = () => navigate('/phase4/step/2') }, [])
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 1, interaction: 4, context: 'remedial_c1' })
@@ -147,7 +147,7 @@ export default function RemedialC1TaskD() {
       const data = await response.json()
       if (data.success) {
         console.log('Final C1 score logged to backend:', data.data)
-        const nextUrl = data.data.next_url || (passed ? '/phase4_2/step/1' : '/phase4/remedial/c1/taskA')
+        const nextUrl = data.data.next_url || (passed ? '/phase4/step/2' : '/phase4/remedial/c1/taskA')
         sessionStorage.setItem('phase4_step1_c1_next_url', nextUrl)
       }
     } catch (error) {
@@ -163,7 +163,7 @@ export default function RemedialC1TaskD() {
       sessionStorage.removeItem('remedial_c1_taskC_score')
       sessionStorage.removeItem('remedial_c1_taskD_score')
 
-      navigate(sessionStorage.getItem('phase4_step1_c1_next_url') || (passed ? '/phase4_2/step/1' : '/phase4/remedial/c1/taskA'))
+      navigate(sessionStorage.getItem('phase4_step1_c1_next_url') || (passed ? '/phase4/step/2' : '/phase4/remedial/c1/taskA'))
     }, 5000)
   }
 

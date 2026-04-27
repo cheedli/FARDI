@@ -13,6 +13,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront'
 import CampaignIcon from '@mui/icons-material/Campaign'
 import BuildIcon from '@mui/icons-material/Build'
 import AutoStoriesIcon from '@mui/icons-material/AutoStories'
+import MenuBookIcon from '@mui/icons-material/MenuBook'
 import LockIcon from '@mui/icons-material/Lock'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import MapIcon from '@mui/icons-material/Map'
@@ -63,7 +64,7 @@ const SIDEBAR_W = 260
 const SIDEBAR_W_COLLAPSED = 64
 
 const PHASES = [
-  { id: 1, title: 'Foundation', subtitle: 'Language Assessment', icon: SchoolIcon, color: '#6366f1', path: '/game' },
+  { id: 1, title: 'Foundation', subtitle: 'Language Assessment', icon: SchoolIcon, color: '#6366f1', path: '/phase1' },
   { id: 2, title: 'Cultural Planning', subtitle: 'Event Organization', icon: GroupIcon, color: '#0ea5e9', path: '/phase2' },
   { id: 3, title: 'Vendors & Budget', subtitle: 'Negotiation', icon: StorefrontIcon, color: '#10b981', path: '/phase3/step/1' },
   { id: 4, title: 'Marketing', subtitle: 'Promotion & Outreach', icon: CampaignIcon, color: '#f97316', path: '/phase4/step/1' },
@@ -441,6 +442,8 @@ export default function AppLayout() {
                 { to: '/chat', icon: <ChatBubbleOutlineIcon />, label: 'Messages', colorKey: 'orange' },
                 { to: '/profile', icon: <PersonIcon />, label: 'Profile', colorKey: 'teal' },
                 { to: '/phase-journey', icon: <MapIcon />, label: 'Learning Journey', colorKey: 'blue' },
+                { to: '/characters', icon: <GroupIcon />, label: 'Characters', colorKey: 'purple' },
+                { to: '/documentation', icon: <MenuBookIcon />, label: 'Documentation', colorKey: 'green' },
               ].map((item) => {
                 const active = isActive(item.to)
                 const c = D[item.colorKey]
@@ -481,7 +484,7 @@ export default function AppLayout() {
                 const completed = getPhaseCompleted(phase.id)
                 const IconComp = phase.icon
                 const active = isActive(phase.path) ||
-                  (phase.id === 1 && isActive('/game')) ||
+                  (phase.id === 1 && (isActive('/game') || isActive('/phase1'))) ||
                   (phase.id === 2 && isActive('/phase2')) ||
                   (phase.id === 3 && isActive('/phase3')) ||
                   (phase.id === 4 && isActive('/phase4')) ||

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -6,28 +6,30 @@ import {
   TextField,
   CircularProgress,
   Stack,
-  Container
+  Container,
+  useTheme
 } from '@mui/material'
-import { useTheme } from '@mui/material'
-import { motion } from 'framer-motion'
 import { CharacterMessage } from '../../components/Avatar.jsx'
 import SushiSpellGame from '../../components/SushiSpellGame.jsx'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import { useProgressSave } from '../../hooks/useProgressSave'
+import { motion } from 'framer-motion'
 
 /**
- * Phase 4 Step 3 Interaction 3: Sushi Spell Game
- * Students play Sushi Spell to practice spelling advertising vocabulary,
- * then explain the connection between the game, a word, and the videos
+ * Phase 4 Step 3 Interaction 3: Vocabulary Integration with Sushi Spell
+ * Students play Sushi Spell to spell 5 terms, then write a revised sentence using one of those terms
  */
 
 const VOCABULARY_WORDS = [
-  'persuasive', 'targeted', 'creative', 'dramatisation',
-  'goal', 'obstacles', 'friction'
+  'gatefold',
+  'dramatisation',
+  'animation',
+  'jingle',
+  'lettering',
+  'sketch'
 ]
 
-export default function Phase4Step3Interaction3() {
+export default function Phase4Step4Interaction3() {
   const navigate = useNavigate()
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
@@ -53,26 +55,26 @@ export default function Phase4Step3Interaction3() {
   }
   const P = isDark ? DARK : LIGHT
 
-  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 3, interaction: 3, context: 'main' })
-  const [answer, setAnswer] = useState('')
+  const { saveResponse } = useProgressSave({ phase: 4, subphase: null, step: 4, interaction: 3, context: 'main' })
+  const [revisedSentence, setRevisedSentence] = useState('')
   const [evaluation, setEvaluation] = useState(null)
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [gameResult, setGameResult] = useState(null)
-
+ 
   const handleGameComplete = (result) => {
     saveResponse({ item_index: 0, item_id: 'completion', item_type: 'task_complete', prompt: 'Task completion', answer: 'Interaction3', is_correct: true, score: result })
-    console.log('Game completed:', result)
+    console.log('Sushi Spell game completed:', result)
     setGameResult(result)
   }
 
   const handleSubmit = async () => {
-    if (!answer.trim()) {
+    if (!revisedSentence.trim()) {
       setEvaluation({
         success: false,
         score: 0,
         level: 'Below A1',
-        feedback: 'Please explain how to use Sushi Spell with one of the vocabulary words.'
+        feedback: 'Please write a revised sentence using one of the vocabulary terms you spelled.'
       })
       return
     }
@@ -80,152 +82,149 @@ export default function Phase4Step3Interaction3() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/phase4/evaluate-game-explanation', {
+      const response = await fetch('/api/phase4/step4/evaluate-vocabulary-integration', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         credentials: 'include',
         body: JSON.stringify({
-          question: 'How would you use Sushi Spell to practice one vocabulary word from the videos?',
-          answer: answer.trim(),
-          vocabularyWords: VOCABULARY_WORDS,
-          expectedElements: ['game', 'word', 'video', 'spelling', 'practice'],
-          level: 'B1'
+          spelledTerms: gameResult?.foundWords?.join(', ') || '',
+          revisedSentence: revisedSentence.trim()
         })
       })
 
       const data = await response.json()
 
-      if (data.success !== false) {
-        setEvaluation({
-          success: true,
-          score: data.score || 1,
-          level: data.level || 'B1',
-          feedback: data.feedback || 'Good explanation!'
-        })
-        setSubmitted(true)
+      // Always show feedback with score
+      setEvaluation({
+        success: true,
+        score: data.score || 0,
+        level: data.level || 'A1',
+        feedback: data.feedback || 'Good work!',
+        details: data.details || {}
+      })
+      setSubmitted(true)
 
-        // Store score for later
-        sessionStorage.setItem('phase4_step3_interaction3_score', data.score || 1)
-      } else {
-        setEvaluation({
-          success: false,
-          score: 0,
-          level: 'Below A1',
-          feedback: data.feedback || 'Please try again with more detail.'
-        })
-      }
+      // Store score for later
+      sessionStorage.setItem('phase4_step4_interaction3_score', data.score || 0)
     } catch (error) {
       console.error('Evaluation error:', error)
-      // Fallback evaluation
-      const answerLower = answer.toLowerCase()
 
-      // Check if mentions a vocabulary word
-      const mentionsWord = VOCABULARY_WORDS.some(word => answerLower.includes(word))
-      const mentionsGame = answerLower.includes('sushi') || answerLower.includes('spell') || answerLower.includes('game')
-      const mentionsVideo = answerLower.includes('video') || answerLower.includes('first') || answerLower.includes('second')
-      const mentionsPractice = answerLower.includes('practice') || answerLower.includes('learn') || answerLower.includes('spell')
+      // Fallback evaluation based on CEFR criteria
+      const sentenceLower = revisedSentence.toLowerCase()
+      const wordCount = revisedSentence.split(/\s+/).length
 
-      let score = 1 // A1 baseline
-      let level = 'A1'
+      // Check if any vocabulary term is used in the revised sentence
+      const usedTerm = VOCABULARY_WORDS.find(term => sentenceLower.includes(term.toLowerCase()))
 
-      const wordCount = answer.split(/\s+/).length
+      // Grammar indicators
+      const hasSubjectVerb = /\b(poster|video|script|scene)\s+(has|uses|features|employs|adds|incorporates)\b/i.test(revisedSentence)
+      const hasArticles = /\b(a|an|the)\b/i.test(revisedSentence)
+      const hasProperStructure = wordCount >= 5
 
-      if (mentionsWord && mentionsGame && mentionsVideo && wordCount >= 15) {
-        score = 5 // C1
+      // Error detection indicators
+      const mentionsError = sentenceLower.includes('fixed') || sentenceLower.includes('corrected') ||
+                           sentenceLower.includes('revised') || sentenceLower.includes('detected')
+      const showsImprovement = sentenceLower.includes('to') && hasSubjectVerb
+
+      // Advanced writing indicators
+      const hasComplex = sentenceLower.includes('which') || sentenceLower.includes('that') ||
+                        sentenceLower.includes(',')
+      const hasAdvancedVocab = sentenceLower.includes('autonomous') || sentenceLower.includes('leverage') ||
+                              sentenceLower.includes('incorporate') || sentenceLower.includes('narrative drive')
+
+      let score = 0
+      let level = 'Below A1'
+      let feedback = ''
+
+      // C1: 5 points - Complex sentence with error detection and sophisticated revision
+      if (usedTerm && wordCount >= 15 && hasComplex && hasAdvancedVocab && mentionsError) {
+        score = 5
         level = 'C1'
-      } else if (mentionsWord && mentionsGame && (mentionsVideo || mentionsPractice) && wordCount >= 12) {
-        score = 4 // B2
+        feedback = `Excellent! You successfully spelled "${usedTerm}" in Sushi Spell and leveraged it in a sophisticated revised sentence. Your sentence demonstrates autonomous error detection (identifying run-on sentences or structure issues) and complex grammar with clauses. Outstanding improvement!`
+      }
+      // B2: 4 points - Well-structured revision with clear improvement
+      else if (usedTerm && wordCount >= 10 && hasSubjectVerb && hasArticles && (mentionsError || showsImprovement)) {
+        score = 4
         level = 'B2'
-      } else if (mentionsWord && (mentionsGame || mentionsPractice) && wordCount >= 8) {
-        score = 3 // B1
+        feedback = `Very good! You incorporated "${usedTerm}" from Sushi Spell into a well-structured revised sentence. You showed clear improvement from the original sentence with better grammar and structure. Good work on autonomous correction!`
+      }
+      // B1: 3 points - Uses term correctly with basic revision
+      else if (usedTerm && wordCount >= 8 && hasSubjectVerb && hasProperStructure) {
+        score = 3
         level = 'B1'
-      } else if (mentionsWord && wordCount >= 5) {
-        score = 2 // A2
+        feedback = `Good! You used "${usedTerm}" from Sushi Spell in your revised sentence. Your sentence shows improvement with subject-verb agreement and proper structure. Keep working on identifying and fixing errors autonomously.`
+      }
+      // A2: 2 points - Basic use of term with some structure
+      else if (usedTerm && wordCount >= 5 && hasProperStructure) {
+        score = 2
         level = 'A2'
+        feedback = `Good start! You used "${usedTerm}" in your sentence. Try to show more clearly how you revised/fixed the original sentence. Explain the improvement you made.`
+      }
+      // A1: 1 point - Very basic attempt
+      else if (usedTerm && revisedSentence.trim().length > 0) {
+        score = 1
+        level = 'A1'
+        feedback = 'You made an attempt. Use ONE of the terms you spelled and show how you fixed errors in grammar/spelling/structure.'
+      }
+      else {
+        score = 0
+        level = 'Below A1'
+        feedback = 'Please write a revised sentence using one of the vocabulary terms you spelled in the game, showing how you fixed errors.'
       }
 
+      // Always show feedback with score (no retry)
       setEvaluation({
         success: true,
         score,
         level,
-        feedback: score >= 3
-          ? 'Good explanation! You connected the game, word, and videos well.'
-          : 'Good start! Try to explain how the game helps with a specific word from the videos.'
+        feedback,
+        details: {
+          usedTerm: usedTerm || 'None detected',
+          grammar: hasSubjectVerb ? 'Good subject-verb agreement' : 'Check subject-verb agreement',
+          structure: hasProperStructure ? 'Good structure' : 'Sentence needs more development'
+        }
       })
       setSubmitted(true)
-      sessionStorage.setItem('phase4_step3_interaction3_score', score)
-      console.log(`[Phase 4 Step 3 - Interaction 3] Score: ${score}/5 | Level: ${level}`)
+      sessionStorage.setItem('phase4_step4_interaction3_score', score)
+      console.log(`[Phase 4 Step 4 - Interaction 3] Score: ${score}/5 | Level: ${level}`)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleContinue = async () => {
-    const score1 = parseInt(sessionStorage.getItem('phase4_step3_interaction1_score') || '1')
-    const score2 = parseInt(sessionStorage.getItem('phase4_step3_interaction2_score') || '1')
-    const score3 = parseInt(sessionStorage.getItem('phase4_step3_interaction3_score') || '1')
-    const totalScore = score1 + score2 + score3
-
-    sessionStorage.setItem('phase4_step3_total_score', totalScore)
-
-    console.log(`[Phase 4 Step 3] Calculating score - I1=${score1}, I2=${score2}, I3=${score3}, Total=${totalScore}`)
-
-    try {
-      const response = await fetch('/api/phase4/step/3/calculate-score', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          interaction1_score: score1,
-          interaction2_score: score2,
-          interaction3_score: score3
-        })
+  const handleContinue = () => {
+    const interaction1Score = parseInt(sessionStorage.getItem('phase4_step4_interaction1_score') || '0')
+    const interaction2Score = parseInt(sessionStorage.getItem('phase4_step4_interaction2_score') || '0')
+    const interaction3Score = parseInt(sessionStorage.getItem('phase4_step4_interaction3_score') || '0')
+    fetch('/api/phase4/step/4/calculate-score', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        interaction1_score: interaction1Score,
+        interaction2_score: interaction2Score,
+        interaction3_score: interaction3Score
       })
-
-      const data = await response.json()
-
-      if (data.success) {
-        const nextUrl = data.data?.total?.next_url
-        const remedialLevel = data.data?.total?.remedial_level
-
-        if (nextUrl) {
-          const clientUrl = nextUrl.replace(/^\/app/, '')
-          console.log(`[Phase 4 Step 3] Backend assigned remedial: ${remedialLevel}`)
-          console.log(`[Phase 4 Step 3] Routing to: ${clientUrl}`)
-          navigate(clientUrl)
-          return
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to calculate Step 4 score')
         }
-      } else {
-        console.error('Error calculating score:', data.error)
-      }
-    } catch (error) {
-      console.error('Error calling calculate-score endpoint:', error)
-    }
-
-    let remedialPath = ''
-    if (totalScore < 4) {
-      remedialPath = '/phase4/step3/remedial/a1/taskA'
-    } else if (totalScore < 7) {
-      remedialPath = '/phase4/step3/remedial/a2/taskA'
-    } else if (totalScore < 10) {
-      remedialPath = '/phase4/step3/remedial/b1/taskA'
-    } else if (totalScore < 13) {
-      remedialPath = '/phase4/step3/remedial/b2/taskA'
-    } else {
-      remedialPath = '/phase4/step3/remedial/c1/taskA'
-    }
-
-    console.log(`[Phase 4 Step 3 - FALLBACK] Routing to: ${remedialPath}`)
-    navigate(remedialPath)
+        const nextUrl = data.data.total.next_url
+        sessionStorage.setItem('phase4_step4_next_url', nextUrl)
+        sessionStorage.setItem('student_cefr_level', data.data.total.remedial_level.replace('Remedial ', ''))
+        navigate(nextUrl)
+      })
+      .catch(error => {
+        console.error('Failed to calculate Step 4 score:', error)
+        alert('Error calculating your Step 4 route. Please try again.')
+      })
   }
-
-  useEffect(() => {
-    window.__remedialSkip = () => navigate('/phase4/step3/remedial/a1/taskA')
-  }, [])
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: P.pageBg, py: 4 }}>
@@ -242,10 +241,10 @@ export default function Phase4Step3Interaction3() {
               Phase 4: Marketing & Promotion
             </Typography>
             <Typography variant="h5" gutterBottom sx={{ color: P.blue.shadow }}>
-              Step 3: Explain - Interaction 3
+              Step 3: Apply - Interaction 3
             </Typography>
             <Typography variant="body1" sx={{ color: P.blue.shadow }}>
-              Use Sushi Spell game to practice advertising vocabulary
+              Polish your writing with vocabulary integration
             </Typography>
           </Box>
 
@@ -257,7 +256,7 @@ export default function Phase4Step3Interaction3() {
           }}>
             <CharacterMessage
               speaker="Ryan"
-              message="Use a game to explain more terms from the videos."
+              message="To polish your writing, play a game and integrate terms."
             />
           </Box>
 
@@ -277,14 +276,19 @@ export default function Phase4Step3Interaction3() {
                   borderRadius: '999px', px: 2, py: 0.5,
                   fontSize: '0.85rem', fontWeight: 700, color: P.purple.shadow,
                   display: 'inline-block'
-                }}>{word}</Box>
+                }}>
+                  {word}
+                </Box>
               ))}
             </Stack>
           </Box>
 
           {/* Sushi Spell Game */}
           <Box sx={{ mb: 4 }}>
-            <SushiSpellGame onComplete={handleGameComplete} />
+            <SushiSpellGame
+              targetWords={VOCABULARY_WORDS}
+              onComplete={handleGameComplete}
+            />
           </Box>
 
           {/* Question Section - Only show after game is completed */}
@@ -295,58 +299,60 @@ export default function Phase4Step3Interaction3() {
               p: 3, mb: 3,
             }}>
               <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.orange.shadow }}>
-                Question: How would you use Sushi Spell to practice one vocabulary word from the videos?
+                Write a revised sentence using one vocabulary term you spelled
               </Typography>
 
               {gameResult.foundWords.length > 0 && (
                 <Box sx={{
                   bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
-                  borderRadius: '12px', p: 2, mb: 2,
+                  borderRadius: '14px', boxShadow: `2px 2px 0 ${P.green.shadow}`,
+                  p: 2, mb: 2,
                 }}>
                   <Typography variant="body2" sx={{ color: P.green.shadow }}>
                     <strong>You spelled these words:</strong> {gameResult.foundWords.join(', ')}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: P.green.shadow, mt: 1 }}>
-                    Pick one of these words and explain how practicing it in Sushi Spell helps you remember it from the videos!
+                  <Typography variant="body2" sx={{ mt: 1, color: P.green.shadow }}>
+                    Pick one of these words and write a sentence showing how you revised/fixed it in your poster description or video script!
                   </Typography>
                 </Box>
               )}
+
+              <Box sx={{
+                bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+                borderRadius: '14px', boxShadow: `2px 2px 0 ${P.blue.shadow}`,
+                p: 2, mb: 2,
+              }}>
+                <Typography variant="body2" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
+                  Hint:
+                </Typography>
+                <Typography variant="body2" sx={{ color: P.blue.shadow }}>
+                  Use Sushi Spell for "animation" because... then add to your script.
+                </Typography>
+              </Box>
 
               <TextField
                 fullWidth
                 multiline
                 rows={4}
                 variant="outlined"
-                placeholder="Example: Use Sushi Spell to practice spelling 'targeted' because it's timed and the first video mentioned specific audiences..."
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
+                placeholder='Example: Use Sushi Spell for "jingle"—revised script: "Add jingle for music" fixed to "The script adds a jingle for catchy music".'
+                value={revisedSentence}
+                onChange={(e) => setRevisedSentence(e.target.value)}
                 disabled={submitted}
-                sx={{
-                  mb: 2,
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '12px',
-                    '& fieldset': { borderColor: P.orange.border },
-                    '&:hover fieldset': { borderColor: P.orange.shadow },
-                    '&.Mui-focused fieldset': { borderColor: P.orange.shadow },
-                  }
-                }}
+                sx={{ mb: 2 }}
               />
 
               {!submitted && (
-                <Box component="button" onClick={handleSubmit} disabled={loading || !answer.trim()} sx={{
-                  width: '100%',
-                  bgcolor: (loading || !answer.trim()) ? 'grey.200' : P.blue.bg,
-                  border: `2px solid ${(loading || !answer.trim()) ? '#ccc' : P.blue.border}`,
-                  borderRadius: '12px',
-                  boxShadow: (loading || !answer.trim()) ? 'none' : `3px 3px 0 ${P.blue.shadow}`,
-                  px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
-                  cursor: (loading || !answer.trim()) ? 'not-allowed' : 'pointer',
-                  color: (loading || !answer.trim()) ? 'grey.500' : P.blue.shadow,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
-                  '&:hover': (loading || !answer.trim()) ? {} : { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.blue.shadow}` },
-                  '&:active': (loading || !answer.trim()) ? {} : { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.blue.shadow}` },
+                <Box component="button" onClick={handleSubmit} disabled={loading || !revisedSentence.trim()} sx={{
+                  bgcolor: P.orange.bg, border: `2px solid ${P.orange.border}`,
+                  borderRadius: '12px', boxShadow: `3px 3px 0 ${P.orange.shadow}`,
+                  px: 3, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                  cursor: (loading || !revisedSentence.trim()) ? 'not-allowed' : 'pointer',
+                  color: P.orange.shadow, width: '100%', opacity: (loading || !revisedSentence.trim()) ? 0.6 : 1,
+                  '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.orange.shadow}` },
+                  '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.orange.shadow}` }
                 }}>
-                  {loading ? <CircularProgress size={20} /> : 'Submit Answer'}
+                  {loading ? <CircularProgress size={24} /> : 'Submit Revised Sentence'}
                 </Box>
               )}
             </Box>
@@ -355,91 +361,67 @@ export default function Phase4Step3Interaction3() {
           {/* Evaluation Results */}
           {evaluation && (
             <Box sx={{
-              bgcolor: evaluation.success ? P.green.bg : P.red.bg,
-              border: `2px solid ${evaluation.success ? P.green.border : P.red.border}`,
-              borderRadius: '20px',
-              boxShadow: `4px 4px 0 ${evaluation.success ? P.green.shadow : P.red.shadow}`,
+              bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
+              borderRadius: '20px', boxShadow: `4px 4px 0 ${P.green.shadow}`,
               p: 3, mb: 3,
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <CheckCircleIcon sx={{
-                  fontSize: 40,
-                  color: evaluation.success ? P.green.shadow : P.red.shadow,
-                  mr: 2
-                }} />
-                <Box>
-                  <Typography variant="h6" fontWeight="bold" sx={{ color: evaluation.success ? P.green.shadow : P.red.shadow }}>
-                    {evaluation.success ? 'Answer Submitted!' : 'Try Again'}
+                <CheckCircleIcon sx={{ fontSize: 40, color: P.green.shadow, mr: 2 }} />
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h6" sx={{ color: P.green.shadow }}>
+                    Vocabulary Integration Complete!
                   </Typography>
-                  <Typography variant="body2" sx={{ color: evaluation.success ? P.green.shadow : P.red.shadow, opacity: 0.8 }}>
-                    Level: {evaluation.level} | Score: {evaluation.score}/5
+                  <Typography variant="h4" fontWeight="bold" sx={{ mt: 1, color: P.blue.shadow }}>
+                    Score: {evaluation.score}/5
                   </Typography>
+                  <Box component="span" sx={{
+                    bgcolor: P.purple.bg, border: `2px solid ${P.purple.border}`,
+                    borderRadius: '999px', px: 2, py: 0.5,
+                    fontSize: '0.85rem', fontWeight: 700, color: P.purple.shadow,
+                    display: 'inline-block', mt: 0.5
+                  }}>
+                    CEFR Level: {evaluation.level}
+                  </Box>
                 </Box>
               </Box>
 
-              <Typography variant="body1" sx={{ color: evaluation.success ? P.green.shadow : P.red.shadow, mb: 2 }}>
+              <Typography variant="body1" sx={{ mb: 2, color: P.green.shadow }}>
                 {evaluation.feedback}
               </Typography>
 
-              {submitted && (() => {
-                const score1 = parseInt(sessionStorage.getItem('phase4_step3_interaction1_score') || '0')
-                const score2 = parseInt(sessionStorage.getItem('phase4_step3_interaction2_score') || '0')
-                const score3 = parseInt(sessionStorage.getItem('phase4_step3_interaction3_score') || '0')
-                const totalScore = score1 + score2 + score3
+              {evaluation.details && (
+                <Box sx={{ mt: 2, p: 2, bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.7)', borderRadius: '10px' }}>
+                  <Typography variant="subtitle2" gutterBottom sx={{ color: P.green.shadow }}>
+                    Evaluation Details:
+                  </Typography>
+                  {evaluation.details.usedTerm && (
+                    <Typography variant="body2" sx={{ color: P.green.shadow }}>
+                      Vocabulary Term Used: {evaluation.details.usedTerm}
+                    </Typography>
+                  )}
+                  {evaluation.details.grammar && (
+                    <Typography variant="body2" sx={{ color: P.green.shadow }}>
+                      Grammar: {evaluation.details.grammar}
+                    </Typography>
+                  )}
+                  {evaluation.details.structure && (
+                    <Typography variant="body2" sx={{ color: P.green.shadow }}>
+                      Structure: {evaluation.details.structure}
+                    </Typography>
+                  )}
+                </Box>
+              )}
 
-                let assignedLevel = ''
-                if (totalScore < 4) assignedLevel = 'A1'
-                else if (totalScore < 7) assignedLevel = 'A2'
-                else if (totalScore < 10) assignedLevel = 'B1'
-                else if (totalScore < 13) assignedLevel = 'B2'
-                else assignedLevel = 'C1'
-
-                return (
-                  <>
-                    <Box sx={{
-                      bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
-                      borderRadius: '12px', p: 2, mb: 2,
-                    }}>
-                      <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: P.blue.shadow }}>
-                        Overall Performance Summary
-                      </Typography>
-                      <Stack spacing={1}>
-                        <Typography variant="body2" sx={{ color: P.blue.shadow }}>
-                          <strong>Interaction 1 (Persuasive):</strong> {score1}/5 points
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: P.blue.shadow }}>
-                          <strong>Interaction 2 (Dramatisation):</strong> {score2}/5 points
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: P.blue.shadow }}>
-                          <strong>Interaction 3 (Game Connection):</strong> {score3}/5 points
-                        </Typography>
-                        <Typography variant="h6" sx={{ mt: 1, color: P.blue.shadow }}>
-                          <strong>Total Score: {totalScore}/15</strong>
-                        </Typography>
-                        <Typography variant="body1" sx={{ mt: 1, color: P.blue.shadow }}>
-                          <strong>Assigned Level: {assignedLevel}</strong>
-                        </Typography>
-                        <Typography variant="body2" sx={{ mt: 1, color: P.blue.shadow, opacity: 0.8 }}>
-                          {`You will now proceed to ${assignedLevel}-level activities.`}
-                        </Typography>
-                      </Stack>
-                    </Box>
-                    <Box component="button" onClick={handleContinue} sx={{
-                      width: '100%',
-                      bgcolor: P.green.bg, border: `2px solid ${P.green.border}`,
-                      borderRadius: '12px', boxShadow: `3px 3px 0 ${P.green.shadow}`,
-                      px: 4, py: 1.5, fontWeight: 700, fontSize: '1rem',
-                      cursor: 'pointer', color: P.green.shadow,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
-                      '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.green.shadow}` },
-                      '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.green.shadow}` },
-                    }}>
-                      <PlayArrowIcon fontSize="small" />
-                      {`Continue to ${assignedLevel} Activities`}
-                    </Box>
-                  </>
-                )
-              })()}
+              <Box component="button" onClick={handleContinue} sx={{
+                bgcolor: P.blue.bg, border: `2px solid ${P.blue.border}`,
+                borderRadius: '12px', boxShadow: `3px 3px 0 ${P.blue.shadow}`,
+                px: 3, py: 1.5, fontWeight: 700, fontSize: '1rem',
+                cursor: 'pointer', color: P.blue.shadow, width: '100%', mt: 3,
+                '&:hover': { transform: 'translate(-2px,-2px)', boxShadow: `5px 5px 0 ${P.blue.shadow}` },
+                '&:active': { transform: 'translate(0,0)', boxShadow: `1px 1px 0 ${P.blue.shadow}` }
+              }}>
+                {(evaluation?.score || 0) >= 3 ? 'Continue to Step 5' : 'Continue to Remedial Activities'}
+              </Box>
             </Box>
           )}
 
