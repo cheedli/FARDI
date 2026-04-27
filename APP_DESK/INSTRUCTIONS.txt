@@ -1,0 +1,169 @@
+================================================================
+  FARDI - Windows Desktop App Build Instructions
+  (Run everything in Command Prompt or PowerShell as Administrator)
+================================================================
+
+
+PREREQUISITES — Install these first
+------------------------------------
+
+1. Python 3.11 (64-bit)
+   https://www.python.org/downloads/
+   IMPORTANT: During install, check "Add Python to PATH"
+
+2. Node.js LTS (64-bit)
+   https://nodejs.org/en/download
+   npm is included automatically
+
+3. Git
+   https://git-scm.com/download/win
+
+After installing all three, close and reopen your terminal,
+then verify:
+
+   python --version       (should say 3.11.x)
+   node --version         (should say v20.x or higher)
+   npm --version
+   git --version
+
+
+STEP 1 — Get the repo on Windows
+----------------------------------
+
+Option A — Clone from Git:
+   git clone <your-repo-url>
+   cd FARDI
+
+Option B — Copy via USB/ZIP:
+   Copy the entire FARDI folder to your Windows machine.
+   Open a terminal and cd into the FARDI folder.
+
+   Example:
+   cd C:\Users\YourName\Desktop\FARDI
+
+
+STEP 2 — Set up your .env file
+--------------------------------
+
+   cd backend
+   copy .env.example .env
+
+Open .env in Notepad and fill in:
+
+   GROQ_API_KEY=your_groq_api_key_here
+   SECRET_KEY=any_random_long_string_here
+
+Save and close. Then go back to the root:
+
+   cd ..
+
+
+STEP 3 — Run the build script
+-------------------------------
+
+From the FARDI root folder, run:
+
+   APP_DESK\build-win.bat
+
+This script will automatically:
+  - Install React dependencies and build the frontend
+  - Copy the frontend build into the backend static folder
+  - Create a Python virtual environment in backend\venv
+  - Install all Python dependencies
+  - Bundle the backend into a single .exe using PyInstaller
+  - Install Electron dependencies
+  - Package everything into a portable app\ folder
+
+This will take 5–15 minutes on first run.
+
+
+STEP 4 — Distribute to users
+------------------------------
+
+When the build completes, you will find:
+
+   APP_DESK\app\          <- send this entire folder to users
+
+Send users the whole  app\  folder (zip it up if needed).
+Users do NOT need Python, Node.js, or anything else installed.
+
+To run the app, users just double-click:
+   app\FARDI.exe
+
+
+OPTIONAL — Sending a pre-filled database
+------------------------------------------
+
+By default the app ships with a blank fardi.db.
+If you want users to start with existing data:
+
+   Copy your fardi.db into the app\ folder (next to FARDI.exe)
+
+On first launch, FARDI will use that db automatically.
+
+
+TROUBLESHOOTING
+---------------
+
+Problem: "python not found" or "pip not found"
+  Fix: Reinstall Python and make sure "Add to PATH" is checked.
+       Or run: setx PATH "%PATH%;C:\Users\YourName\AppData\Local\Programs\Python\Python311"
+
+Problem: "node not found" or "npm not found"
+  Fix: Reinstall Node.js. Restart your terminal after install.
+
+Problem: PyInstaller fails with import errors
+  Fix: Make sure you are inside the FARDI folder when running the bat file.
+       Check that venv was created: backend\venv should exist.
+
+Problem: App opens but shows blank screen or "Server did not start"
+  Fix: Check the log file at:
+       C:\Users\YourName\AppData\Roaming\fardi\fardi-server.log
+
+Problem: The build script stops at "Building frontend"
+  Fix: Run manually:
+       cd frontend
+       npm install
+       npm run build
+
+Problem: electron-builder fails
+  Fix: Run manually:
+       cd APP_DESK\electron
+       npm install
+       npm run dist:win
+
+
+MANUAL BUILD (if the bat script fails)
+----------------------------------------
+
+Run these commands one by one from the FARDI root:
+
+  1. cd frontend
+     npm install
+     npm run build
+     xcopy /E /I /Y dist ..\backend\static\app
+     cd ..
+
+  2. cd backend
+     python -m venv venv
+     venv\Scripts\activate.bat
+     pip install pyinstaller
+     pip install -r requirements-fastapi.txt
+     cd ..
+
+  3. pyinstaller APP_DESK\fardi-server.spec ^
+       --distpath APP_DESK\fardi-server-win ^
+       --workpath APP_DESK\_pyibuild ^
+       --noconfirm
+
+  4. cd APP_DESK\electron
+     npm install
+     npm run dist:win
+     cd ..\..
+
+  5. cd APP_DESK
+     move dist\win-unpacked app
+     copy /Y fardi.db app\fardi.db
+
+
+================================================================

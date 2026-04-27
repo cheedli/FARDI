@@ -1,0 +1,46 @@
+{
+  "name": "fardi",
+  "version": "1.0.0",
+  "description": "FARDI - CEFR Language Assessment Platform",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist:all": "electron-builder --mac --win"
+  },
+  "build": {
+    "appId": "com.fardi.app",
+    "productName": "FARDI",
+    "directories": {
+      "output": "../dist"
+    },
+    "files": [
+      "main.js"
+    ],
+    "extraResources": [
+      {
+        "from": "../fardi-server-mac/",
+        "to": "fardi-server/",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../fardi.db",
+        "to": "fardi.db"
+      }
+    ],
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+      "icon": "../../frontend/public/favicon.ico",
+      "category": "public.app-category.education"
+    },
+    "win": {
+      "target": [{ "target": "dir", "arch": ["x64"] }],
+      "icon": "../../frontend/public/favicon.ico"
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}

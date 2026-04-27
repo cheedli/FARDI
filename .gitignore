@@ -44,4 +44,3 @@ backend/sessions/*
 backend/fardi.db
 fardi.db
 *.backup
-APP_DESK/
