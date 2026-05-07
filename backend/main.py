@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -17,7 +18,49 @@ os.environ.setdefault("FARDI_DB_PATH", os.path.join(_data_dir, "fardi.db"))
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="FARDI API", version="1.0.0")
+
+def _ensure_admin_exists():
+    """Create default admin account on first run if none exists."""
+    from models.auth import DatabaseManager, User
+
+    db = DatabaseManager(os.environ["FARDI_DB_PATH"])
+    conn = db.get_connection()
+    try:
+        row = conn.execute(
+            "SELECT id FROM users WHERE is_admin = 1 OR role = 'admin' LIMIT 1"
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if row:
+        return
+
+    username = os.environ.get("ADMIN_USERNAME", "admin")
+    email = os.environ.get("ADMIN_EMAIL", "admin@fardi.local")
+    password = os.environ.get("ADMIN_PASSWORD", "Admin@1234")
+
+    user_model = User(db)
+    _, err = user_model.create_admin_user(
+        username=username,
+        email=email,
+        password=password,
+        first_name="Admin",
+        last_name="FARDI",
+    )
+    if err:
+        logger.warning(f"Could not create default admin: {err}")
+    else:
+        logger.info(f"Default admin account created — username: '{username}'")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if getattr(sys, "frozen", False):
+        _ensure_admin_exists()
+    yield
+
+
+app = FastAPI(title="FARDI API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

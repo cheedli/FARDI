@@ -30,13 +30,16 @@ call npm install
 echo === 4. Package portable app folder ===
 call npm run dist:win
 
-echo === 5. Assemble app\ folder ===
+echo === 5. Assemble three delivery folders (m, n, w) ===
 cd /d "%APP_DESK%"
-if exist app rmdir /s /q app
-move dist\win-unpacked app
-copy /Y fardi.db app\fardi.db
+
+for %%F in (m n w) do (
+    if exist %%F rmdir /s /q %%F
+    xcopy /E /I /Y dist\win-unpacked %%F
+    copy /Y fardi.db %%F\fardi.db
+)
 
 echo.
 echo Done!
-echo Ship to users:  the entire  APP_DESK\app\  folder
-echo Users double-click:  app\FARDI.exe
+echo Ship each folder separately:  APP_DESK\m\  APP_DESK\n\  APP_DESK\w\
+echo Users double-click:  FARDI.exe  inside their folder
